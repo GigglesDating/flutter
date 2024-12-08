@@ -1,0 +1,481 @@
+import 'package:country_picker/country_picker.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:giggles/constants/appColors.dart';
+import 'package:giggles/constants/appFonts.dart';
+import 'package:giggles/constants/database/shared_preferences_service.dart';
+import 'package:giggles/constants/utils/show_dialog.dart';
+import 'package:giggles/network/auth_provider.dart';
+import 'package:giggles/screens/auth/aadhar_verification/adhar_verification_page.dart';
+import 'package:provider/provider.dart';
+
+import '../user/user_profile_creation_page.dart';
+import '../user/white_waiting_events_page.dart';
+import 'Video_intro_screen.dart';
+
+class SigninPage extends StatefulWidget {
+  const SigninPage({
+    super.key,
+  });
+
+  @override
+  State<SigninPage> createState() => _signInPageState();
+}
+
+class _signInPageState extends State<SigninPage> {
+  final TextEditingController phoneNumberController = TextEditingController();
+  final TextEditingController otpController = TextEditingController();
+  bool _otpFieldVisible = false;
+  final signInFormKey = GlobalKey<FormState>();
+
+  Country selectedCountry = Country(
+    phoneCode: "91",
+    countryCode: "IN",
+    e164Sc: 0,
+    geographic: true,
+    level: 1,
+    name: "India",
+    example: "India",
+    displayName: "IN",
+    displayNameNoCountryCode: "IN",
+    e164Key: "",
+  );
+
+  void _closeKeyboard() {
+    SystemChannels.textInput.invokeMethod('TextInput.hide');
+  }
+
+  // Enter full-Page landscape mode by hiding system UI and locking orientation
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    // Hide only the status bar
+    SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+    SystemChrome.setPreferredOrientations([
+      DeviceOrientation.portraitUp,
+      DeviceOrientation.portraitDown,
+    ]);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
+    final userProvider = Provider.of<AuthProvider>(context);
+    return WillPopScope(
+      onWillPop: () async {
+        return false;
+      },
+      child: Scaffold(
+        extendBodyBehindAppBar: true,
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+        body: Stack(
+          children: [
+            // The backdrop filter for blur effect
+            // BackdropFilter(
+            //   filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
+            //   child: Container(
+            //     color: Colors.black.withOpacity(0), // Transparent container
+            //   ),
+            // ),
+
+            // Image.asset('assets/images/loginPagebg.png'),
+            Positioned.fill(
+              child: Image.asset(
+                'assets/images/loginscreenbg.png',
+                fit: BoxFit.cover,
+              ),
+            ),
+            Positioned(
+              bottom: 10,
+              left: 16,
+              right: 16,
+              child: SingleChildScrollView(
+                child: Form(
+                  key: signInFormKey,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      // SizedBox(height: kToolbarHeight,),
+                      Container(
+                        height: MediaQuery.of(context).size.width / 2.5,
+                        width: MediaQuery.of(context).size.width / 2.5,
+                        padding: const EdgeInsets.all(28),
+                        decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                                color: Theme.of(context).brightness ==
+                                        Brightness.light
+                                    ? AppColors.white
+                                    : AppColors.black,
+                                width: 2)),
+                        child: Image.asset(
+                          Theme.of(context).brightness == Brightness.light
+                              ? 'assets/images/logodarktheme.png'
+                              : 'assets/images/logolighttheme.png',
+                          // height: 150,
+                          // width: 150,
+                        ),
+                      ),
+                      const SizedBox(
+                        height: kToolbarHeight + kTextTabBarHeight,
+                      ),
+                      _otpFieldVisible
+                          ? const SizedBox()
+                          : TextFormField(
+                              controller: phoneNumberController,
+                              style: AppFonts.hintTitle(
+                                  color:
+                                      Theme.of(context).colorScheme.tertiary),
+                              cursorHeight: 20,
+                              maxLength: 10,
+                              maxLines: 1,
+                              minLines: 1,
+                              onChanged: (value) {
+                                if (value.length == 10) {
+                                  _closeKeyboard();
+                                }
+                              },
+                              inputFormatters: <TextInputFormatter>[
+                                FilteringTextInputFormatter.digitsOnly
+                                // Allows only numbers
+                              ],
+                              keyboardType: TextInputType.phone,
+                              validator: (value) {
+                                bool isValidLength(String text) {
+                                  return text.length >= 10;
+                                }
+
+                                if (value!.isEmpty) {
+                                  return 'Mobile number is empty';
+                                } else if (!isValidLength(value)) {
+                                  return 'Enter complete mobile number';
+                                }
+                                return null;
+                              },
+                              decoration: InputDecoration(
+                                floatingLabelBehavior:
+                                    FloatingLabelBehavior.never,
+                                contentPadding:
+                                    EdgeInsets.symmetric(horizontal: 16),
+                                hintText: 'Phone',
+                                filled: true,
+                                fillColor: Theme.of(context).brightness ==
+                                        Brightness.light
+                                    ? AppColors.white
+                                    : AppColors.black,
+                                counterText: '',
+                                border: OutlineInputBorder(
+                                    borderRadius:
+                                        BorderRadius.all(Radius.circular(22)),
+                                    borderSide:
+                                        BorderSide(color: AppColors.white)),
+                                focusedBorder: OutlineInputBorder(
+                                    borderRadius:
+                                        BorderRadius.all(Radius.circular(22)),
+                                    borderSide:
+                                        BorderSide(color: AppColors.white)),
+                                enabledBorder: const OutlineInputBorder(
+                                  // Border when enabled
+                                  borderSide:
+                                      BorderSide(color: AppColors.white),
+                                  borderRadius:
+                                      BorderRadius.all(Radius.circular(22)),
+                                ),
+                                errorBorder: const OutlineInputBorder(
+                                  borderRadius:
+                                      BorderRadius.all(Radius.circular(22)),
+                                  borderSide:
+                                      BorderSide(color: AppColors.error),
+                                ),
+                              ),
+                            ),
+                      SizedBox(
+                        height: 16,
+                      ),
+                      _otpFieldVisible
+                          ? TextFormField(
+                              controller: otpController,
+                              style: AppFonts.hintTitle(
+                                  color:
+                                      Theme.of(context).colorScheme.tertiary),
+                              cursorHeight: 20,
+                              maxLength: 6,
+                              maxLines: 1,
+                              minLines: 1,
+                              onChanged: (value) {
+                                if (value.length == 6) {
+                                  _closeKeyboard();
+                                }
+                              },
+                              keyboardType: TextInputType.phone,
+                              inputFormatters: <TextInputFormatter>[
+                                FilteringTextInputFormatter.digitsOnly
+                                // Allows only numbers
+                              ],
+                              validator: (value) {
+                                bool isValidLength(String text) {
+                                  return text.length >= 6;
+                                }
+
+                                if (value!.isEmpty) {
+                                  return 'OTP is empty';
+                                } else if (!isValidLength(value)) {
+                                  return 'Enter 6 digit OTP';
+                                }
+                                return null;
+                              },
+                              decoration: InputDecoration(
+                                floatingLabelBehavior:
+                                    FloatingLabelBehavior.never,
+                                contentPadding:
+                                    EdgeInsets.symmetric(horizontal: 16),
+                                hintText: 'Otp',
+                                isDense: true,
+                                hintStyle: TextStyle(
+                                  color:
+                                      Theme.of(context).colorScheme.secondary,
+                                ),
+                                suffixIcon: Container(
+                                  width: MediaQuery.of(context).size.width / 3,
+                                  padding: EdgeInsets.only(right: 8),
+                                  child: Align(
+                                    alignment: Alignment.centerRight,
+                                    child: InkWell(
+                                      onTap: userProvider.isResendOTPLoading
+                                          ? null
+                                          : () async {
+                                              if (_otpFieldVisible) {
+                                                try {
+                                                  final isOtpValidate =
+                                                      await userProvider
+                                                          .postResendOTP();
+                                                  if (isOtpValidate == true) {
+                                                    ShowDialog().showSuccessDialog(
+                                                        context,
+                                                        'OTP Resend Successfully');
+                                                  } else {
+                                                    ShowDialog()
+                                                        .showErrorDialog(
+                                                            context,
+                                                            'Please Try Again');
+                                                  }
+                                                } catch (e) {
+                                                  ShowDialog().showErrorDialog(
+                                                      context,
+                                                      'Failed to Resend OTP: $e');
+                                                }
+                                              }
+                                            },
+                                      child: userProvider.isResendOTPLoading
+                                          ? SizedBox(
+                                              width: 20,
+                                              height: 20,
+                                              child: Align(
+                                                alignment: Alignment.center,
+                                                child:
+                                                    CircularProgressIndicator(
+                                                  color: AppColors.primary,
+                                                  strokeWidth: 2,
+                                                ),
+                                              ),
+                                            )
+                                          : Text(
+                                              'Resend OTP',
+                                              textAlign: TextAlign.start,
+                                              style: TextStyle(
+                                                  color: Theme.of(context)
+                                                      .hintColor),
+                                            ),
+                                    ),
+                                  ),
+                                ),
+                                counterText: '',
+                                filled: true,
+                                fillColor: Theme.of(context).brightness ==
+                                        Brightness.light
+                                    ? AppColors.white
+                                    : AppColors.black,
+                                border: OutlineInputBorder(
+                                    borderRadius:
+                                        BorderRadius.all(Radius.circular(22)),
+                                    borderSide:
+                                        BorderSide(color: AppColors.white)),
+                                focusedBorder: OutlineInputBorder(
+                                    borderRadius:
+                                        BorderRadius.all(Radius.circular(22)),
+                                    borderSide:
+                                        BorderSide(color: AppColors.white)),
+                                enabledBorder: const OutlineInputBorder(
+                                  // Border when enabled
+                                  borderSide:
+                                      BorderSide(color: AppColors.white),
+                                  borderRadius:
+                                      BorderRadius.all(Radius.circular(22)),
+                                ),
+                                errorBorder: const OutlineInputBorder(
+                                  borderRadius:
+                                      BorderRadius.all(Radius.circular(22)),
+                                  borderSide:
+                                      BorderSide(color: AppColors.error),
+                                ),
+                              ),
+                            )
+                          : SizedBox(),
+                      const SizedBox(height: 16),
+                      Container(
+                        height: 50,
+                        child: ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            // minimumSize: Size(250, 50),
+                            foregroundColor:
+                                Theme.of(context).colorScheme.onPrimary,
+                            backgroundColor:
+                                Theme.of(context).brightness == Brightness.light
+                                    ? AppColors.white
+                                    : AppColors.black,
+                          ),
+                          onPressed:
+                              userProvider.isLoading
+                                  ? null
+                                  :
+                              () async {
+
+                            // final success =
+                            //     await userProvider.fetchUserInterestList();
+                            // if (success?.status == true) {
+                            //   Navigator.push(
+                            //       context,
+                            //       MaterialPageRoute(
+                            //         builder: (context) =>
+                            //             UserProfileCreationPage(userInterestList: success?.data,),
+                            //         // VideoIntroPage(videoUrl: success?.data?.introVideo,),
+                            //       ));
+                            // }
+
+                            // final success = await userProvider.fetchUserInterestList();
+                            // if(success?.status==true){
+                            //   Navigator.push(
+                            //       context,
+                            //       MaterialPageRoute(
+                            //         builder: (context) =>  WhiteWaitingEventsPage()
+                            //       ));
+                            // }
+
+
+                            if (_otpFieldVisible) {
+                              if (signInFormKey.currentState!
+                                  .validate()) {
+                                try {
+                                  var userMap = {
+                                    'otp': otpController.text
+                                  };
+                                  final isOtpValidate = await userProvider
+                                      .otpVerification(userMap);
+                                  print('response.verufy');
+                                  print(SharedPref().getTokenDetail());
+                                  if (isOtpValidate == true) {
+                                    final success = await userProvider
+                                        .fetchIntroVideoData();
+                                    if (success?.status == true) {
+                                      if (success!
+                                          .data!.introVideo!.isNotEmpty) {
+                                        Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                                builder: (context) =>
+                                                    VideoIntroPage(videoUrl:success.data!.introVideo,)));
+
+                                      } else {
+                                        ShowDialog().showErrorDialog(context,
+                                            userProvider.errorMessage);
+                                      }
+                                    } else {
+                                      ShowDialog().showErrorDialog(context,
+                                          userProvider.errorMessage);
+                                    }
+                                  } else {
+                                    ShowDialog().showErrorDialog(context,
+                                        userProvider.errorMessage);
+                                  }
+                                } catch (e) {
+                                  ShowDialog().showErrorDialog(context,
+                                      userProvider.errorMessage);
+                                }
+                              }
+                            } else {
+                              if (signInFormKey.currentState!
+                                  .validate()) {
+                                try {
+                                  var userMap = {
+                                    'phone': phoneNumberController.text
+                                  };
+
+                                  final userLogin =
+                                      await userProvider.login(userMap);
+                                  if (userLogin != null) {
+                                    setState(() {
+                                      _otpFieldVisible = true;
+                                    });
+
+                                    ShowDialog().showSuccessDialog(context,
+                                        userProvider.successMessage);
+                                  } else {
+                                    ShowDialog().showErrorDialog(context,
+                                        userProvider.errorMessage);
+                                  }
+                                } catch (e) {
+                                  ShowDialog().showErrorDialog(context,
+                                      userProvider.errorMessage);
+                                }
+                              }
+                            }
+                          },
+                          child: userProvider.isLoading
+                              ? SizedBox(
+                                  width: 40,
+                                  height: 40,
+                                  child: CircularProgressIndicator(
+                                    color: AppColors.primary,
+                                    strokeWidth: 2,
+                                  ),
+                                )
+                              : Text(
+                                  _otpFieldVisible ? 'Login' : 'Get OTP',
+                                  style: AppFonts.titleBold().copyWith(
+                                    color:
+                                        Theme.of(context).colorScheme.primary,
+                                  ),
+                                ),
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+                      _otpFieldVisible
+                          ? TextButton(
+                              onPressed: () {
+                                setState(() {
+                                  _otpFieldVisible = false;
+                                  phoneNumberController.clear();
+                                });
+                              },
+                              child: Text(
+                                'Wrong Number?',
+                                style: TextStyle(
+                                    color: Theme.of(context).primaryColor),
+                              ),
+                            )
+                          : SizedBox.shrink(),
+                      const SizedBox(height: kToolbarHeight),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}

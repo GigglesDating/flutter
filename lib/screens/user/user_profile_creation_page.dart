@@ -1,0 +1,971 @@
+import 'dart:convert';
+import 'dart:io';
+
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_svg/svg.dart';
+import 'package:giggles/constants/appColors.dart';
+import 'package:giggles/constants/appFonts.dart';
+import 'package:giggles/constants/utils/show_dialog.dart';
+import 'package:giggles/screens/auth/signUpPage.dart';
+import 'package:giggles/screens/user/user_photos_videos_page.dart';
+import 'package:giggles/screens/user/user_waitlist_page.dart';
+import 'package:giggles/screens/user/white_waiting_events_page.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:provider/provider.dart';
+import 'package:reorderable_grid_view/reorderable_grid_view.dart';
+
+import '../../constants/utils/multi_select_dialog.dart';
+import '../../models/user_interests_model.dart';
+import '../../network/auth_provider.dart';
+
+class UserProfileCreationPage extends StatefulWidget {
+  List<UserInterestsData>? userInterestList;
+
+  UserProfileCreationPage({
+    super.key,
+    this.userInterestList
+  });
+
+  @override
+  State<UserProfileCreationPage> createState() => _UserProfileCreationPage();
+}
+
+class _UserProfileCreationPage extends State<UserProfileCreationPage> {
+  final List<String> genderOrientationList = [
+    'Straight',
+    'Homosexual',
+    'Bisexual',
+    'Asexual'
+  ];
+  // List<UserInterestsData> userInterestList = [];
+  final data = [1, 2, 3, 4, 5, 6];
+
+  double heightfactor = 1.0;
+  final List<String> genderList = ['All', 'Male', 'Female'];
+  String? genderOrientation;
+  String? datingPreference;
+  String? gender;
+  var filePath;
+  TextEditingController bioTextController = TextEditingController();
+  RangeValues _currentRangeValues = const RangeValues(18, 34);
+  final List<String> datingPreferenceList = [
+    'Companionship',
+    'Relationship',
+    'Friendship'
+  ];
+  final List<String> _selectedDatingPrefrencesItems = [];
+
+  // List of options
+  final List<String> _options = [
+    'Coffee ',
+    'Shooping',
+    'Clubing',
+    'Cinema',
+    'Pet Club'
+  ];
+  bool isYes = false;
+  bool isNo = false;
+
+  // List to store selected options
+  // List<String> selectedInterest = [];
+
+  // final List<Map<String, dynamic>> userInterestList = [
+  //   {"name": "Coffee", "icon": Icons.local_cafe},
+  //   {"name": "Shopping", "icon": Icons.shopping_bag},
+  //   {"name": "Clubbing", "icon": Icons.local_bar},
+  //   {"name": "Cinema", "icon": Icons.movie},
+  //   {"name": "Cycling", "icon": Icons.directions_bike},
+  //   {"name": "Gymming", "icon": Icons.fitness_center},
+  //   {"name": "Hiking", "icon": Icons.hiking},
+  //   {"name": "Swimming", "icon": Icons.pool},
+  //   {"name": "Pet Club", "icon": Icons.pets},
+  //   {"name": "Pottery", "icon": Icons.brush},
+  //   {"name": "Cooking", "icon": Icons.kitchen},
+  //   {"name": "Karaoke", "icon": Icons.mic},
+  //   {"name": "Yoga", "icon": Icons.self_improvement},
+  //   {"name": "Book Club", "icon": Icons.menu_book},
+  //   {"name": "Long Drive", "icon": Icons.directions_car},
+  // ];
+
+  // List images = [null, null, null, null, null,null]; // 3 images max for demo
+  final picker = ImagePicker();
+  List<File> images = [];
+  final int maxGridSize = 6;
+
+  // Function to pick image from gallery or camera
+  Future<void> pickImage() async {
+    if (images.length < maxGridSize) {
+      final List<XFile>? pickedFile = await picker.pickMultiImage();
+      if (pickedFile != null) {
+        // filePath = pickedFile.path;
+        setState(() {
+          for (var file in pickedFile) {
+            images.add(File(file.path)); // Add each selected file's path
+
+          }
+          print(images);
+
+
+
+
+        });
+      }
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Maximum limit of images reached')),
+      );
+    }
+  }
+
+  void reorderImages(int oldIndex, int newIndex) {
+    setState(() {
+      if (newIndex > oldIndex) {
+        newIndex -= 1;
+      }
+      final File movedItem = images.removeAt(oldIndex);
+      images.insert(newIndex, movedItem);
+    });
+  }
+
+
+  // Set to keep track of selected items
+  List<String> selectedActivities = [];
+
+  // Method to toggle selection
+  void _toggleSelection(String id) {
+    setState(() {
+      if (selectedActivities.contains(id)) {
+        selectedActivities.remove(id);
+      } else {
+        selectedActivities.add(id);
+      }
+    });
+  }
+
+  void _closeKeyboard() {
+    SystemChannels.textInput.invokeMethod('TextInput.hide');
+  }
+
+  void openMultiSelectDropdown() async {
+    final selectedItems = await showDialog<List<String>>(
+      context: context,
+      builder: (BuildContext context) {
+        return MultiSelectDialog(
+          items: datingPreferenceList,
+          selectedItems: _selectedDatingPrefrencesItems,
+        );
+      },
+    );
+
+    if (selectedItems != null) {
+      setState(() {
+        _selectedDatingPrefrencesItems
+          ..clear()
+          ..addAll(selectedItems);
+      });
+    }
+  }
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    // Future.microtask(() async {
+    //   // Fetch data when the screen appears
+    //   Provider.of<AuthProvider>(context, listen: false)
+    //       .fetchUserInterestList()
+    //       .then(
+    //     (value) {
+    //       if (value?.status == true) {
+    //         setState(() {
+    //           userInterestList = value!.data!;
+    //         });
+    //       }
+    //     },
+    //   );
+    // });
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+  }
+
+  // Method to show multi-select dialog
+
+  @override
+  Widget build(BuildContext context) {
+    final userProfileCreation = context.watch<AuthProvider>();
+    return WillPopScope(
+      onWillPop: ()async{
+        return true;
+
+      },
+      child: Scaffold(
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+        appBar: AppBar(
+          title: Text('Profile'),
+          backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+          titleTextStyle: AppFonts.titleBold(
+              fontSize: 20, color: Theme.of(context).colorScheme.tertiary),
+          automaticallyImplyLeading: false,
+          centerTitle: true,
+        ),
+        body: SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Gender Orientation',
+                  style: AppFonts.titleBold(
+                      color: Theme.of(context).colorScheme.tertiary),
+                ),
+                SizedBox(
+                  height: 10,
+                ),
+                Container(
+                  height: 46,
+                  width: MediaQuery.of(context).size.width,
+                  decoration: BoxDecoration(
+                    color: AppColors.signUpTextFieldColor,
+                    borderRadius: BorderRadius.circular(20),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.grey.withOpacity(0.3),
+                        // Shadow color
+                        // Shadow color
+                        offset: const Offset(0, 2),
+                        // Offset of the shadow
+                        blurRadius: 4,
+                        // Blur radius of the shadow
+                        spreadRadius: 1, // Spread radius of the shadow
+                      ),
+                    ],
+                    border: Border.all(
+                      color: Theme.of(context).brightness == Brightness.light
+                          ? AppColors.profileCreateOutlineBorder
+                          : AppColors.white,
+                    ),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: DropdownButton<String>(
+                      underline: Text(''),
+                      dropdownColor: AppColors.black,
+                      style:
+                          AppFonts.hintTitle(color: AppColors.sosbuttonBgColor),
+                      value: genderOrientation,
+                      hint: Text('Select Your Gender',
+                          style: AppFonts.hintTitle(
+                              color: AppColors.sosbuttonBgColor, fontSize: 14)),
+                      iconDisabledColor: AppColors.profileCreateOutlineBorder,
+                      iconEnabledColor: AppColors.profileCreateOutlineBorder,
+                      isExpanded: true,
+                      items: genderOrientationList.map((String gender) {
+                        return DropdownMenuItem<String>(
+                          value: gender,
+                          child: Text(
+                            gender,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: AppFonts.hintTitle(
+                                color: AppColors.white, fontSize: 14),
+                          ),
+                        );
+                      }).toList(),
+                      onChanged: (String? newValue) {
+                        setState(() {
+                          genderOrientation = newValue;
+                        });
+                      },
+                    ),
+                  ),
+                ),
+                SizedBox(
+                  height: 16,
+                ),
+                Text(
+                  'Dating Preference',
+                  style: AppFonts.titleBold(
+                      color: Theme.of(context).colorScheme.tertiary),
+                ),
+                SizedBox(
+                  height: 10,
+                ),
+                InkWell(
+                  onTap: () => openMultiSelectDropdown(),
+                  child: Container(
+                    height: 46,
+                    width: MediaQuery.of(context).size.width,
+                    padding: EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: AppColors.signUpTextFieldColor,
+                      borderRadius: BorderRadius.circular(20),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.grey.withOpacity(0.3),
+                          // Shadow color
+                          // Shadow color
+                          offset: const Offset(0, 2),
+                          // Offset of the shadow
+                          blurRadius: 4,
+                          // Blur radius of the shadow
+                          spreadRadius: 1, // Spread radius of the shadow
+                        ),
+                      ],
+                      border: Border.all(
+                        color: Theme.of(context).brightness == Brightness.light
+                            ? AppColors.profileCreateOutlineBorder
+                            : AppColors.white,
+                      ),
+                    ),
+                    child: Align(
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        _selectedDatingPrefrencesItems.isEmpty
+                            ? 'Select Dating Preferences'
+                            : _selectedDatingPrefrencesItems.join(", "),
+                        textAlign: TextAlign.start,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: AppFonts.hintTitle(
+                            color: _selectedDatingPrefrencesItems.isEmpty
+                                ? AppColors.sosbuttonBgColor
+                                : AppColors.white,
+                            fontSize: 14),
+                      ),
+                    ),
+
+                    // Padding(
+                    //   padding: const EdgeInsets.all(8.0),
+                    //   child: DropdownButton<String>(
+                    //     underline: Text(''),
+                    //     dropdownColor: AppColors.black,
+                    //     style:
+                    //     AppFonts.hintTitle(color: AppColors.sosbuttonBgColor),
+                    //     value: datingPreference,
+                    //     hint: Text('Select Your Option',
+                    //         style: AppFonts.hintTitle(
+                    //             color: AppColors.sosbuttonBgColor, fontSize: 14)),
+                    //     iconDisabledColor: AppColors.profileCreateOutlineBorder,
+                    //     iconEnabledColor: AppColors.profileCreateOutlineBorder,
+                    //     isExpanded: true,
+                    //     items: datingPreferenceList.map((String gender) {
+                    //       return DropdownMenuItem<String>(
+                    //         value: gender,
+                    //         child: Text(
+                    //           gender,
+                    //           maxLines: 1,
+                    //           overflow: TextOverflow.ellipsis,
+                    //           style: AppFonts.hintTitle(
+                    //               color: AppColors.white, fontSize: 14),
+                    //         ),
+                    //       );
+                    //     }).toList(),
+                    //     onChanged: (String? newValue) {
+                    //       setState(() {
+                    //         datingPreference = newValue;
+                    //       });
+                    //     },
+                    //   ),
+                    // ),
+                  ),
+                ),
+                SizedBox(
+                  height: 16,
+                ),
+                Text(
+                  'Gender Preference',
+                  style: AppFonts.titleBold(
+                      color: Theme.of(context).colorScheme.tertiary),
+                ),
+                SizedBox(
+                  height: 10,
+                ),
+                Container(
+                  height: 46,
+                  width: MediaQuery.of(context).size.width,
+                  decoration: BoxDecoration(
+                    color: AppColors.signUpTextFieldColor,
+                    borderRadius: BorderRadius.circular(20),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.grey.withOpacity(0.3),
+                        // Shadow color
+                        // Shadow color
+                        offset: const Offset(0, 2),
+                        // Offset of the shadow
+                        blurRadius: 4,
+                        // Blur radius of the shadow
+                        spreadRadius: 1, // Spread radius of the shadow
+                      ),
+                    ],
+                    border: Border.all(
+                      color: Theme.of(context).brightness == Brightness.light
+                          ? AppColors.profileCreateOutlineBorder
+                          : AppColors.white,
+                    ),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: DropdownButton<String>(
+                      underline: Text(''),
+                      dropdownColor: AppColors.black,
+                      style:
+                          AppFonts.hintTitle(color: AppColors.sosbuttonBgColor),
+                      value: gender,
+                      hint: Text('Select Your Option',
+                          style: AppFonts.hintTitle(
+                              color: AppColors.sosbuttonBgColor, fontSize: 14)),
+                      iconDisabledColor: AppColors.profileCreateOutlineBorder,
+                      iconEnabledColor: AppColors.profileCreateOutlineBorder,
+                      isExpanded: true,
+                      items: genderList.map((String gender) {
+                        return DropdownMenuItem<String>(
+                          value: gender,
+                          child: Text(
+                            gender,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: AppFonts.hintTitle(
+                                color: AppColors.white, fontSize: 14),
+                          ),
+                        );
+                      }).toList(),
+                      onChanged: (String? newValue) {
+                        setState(() {
+                          gender = newValue;
+                        });
+                      },
+                    ),
+                  ),
+                ),
+                SizedBox(
+                  height: 16,
+                ),
+                Text(
+                  'Age Preference',
+                  style: AppFonts.titleBold(
+                      color: Theme.of(context).colorScheme.tertiary),
+                ),
+                SizedBox(
+                  height: 10,
+                ),
+                Container(
+                  padding: EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                      border: Border.all(
+                          width: 1,
+                          color: Theme.of(context).colorScheme.tertiary),
+                      borderRadius: BorderRadius.circular(20)),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Between ${_currentRangeValues.start.round().toString()} and ${_currentRangeValues.end.round().toString()}',
+                        style: AppFonts.titleBold(
+                            color: Theme.of(context).colorScheme.tertiary),
+                      ),
+                      RangeSlider(
+                        values: _currentRangeValues,
+                        min: 18,
+                        max: 60,
+                        divisions: 82,
+                        activeColor: Theme.of(context).colorScheme.tertiary,
+                        inactiveColor: AppColors.profileCreateOutlineBorder,
+                        overlayColor: WidgetStatePropertyAll(
+                            Theme.of(context).colorScheme.tertiary),
+                        labels: RangeLabels(
+                          _currentRangeValues.start.round().toString(),
+                          _currentRangeValues.end.round().toString(),
+                        ),
+                        onChanged: (RangeValues values) {
+                          setState(() {
+                            _currentRangeValues = values;
+                          });
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+                SizedBox(
+                  height: 16,
+                ),
+                Text(
+                  'Interests',
+                  style: AppFonts.titleBold(
+                      color: Theme.of(context).colorScheme.tertiary),
+                ),
+                SizedBox(
+                  height: 10,
+                ),
+                // InkWell(
+                //   onTap:(){
+                //     setState(() {
+                //       _showMultiSelectDialog();
+                //     });
+                //   },
+                //   child: Container(
+                //     padding: EdgeInsets.all(16),
+                //     decoration: BoxDecoration(
+                //         border: Border.all(width: 1,color: Theme.of(context).colorScheme.tertiary),
+                //         borderRadius: BorderRadius.circular(20)
+                //     ),
+                //     child: Text(
+                //       'Interests: ${_selectedOptions.join(', ')}',
+                //       style: TextStyle(fontSize: 16),
+                //     ),
+                //   ),
+                // ),
+                Container(
+                  height: MediaQuery.of(context).size.width / 2,
+                  padding: EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                      border: Border.all(
+                          width: 1,
+                          color: Theme.of(context).colorScheme.tertiary),
+                      borderRadius: BorderRadius.circular(20)),
+                  child: GridView.builder(
+                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 3, // 3 items per row
+                      childAspectRatio: 3, // Adjust height-to-width ratio
+                      crossAxisSpacing: 8,
+                      mainAxisSpacing: 8,
+                    ),
+                    physics: ScrollPhysics(),
+                    itemCount: widget.userInterestList?.length,
+                    shrinkWrap: true,
+                    itemBuilder: (context, index) {
+                      String activity = widget.userInterestList![index].name.toString();
+                      String selectedInterestId = widget.userInterestList![index].id.toString();
+                      bool isSelected =
+                          selectedActivities.contains(selectedInterestId);
+
+                      return GestureDetector(
+                        onTap: () => _toggleSelection(selectedInterestId),
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: isSelected
+                                ? Theme.of(context).brightness == Brightness.light
+                                    ? Colors.black
+                                    : Colors.white
+                                : Colors.grey[300],
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          padding: EdgeInsets.all(8),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  activity,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: AppFonts.titleBold(
+                                      color: isSelected
+                                          ? Theme.of(context).brightness ==
+                                                  Brightness.light
+                                              ? Colors.white
+                                              : Colors.black
+                                          : Theme.of(context).brightness ==
+                                                  Brightness.light
+                                              ? Colors.black
+                                              : Colors.white,
+                                      fontWeight: isSelected
+                                          ? FontWeight.bold
+                                          : FontWeight.normal,
+                                      fontSize: 12),
+                                ),
+                              ),
+                              // const SizedBox(width: 4),
+                              // Icon(
+                              //   icon,
+                              //   size: 12,
+                              //   color: isSelected ? Theme.of(context).brightness==Brightness.light?Colors.white:Colors.black :Theme.of(context).brightness==Brightness.light?Colors.black:Colors.white,
+                              // ),
+                            ],
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+                SizedBox(
+                  height: 16,
+                ),
+                Text(
+                  'Bio',
+                  style: AppFonts.titleBold(
+                      color: Theme.of(context).colorScheme.tertiary),
+                ),
+                SizedBox(
+                  height: 10,
+                ),
+                TextFormField(
+                  autocorrect: false,
+                  textAlignVertical: TextAlignVertical.top,
+                  enableSuggestions: false,
+                  style: AppFonts.titleMedium(
+                      color: Theme.of(context).colorScheme.tertiary),
+                  minLines: 4,
+                  maxLines: 4,
+                  keyboardType: TextInputType.text,
+                  maxLength: 300,
+                  // textAlign: TextAlign.start,
+                  controller: bioTextController,
+                  onChanged: (value) {},
+                  decoration: InputDecoration(
+                    errorMaxLines: 1,
+                    hintMaxLines: 1,
+                    contentPadding: const EdgeInsets.all(14),
+                    floatingLabelBehavior: FloatingLabelBehavior.never,
+                    border: OutlineInputBorder(
+                        borderRadius: BorderRadius.all(Radius.circular(20)),
+                        borderSide: BorderSide(
+                            color: Theme.of(context).colorScheme.tertiary)),
+                    focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.all(Radius.circular(20)),
+                        borderSide: BorderSide(
+                            color: Theme.of(context).colorScheme.primary)),
+                    enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.all(Radius.circular(20)),
+                        borderSide: BorderSide(
+                            color: Theme.of(context).colorScheme.tertiary)),
+                    focusedErrorBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.all(Radius.circular(20)),
+                        borderSide: BorderSide(color: AppColors.error)),
+                    hintText: 'Write About Yourself',
+                    hintStyle: AppFonts.hintTitle(),
+                  ),
+                  validator: (value) {
+                    if (value!.isEmpty) {
+                      return 'Bio is empty';
+                    }
+                    return null;
+                  },
+                ),
+                SizedBox(
+                  height: 16,
+                ),
+                Text(
+                  'Photos and Videos',
+                  style: AppFonts.titleBold(
+                      color: Theme.of(context).colorScheme.tertiary),
+                ),
+                SizedBox(
+                  height: 10,
+                ),
+                Container(
+                  height: MediaQuery.of(context).size.height * 0.35,
+                  child: ReorderableGridView.count(
+                    crossAxisCount: 3,
+                    childAspectRatio: 1, // Aspect ratio for images
+                    mainAxisSpacing: 10,
+                    crossAxisSpacing: 10,
+                    physics: NeverScrollableScrollPhysics(),
+                    shrinkWrap: true,
+                    onReorder: reorderImages,
+                    children: [
+                      for (int index = 0; index < maxGridSize ; index++)
+                        GestureDetector(
+                          key: ValueKey(index),
+                          onTap: index == images.length ? pickImage : null, // Pick image on tap if it's the last slot
+                          child: index < images.length
+                              ?Stack(
+                            children: [
+                              ClipRRect(
+                                borderRadius: BorderRadius.circular(15),
+                                child: Image.file(
+                                  images[index],
+                                  width: double.infinity,
+                                  height: double.infinity,
+                                  fit: BoxFit.cover,
+                                ),
+                              ),
+                              if (index == 0) // Display the checkmark overlay only for the default image
+                                Positioned(
+                                  top: 8,
+                                  left: 8,
+                                  child: SvgPicture.asset(
+                                    'assets/icons/green_check_icon.svg',
+                                    width: 32,
+                                    height: 32,
+                                  ),
+                                ),
+                            ],
+                          )
+
+                              :Container(
+                            decoration: BoxDecoration(
+                              border: Border.all(
+                                width: 1.0,
+                                color: Theme.of(context).colorScheme.tertiary,
+                              ),
+                              borderRadius: BorderRadius.circular(15),
+                            ),
+                            child: Center(
+                              child: Icon(Icons.add, size: 50),
+                            ),
+                          ) ,
+                        ),
+                    ],
+                  ),
+                ),
+
+                // Container(
+                //     height: MediaQuery.of(context).size.height * 0.35,
+                //     child:
+                //         ReorderableStaggeredGridScreen()
+                    //     ReorderableGridView.count(
+                    //   crossAxisSpacing: 10,
+                    //   mainAxisSpacing: 10,
+                    //   crossAxisCount: 3,
+                    //   children: data.map((e) {
+                    //     return    Card(
+                    //       key: ValueKey(e),
+                    //       child: Text(e.toString()),
+                    //     );
+                    //   }
+                    //    ).toList(),
+                    //   onReorder: (oldIndex, newIndex) {
+                    //     setState(() {
+                    //       final element = data.removeAt(oldIndex);
+                    //       data.insert(newIndex, element);
+                    //     });
+                    //   },
+                    // )
+          // ),
+                // Container(
+                //   height: MediaQuery.of(context).size.width,
+                //   child: GridView.builder(
+                //     gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                //       crossAxisCount: 2, // Two images per row
+                //       childAspectRatio: 1, // Aspect ratio for images
+                //       mainAxisSpacing: 10,
+                //       crossAxisSpacing: 10,
+                //     ),
+                //     itemCount: _images.length,
+                //     physics: ScrollPhysics(),
+                //     shrinkWrap: true,
+                //     itemBuilder: (context, index) {
+                //       // var item =_images[index];
+                //       double heightFactor = (index == 0) ? 2.0 : 1.0; // Double height for the first item
+                //       return GestureDetector(
+                //         onTap: () => _pickImage(index),
+                //         // Open image picker on tap
+                //         child: _images[index] == null
+                //             ? Container(
+                //                 height: 300 * heightFactor,
+                //                 decoration: BoxDecoration(
+                //                   border: Border.all(
+                //                       width: 1.0,
+                //                       color:
+                //                           Theme.of(context).colorScheme.tertiary),
+                //                   borderRadius: BorderRadius.circular(15),
+                //                 ),
+                //                 child: Center(
+                //                   child: Icon(Icons.add, size: 50),
+                //                 ),
+                //               )
+                //             : Stack(
+                //                 children: [
+                //                   // Display selected image
+                //                   ClipRRect(
+                //                     borderRadius: BorderRadius.circular(15),
+                //                     child: Image.file(
+                //                       _images[index]!,
+                //                       width: double.infinity,
+                //                       height: double.infinity,
+                //                       fit: BoxFit.cover,
+                //                     ),
+                //                   ),
+                //                   // Checkmark overlay when an image is selected
+                //                   if (index == 0)
+                //                     Positioned(
+                //                       top: 8,
+                //                       left: 8,
+                //                       child: SvgPicture.asset(
+                //                         'assets/icons/green_check_icon.svg',
+                //                         width: 32,
+                //                         height: 32,
+                //                       ),
+                //                     ),
+                //                 ],
+                //               ),
+                //       );
+                //     },
+                //   ),
+                // ),
+                // SizedBox(height: 16,),
+                Text(
+                  'Is this your first application to Giggles?',
+                  style: AppFonts.titleBold(
+                      color: Theme.of(context).colorScheme.tertiary),
+                ),
+                SizedBox(
+                  height: 10,
+                ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Checkbox(
+                      checkColor: AppColors.white,
+                      activeColor: AppColors.checkboxFillColor,
+                      // isError: true,
+                      value: isYes,
+                      side: BorderSide(
+                          color: AppColors.checkboxFillColor, width: 2),
+                      visualDensity: VisualDensity(horizontal: 1, vertical: -4),
+                      onChanged: (value) {
+                        setState(() {
+                          isYes = value!;
+                          isNo = false;
+                        });
+                      },
+                    ),
+                    Text('Yes',
+                        style: AppFonts.titleBold(
+                            color: Theme.of(context).colorScheme.tertiary)),
+                    SizedBox(
+                      width: 20,
+                    ),
+                    Checkbox(
+                      checkColor: AppColors.white,
+                      activeColor: AppColors.checkboxFillColor,
+                      // isError: true,
+                      value: isNo,
+                      side: BorderSide(
+                          color: AppColors.checkboxFillColor, width: 2),
+                      visualDensity: VisualDensity(horizontal: 1, vertical: -4),
+                      onChanged: (value) {
+                        setState(() {
+                          isNo = value!;
+                          isYes = false;
+                        });
+                      },
+                    ),
+                    Text('No',
+                        style: AppFonts.titleBold(
+                            color: Theme.of(context).colorScheme.tertiary)),
+                  ],
+                ),
+                SizedBox(
+                  height: 20,
+                ),
+                Center(
+                  child: Container(
+                    height: 46,
+                    //width:MediaQuery.of(context).size.width/2.5,
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        // minimumSize: Size(250, 50),
+                        // foregroundColor: Theme.of(context).colorScheme.onPrimary,
+                        backgroundColor: AppColors.primary,
+                        side: BorderSide(
+                          color: Theme.of(context).colorScheme.tertiary,
+                        ),
+                        // shape: RoundedRectangleBorder( // Add rounded corners
+                        //   borderRadius: BorderRadius.circular(24.0),
+                        // ),
+                      ),
+                      onPressed: () async {
+                        // Navigator.push(context, MaterialPageRoute(builder: (context) => const WhiteWaitingEventsPage(),));
+                        if (genderOrientation == null) {
+                          ShowDialog().showInfoDialog(
+                              context, 'Select gender orientation');
+                        } else if (_selectedDatingPrefrencesItems.isEmpty) {
+                          ShowDialog().showInfoDialog(
+                              context, 'Select dating preference');
+                        } else if (gender == null) {
+                          ShowDialog().showInfoDialog(
+                              context, 'Select gender preference');
+                        } else if (_currentRangeValues.start
+                            .round()
+                            .toString()
+                            .isEmpty) {
+                          ShowDialog()
+                              .showInfoDialog(context, 'Select minimum age');
+                        } else if (_currentRangeValues.end
+                            .round()
+                            .toString()
+                            .isEmpty) {
+                          ShowDialog()
+                              .showInfoDialog(context, 'Select maximum age');
+                        } else if (selectedActivities.isEmpty) {
+                          ShowDialog()
+                              .showInfoDialog(context, 'Please select interest');
+                        } else if (selectedActivities.length < 5) {
+                          print('selectedActivities');
+                          print(selectedActivities);
+                          print(selectedActivities.length);
+                          ShowDialog().showInfoDialog(
+                              context, 'Please select minimum 5 interest');
+                        } else if (bioTextController.text.isEmpty) {
+                          ShowDialog().showInfoDialog(
+                              context, 'Please write about yourself');
+                        }  else if (images.isEmpty) {
+                          ShowDialog().showInfoDialog(
+                              context, 'Please add photos');
+                        } else if (images.length<3) {
+                          ShowDialog().showInfoDialog(
+                              context, 'Please select minimum 3 photos');
+                        } else if (isYes == false && isNo == false) {
+                          ShowDialog().showInfoDialog(context,
+                              'check the box to clarify Is this your first application to Giigles');
+                        } else {
+                           // List<String> selectPref = _selectedDatingPrefrencesItems.map((item) => item.toString()).toList();
+                          var userProfileMap = {
+                            "gender_orientation": genderOrientation,
+                            "gender_preferences": gender,
+                            "age_min":
+                                _currentRangeValues.start.round().toString(),
+                            "age_max": _currentRangeValues.end.round().toString(),
+                            // "dating_preferencesq": _selectedDatingPrefrencesItems,
+                            // "interests":selectedActivities,
+                            "bio": bioTextController.text,
+                            // 'images': images,
+                            "is_first_time": isYes == true
+                                ? "True"
+                                : isNo == true
+                                    ? 'False'
+                                    : null,
+                          };
+                          print('filePath');
+                          print(filePath);
+                          final userProfileCreate = await userProfileCreation
+                              .userProfileCreation(userProfileMap,images,_selectedDatingPrefrencesItems,selectedActivities);
+                          if (userProfileCreate?.status == true) {
+                            Navigator.push(context, MaterialPageRoute(builder:(context) => WhiteWaitingEventsPage(),));
+                            ShowDialog().showSuccessDialog(
+                                context, userProfileCreation.successMessage);
+
+                          } else {
+                            ShowDialog().showErrorDialog(
+                                context, userProfileCreation.errorMessage);
+                          }
+                        }
+                      },
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                        child: Text('Submit',
+                            style: AppFonts.titleBold(
+                                color: AppColors.white, fontSize: 14)),
+                      ),
+                    ),
+                  ),
+                ),
+                SizedBox(
+                  height: kToolbarHeight,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}

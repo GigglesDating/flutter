@@ -1,0 +1,52 @@
+
+# Flutter/Dart specific
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+pubspec.lock
+
+# Build outputs
+build/
+ios/Flutter/Flutter.framework
+ios/Flutter/Flutter.podspec
+ios/Flutter/Generated.xcconfig
+ios/.symlinks/
+ios/Pods/
+ios/Podfile.lock
+android/.gradle/
+android/app/build/
+android/app/intermediates/
+android/local.properties
+android/.idea/
+android/app/.cxx/
+
+# VS Code settings
+.vscode/
+.idea/
+*.iml
+
+# IntelliJ / Android Studio settings
+*.iws
+*.idea/
+*.iml
+*.ipr
+
+# Miscellaneous
+.DS_Store
+*.log
+*.swp
+*.swo
+*.bak
+
+# Firebase related
+ios/GoogleService-Info.plist
+android/app/google-services.json
+
+# Coverage
+coverage/
+
+# Other
+*.lock
+*.backup
+

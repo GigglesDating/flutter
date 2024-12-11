@@ -1,7 +1,5 @@
 import 'dart:io';
 import 'dart:math';
-
-import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:giggles/constants/appColors.dart';
 import 'package:giggles/constants/appFonts.dart';
@@ -11,6 +9,7 @@ import 'package:hyperkyc_flutter/hyperkyc_flutter.dart';
 import 'package:hyperkyc_flutter/hyperkyc_result.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../constants/utils/show_dialog.dart';
 import '../../../network/auth_provider.dart';
@@ -49,11 +48,17 @@ class _AadharVerificationPage extends State<AadharVerificationPage>
 
   String getRandomString(int length) => String.fromCharCodes(Iterable.generate(
       length, (_) => _chars.codeUnitAt(_rnd.nextInt(_chars.length))));
+ 
+  Future<void> saveLastScreen() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('lastScreen', 'signUpVerified');
+  }
 
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
+    saveLastScreen();
     // initializeCamera();
     final transactionId = 'giggles' + getRandomString(10);
     hyperKycConfig = HyperKycConfig.fromAppIdAppKey(
@@ -100,13 +105,15 @@ class _AadharVerificationPage extends State<AadharVerificationPage>
       case HyperKycStatus.autoApproved:
         Future.microtask(() async {
           // Fetch data when the screen appears
-          var map={
-            'aadhaar_data':result.details,
+          var map = {
+            'aadhaar_data': result.details,
           };
           print('result.details');
           print(result.details);
-          Provider.of<AuthProvider>(context, listen: false).postAadharData(map).then(
-                (value) {
+          Provider.of<AuthProvider>(context, listen: false)
+              .postAadharData(map)
+              .then(
+            (value) {
               if (value == true) {
                 print('value');
                 print(value);
@@ -114,14 +121,17 @@ class _AadharVerificationPage extends State<AadharVerificationPage>
                   Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) =>  AadharVerificationResultPage(
+                        builder: (context) => AadharVerificationResultPage(
                           resultImageUrl: 'assets/icons/success_icon.svg',
                           resultButtonText: 'Continue',
                           resultStatus: 'Successful',
-                          resultDescription: 'Aadhar verification is complete!  Go ahead and Personalize your profile',
+                          resultDescription:
+                              'Aadhar verification is complete!  Go ahead and Personalize your profile',
                           onPressed: () async {
-                            final success =
-                                await Provider.of<AuthProvider>(context, listen: false).fetchUserInterestList();
+                            final success = await Provider.of<AuthProvider>(
+                                    context,
+                                    listen: false)
+                                .fetchUserInterestList();
                             if (success?.status == true) {
                               print('success?.data');
                               print(success?.data);
@@ -130,11 +140,12 @@ class _AadharVerificationPage extends State<AadharVerificationPage>
                                     context,
                                     MaterialPageRoute(
                                       builder: (context) =>
-                                          UserProfileCreationPage(userInterestList: success?.data,),
+                                          UserProfileCreationPage(
+                                        userInterestList: success?.data,
+                                      ),
                                       // VideoIntroPage(videoUrl: success?.data?.introVideo,),
                                     ));
                               });
-
                             }
                             // Navigator.push(
                             //     context,
@@ -144,48 +155,45 @@ class _AadharVerificationPage extends State<AadharVerificationPage>
                         ),
                       ));
                 });
-              }else{
-                ShowDialog()
-                    .showErrorDialog(
-                    context,
-                    'Something went wrong');
+              } else {
+                ShowDialog().showErrorDialog(context, 'Something went wrong');
               }
             },
           );
         });
 
-
       case HyperKycStatus.autoDeclined:
       // workflow successful
 
       case HyperKycStatus.needsReview:
-      Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) =>  AadharVerificationResultPage(
-              resultImageUrl: 'assets/icons/inreview_icon.svg',
-              resultButtonText: 'Retry',
-              resultStatus: 'InReview',
-              resultDescription: 'Verification pending.  We may need additional information from you to complete the process, write to us at support @giglesplatonicdating.com',
-              onPressed: () {
-                Navigator.pop(context);
-                startKYCProcess();
-              },
-            ),
-          ));
+        Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => AadharVerificationResultPage(
+                resultImageUrl: 'assets/icons/inreview_icon.svg',
+                resultButtonText: 'Retry',
+                resultStatus: 'InReview',
+                resultDescription:
+                    'Verification pending.  We may need additional information from you to complete the process, write to us at support @giglesplatonicdating.com',
+                onPressed: () {
+                  Navigator.pop(context);
+                  startKYCProcess();
+                },
+              ),
+            ));
       case HyperKycStatus.error:
         Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (context) =>  AadharVerificationResultPage(
+              builder: (context) => AadharVerificationResultPage(
                 resultImageUrl: 'assets/icons/failed_icon.svg',
                 resultButtonText: 'Retry',
                 resultStatus: 'Failed',
-                resultDescription: 'Verification failed couldn’t verify your identity. Make sure everything is correct and try again',
+                resultDescription:
+                    'Verification failed couldn’t verify your identity. Make sure everything is correct and try again',
                 onPressed: () {
                   Navigator.pop(context);
                   startKYCProcess();
-
                 },
               ),
             ));
@@ -204,10 +212,8 @@ class _AadharVerificationPage extends State<AadharVerificationPage>
         // user cancelled
         print('user manualdeclined');
       default:
-        Navigator.push(
-            context,
-            MaterialPageRoute(
-                builder: (context) => AadharVerificationPage()));
+        Navigator.push(context,
+            MaterialPageRoute(builder: (context) => AadharVerificationPage()));
     }
   }
 
@@ -256,12 +262,12 @@ class _AadharVerificationPage extends State<AadharVerificationPage>
   @override
   Widget build(BuildContext context) {
     return WillPopScope(
-      onWillPop: () async{
+      onWillPop: () async {
         return false;
       },
       child: Scaffold(
         backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      // appBar: AppBar(),
+        // appBar: AppBar(),
         body: SingleChildScrollView(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.center,
@@ -375,7 +381,8 @@ class _AadharVerificationPage extends State<AadharVerificationPage>
               Text(
                 'Verify Your Identity',
                 style: AppFonts.titleBold(
-                    color: Theme.of(context).colorScheme.tertiary, fontSize: 24),
+                    color: Theme.of(context).colorScheme.tertiary,
+                    fontSize: 24),
               ),
 
               const SizedBox(
@@ -383,7 +390,8 @@ class _AadharVerificationPage extends State<AadharVerificationPage>
               ),
               Padding(
                 padding: const EdgeInsets.all(16.0),
-                child: Text('All our members are required to verify their profile with Aadhar, to ensure authentic and secure connections at Giggles. With your consent, we retrieve your identity details via DigiLocker, to maintain a safe and trusted community. Rest assured, your data is safe.',
+                child: Text(
+                  'All our members are required to verify their profile with Aadhar, to ensure authentic and secure connections at Giggles. With your consent, we retrieve your identity details via DigiLocker, to maintain a safe and trusted community. Rest assured, your data is safe.',
                   style: AppFonts.titleRegular(
                       color: Theme.of(context).colorScheme.tertiary,
                       fontSize: 16),

@@ -1,7 +1,10 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:giggles/constants/appColors.dart';
 import 'package:giggles/constants/appFonts.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class AadharVerificationResultPage extends StatefulWidget {
   String resultStatus;
@@ -29,8 +32,15 @@ class _AadharVerificationResultPage
     extends State<AadharVerificationResultPage> {
   @override
   void initState() {
-    // TODO: implement initState
     super.initState();
+    check();
+  }
+
+  check() async {
+    if (widget.resultStatus == 'Successful') {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('lastScreen','digiCheck');
+    }
   }
 
   @override
@@ -41,7 +51,7 @@ class _AadharVerificationResultPage
   @override
   Widget build(BuildContext context) {
     return WillPopScope(
-      onWillPop: () async{
+      onWillPop: () async {
         return false;
       },
       child: Scaffold(

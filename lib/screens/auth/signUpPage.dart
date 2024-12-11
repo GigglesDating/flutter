@@ -1,16 +1,20 @@
 import 'dart:io';
 
 import 'package:awesome_snackbar_content/awesome_snackbar_content.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:giggles/constants/appColors.dart';
 import 'package:giggles/constants/appFonts.dart';
 import 'package:giggles/constants/utils/show_dialog.dart';
 import 'package:giggles/constants/utils/snackbar_popup.dart';
+import 'package:giggles/screens/auth/privacy.dart';
+import 'package:giggles/screens/auth/terms_and_condition.dart';
 import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../network/auth_provider.dart';
 import 'aadhar_verification/adhar_verification_page.dart';
@@ -34,6 +38,17 @@ class _SignUPPage extends State<SignUPPage> {
   TextEditingController genderController = TextEditingController();
 
   ThemeMode _themeMode = ThemeMode.system;
+
+  Future<void> saveLastScreen() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('lastScreen', 'otpVerified');
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    saveLastScreen();
+  }
 
   String? _gender;
   String? city;
@@ -386,13 +401,11 @@ class _SignUPPage extends State<SignUPPage> {
                         style: AppFonts.titleMedium(color: AppColors.white),
                         keyboardType: TextInputType.emailAddress,
                         validator: (value) {
-                          if (value!.isEmpty) {
+                          if (value == null || value.isEmpty) {
                             return "Please enter your email address";
-                          } else if ((!RegExp(
-                                  r'^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$')
-                              .hasMatch(value))) {
-                            return "Please enter a valid email address";
-                          } else if (!value.endsWith(".com")) {
+                          } else if (!RegExp(
+                                  r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$")
+                              .hasMatch(value)) {
                             return "Please enter a valid email address";
                           }
                           return null;
@@ -406,15 +419,14 @@ class _SignUPPage extends State<SignUPPage> {
                           filled: true,
                           fillColor: AppColors.signUpTextFieldColor,
                           border: OutlineInputBorder(
-                              borderRadius:
-                                  BorderRadius.all(Radius.circular(22)),
-                              borderSide: BorderSide(color: AppColors.white)),
+                            borderRadius: BorderRadius.all(Radius.circular(22)),
+                            borderSide: BorderSide(color: AppColors.white),
+                          ),
                           focusedBorder: OutlineInputBorder(
-                              borderRadius:
-                                  BorderRadius.all(Radius.circular(22)),
-                              borderSide: BorderSide(color: AppColors.white)),
+                            borderRadius: BorderRadius.all(Radius.circular(22)),
+                            borderSide: BorderSide(color: AppColors.white),
+                          ),
                           enabledBorder: const OutlineInputBorder(
-                            // Border when enabled
                             borderSide: BorderSide(color: AppColors.white),
                             borderRadius: BorderRadius.all(Radius.circular(22)),
                           ),
@@ -424,6 +436,7 @@ class _SignUPPage extends State<SignUPPage> {
                           ),
                         ),
                       ),
+
                       SizedBox(
                         height: 22,
                       ),
@@ -619,26 +632,109 @@ class _SignUPPage extends State<SignUPPage> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Checkbox(
-                            checkColor: AppColors.white,
-                            activeColor: AppColors.checkboxFillColor,
-                            // isError: true,
-                            value: isAgree,
-                            side: BorderSide(
-                                color: AppColors.checkboxFillColor, width: 2),
-                            visualDensity:
-                                VisualDensity(horizontal: 1, vertical: -4),
-                            onChanged: (value) {
+                          GestureDetector(
+                            onTap: () {
                               setState(() {
-                                isAgree = value!;
+                                isAgree = !isAgree;
                               });
                             },
+                            child: Row(
+                              children: [
+                                Checkbox(
+                                  checkColor: AppColors.white,
+                                  activeColor: AppColors.checkboxFillColor,
+                                  value: isAgree,
+                                  side: BorderSide(
+                                    color: AppColors.checkboxFillColor,
+                                    width: 2,
+                                  ),
+                                  visualDensity: VisualDensity(
+                                      horizontal: 1, vertical: -4),
+                                  onChanged: (value) {
+                                    setState(() {
+                                      isAgree = value!;
+                                    });
+                                  },
+                                ),
+                                Text(
+                                  'I agree to verify myself\nwith aadhar',
+                                  style: AppFonts.titleRegular(
+                                      color: AppColors.white),
+                                ),
+                              ],
+                            ),
                           ),
-                          Text('I agree to verify myself\nwith aadhar',
-                              style:
-                                  AppFonts.titleRegular(color: AppColors.white))
                         ],
                       ),
+                      SizedBox(height: 20),
+                      RichText(
+                        textAlign: TextAlign.center,
+                        text: TextSpan(
+                          children: [
+                            TextSpan(
+                              text:
+                                  'By using this application you agree with our ',
+                            ),
+                            TextSpan(
+                              text: 'Terms of use',
+                              style: TextStyle(
+                                decoration: TextDecoration.underline,
+                              ),
+                              recognizer: TapGestureRecognizer()
+                                ..onTap = () {
+                                  Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) =>
+                                            TermsPrivacyScreen(),
+                                      ));
+                                },
+                            ),
+                            TextSpan(
+                                text: ' & ',
+                                recognizer: TapGestureRecognizer()),
+                            TextSpan(
+                              text: 'Privacy Policy',
+                              style: TextStyle(
+                                decoration: TextDecoration.underline,
+                              ),
+                              recognizer: TapGestureRecognizer()
+                                ..onTap = () {
+                                  Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) => PrivacyPolicy(),
+                                      ));
+                                },
+                            ),
+                          ],
+                        ),
+                      ),
+                      // Row(
+                      //   mainAxisAlignment: MainAxisAlignment.start,
+                      //   crossAxisAlignment: CrossAxisAlignment.start,
+                      //   mainAxisSize: MainAxisSize.min,
+                      //   children: [
+                      //     Checkbox(
+                      //       checkColor: AppColors.white,
+                      //       activeColor: AppColors.checkboxFillColor,
+                      //       // isError: true,
+                      //       value: isAgree,
+                      //       side: BorderSide(
+                      //           color: AppColors.checkboxFillColor, width: 2),
+                      //       visualDensity:
+                      //           VisualDensity(horizontal: 1, vertical: -4),
+                      //       onChanged: (value) {
+                      //         setState(() {
+                      //           isAgree = value!;
+                      //         });
+                      //       },
+                      //     ),
+                      //     Text('I agree to verify myself\nwith aadhar',
+                      //         style:
+                      //             AppFonts.titleRegular(color: AppColors.white))
+                      //   ],
+                      // ),
                       SizedBox(
                         height: 22,
                       ),
@@ -659,70 +755,79 @@ class _SignUPPage extends State<SignUPPage> {
                             ),
                             onPressed: userProvider.isLoading
                                 ? null
-                                :
-                            () async {
-                              if (signupFormKey.currentState?.validate() ??
-                                  false) {
-                                if (_gender == null) {
-                                  ShowDialog().showInfoDialog(context,'Select Gender');
-                                } else if (city == null) {
-                                  ShowDialog().showInfoDialog(context,'Select City');
-                                } else if (_selectedDate == null) {
-                                  ShowDialog().showInfoDialog(context,'Select DOB');
-                                } else if (isAgree == false) {
-                                  ShowDialog().showInfoDialog(context,'Agree the Terms');
-                                } else {
-                                  var signUpMap = {
-                                    'first_name': firstNameController.text,
-                                    'email': emailController.text,
-                                    'last_name': lastNameController.text,
-                                    'dob': DateFormat('yyyy-MM-dd')
-                                        .format(_selectedDate!),
-                                    'city': city,
-                                    'gender': _gender,
-                                    'is_agree': isAgree,
-                                  };
-                                  print('signUpMap');
-                                  print(signUpMap);
-                                  final success =
-                                      await userProvider.signUp(signUpMap);
-                                  print(success);
-                                  print(success.runtimeType);
-                                  print(success?.message);
-                                  if (success?.status == true) {
-                                    Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder: (context) =>
-                                              const AadharVerificationPage(),
-                                        ));
-                                  } else {
-                                    // SnackBarHelper.showSuccess(context, message: userProvider.errorMessage);
-                                    ShowDialog().showErrorDialog(context,userProvider.errorMessage);
-                                  }
-                                }
-                              } else {
-                                // _showErrorDialog('userProvider.errorMessage');
-                              }
-
-                            },
-                            child: userProvider.isLoading?SizedBox(
-                              width: 40,
-                              height: 40,
-                              child: CircularProgressIndicator(
-                                color: AppColors.primary,
-                                strokeWidth: 2,
-                              ),
-                            ):Padding(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 16.0, vertical: 0),
-                              child: Text(
-                                'JOIN',
-                                style: AppFonts.titleBold(
-                                  color: Theme.of(context).colorScheme.primary,
-                                ),
-                              ),
-                            ),
+                                : () async {
+                                    if (signupFormKey.currentState
+                                            ?.validate() ??
+                                        false) {
+                                      if (_gender == null) {
+                                        ShowDialog().showInfoDialog(
+                                            context, 'Select Gender');
+                                      } else if (city == null) {
+                                        ShowDialog().showInfoDialog(
+                                            context, 'Select City');
+                                      } else if (_selectedDate == null) {
+                                        ShowDialog().showInfoDialog(
+                                            context, 'Select DOB');
+                                      } else if (isAgree == false) {
+                                        ShowDialog().showInfoDialog(
+                                            context, 'Agree the Terms');
+                                      } else {
+                                        var signUpMap = {
+                                          'first_name':
+                                              firstNameController.text,
+                                          'email': emailController.text,
+                                          'last_name': lastNameController.text,
+                                          'dob': DateFormat('yyyy-MM-dd')
+                                              .format(_selectedDate!),
+                                          'city': city,
+                                          'gender': _gender,
+                                          'is_agree': isAgree,
+                                        };
+                                        print('signUpMap');
+                                        print(signUpMap);
+                                        final success = await userProvider
+                                            .signUp(signUpMap);
+                                        print(success);
+                                        print(success.runtimeType);
+                                        print(success?.message);
+                                        if (success?.status == true) {
+                                          Navigator.push(
+                                              context,
+                                              MaterialPageRoute(
+                                                builder: (context) =>
+                                                    const AadharVerificationPage(),
+                                              ));
+                                        } else {
+                                          // SnackBarHelper.showSuccess(context, message: userProvider.errorMessage);
+                                          ShowDialog().showErrorDialog(context,
+                                              userProvider.errorMessage);
+                                        }
+                                      }
+                                    } else {
+                                      // _showErrorDialog('userProvider.errorMessage');
+                                    }
+                                  },
+                            child: userProvider.isLoading
+                                ? SizedBox(
+                                    width: 40,
+                                    height: 40,
+                                    child: CircularProgressIndicator(
+                                      color: AppColors.primary,
+                                      strokeWidth: 2,
+                                    ),
+                                  )
+                                : Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 16.0, vertical: 0),
+                                    child: Text(
+                                      'JOIN',
+                                      style: AppFonts.titleBold(
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .primary,
+                                      ),
+                                    ),
+                                  ),
                           ),
                         ),
                       ),

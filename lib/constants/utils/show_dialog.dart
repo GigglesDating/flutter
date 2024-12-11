@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:giggles/constants/appColors.dart';
 import 'package:giggles/constants/appFonts.dart';
+import 'package:giggles/screens/user/white_waiting_events_page.dart';
 
 class ShowDialog {
   //show Error Dialog
-  void showInfoDialogPopUp(BuildContext context, String message,void Function() onPressed) {
+  void showInfoDialogPopUp(
+      BuildContext context, String message, void Function() onPressed) {
     showDialog(
       barrierDismissible: false,
       context: context,
@@ -27,10 +29,9 @@ class ShowDialog {
                 style: ElevatedButton.styleFrom(
                   // backgroundColor: AppColors.primary,
                   shape: RoundedRectangleBorder(
-                    // Add rounded corners
-                    borderRadius: BorderRadius.circular(12.0),
-                    side: BorderSide(width: 1,color: AppColors.primary)
-                  ),
+                      // Add rounded corners
+                      borderRadius: BorderRadius.circular(12.0),
+                      side: BorderSide(width: 1, color: AppColors.primary)),
                 ),
                 onPressed: () {
                   Navigator.of(context).pop();
@@ -59,6 +60,7 @@ class ShowDialog {
       },
     );
   }
+
   void showInfoDialog(BuildContext context, String message) {
     showDialog(
       context: context,
@@ -145,19 +147,20 @@ class ShowDialog {
   void showSuccessDialog(BuildContext context, String message) {
     showDialog(
       context: context,
-        barrierDismissible: false,
-
+      barrierDismissible: false,
       builder: (BuildContext context) {
         return AlertDialog(
-
           title: Icon(
             Icons.check_circle,
             color: AppColors.success,
             size: 56,
           ),
-          content: Text(message, textAlign: TextAlign.left,
+          content: Text(
+            message,
+            textAlign: TextAlign.left,
             style: AppFonts.titleMedium(
-                color: Theme.of(context).colorScheme.tertiary, fontSize: 16),),
+                color: Theme.of(context).colorScheme.tertiary, fontSize: 16),
+          ),
           actions: [
             ElevatedButton(
                 style: ElevatedButton.styleFrom(
@@ -169,6 +172,11 @@ class ShowDialog {
                 ),
                 onPressed: () {
                   Navigator.of(context).pop();
+                  // Navigator.pushReplacement(
+                  //   context,
+                  //   MaterialPageRoute(
+                  //       builder: (context) => WhiteWaitingEventsPage()),
+                  // );
                 },
                 child: Text(
                   'Ok',

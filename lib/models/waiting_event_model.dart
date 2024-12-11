@@ -60,7 +60,6 @@ WaitingEventModel copyWith({  bool? status,
 /// event_image : "http://192.168.29.109:8000/media/home/event/event_image/home/event/event_image/home/event/event_image/home/event/event_image/home/event/event_image/home/event/event_image/home/event/event_image/home/event/event_image/stock-03_xlxnBfT.jpg"
 /// event_location : "https://maps.app.goo.gl/NEfWWimqzDUsRWXq6"
 /// is_like : false
-
 class WaitingEventData {
   WaitingEventData(
       {
@@ -74,7 +73,9 @@ class WaitingEventData {
       num? discountPrice, 
       String? eventImage, 
       String? eventLocation, 
-      bool? isLike,}
+      bool? isLike, 
+      bool? isRegistered, // Added new field
+      }
       ){
     _id = id;
     _eventName = eventName;
@@ -87,7 +88,8 @@ class WaitingEventData {
     _eventImage = eventImage;
     _eventLocation = eventLocation;
     _isLike = isLike;
-}
+    _isRegistered = isRegistered; // Initialize new field
+  }
 
   WaitingEventData.fromJson(dynamic json) {
     _id = json['id'];
@@ -101,7 +103,9 @@ class WaitingEventData {
     _eventImage = json['event_image'];
     _eventLocation = json['event_location'];
     _isLike = json['is_like'];
+    _isRegistered = json['is_registered']; // Parse new field from JSON
   }
+
   num? _id;
   String? _eventName;
   num? _totalSeat;
@@ -113,29 +117,36 @@ class WaitingEventData {
   String? _eventImage;
   String? _eventLocation;
   bool? _isLike;
-  WaitingEventData copyWith({  num? id,
-  String? eventName,
-  num? totalSeat,
-  num? currentSeat,
-  String? eventType,
-  String? eventDateAndTime,
-  num? price,
-  num? discountPrice,
-  String? eventImage,
-  String? eventLocation,
-  bool? isLike,
-}) => WaitingEventData(  id: id ?? _id,
-  eventName: eventName ?? _eventName,
-  totalSeat: totalSeat ?? _totalSeat,
-  currentSeat: currentSeat ?? _currentSeat,
-  eventType: eventType ?? _eventType,
-  eventDateAndTime: eventDateAndTime ?? _eventDateAndTime,
-  price: price ?? _price,
-  discountPrice: discountPrice ?? _discountPrice,
-  eventImage: eventImage ?? _eventImage,
-  eventLocation: eventLocation ?? _eventLocation,
-  isLike: isLike ?? _isLike,
-);
+  bool? _isRegistered; // New private field
+
+  WaitingEventData copyWith({
+    num? id,
+    String? eventName,
+    num? totalSeat,
+    num? currentSeat,
+    String? eventType,
+    String? eventDateAndTime,
+    num? price,
+    num? discountPrice,
+    String? eventImage,
+    String? eventLocation,
+    bool? isLike,
+    bool? isRegistered, // Added new field in copyWith
+  }) => WaitingEventData(
+    id: id ?? _id,
+    eventName: eventName ?? _eventName,
+    totalSeat: totalSeat ?? _totalSeat,
+    currentSeat: currentSeat ?? _currentSeat,
+    eventType: eventType ?? _eventType,
+    eventDateAndTime: eventDateAndTime ?? _eventDateAndTime,
+    price: price ?? _price,
+    discountPrice: discountPrice ?? _discountPrice,
+    eventImage: eventImage ?? _eventImage,
+    eventLocation: eventLocation ?? _eventLocation,
+    isLike: isLike ?? _isLike,
+    isRegistered: isRegistered ?? _isRegistered, // Handle new field in copyWith
+  );
+
   num? get id => _id;
   String? get eventName => _eventName;
   num? get totalSeat => _totalSeat;
@@ -147,6 +158,7 @@ class WaitingEventData {
   String? get eventImage => _eventImage;
   String? get eventLocation => _eventLocation;
   bool? get isLike => _isLike;
+  bool? get isRegistered => _isRegistered; // Getter for new field
 
   Map<String, dynamic> toJson() {
     final map = <String, dynamic>{};
@@ -161,7 +173,7 @@ class WaitingEventData {
     map['event_image'] = _eventImage;
     map['event_location'] = _eventLocation;
     map['is_like'] = _isLike;
+    map['is_registered'] = _isRegistered; // Added new field to JSON
     return map;
   }
-
 }

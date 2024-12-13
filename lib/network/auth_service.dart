@@ -52,8 +52,9 @@ class AuthService {
         final responseData = json.decode(response.body);
 
         // Save the last screen for navigation tracking
-        final prefs = await SharedPreferences.getInstance();
-        await prefs.setString('lastScreen', 'otpVerified');
+        // final prefs = await SharedPreferences.getInstance();
+        await SharedPref.otpVerifiedScreen();
+        // await prefs.setString('lastScreen', 'otpVerified');
 
         return Otpverify.fromJson(responseData);
       } else {
@@ -189,8 +190,9 @@ class AuthService {
     );
     if (response.statusCode == 200) {
       print("heyyy ${response.statusCode}");
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setString('lastScreen', 'signUpVerified');
+      // final prefs = await SharedPreferences.getInstance();
+      await SharedPref.signUpVerifiedScreenSave();
+      // await prefs.setString('lastScreen', 'signUpVerified');
       return UserModel.fromJson(jsonDecode(response.body));
     } else if (response.statusCode == 400) {
       userModel.detail = jsonDecode(response.body)['message'];

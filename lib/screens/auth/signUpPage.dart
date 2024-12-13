@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:giggles/constants/appColors.dart';
 import 'package:giggles/constants/appFonts.dart';
+import 'package:giggles/constants/database/shared_preferences_service.dart';
 import 'package:giggles/constants/utils/show_dialog.dart';
 import 'package:giggles/constants/utils/snackbar_popup.dart';
 import 'package:giggles/screens/auth/privacy.dart';
@@ -40,8 +41,9 @@ class _SignUPPage extends State<SignUPPage> {
   ThemeMode _themeMode = ThemeMode.system;
 
   Future<void> saveLastScreen() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('lastScreen', 'otpVerified');
+    await SharedPref.otpVerifiedScreen();
+    // final prefs = await SharedPreferences.getInstance();
+    // await prefs.setString('lastScreen', 'otpVerified');
   }
 
   @override

@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:giggles/constants/appColors.dart';
 import 'package:giggles/constants/appFonts.dart';
+import 'package:giggles/constants/database/shared_preferences_service.dart';
 import 'package:giggles/constants/utils/show_dialog.dart';
 import 'package:giggles/screens/auth/signUpPage.dart';
 import 'package:giggles/screens/user/user_photos_videos_page.dart';
@@ -184,8 +185,7 @@ class _UserProfileCreationPage extends State<UserProfileCreationPage> {
   bool isLoading = true;
 
   Future<void> saveLastScreen() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('lastScreen', 'digiCheck');
+    await SharedPref.digiScreenSave();
   }
 
   @override
@@ -995,8 +995,9 @@ class _UserProfileCreationPage extends State<UserProfileCreationPage> {
                                   _selectedDatingPrefrencesItems,
                                   selectedActivities);
                           if (userProfileCreate?.status == true) {
-                            final prefs = await SharedPreferences.getInstance();
-                            await prefs.setString('lastScreen', 'eventPage');
+                            // final prefs = await SharedPreferences.getInstance();
+                            await SharedPref.eventScreenSave();
+                            // await prefs.setString('lastScreen', 'eventPage');
                             Navigator.push(
                                 context,
                                 MaterialPageRoute(

@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:giggles/constants/appColors.dart';
 import 'package:giggles/constants/appFonts.dart';
+import 'package:giggles/constants/database/shared_preferences_service.dart';
 import 'package:giggles/screens/user/user_profile_creation_page.dart';
 import 'package:hyperkyc_flutter/hyperkyc_config.dart';
 import 'package:hyperkyc_flutter/hyperkyc_flutter.dart';
@@ -48,10 +49,11 @@ class _AadharVerificationPage extends State<AadharVerificationPage>
 
   String getRandomString(int length) => String.fromCharCodes(Iterable.generate(
       length, (_) => _chars.codeUnitAt(_rnd.nextInt(_chars.length))));
- 
+
   Future<void> saveLastScreen() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('lastScreen', 'signUpVerified');
+    // final prefs = await SharedPreferences.getInstance();
+    // await prefs.setString('lastScreen', 'signUpVerified');
+    await SharedPref.signUpVerifiedScreenSave();
   }
 
   @override

@@ -71,8 +71,9 @@ class _WhiteWaitingEventsPage extends State<WhiteWaitingEventsPage> {
   }
 
   Future<void> saveLastScreen() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('lastScreen', 'eventPage');
+    await SharedPref.eventScreenSave();
+    // final prefs = await SharedPreferences.getInstance();
+    // await prefs.setString('lastScreen', 'eventPage');
   }
 
   @override
@@ -204,8 +205,8 @@ class _WhiteWaitingEventsPage extends State<WhiteWaitingEventsPage> {
                       final success =
                           await registerProvider.fetchEventVideoData();
                       if (success?.status == true) {
-                        final introVideo = success
-                            ?.data?.waitingListVideo; // Safely access introVideo
+                        final introVideo = success?.data
+                            ?.waitingListVideo; // Safely access introVideo
                         if (introVideo != null && introVideo.isNotEmpty) {
                           print("Video URL: $introVideo");
                           Navigator.push(

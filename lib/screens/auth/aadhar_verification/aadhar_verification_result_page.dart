@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:giggles/constants/appColors.dart';
 import 'package:giggles/constants/appFonts.dart';
+import 'package:giggles/constants/database/shared_preferences_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class AadharVerificationResultPage extends StatefulWidget {
@@ -38,8 +39,9 @@ class _AadharVerificationResultPage
 
   check() async {
     if (widget.resultStatus == 'Successful') {
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setString('lastScreen','digiCheck');
+      await SharedPref.digiScreenSave();
+      // final prefs = await SharedPreferences.getInstance();
+      // await prefs.setString('lastScreen','digiCheck');
     }
   }
 

@@ -22,7 +22,6 @@ class _SplashPage extends State<SplashPage> {
     final token = prefs.getString('userToken');
     final lastScreen = prefs.getString('lastScreen');
 
-    print("Token: $token, LastScreen: $lastScreen");
 
     if (token != null) {
       if (lastScreen == 'eventPage') {

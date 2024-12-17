@@ -68,8 +68,8 @@ dependencies:
   hyperkyc_flutter: ^0.33.0
   html: ^0.15.5
   # device_preview: ^1.2.0
-
   # For Dating Part
+  alt_sms_autofill: ^1.0.0
 
   intl:
   country_picker:

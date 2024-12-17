@@ -1,11 +1,15 @@
 import 'dart:convert';
 import 'dart:io';
-
-import 'package:camera/camera.dart';
 import 'package:flutter/foundation.dart';
 import 'package:giggles/constants/database/shared_preferences_service.dart';
+import 'package:giggles/models/event_video.dart';
 import 'package:giggles/models/membership_count_model.dart';
+import 'package:giggles/models/otp_model.dart';
+import 'package:giggles/models/privacy_model.dart';
+import 'package:giggles/models/term_model.dart';
 import 'package:giggles/models/user_profile_creation_model.dart';
+import 'package:giggles/screens/auth/privacy.dart';
+import 'package:giggles/screens/auth/privacy.dart';
 
 import '../models/intro_video_model.dart';
 import '../models/register_waitng_events_model.dart';
@@ -24,6 +28,7 @@ class AuthProvider extends ChangeNotifier {
   String _errorMessage = '';
   String _successMessage = '';
   UserModel? _user;
+  Otpverify? otpverifyUser;
 
   String get getIntorVideoUrl => introVideoUrl;
 
@@ -47,7 +52,9 @@ class AuthProvider extends ChangeNotifier {
       // if (_isLoading) return;
       _isLoading = true;
       notifyListeners();
+      print("hellooo");
       final userModel = await _authService.login(loginMap);
+      print("${userModel!.status}");
       _isLoading = false;
       print('userModel!.detail.toString()');
 
@@ -71,20 +78,51 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
-  Future<bool?> otpVerification(Map<String, dynamic> otpMap) async {
-    _isLoading = true;
-    notifyListeners();
-    final otpValidate = await _authService.otpValidate(otpMap);
-    _isLoading = false;
-    if (otpValidate == false) {
-      _errorMessage = 'Enter Valid  OTP';
-    } else {
-      _errorMessage = '';
-      // _user = otpValidate; // Store logged-in user data
+  Future<Otpverify?> otpVerify(Map<String, dynamic> loginMap) async {
+    try {
+      _isLoading = true;
+      notifyListeners();
+
+      print('Sending OTP Verify Request: $loginMap');
+
+      final userModel = await _authService.otpverify(loginMap);
+
+      _isLoading = false;
+      if (userModel != null && userModel.status == true) {
+        _successMessage = userModel.message ?? "OTP Verified Successfully";
+        otpverifyUser = userModel;
+
+        // Save details if needed
+        print('OTP Verification Successful: ${userModel.toJson()}');
+        print('Token: ${SharedPref().getTokenDetail()}');
+      } else {
+        _errorMessage = userModel?.message ?? 'OTP Verification Failed';
+      }
+
+      notifyListeners();
+      return userModel;
+    } catch (e) {
+      _isLoading = false;
+      _errorMessage = 'Something went wrong: $e';
+      notifyListeners();
+      return null;
     }
-    notifyListeners();
-    return otpValidate;
   }
+
+  // Future<bool?> otpVerification(Map<String, dynamic> otpMap) async {
+  //   _isLoading = true;
+  //   notifyListeners();
+  //   final otpValidate = await _authService.otpValidate(otpMap);
+  //   _isLoading = false;
+  //   if (otpValidate == false) {
+  //     _errorMessage = 'Enter Valid  OTP';
+  //   } else {
+  //     _errorMessage = '';
+  //     // _user = otpValidate; // Store logged-in user data
+  //   }
+  //   notifyListeners();
+  //   return otpValidate;
+  // }
 
   Future<bool?> postResendOTP() async {
     _isResendOTPLoading = true;
@@ -102,21 +140,43 @@ class AuthProvider extends ChangeNotifier {
     return otpValidate;
   }
 
+  Future<EventVideoModel?> fetchEventVideoData() async {
+    try {
+      _isLoading = true;
+      notifyListeners();
+
+      final fetchIntro = await _authService.fetchEventVideo();
+
+      _isLoading = false;
+      print('API Response: ${fetchIntro?.toJson()}'); // Debug the full response
+      if (fetchIntro == false) {
+        _errorMessage = 'Unable to fetch video';
+      } else {
+        _errorMessage = '';
+      }
+      notifyListeners();
+      return fetchIntro;
+    } catch (e) {
+      _isLoading = false;
+      _errorMessage = 'An error occurred: ${e.toString()}';
+      notifyListeners();
+      return null;
+    }
+  }
+
   Future<IntroVideoModel?> fetchIntroVideoData() async {
     try {
       _isLoading = true;
       notifyListeners();
 
       final fetchIntro = await _authService.fetchIntroVideo();
+
       _isLoading = false;
-      print('otpValidate');
-      print(fetchIntro);
-      print(fetchIntro.runtimeType);
+      print('API Response: ${fetchIntro?.toJson()}'); // Debug the full response
       if (fetchIntro == false) {
         _errorMessage = 'Unable to fetch video';
       } else {
         _errorMessage = '';
-        // _user = otpValidate; // Store logged-in user data
       }
       notifyListeners();
       return fetchIntro;
@@ -181,13 +241,16 @@ class AuthProvider extends ChangeNotifier {
   //  User Profile Creation
 
   Future<UserProfileCreationModel?> userProfileCreation(
-      Map<String, dynamic> userProfileMap,List<File> imageFiles ,List<String> prefrecList,List<String> interests) async {
+      Map<String, dynamic> userProfileMap,
+      List<File> imageFiles,
+      List<String> prefrecList,
+      List<String> interests) async {
     try {
       _isLoading = true;
       notifyListeners();
 
-      final userProfilecreation =
-          await _authService.postProfileCreationData(userProfileMap,imageFiles,prefrecList,interests);
+      final userProfilecreation = await _authService.postProfileCreationData(
+          userProfileMap, imageFiles, prefrecList, interests);
       _isLoading = false;
       if (userProfilecreation == null) {
         _errorMessage = userProfilecreation!.message.toString();
@@ -222,6 +285,54 @@ class AuthProvider extends ChangeNotifier {
       }
       notifyListeners();
       return membershipcount;
+    } catch (e) {
+      _isLoading = false;
+      _errorMessage = 'Something went wrong: ${e.toString()}';
+      notifyListeners();
+      return null;
+    }
+  }
+
+  Future<TermsOfUse?> termsOfUse() async {
+    try {
+      _isLoading = true;
+      notifyListeners();
+
+      final termsOfUse = await _authService.fetchTermsOfUse();
+      print("ayush1 ${termsOfUse}");
+      _isLoading = false;
+      if (termsOfUse == null) {
+        _errorMessage = termsOfUse!.message.toString();
+      } else {
+        _successMessage = termsOfUse.message.toString();
+        // _user = otpValidate;
+      }
+      notifyListeners();
+      return termsOfUse;
+    } catch (e) {
+      _isLoading = false;
+      _errorMessage = 'Something went wrong: ${e.toString()}';
+      notifyListeners();
+      return null;
+    }
+  }
+
+  Future<PrivacyPolicyModel?> PrivacyPolicy() async {
+    try {
+      _isLoading = true;
+      notifyListeners();
+
+      final termsOfUse = await _authService.fetchPrivacyUse();
+      print("ayush1 ${termsOfUse}");
+      _isLoading = false;
+      if (termsOfUse == null) {
+        _errorMessage = termsOfUse!.message.toString();
+      } else {
+        _successMessage = termsOfUse.message.toString();
+        // _user = otpValidate;
+      }
+      notifyListeners();
+      return termsOfUse;
     } catch (e) {
       _isLoading = false;
       _errorMessage = 'Something went wrong: ${e.toString()}';
@@ -286,6 +397,66 @@ class AuthProvider extends ChangeNotifier {
       return null;
     }
   }
+
+  Future<RegisterWaitngEventsModel?> waitingEventRegisterUser2(
+      Map<String, dynamic> eventMap) async {
+    try {
+      _isLoading = true;
+      notifyListeners();
+      final registerForEvents =
+          await _authService.registerWaitingEvents2(eventMap);
+      _isLoading = false;
+
+      print(registerForEvents?.status);
+      print(registerForEvents.runtimeType);
+      if (registerForEvents?.status == null) {
+        _errorMessage = registerForEvents!.detail.toString();
+      } else {
+        print('registerForEvents.runtimeType');
+        print(registerForEvents);
+        _successMessage = registerForEvents!.message.toString();
+
+        // _user = otpValidate;
+      }
+      notifyListeners();
+      return registerForEvents;
+    } catch (e) {
+      _isLoading = false;
+      _errorMessage = 'Something went wrong';
+      notifyListeners();
+      return null;
+    }
+  }
+
+  Future<RegisterWaitngEventsModel?> unRegisterUser(
+      Map<String, dynamic> eventMap) async {
+    try {
+      _isLoading = true;
+      notifyListeners();
+      final registerForEvents =
+          await _authService.registerWaitingEvents(eventMap);
+      _isLoading = false;
+
+      print(registerForEvents?.status);
+      print(registerForEvents.runtimeType);
+      if (registerForEvents?.status == null) {
+        _errorMessage = registerForEvents!.detail.toString();
+      } else {
+        print('registerForEvents.runtimeType');
+        print(registerForEvents);
+        _successMessage = registerForEvents!.message.toString();
+
+        // _user = otpValidate;
+      }
+      notifyListeners();
+      return registerForEvents;
+    } catch (e) {
+      _isLoading = false;
+      _errorMessage = 'Something went wrong';
+      notifyListeners();
+      return null;
+    }
+  }
   //  like/disliked to waiting events
 
   Future<WatingEventLikeModel?> likeWaitingEventsProvider(
@@ -311,14 +482,13 @@ class AuthProvider extends ChangeNotifier {
       return null;
     }
   }
+
   // delete user profile
-  Future<UserProfileDeleteModel?> deleteUserProfileProvider(
-    ) async {
+  Future<UserProfileDeleteModel?> deleteUserProfileProvider() async {
     try {
       _isLoading = true;
       notifyListeners();
-      final userProfileDelete =
-          await _authService.deleteUserProfile();
+      final userProfileDelete = await _authService.deleteUserProfile();
       _isLoading = false;
       print('userProfileDelete');
       print(userProfileDelete);
@@ -339,7 +509,7 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
-  Future<bool?> postAadharData(Map<String,dynamic> map) async {
+  Future<bool?> postAadharData(Map<String, dynamic> map) async {
     _isLoading = true;
     notifyListeners();
     final otpValidate = await _authService.postAadharDetails(map);
@@ -354,5 +524,4 @@ class AuthProvider extends ChangeNotifier {
     notifyListeners();
     return otpValidate;
   }
-
 }

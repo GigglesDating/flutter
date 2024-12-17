@@ -8,9 +8,9 @@ import 'package:giggles/constants/database/shared_preferences_service.dart';
 import 'package:giggles/constants/utils/show_dialog.dart';
 import 'package:giggles/network/auth_provider.dart';
 import 'package:giggles/screens/auth/signInPage.dart';
-import 'package:giggles/screens/subcription_plan/subscription_page.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../models/waiting_event_model.dart';
@@ -33,6 +33,8 @@ class _WhiteWaitingEventsPage extends State<WhiteWaitingEventsPage> {
   String membershipCount = '';
   List<bool> isLiked = [];
   List<WaitingEventData> waitingEventList = [];
+  bool? isRegister = false;
+
   List<String> imageUrlList = [
     "assets/images/stock_1.jpg",
     "assets/images/stock-03.jpg",
@@ -44,16 +46,47 @@ class _WhiteWaitingEventsPage extends State<WhiteWaitingEventsPage> {
 
   final _formKey = GlobalKey<FormState>();
 
+  void fetchData() async {
+    // Fetch membership count
+    Provider.of<AuthProvider>(context, listen: false).membershipCount().then(
+      (value) {
+        if (value?.status == true) {
+          setState(() {
+            membershipCount = value!.data!.totalUsers.toString();
+          });
+        }
+      },
+    );
+
+    // Fetch waiting events
+    Provider.of<AuthProvider>(context, listen: false).waitingEvents().then(
+      (value) {
+        if (value?.status == true) {
+          setState(() {
+            waitingEventList = value!.data!;
+          });
+        }
+      },
+    );
+  }
+
+  Future<void> saveLastScreen() async {
+    await SharedPref.eventScreenSave();
+    // final prefs = await SharedPreferences.getInstance();
+    // await prefs.setString('lastScreen', 'eventPage');
+  }
+
   @override
   void initState() {
     super.initState();
+    saveLastScreen();
     Future.microtask(() async {
       // Fetch data when the screen appears
       Provider.of<AuthProvider>(context, listen: false).membershipCount().then(
         (value) {
           if (value?.status == true) {
             setState(() {
-              membershipCount = value!.data!.membershipCount.toString();
+              membershipCount = value!.data!.totalUsers.toString();
             });
           }
         },
@@ -77,11 +110,12 @@ class _WhiteWaitingEventsPage extends State<WhiteWaitingEventsPage> {
       throw 'Could not launch $whatsappUrl';
     }
   }
+
   @override
   Widget build(BuildContext context) {
     final registerProvider = Provider.of<AuthProvider>(context);
     return WillPopScope(
-      onWillPop: ()async {
+      onWillPop: () async {
         return false;
       },
       child: Scaffold(
@@ -104,7 +138,7 @@ class _WhiteWaitingEventsPage extends State<WhiteWaitingEventsPage> {
                   ),
                 ),
               ),
-              const SizedBox(height: kToolbarHeight),
+              const SizedBox(height: kToolbarHeight * 0.6),
               Padding(
                 padding: const EdgeInsets.only(right: 20),
                 child: Align(
@@ -117,18 +151,26 @@ class _WhiteWaitingEventsPage extends State<WhiteWaitingEventsPage> {
                       backgroundColor: Colors.red,
                     ),
                     onPressed: () {
-                      ShowDialog().showInfoDialogPopUp(context, 'Are you sure want to delete your profile ?',() async {
+                      ShowDialog().showInfoDialogPopUp(context,
+                          'Be patient leaving now may mean a longer wait later. The best is worth the wait.',
+                          () async {
                         Navigator.of(context).pop();
-                       final success=await registerProvider.deleteUserProfileProvider();
-                       if(success?.status==true){
-                        await SharedPref().clearUserData();
-                         Navigator.push(context, MaterialPageRoute(builder: (context) => SigninPage(),));
-                         ShowDialog().showSuccessDialog(context, registerProvider.successMessage);
-                         // Navigator.push(context, MaterialPageRoute(builder: (context) => SigninPage(),));
-                       }else{
-
-                         ShowDialog().showErrorDialog(context, registerProvider.errorMessage);
-                       }
+                        final success =
+                            await registerProvider.deleteUserProfileProvider();
+                        if (success?.status == true) {
+                          await SharedPref().clearUserData();
+                          Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => SigninPage(),
+                              ));
+                          ShowDialog().showSuccessDialog(
+                              context, registerProvider.successMessage);
+                          // Navigator.push(context, MaterialPageRoute(builder: (context) => SigninPage(),));
+                        } else {
+                          ShowDialog().showErrorDialog(
+                              context, registerProvider.errorMessage);
+                        }
                       });
                     },
                     icon: const Icon(Icons.delete_rounded),
@@ -136,9 +178,11 @@ class _WhiteWaitingEventsPage extends State<WhiteWaitingEventsPage> {
                 ),
               ),
               Text(
-                membershipCount.length==2?'00$membershipCount':membershipCount,
+                membershipCount.length == 2
+                    ? '00$membershipCount'
+                    : membershipCount,
                 style: AppFonts.titleBold(
-                  fontSize: MediaQuery.of(context).size.width * 0.15,
+                  fontSize: MediaQuery.of(context).size.width * 0.14,
                   // fontWeight: FontWeight.bold,
                   color: AppColors.white,
                 ),
@@ -146,7 +190,7 @@ class _WhiteWaitingEventsPage extends State<WhiteWaitingEventsPage> {
               Text(
                 'waiting list',
                 style: AppFonts.titleRegular(
-                  fontSize: MediaQuery.of(context).size.width * 0.05,
+                  fontSize: MediaQuery.of(context).size.width * 0.04,
                   color: AppColors.sosbuttonBgColor,
                 ),
               ),
@@ -155,38 +199,86 @@ class _WhiteWaitingEventsPage extends State<WhiteWaitingEventsPage> {
                 alignment: Alignment.center,
                 child: IconButton(
                   color: AppColors.white,
-                  iconSize: 64,
+                  iconSize: 72,
                   onPressed: () async {
-                    final success = await registerProvider
-                        .fetchIntroVideoData();
-                    if (success?.status==true) {
-                      if(success!
-                          .data!.introVideo!.isNotEmpty){
-                        Navigator.push(
+                    try {
+                      final success =
+                          await registerProvider.fetchEventVideoData();
+                      if (success?.status == true) {
+                        final introVideo = success?.data
+                            ?.waitingListVideo; // Safely access introVideo
+                        if (introVideo != null && introVideo.isNotEmpty) {
+                          print("Video URL: $introVideo");
+                          Navigator.push(
                             context,
                             MaterialPageRoute(
                               builder: (context) => VideoIntroPage(
                                 value: true,
-                                videoUrl: success.data!.introVideo,
+                                videoUrl: introVideo,
                               ),
-                            ));
-
-                      }else{
-                        ShowDialog().showErrorDialog(context,
-                            registerProvider.errorMessage);
-
+                            ),
+                          );
+                        } else {
+                          print("Intro video not available");
+                          ShowDialog().showErrorDialog(
+                            context,
+                            registerProvider.errorMessage.isNotEmpty
+                                ? registerProvider.errorMessage
+                                : 'Intro video not available',
+                          );
+                        }
+                      } else {
+                        print("Failed to fetch intro video");
+                        ShowDialog().showErrorDialog(
+                          context,
+                          registerProvider.errorMessage.isNotEmpty
+                              ? registerProvider.errorMessage
+                              : 'Failed to fetch intro video',
+                        );
                       }
-
-
-                    }  else{
-                      ShowDialog().showErrorDialog(context,
-                          registerProvider.errorMessage);
+                    } catch (e) {
+                      print("Error occurred: $e");
+                      ShowDialog().showErrorDialog(
+                        context,
+                        'An unexpected error occurred. Please try again.',
+                      );
                     }
-
                   },
                   icon: const Icon(Icons.play_circle_outline_rounded),
                 ),
               ),
+              // Align(
+              //   alignment: Alignment.center,
+              //   child: IconButton(
+              //     color: AppColors.white,
+              //     iconSize: 72,
+              //     onPressed: () async {
+              //       final success =
+              //           await registerProvider.fetchIntroVideoData(false);
+              //       if (success?.status == true) {
+              //         if (success!.data!.introVideo!.isNotEmpty) {
+              //           print("yesss");
+              //           Navigator.push(
+              //               context,
+              //               MaterialPageRoute(
+              //                 builder: (context) => VideoIntroPage(
+              //                   value: true,
+              //                   videoUrl: success.data!.introVideo,
+              //                 ),
+              //               ));
+              //         } else {
+              //           print("chuuu");
+              //           ShowDialog().showErrorDialog(
+              //               context, registerProvider.errorMessage);
+              //         }
+              //       } else {
+              //         ShowDialog().showErrorDialog(
+              //             context, registerProvider.errorMessage);
+              //       }
+              //     },
+              //     icon: const Icon(Icons.play_circle_outline_rounded),
+              //   ),
+              // ),
               Expanded(
                 child: Container(
                   width: double.infinity,
@@ -252,23 +344,28 @@ class _WhiteWaitingEventsPage extends State<WhiteWaitingEventsPage> {
                               enableInfiniteScroll: false,
                             ),
                             itemBuilder: (ctx, index, realIdx) {
-                              for (int i = 0; i < waitingEventList.length; i++) {
-                                isLiked
-                                    .add(waitingEventList[index].isLike ?? false);
+                              // print("asdasdad ${waitingEventList[index].isRegistered}");
+                              for (int i = 0;
+                                  i < waitingEventList.length;
+                                  i++) {
+                                isLiked.add(
+                                    waitingEventList[index].isLike ?? false);
                                 return Container(
                                   padding: const EdgeInsets.all(15),
                                   decoration: BoxDecoration(
                                     // color: Theme.of(context).brightness==Brightness.light?AppColors.black:AppColors.black,
                                     borderRadius: BorderRadius.circular(14),
                                     image: DecorationImage(
-                                      image: NetworkImage(waitingEventList[index]
-                                          .eventImage
-                                          .toString()),
+                                      image: NetworkImage(
+                                          waitingEventList[index]
+                                              .eventImage
+                                              .toString()),
                                       fit: BoxFit.cover,
                                     ),
                                   ),
                                   child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     mainAxisAlignment: MainAxisAlignment.start,
                                     children: [
                                       Row(
@@ -299,10 +396,13 @@ class _WhiteWaitingEventsPage extends State<WhiteWaitingEventsPage> {
                                                     ),
                                                     Text(
                                                       'iggles',
-                                                      textAlign: TextAlign.start,
-                                                      style: AppFonts.titleMedium(
-                                                          color: AppColors.white,
-                                                          fontSize: 16),
+                                                      textAlign:
+                                                          TextAlign.start,
+                                                      style:
+                                                          AppFonts.titleMedium(
+                                                              color: AppColors
+                                                                  .white,
+                                                              fontSize: 16),
                                                     ),
                                                     Padding(
                                                       padding:
@@ -310,9 +410,10 @@ class _WhiteWaitingEventsPage extends State<WhiteWaitingEventsPage> {
                                                               top: 2, left: 10),
                                                       child: Text(
                                                         'platonic dating',
-                                                        textAlign: TextAlign.end,
-                                                        style:
-                                                            AppFonts.titleMedium(
+                                                        textAlign:
+                                                            TextAlign.end,
+                                                        style: AppFonts
+                                                            .titleMedium(
                                                                 fontSize: 4,
                                                                 color: AppColors
                                                                     .white),
@@ -376,10 +477,12 @@ class _WhiteWaitingEventsPage extends State<WhiteWaitingEventsPage> {
                                                 });
                                                 var likeMap = {
                                                   'event_id':
-                                                      waitingEventList[index].id,
-                                                  'action': isLiked[index] == true
-                                                      ? 'like'
-                                                      : 'dislike',
+                                                      waitingEventList[index]
+                                                          .id,
+                                                  'action':
+                                                      isLiked[index] == true
+                                                          ? 'like'
+                                                          : 'dislike',
                                                 };
                                                 final success =
                                                     await registerProvider
@@ -387,8 +490,11 @@ class _WhiteWaitingEventsPage extends State<WhiteWaitingEventsPage> {
                                                             likeMap);
                                                 if (success?.status == true) {
                                                   // ShowDialog().showSuccessDialog(context, registerProvider.successMessage);
-                                                }else{
-                                                  ShowDialog().showErrorDialog(context, registerProvider.errorMessage);
+                                                } else {
+                                                  // ShowDialog().showErrorDialog(
+                                                  //     context,
+                                                  //     registerProvider
+                                                  //         .errorMessage);
                                                 }
                                               },
                                               icon: isLiked[index]
@@ -401,8 +507,9 @@ class _WhiteWaitingEventsPage extends State<WhiteWaitingEventsPage> {
                                                       Icons.favorite_outline,
                                                       color: AppColors.white,
                                                     ),
-                                              visualDensity: const VisualDensity(
-                                                  vertical: -4),
+                                              visualDensity:
+                                                  const VisualDensity(
+                                                      vertical: -4),
                                             )
                                           ]),
                                       RichText(
@@ -485,61 +592,163 @@ class _WhiteWaitingEventsPage extends State<WhiteWaitingEventsPage> {
                                                       BorderRadius.circular(12),
                                                   color: Colors.white),
                                               child: Row(children: [
-                                                Icon(Icons.location_on, size: 16),
+                                                Icon(Icons.location_on,
+                                                    size: 16),
                                                 Text(
                                                   'Venue',
                                                   style: TextStyle(
                                                       fontSize: 12,
-                                                      fontStyle: FontStyle.italic,
+                                                      fontStyle:
+                                                          FontStyle.italic,
                                                       color: Colors.black),
                                                 ),
                                               ])),
                                         )
                                       ]),
                                       const SizedBox(height: 20),
-                                      InkWell(
-                                        onTap: () async {
-                                          var eventMap = {
-                                            'event_id': waitingEventList[index]
-                                                .id
-                                                .toString()
-                                          };
-                                          final success = await registerProvider
-                                              .waitingEventRegisterUser(eventMap);
-                                          if (success?.status == true) {
-                                            ShowDialog().showSuccessDialog(
-                                                context,
-                                                registerProvider.successMessage);
-                                          } else {
-                                            ShowDialog().showErrorDialog(context,
-                                                registerProvider.errorMessage);
-                                          }
-                                        },
-                                        child: Container(
-                                          width: double.infinity,
-                                          padding: const EdgeInsets.all(20),
-                                          decoration: BoxDecoration(
-                                              borderRadius:
-                                                  BorderRadius.circular(36),
-                                              color:
-                                                  Colors.grey.withOpacity(0.6)),
-                                          child: Center(
-                                            child: Text(
-                                              'Register',
-                                              style: AppFonts.titleBold(
-                                                  fontSize: 18,
-                                                  // fontStyle: FontStyle.italic,
-                                                  color: Colors.white),
+                                      waitingEventList[index].isRegistered ==
+                                              true
+                                          ? InkWell(
+                                              onTap: () async {
+                                                print("ontapppppppppp");
+
+                                                var eventMap = {
+                                                  'event_id':
+                                                      waitingEventList[index]
+                                                          .id
+                                                          .toString()
+                                                };
+
+                                                try {
+                                                  // Call the register method
+                                                  final success =
+                                                      await registerProvider
+                                                          .waitingEventRegisterUser2(
+                                                              eventMap);
+
+                                                  // Log the success response
+                                                  print(
+                                                      "Response status: ${success?.status}");
+                                                  print(
+                                                      "Response message: ${success?.message}");
+
+                                                  if (success?.status == true) {
+                                                    print(
+                                                        "Registration successful!");
+                                                    fetchData();
+                                                    setState(() {});
+                                                    ShowDialog()
+                                                        .showSuccessDialog(
+                                                      context,
+                                                      registerProvider
+                                                          .successMessage,
+                                                    );
+                                                  } else {
+                                                    fetchData();
+                                                    ShowDialog()
+                                                        .showSuccessDialog(
+                                                      context,
+                                                      "Event unregistered successfully",
+                                                    );
+                                                  }
+                                                } catch (error) {
+                                                  fetchData();
+                                                  print("Error: $error");
+                                                  ShowDialog().showErrorDialog(
+                                                    context,
+                                                    "Something went wrong. Please try again.",
+                                                  );
+                                                }
+                                              },
+                                              child: Container(
+                                                width: double.infinity,
+                                                padding:
+                                                    const EdgeInsets.all(16),
+                                                decoration: BoxDecoration(
+                                                  borderRadius:
+                                                      BorderRadius.circular(36),
+                                                  color: Colors.grey
+                                                      .withOpacity(0.6),
+                                                ),
+                                                child: Center(
+                                                  child: Text(
+                                                    "Unregister",
+                                                    style: AppFonts.titleBold(
+                                                      fontSize: 18,
+                                                      color: Colors.white,
+                                                    ),
+                                                  ),
+                                                ),
+                                              ),
+                                            )
+                                          : InkWell(
+                                              onTap: () async {
+                                                var eventMap = {
+                                                  'event_id':
+                                                      waitingEventList[index]
+                                                          .id
+                                                          .toString()
+                                                };
+
+                                                try {
+                                                  final success =
+                                                      await registerProvider
+                                                          .waitingEventRegisterUser(
+                                                              eventMap);
+
+                                                  if (success?.status == true) {
+                                                    print("success");
+                                                    fetchData(); // Ensure this updates the `waitingEventList`
+                                                    setState(() {});
+                                                    ShowDialog()
+                                                        .showSuccessDialog(
+                                                      context,
+                                                      registerProvider
+                                                          .successMessage,
+                                                    );
+                                                  } else {
+                                                    print("nottttt");
+                                                    ShowDialog()
+                                                        .showErrorDialog(
+                                                      context,
+                                                      registerProvider
+                                                          .errorMessage,
+                                                    );
+                                                  }
+                                                } catch (error) {
+                                                  print("error: $error");
+                                                  ShowDialog().showErrorDialog(
+                                                    context,
+                                                    "Something went wrong. Please try again.",
+                                                  );
+                                                }
+                                              },
+                                              child: Container(
+                                                width: double.infinity,
+                                                padding:
+                                                    const EdgeInsets.all(16),
+                                                decoration: BoxDecoration(
+                                                  borderRadius:
+                                                      BorderRadius.circular(36),
+                                                  color: Colors.grey
+                                                      .withOpacity(0.6),
+                                                ),
+                                                child: Center(
+                                                  child: Text(
+                                                    "Register",
+                                                    style: AppFonts.titleBold(
+                                                      fontSize: 18,
+                                                      color: Colors.white,
+                                                    ),
+                                                  ),
+                                                ),
+                                              ),
                                             ),
-                                          ),
-                                        ),
-                                      ),
                                     ],
                                   ),
                                 );
                               }
                               return SizedBox.shrink();
-
                             },
                           ),
                         ),
@@ -547,7 +756,7 @@ class _WhiteWaitingEventsPage extends State<WhiteWaitingEventsPage> {
                         Align(
                           alignment: Alignment.bottomCenter,
                           child: TextButton(
-                            onPressed: (){
+                            onPressed: () {
                               openWhatsApp();
                             },
                             child: Text('Customer support',
@@ -557,9 +766,6 @@ class _WhiteWaitingEventsPage extends State<WhiteWaitingEventsPage> {
                                   fontSize: 14,
                                 )),
                           ),
-                        ),
-                        SizedBox(
-                          height: 8,
                         ),
                       ],
                     ),

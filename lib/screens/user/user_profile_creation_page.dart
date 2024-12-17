@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:giggles/constants/appColors.dart';
 import 'package:giggles/constants/appFonts.dart';
+import 'package:giggles/constants/database/shared_preferences_service.dart';
 import 'package:giggles/constants/utils/show_dialog.dart';
 import 'package:giggles/screens/auth/signUpPage.dart';
 import 'package:giggles/screens/user/user_photos_videos_page.dart';
@@ -14,6 +15,7 @@ import 'package:giggles/screens/user/white_waiting_events_page.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 import 'package:reorderable_grid_view/reorderable_grid_view.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../constants/utils/multi_select_dialog.dart';
 import '../../models/user_interests_model.dart';
@@ -22,16 +24,14 @@ import '../../network/auth_provider.dart';
 class UserProfileCreationPage extends StatefulWidget {
   List<UserInterestsData>? userInterestList;
 
-  UserProfileCreationPage({
-    super.key,
-    this.userInterestList
-  });
+  UserProfileCreationPage({super.key, this.userInterestList});
 
   @override
   State<UserProfileCreationPage> createState() => _UserProfileCreationPage();
 }
 
 class _UserProfileCreationPage extends State<UserProfileCreationPage> {
+  bool _isLoading = false;
   final List<String> genderOrientationList = [
     'Straight',
     'Homosexual',
@@ -102,18 +102,13 @@ class _UserProfileCreationPage extends State<UserProfileCreationPage> {
         setState(() {
           for (var file in pickedFile) {
             images.add(File(file.path)); // Add each selected file's path
-
           }
           print(images);
-
-
-
-
         });
       }
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Maximum limit of images reached')),
+        const SnackBar(content: Text('Maximum limit of images reached')),
       );
     }
   }
@@ -127,7 +122,6 @@ class _UserProfileCreationPage extends State<UserProfileCreationPage> {
       images.insert(newIndex, movedItem);
     });
   }
-
 
   // Set to keep track of selected items
   List<String> selectedActivities = [];
@@ -167,24 +161,58 @@ class _UserProfileCreationPage extends State<UserProfileCreationPage> {
     }
   }
 
+  List<UserInterestsData>? userInterestList;
+
+  // @override
+  // void initState() {
+  //   // TODO: implement initState
+  //   super.initState();
+  //   Future.microtask(() async {
+  //     // Fetch data when the screen appears
+  //     Provider.of<AuthProvider>(context, listen: false)
+  //         .fetchUserInterestList()
+  //         .then(
+  //       (value) {
+  //         if (value?.status == true) {
+  //           setState(() {
+  //             userInterestList = value!.data!;
+  //           });
+  //         }
+  //       },
+  //     );
+  //   });
+  // }
+
+  bool isLoading = true;
+
+  Future<void> saveLastScreen() async {
+    await SharedPref.digiScreenSave();
+  }
+
   @override
   void initState() {
-    // TODO: implement initState
     super.initState();
-    // Future.microtask(() async {
-    //   // Fetch data when the screen appears
-    //   Provider.of<AuthProvider>(context, listen: false)
-    //       .fetchUserInterestList()
-    //       .then(
-    //     (value) {
-    //       if (value?.status == true) {
-    //         setState(() {
-    //           userInterestList = value!.data!;
-    //         });
-    //       }
-    //     },
-    //   );
-    // });
+    saveLastScreen();
+    fetchUserInterestList();
+  }
+
+  Future<void> fetchUserInterestList() async {
+    try {
+      var value = await Provider.of<AuthProvider>(context, listen: false)
+          .fetchUserInterestList();
+      if (value?.status == true) {
+        setState(() {
+          userInterestList = value!.data!;
+        });
+      }
+    } catch (e) {
+      // Handle any errors here
+      print("Error fetching user interests: $e");
+    } finally {
+      setState(() {
+        isLoading = false;
+      });
+    }
   }
 
   @override
@@ -198,14 +226,13 @@ class _UserProfileCreationPage extends State<UserProfileCreationPage> {
   Widget build(BuildContext context) {
     final userProfileCreation = context.watch<AuthProvider>();
     return WillPopScope(
-      onWillPop: ()async{
+      onWillPop: () async {
         return true;
-
       },
       child: Scaffold(
         backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         appBar: AppBar(
-          title: Text('Profile'),
+          title: const Text('Profile'),
           backgroundColor: Theme.of(context).scaffoldBackgroundColor,
           titleTextStyle: AppFonts.titleBold(
               fontSize: 20, color: Theme.of(context).colorScheme.tertiary),
@@ -223,7 +250,7 @@ class _UserProfileCreationPage extends State<UserProfileCreationPage> {
                   style: AppFonts.titleBold(
                       color: Theme.of(context).colorScheme.tertiary),
                 ),
-                SizedBox(
+                const SizedBox(
                   height: 10,
                 ),
                 Container(
@@ -253,8 +280,8 @@ class _UserProfileCreationPage extends State<UserProfileCreationPage> {
                   child: Padding(
                     padding: const EdgeInsets.all(8.0),
                     child: DropdownButton<String>(
-                      underline: Text(''),
-                      dropdownColor: AppColors.black,
+                      underline: const Text(''),
+                      dropdownColor: AppColors.sosbuttonBgColor,
                       style:
                           AppFonts.hintTitle(color: AppColors.sosbuttonBgColor),
                       value: genderOrientation,
@@ -284,7 +311,7 @@ class _UserProfileCreationPage extends State<UserProfileCreationPage> {
                     ),
                   ),
                 ),
-                SizedBox(
+                const SizedBox(
                   height: 16,
                 ),
                 Text(
@@ -292,7 +319,7 @@ class _UserProfileCreationPage extends State<UserProfileCreationPage> {
                   style: AppFonts.titleBold(
                       color: Theme.of(context).colorScheme.tertiary),
                 ),
-                SizedBox(
+                const SizedBox(
                   height: 10,
                 ),
                 InkWell(
@@ -300,7 +327,7 @@ class _UserProfileCreationPage extends State<UserProfileCreationPage> {
                   child: Container(
                     height: 46,
                     width: MediaQuery.of(context).size.width,
-                    padding: EdgeInsets.all(8),
+                    padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
                       color: AppColors.signUpTextFieldColor,
                       borderRadius: BorderRadius.circular(20),
@@ -374,7 +401,7 @@ class _UserProfileCreationPage extends State<UserProfileCreationPage> {
                     // ),
                   ),
                 ),
-                SizedBox(
+                const SizedBox(
                   height: 16,
                 ),
                 Text(
@@ -382,7 +409,7 @@ class _UserProfileCreationPage extends State<UserProfileCreationPage> {
                   style: AppFonts.titleBold(
                       color: Theme.of(context).colorScheme.tertiary),
                 ),
-                SizedBox(
+                const SizedBox(
                   height: 10,
                 ),
                 Container(
@@ -412,8 +439,8 @@ class _UserProfileCreationPage extends State<UserProfileCreationPage> {
                   child: Padding(
                     padding: const EdgeInsets.all(8.0),
                     child: DropdownButton<String>(
-                      underline: Text(''),
-                      dropdownColor: AppColors.black,
+                      underline: const Text(''),
+                      dropdownColor: AppColors.sosbuttonBgColor,
                       style:
                           AppFonts.hintTitle(color: AppColors.sosbuttonBgColor),
                       value: gender,
@@ -443,7 +470,7 @@ class _UserProfileCreationPage extends State<UserProfileCreationPage> {
                     ),
                   ),
                 ),
-                SizedBox(
+                const SizedBox(
                   height: 16,
                 ),
                 Text(
@@ -451,11 +478,11 @@ class _UserProfileCreationPage extends State<UserProfileCreationPage> {
                   style: AppFonts.titleBold(
                       color: Theme.of(context).colorScheme.tertiary),
                 ),
-                SizedBox(
+                const SizedBox(
                   height: 10,
                 ),
                 Container(
-                  padding: EdgeInsets.all(16),
+                  padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
                       border: Border.all(
                           width: 1,
@@ -491,7 +518,7 @@ class _UserProfileCreationPage extends State<UserProfileCreationPage> {
                     ],
                   ),
                 ),
-                SizedBox(
+                const SizedBox(
                   height: 16,
                 ),
                 Text(
@@ -499,7 +526,7 @@ class _UserProfileCreationPage extends State<UserProfileCreationPage> {
                   style: AppFonts.titleBold(
                       color: Theme.of(context).colorScheme.tertiary),
                 ),
-                SizedBox(
+                const SizedBox(
                   height: 10,
                 ),
                 // InkWell(
@@ -522,78 +549,94 @@ class _UserProfileCreationPage extends State<UserProfileCreationPage> {
                 // ),
                 Container(
                   height: MediaQuery.of(context).size.width / 2,
-                  padding: EdgeInsets.all(12),
+                  padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
                       border: Border.all(
                           width: 1,
                           color: Theme.of(context).colorScheme.tertiary),
                       borderRadius: BorderRadius.circular(20)),
-                  child: GridView.builder(
-                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 3, // 3 items per row
-                      childAspectRatio: 3, // Adjust height-to-width ratio
-                      crossAxisSpacing: 8,
-                      mainAxisSpacing: 8,
-                    ),
-                    physics: ScrollPhysics(),
-                    itemCount: widget.userInterestList?.length,
-                    shrinkWrap: true,
-                    itemBuilder: (context, index) {
-                      String activity = widget.userInterestList![index].name.toString();
-                      String selectedInterestId = widget.userInterestList![index].id.toString();
-                      bool isSelected =
-                          selectedActivities.contains(selectedInterestId);
+                  child: isLoading
+                      ? const Center(
+                          child: CircularProgressIndicator(),
+                        )
+                      : userInterestList == null || userInterestList!.isEmpty
+                          ? const Center(
+                              child: Text('No interests found.'),
+                            )
+                          : GridView.builder(
+                              gridDelegate:
+                                  const SliverGridDelegateWithFixedCrossAxisCount(
+                                crossAxisCount: 3,
+                                childAspectRatio: 3,
+                                crossAxisSpacing: 8,
+                                mainAxisSpacing: 8,
+                              ),
+                              physics: const ScrollPhysics(),
+                              itemCount: userInterestList?.length,
+                              shrinkWrap: true,
+                              itemBuilder: (context, index) {
+                                String activity =
+                                    userInterestList![index].name.toString();
+                                String selectedInterestId =
+                                    userInterestList![index].id.toString();
+                                bool isSelected = selectedActivities
+                                    .contains(selectedInterestId);
 
-                      return GestureDetector(
-                        onTap: () => _toggleSelection(selectedInterestId),
-                        child: Container(
-                          decoration: BoxDecoration(
-                            color: isSelected
-                                ? Theme.of(context).brightness == Brightness.light
-                                    ? Colors.black
-                                    : Colors.white
-                                : Colors.grey[300],
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          padding: EdgeInsets.all(8),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Expanded(
-                                child: Text(
-                                  activity,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: AppFonts.titleBold(
+                                return GestureDetector(
+                                  onTap: () =>
+                                      _toggleSelection(selectedInterestId),
+                                  child: Container(
+                                    decoration: BoxDecoration(
                                       color: isSelected
                                           ? Theme.of(context).brightness ==
                                                   Brightness.light
-                                              ? Colors.white
-                                              : Colors.black
-                                          : Theme.of(context).brightness ==
-                                                  Brightness.light
                                               ? Colors.black
-                                              : Colors.white,
-                                      fontWeight: isSelected
-                                          ? FontWeight.bold
-                                          : FontWeight.normal,
-                                      fontSize: 12),
-                                ),
-                              ),
-                              // const SizedBox(width: 4),
-                              // Icon(
-                              //   icon,
-                              //   size: 12,
-                              //   color: isSelected ? Theme.of(context).brightness==Brightness.light?Colors.white:Colors.black :Theme.of(context).brightness==Brightness.light?Colors.black:Colors.white,
-                              // ),
-                            ],
-                          ),
-                        ),
-                      );
-                    },
-                  ),
+                                              : Colors.white
+                                          : Colors.grey[300],
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    padding: const EdgeInsets.all(8),
+                                    child: Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      children: [
+                                        Expanded(
+                                          child: Text(
+                                            activity,
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                            style: AppFonts.fullBold(
+                                                color: isSelected
+                                                    ? Theme.of(context)
+                                                                .brightness ==
+                                                            Brightness.light
+                                                        ? Colors.white
+                                                        : Colors.black
+                                                    : Theme.of(context)
+                                                                .brightness ==
+                                                            Brightness.light
+                                                        ? Colors.black
+                                                        : Colors.white,
+                                                fontWeight: isSelected
+                                                    ? FontWeight.bold
+                                                    : FontWeight.normal,
+                                                fontSize: 13),
+                                          ),
+                                        ),
+                                        // const SizedBox(width: 4),
+                                        // Icon(
+                                        //   icon,
+                                        //   size: 12,
+                                        //   color: isSelected ? Theme.of(context).brightness==Brightness.light?Colors.white:Colors.black :Theme.of(context).brightness==Brightness.light?Colors.black:Colors.white,
+                                        // ),
+                                      ],
+                                    ),
+                                  ),
+                                );
+                              },
+                            ),
                 ),
-                SizedBox(
+                const SizedBox(
                   height: 16,
                 ),
                 Text(
@@ -601,7 +644,7 @@ class _UserProfileCreationPage extends State<UserProfileCreationPage> {
                   style: AppFonts.titleBold(
                       color: Theme.of(context).colorScheme.tertiary),
                 ),
-                SizedBox(
+                const SizedBox(
                   height: 10,
                 ),
                 TextFormField(
@@ -623,18 +666,21 @@ class _UserProfileCreationPage extends State<UserProfileCreationPage> {
                     contentPadding: const EdgeInsets.all(14),
                     floatingLabelBehavior: FloatingLabelBehavior.never,
                     border: OutlineInputBorder(
-                        borderRadius: BorderRadius.all(Radius.circular(20)),
+                        borderRadius:
+                            const BorderRadius.all(Radius.circular(20)),
                         borderSide: BorderSide(
                             color: Theme.of(context).colorScheme.tertiary)),
                     focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.all(Radius.circular(20)),
+                        borderRadius:
+                            const BorderRadius.all(Radius.circular(20)),
                         borderSide: BorderSide(
                             color: Theme.of(context).colorScheme.primary)),
                     enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.all(Radius.circular(20)),
+                        borderRadius:
+                            const BorderRadius.all(Radius.circular(20)),
                         borderSide: BorderSide(
                             color: Theme.of(context).colorScheme.tertiary)),
-                    focusedErrorBorder: OutlineInputBorder(
+                    focusedErrorBorder: const OutlineInputBorder(
                         borderRadius: BorderRadius.all(Radius.circular(20)),
                         borderSide: BorderSide(color: AppColors.error)),
                     hintText: 'Write About Yourself',
@@ -647,7 +693,7 @@ class _UserProfileCreationPage extends State<UserProfileCreationPage> {
                     return null;
                   },
                 ),
-                SizedBox(
+                const SizedBox(
                   height: 16,
                 ),
                 Text(
@@ -655,7 +701,7 @@ class _UserProfileCreationPage extends State<UserProfileCreationPage> {
                   style: AppFonts.titleBold(
                       color: Theme.of(context).colorScheme.tertiary),
                 ),
-                SizedBox(
+                const SizedBox(
                   height: 10,
                 ),
                 Container(
@@ -665,51 +711,55 @@ class _UserProfileCreationPage extends State<UserProfileCreationPage> {
                     childAspectRatio: 1, // Aspect ratio for images
                     mainAxisSpacing: 10,
                     crossAxisSpacing: 10,
-                    physics: NeverScrollableScrollPhysics(),
+                    physics: const NeverScrollableScrollPhysics(),
                     shrinkWrap: true,
                     onReorder: reorderImages,
                     children: [
-                      for (int index = 0; index < maxGridSize ; index++)
+                      for (int index = 0; index < maxGridSize; index++)
                         GestureDetector(
                           key: ValueKey(index),
-                          onTap: index == images.length ? pickImage : null, // Pick image on tap if it's the last slot
+                          onTap: index == images.length
+                              ? pickImage
+                              : null, // Pick image on tap if it's the last slot
                           child: index < images.length
-                              ?Stack(
-                            children: [
-                              ClipRRect(
-                                borderRadius: BorderRadius.circular(15),
-                                child: Image.file(
-                                  images[index],
-                                  width: double.infinity,
-                                  height: double.infinity,
-                                  fit: BoxFit.cover,
-                                ),
-                              ),
-                              if (index == 0) // Display the checkmark overlay only for the default image
-                                Positioned(
-                                  top: 8,
-                                  left: 8,
-                                  child: SvgPicture.asset(
-                                    'assets/icons/green_check_icon.svg',
-                                    width: 32,
-                                    height: 32,
+                              ? Stack(
+                                  children: [
+                                    ClipRRect(
+                                      borderRadius: BorderRadius.circular(15),
+                                      child: Image.file(
+                                        images[index],
+                                        width: double.infinity,
+                                        height: double.infinity,
+                                        fit: BoxFit.cover,
+                                      ),
+                                    ),
+                                    if (index ==
+                                        0) // Display the checkmark overlay only for the default image
+                                      Positioned(
+                                        top: 8,
+                                        left: 8,
+                                        child: SvgPicture.asset(
+                                          'assets/icons/green_check_icon.svg',
+                                          width: 32,
+                                          height: 32,
+                                        ),
+                                      ),
+                                  ],
+                                )
+                              : Container(
+                                  decoration: BoxDecoration(
+                                    border: Border.all(
+                                      width: 1.0,
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .tertiary,
+                                    ),
+                                    borderRadius: BorderRadius.circular(15),
+                                  ),
+                                  child: const Center(
+                                    child: Icon(Icons.add, size: 50),
                                   ),
                                 ),
-                            ],
-                          )
-
-                              :Container(
-                            decoration: BoxDecoration(
-                              border: Border.all(
-                                width: 1.0,
-                                color: Theme.of(context).colorScheme.tertiary,
-                              ),
-                              borderRadius: BorderRadius.circular(15),
-                            ),
-                            child: Center(
-                              child: Icon(Icons.add, size: 50),
-                            ),
-                          ) ,
                         ),
                     ],
                   ),
@@ -719,25 +769,25 @@ class _UserProfileCreationPage extends State<UserProfileCreationPage> {
                 //     height: MediaQuery.of(context).size.height * 0.35,
                 //     child:
                 //         ReorderableStaggeredGridScreen()
-                    //     ReorderableGridView.count(
-                    //   crossAxisSpacing: 10,
-                    //   mainAxisSpacing: 10,
-                    //   crossAxisCount: 3,
-                    //   children: data.map((e) {
-                    //     return    Card(
-                    //       key: ValueKey(e),
-                    //       child: Text(e.toString()),
-                    //     );
-                    //   }
-                    //    ).toList(),
-                    //   onReorder: (oldIndex, newIndex) {
-                    //     setState(() {
-                    //       final element = data.removeAt(oldIndex);
-                    //       data.insert(newIndex, element);
-                    //     });
-                    //   },
-                    // )
-          // ),
+                //     ReorderableGridView.count(
+                //   crossAxisSpacing: 10,
+                //   mainAxisSpacing: 10,
+                //   crossAxisCount: 3,
+                //   children: data.map((e) {
+                //     return    Card(
+                //       key: ValueKey(e),
+                //       child: Text(e.toString()),
+                //     );
+                //   }
+                //    ).toList(),
+                //   onReorder: (oldIndex, newIndex) {
+                //     setState(() {
+                //       final element = data.removeAt(oldIndex);
+                //       data.insert(newIndex, element);
+                //     });
+                //   },
+                // )
+                // ),
                 // Container(
                 //   height: MediaQuery.of(context).size.width,
                 //   child: GridView.builder(
@@ -805,7 +855,7 @@ class _UserProfileCreationPage extends State<UserProfileCreationPage> {
                   style: AppFonts.titleBold(
                       color: Theme.of(context).colorScheme.tertiary),
                 ),
-                SizedBox(
+                const SizedBox(
                   height: 10,
                 ),
                 Row(
@@ -817,9 +867,10 @@ class _UserProfileCreationPage extends State<UserProfileCreationPage> {
                       activeColor: AppColors.checkboxFillColor,
                       // isError: true,
                       value: isYes,
-                      side: BorderSide(
+                      side: const BorderSide(
                           color: AppColors.checkboxFillColor, width: 2),
-                      visualDensity: VisualDensity(horizontal: 1, vertical: -4),
+                      visualDensity:
+                          const VisualDensity(horizontal: 1, vertical: -4),
                       onChanged: (value) {
                         setState(() {
                           isYes = value!;
@@ -830,7 +881,7 @@ class _UserProfileCreationPage extends State<UserProfileCreationPage> {
                     Text('Yes',
                         style: AppFonts.titleBold(
                             color: Theme.of(context).colorScheme.tertiary)),
-                    SizedBox(
+                    const SizedBox(
                       width: 20,
                     ),
                     Checkbox(
@@ -838,9 +889,10 @@ class _UserProfileCreationPage extends State<UserProfileCreationPage> {
                       activeColor: AppColors.checkboxFillColor,
                       // isError: true,
                       value: isNo,
-                      side: BorderSide(
+                      side: const BorderSide(
                           color: AppColors.checkboxFillColor, width: 2),
-                      visualDensity: VisualDensity(horizontal: 1, vertical: -4),
+                      visualDensity:
+                          const VisualDensity(horizontal: 1, vertical: -4),
                       onChanged: (value) {
                         setState(() {
                           isNo = value!;
@@ -853,112 +905,211 @@ class _UserProfileCreationPage extends State<UserProfileCreationPage> {
                             color: Theme.of(context).colorScheme.tertiary)),
                   ],
                 ),
-                SizedBox(
+                const SizedBox(
                   height: 20,
                 ),
+                // Center(
+                //   child: Container(
+                //     height: 46,
+                //     //width:MediaQuery.of(context).size.width/2.5,
+                //     child: ElevatedButton(
+                //       style: ElevatedButton.styleFrom(
+                //         backgroundColor: AppColors.primary,
+                //         side: BorderSide(
+                //           color: Theme.of(context).colorScheme.tertiary,
+                //         ),
+                //       ),
+                //       onPressed: () async {
+                //         // Navigator.push(context, MaterialPageRoute(builder: (context) => const WhiteWaitingEventsPage(),));
+                //         if (genderOrientation == null) {
+                //           ShowDialog().showInfoDialog(
+                //               context, 'Select gender orientation');
+                //         } else if (_selectedDatingPrefrencesItems.isEmpty) {
+                //           ShowDialog().showInfoDialog(
+                //               context, 'Select dating preference');
+                //         } else if (gender == null) {
+                //           ShowDialog().showInfoDialog(
+                //               context, 'Select gender preference');
+                //         } else if (_currentRangeValues.start
+                //             .round()
+                //             .toString()
+                //             .isEmpty) {
+                //           ShowDialog()
+                //               .showInfoDialog(context, 'Select minimum age');
+                //         } else if (_currentRangeValues.end
+                //             .round()
+                //             .toString()
+                //             .isEmpty) {
+                //           ShowDialog()
+                //               .showInfoDialog(context, 'Select maximum age');
+                //         } else if (selectedActivities.isEmpty) {
+                //           ShowDialog().showInfoDialog(
+                //               context, 'Please select interest');
+                //         } else if (selectedActivities.length < 5) {
+                //           print('selectedActivities');
+                //           print(selectedActivities);
+                //           print(selectedActivities.length);
+                //           ShowDialog().showInfoDialog(
+                //               context, 'Please select minimum 5 interest');
+                //         } else if (bioTextController.text.isEmpty) {
+                //           ShowDialog().showInfoDialog(
+                //               context, 'Please write about yourself');
+                //         } else if (images.isEmpty) {
+                //           ShowDialog()
+                //               .showInfoDialog(context, 'Please add photos');
+                //         } else if (images.length < 3) {
+                //           ShowDialog().showInfoDialog(
+                //               context, 'Please select minimum 3 photos');
+                //         } else if (isYes == false && isNo == false) {
+                //           ShowDialog().showInfoDialog(context,
+                //               'check the box to clarify Is this your first application to Giigles');
+                //         } else {
+                //           // List<String> selectPref = _selectedDatingPrefrencesItems.map((item) => item.toString()).toList();
+                //           var userProfileMap = {
+                //             "gender_orientation": genderOrientation,
+                //             "gender_preferences": gender,
+                //             "age_min":
+                //                 _currentRangeValues.start.round().toString(),
+                //             "age_max":
+                //                 _currentRangeValues.end.round().toString(),
+                //             // "dating_preferencesq": _selectedDatingPrefrencesItems,
+                //             // "interests":selectedActivities,
+                //             "bio": bioTextController.text,
+                //             // 'images': images,
+                //             "is_first_time": isYes == true
+                //                 ? "True"
+                //                 : isNo == true
+                //                     ? 'False'
+                //                     : null,
+                //           };
+                //           print('filePath');
+                //           print(filePath);
+                //           final userProfileCreate =
+                //               await userProfileCreation.userProfileCreation(
+                //                   userProfileMap,
+                //                   images,
+                //                   _selectedDatingPrefrencesItems,
+                //                   selectedActivities);
+                //           if (userProfileCreate?.status == true) {
+                //             // final prefs = await SharedPreferences.getInstance();
+                //             await SharedPref.eventScreenSave();
+                //             // await prefs.setString('lastScreen', 'eventPage');
+                //             Navigator.push(
+                //                 context,
+                //                 MaterialPageRoute(
+                //                   builder: (context) =>
+                //                       const WhiteWaitingEventsPage(),
+                //                 ));
+                //             ShowDialog().showSuccessDialog(
+                //                 context, userProfileCreation.successMessage);
+                //           } else {
+                //             ShowDialog().showErrorDialog(
+                //                 context, userProfileCreation.errorMessage);
+                //           }
+                //         }
+                //       },
+                //       child: Padding(
+                //         padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                //         child: Text('Submit',
+                //             style: AppFonts.titleBold(
+                //                 color: AppColors.white, fontSize: 14)),
+                //       ),
+                //     ),
+                //   ),
+                // ),
                 Center(
-                  child: Container(
-                    height: 46,
-                    //width:MediaQuery.of(context).size.width/2.5,
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        // minimumSize: Size(250, 50),
-                        // foregroundColor: Theme.of(context).colorScheme.onPrimary,
-                        backgroundColor: AppColors.primary,
-                        side: BorderSide(
-                          color: Theme.of(context).colorScheme.tertiary,
-                        ),
-                        // shape: RoundedRectangleBorder( // Add rounded corners
-                        //   borderRadius: BorderRadius.circular(24.0),
-                        // ),
-                      ),
-                      onPressed: () async {
-                        // Navigator.push(context, MaterialPageRoute(builder: (context) => const WhiteWaitingEventsPage(),));
-                        if (genderOrientation == null) {
-                          ShowDialog().showInfoDialog(
-                              context, 'Select gender orientation');
-                        } else if (_selectedDatingPrefrencesItems.isEmpty) {
-                          ShowDialog().showInfoDialog(
-                              context, 'Select dating preference');
-                        } else if (gender == null) {
-                          ShowDialog().showInfoDialog(
-                              context, 'Select gender preference');
-                        } else if (_currentRangeValues.start
-                            .round()
-                            .toString()
-                            .isEmpty) {
-                          ShowDialog()
-                              .showInfoDialog(context, 'Select minimum age');
-                        } else if (_currentRangeValues.end
-                            .round()
-                            .toString()
-                            .isEmpty) {
-                          ShowDialog()
-                              .showInfoDialog(context, 'Select maximum age');
-                        } else if (selectedActivities.isEmpty) {
-                          ShowDialog()
-                              .showInfoDialog(context, 'Please select interest');
-                        } else if (selectedActivities.length < 5) {
-                          print('selectedActivities');
-                          print(selectedActivities);
-                          print(selectedActivities.length);
-                          ShowDialog().showInfoDialog(
-                              context, 'Please select minimum 5 interest');
-                        } else if (bioTextController.text.isEmpty) {
-                          ShowDialog().showInfoDialog(
-                              context, 'Please write about yourself');
-                        }  else if (images.isEmpty) {
-                          ShowDialog().showInfoDialog(
-                              context, 'Please add photos');
-                        } else if (images.length<3) {
-                          ShowDialog().showInfoDialog(
-                              context, 'Please select minimum 3 photos');
-                        } else if (isYes == false && isNo == false) {
-                          ShowDialog().showInfoDialog(context,
-                              'check the box to clarify Is this your first application to Giigles');
-                        } else {
-                           // List<String> selectPref = _selectedDatingPrefrencesItems.map((item) => item.toString()).toList();
-                          var userProfileMap = {
-                            "gender_orientation": genderOrientation,
-                            "gender_preferences": gender,
-                            "age_min":
-                                _currentRangeValues.start.round().toString(),
-                            "age_max": _currentRangeValues.end.round().toString(),
-                            // "dating_preferencesq": _selectedDatingPrefrencesItems,
-                            // "interests":selectedActivities,
-                            "bio": bioTextController.text,
-                            // 'images': images,
-                            "is_first_time": isYes == true
-                                ? "True"
-                                : isNo == true
-                                    ? 'False'
-                                    : null,
-                          };
-                          print('filePath');
-                          print(filePath);
-                          final userProfileCreate = await userProfileCreation
-                              .userProfileCreation(userProfileMap,images,_selectedDatingPrefrencesItems,selectedActivities);
-                          if (userProfileCreate?.status == true) {
-                            Navigator.push(context, MaterialPageRoute(builder:(context) => WhiteWaitingEventsPage(),));
-                            ShowDialog().showSuccessDialog(
-                                context, userProfileCreation.successMessage);
+                  child: _isLoading
+                      ? CircularProgressIndicator() // Show loader while loading
+                      : Container(
+                          height: 46,
+                          child: ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppColors.primary,
+                              side: BorderSide(
+                                color: Theme.of(context).colorScheme.tertiary,
+                              ),
+                            ),
+                            onPressed: () async {
+                              // Disable interactions while loading
+                              setState(() {
+                                _isLoading = true;
+                              });
 
-                          } else {
-                            ShowDialog().showErrorDialog(
-                                context, userProfileCreation.errorMessage);
-                          }
-                        }
-                      },
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 24.0),
-                        child: Text('Submit',
-                            style: AppFonts.titleBold(
-                                color: AppColors.white, fontSize: 14)),
-                      ),
-                    ),
-                  ),
+                              if (genderOrientation == null) {
+                                ShowDialog().showInfoDialog(
+                                    context, 'Select gender orientation');
+                                setState(() {
+                                  _isLoading = false;
+                                });
+                              } else if (_selectedDatingPrefrencesItems
+                                  .isEmpty) {
+                                ShowDialog().showInfoDialog(
+                                    context, 'Select dating preference');
+                                setState(() {
+                                  _isLoading = false;
+                                });
+                              }
+                              // Add other validation checks here
+                              else {
+                                // API call and navigation logic
+                                var userProfileMap = {
+                                  "gender_orientation": genderOrientation,
+                                  "gender_preferences": gender,
+                                  "age_min": _currentRangeValues.start
+                                      .round()
+                                      .toString(),
+                                  "age_max": _currentRangeValues.end
+                                      .round()
+                                      .toString(),
+                                  "bio": bioTextController.text,
+                                  "is_first_time":
+                                      isYes == true ? "True" : "False",
+                                };
+
+                                final userProfileCreate =
+                                    await userProfileCreation
+                                        .userProfileCreation(
+                                  userProfileMap,
+                                  images,
+                                  _selectedDatingPrefrencesItems,
+                                  selectedActivities,
+                                );
+
+                                if (userProfileCreate?.status == true) {
+                                  await SharedPref.eventScreenSave();
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) =>
+                                          const WhiteWaitingEventsPage(),
+                                    ),
+                                  );
+                                  ShowDialog().showSuccessDialog(context,
+                                      userProfileCreation.successMessage);
+                                } else {
+                                  ShowDialog().showErrorDialog(context,
+                                      userProfileCreation.errorMessage);
+                                }
+
+                                setState(() {
+                                  _isLoading =
+                                      false; // Stop loading after API call
+                                });
+                              }
+                            },
+                            child: Padding(
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 24.0),
+                              child: Text(
+                                'Submit',
+                                style: AppFonts.titleBold(
+                                    color: AppColors.white, fontSize: 14),
+                              ),
+                            ),
+                          ),
+                        ),
                 ),
-                SizedBox(
+                const SizedBox(
                   height: kToolbarHeight,
                 ),
               ],

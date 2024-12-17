@@ -1,17 +1,19 @@
 import 'dart:io';
-
-import 'package:awesome_snackbar_content/awesome_snackbar_content.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:giggles/constants/appColors.dart';
 import 'package:giggles/constants/appFonts.dart';
+import 'package:giggles/constants/database/shared_preferences_service.dart';
 import 'package:giggles/constants/utils/show_dialog.dart';
 import 'package:giggles/constants/utils/snackbar_popup.dart';
+import 'package:giggles/screens/auth/privacy.dart';
+import 'package:giggles/screens/auth/terms_and_condition.dart';
 import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
-
+import 'package:syncfusion_flutter_datepicker/datepicker.dart';
 import '../../network/auth_provider.dart';
 import 'aadhar_verification/adhar_verification_page.dart';
 
@@ -35,24 +37,66 @@ class _SignUPPage extends State<SignUPPage> {
 
   ThemeMode _themeMode = ThemeMode.system;
 
+  DateTime? _selectedDate;
+
+  void _openDatePicker(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) {
+        return Container(
+          padding: const EdgeInsets.all(16),
+          height: 300,
+          child: SfDateRangePicker(
+            initialSelectedDate: _selectedDate,
+            onSelectionChanged: (DateRangePickerSelectionChangedArgs args) {
+              if (args.value is DateTime) {
+                setState(() {
+                  _selectedDate = args.value;
+                });
+                Navigator.pop(context); // Close the bottom sheet
+              }
+            },
+            selectionMode: DateRangePickerSelectionMode.single,
+            showTodayButton: true,
+            todayHighlightColor: Colors.blue,
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> saveLastScreen() async {
+    await SharedPref.otpVerifiedScreen();
+    // final prefs = await SharedPreferences.getInstance();
+    // await prefs.setString('lastScreen', 'otpVerified');
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    saveLastScreen();
+  }
+
   String? _gender;
   String? city;
   final List<String> _genderOptions = ['Male', 'Female', 'Other'];
   final List<String> cityList = [
     'Bangalore',
     'Mumbai',
-    'Pune',
-    'Chennai',
+    // 'Pune',
+    // 'Chennai',
     'Jaipur',
-    'Noida',
-    'Delhi',
+    // 'Noida',
+    // 'Delhi',
     'Hyderabad',
-    'Ahmedabad',
-    'Lucknow',
-    'Mysore',
-    'Kolkata'
+    // 'Ahmedabad',
+    // 'Lucknow',
+    // 'Mysore',
+    // 'Kolkata'
   ];
-  DateTime? _selectedDate;
   bool isAgree = false;
 
   Future<void> _selectDate(BuildContext context) async {
@@ -386,13 +430,11 @@ class _SignUPPage extends State<SignUPPage> {
                         style: AppFonts.titleMedium(color: AppColors.white),
                         keyboardType: TextInputType.emailAddress,
                         validator: (value) {
-                          if (value!.isEmpty) {
+                          if (value == null || value.isEmpty) {
                             return "Please enter your email address";
-                          } else if ((!RegExp(
-                                  r'^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$')
-                              .hasMatch(value))) {
-                            return "Please enter a valid email address";
-                          } else if (!value.endsWith(".com")) {
+                          } else if (!RegExp(
+                                  r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$")
+                              .hasMatch(value)) {
                             return "Please enter a valid email address";
                           }
                           return null;
@@ -406,15 +448,14 @@ class _SignUPPage extends State<SignUPPage> {
                           filled: true,
                           fillColor: AppColors.signUpTextFieldColor,
                           border: OutlineInputBorder(
-                              borderRadius:
-                                  BorderRadius.all(Radius.circular(22)),
-                              borderSide: BorderSide(color: AppColors.white)),
+                            borderRadius: BorderRadius.all(Radius.circular(22)),
+                            borderSide: BorderSide(color: AppColors.white),
+                          ),
                           focusedBorder: OutlineInputBorder(
-                              borderRadius:
-                                  BorderRadius.all(Radius.circular(22)),
-                              borderSide: BorderSide(color: AppColors.white)),
+                            borderRadius: BorderRadius.all(Radius.circular(22)),
+                            borderSide: BorderSide(color: AppColors.white),
+                          ),
                           enabledBorder: const OutlineInputBorder(
-                            // Border when enabled
                             borderSide: BorderSide(color: AppColors.white),
                             borderRadius: BorderRadius.all(Radius.circular(22)),
                           ),
@@ -424,6 +465,7 @@ class _SignUPPage extends State<SignUPPage> {
                           ),
                         ),
                       ),
+
                       SizedBox(
                         height: 22,
                       ),
@@ -456,7 +498,7 @@ class _SignUPPage extends State<SignUPPage> {
                             child: Padding(
                               padding: const EdgeInsets.all(8.0),
                               child: DropdownButton<String>(
-                                dropdownColor: AppColors.black,
+                                dropdownColor: AppColors.sosbuttonBgColor,
                                 underline: Text(''),
                                 hint: Text(
                                   'Gender',
@@ -500,13 +542,9 @@ class _SignUPPage extends State<SignUPPage> {
                                 boxShadow: [
                                   BoxShadow(
                                     color: Colors.grey.withOpacity(0.3),
-                                    // Shadow color
                                     offset: const Offset(0, 2),
-                                    // Offset of the shadow
                                     blurRadius: 4,
-                                    // Blur radius of the shadow
-                                    spreadRadius:
-                                        1, // Spread radius of the shadow
+                                    spreadRadius: 1,
                                   ),
                                 ],
                                 border: Border.all(
@@ -514,7 +552,7 @@ class _SignUPPage extends State<SignUPPage> {
                                 ),
                               ),
                               child: InkWell(
-                                onTap: () => _selectDate(context),
+                                onTap: () => _openDatePicker(context),
                                 child: Padding(
                                   padding: const EdgeInsets.all(6.0),
                                   child: Row(
@@ -543,6 +581,58 @@ class _SignUPPage extends State<SignUPPage> {
                               ),
                             ),
                           ),
+                          // Expanded(
+                          //   child: Container(
+                          //     height: 48,
+                          //     decoration: BoxDecoration(
+                          //       color: AppColors.signUpTextFieldColor,
+                          //       borderRadius: BorderRadius.circular(20),
+                          //       boxShadow: [
+                          //         BoxShadow(
+                          //           color: Colors.grey.withOpacity(0.3),
+                          //           // Shadow color
+                          //           offset: const Offset(0, 2),
+                          //           // Offset of the shadow
+                          //           blurRadius: 4,
+                          //           // Blur radius of the shadow
+                          //           spreadRadius:
+                          //               1, // Spread radius of the shadow
+                          //         ),
+                          //       ],
+                          //       border: Border.all(
+                          //         color: AppColors.white,
+                          //       ),
+                          //     ),
+                          //     child: InkWell(
+                          //       onTap: () => _selectDate(context),
+                          //       child: Padding(
+                          //         padding: const EdgeInsets.all(6.0),
+                          //         child: Row(
+                          //           mainAxisAlignment:
+                          //               MainAxisAlignment.spaceBetween,
+                          //           crossAxisAlignment:
+                          //               CrossAxisAlignment.center,
+                          //           children: [
+                          //             Text(
+                          //               _selectedDate == null
+                          //                   ? 'Birthday'
+                          //                   : "${_selectedDate!.toLocal()}"
+                          //                       .split(' ')[0],
+                          //               style: AppFonts.hintTitle(
+                          //                   color: AppColors.white,
+                          //                   fontSize: 14),
+                          //             ),
+                          //             Icon(
+                          //               Icons.calendar_month,
+                          //               color: AppColors.white,
+                          //               size: 16,
+                          //             ),
+                          //           ],
+                          //         ),
+                          //       ),
+                          //     ),
+                          //   ),
+                          // ),
                           SizedBox(
                             width: 8,
                           ),
@@ -576,7 +666,7 @@ class _SignUPPage extends State<SignUPPage> {
                                   menuMaxHeight:
                                       MediaQuery.of(context).size.width / 2,
                                   underline: Text(''),
-                                  dropdownColor: AppColors.black,
+                                  dropdownColor: AppColors.sosbuttonBgColor,
                                   style: AppFonts.hintTitle(
                                       color: AppColors.white),
                                   value: city,
@@ -619,26 +709,115 @@ class _SignUPPage extends State<SignUPPage> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Checkbox(
-                            checkColor: AppColors.white,
-                            activeColor: AppColors.checkboxFillColor,
-                            // isError: true,
-                            value: isAgree,
-                            side: BorderSide(
-                                color: AppColors.checkboxFillColor, width: 2),
-                            visualDensity:
-                                VisualDensity(horizontal: 1, vertical: -4),
-                            onChanged: (value) {
+                          GestureDetector(
+                            onTap: () {
                               setState(() {
-                                isAgree = value!;
+                                isAgree = !isAgree;
                               });
                             },
+                            child: Row(
+                              children: [
+                                Checkbox(
+                                  checkColor: AppColors.white,
+                                  activeColor: AppColors.checkboxFillColor,
+                                  value: isAgree,
+                                  side: BorderSide(
+                                    color: AppColors.checkboxFillColor,
+                                    width: 2,
+                                  ),
+                                  visualDensity: VisualDensity(
+                                      horizontal: 1, vertical: -4),
+                                  onChanged: (value) {
+                                    setState(() {
+                                      isAgree = value!;
+                                    });
+                                  },
+                                ),
+                                Container(
+                                  constraints: BoxConstraints(maxWidth: 350),
+                                  child: Text(
+                                    'I agree to verify myself with aadhar',
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: AppFonts.titleRegular(
+                                      color: AppColors.white,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
-                          Text('I agree to verify myself\nwith aadhar',
-                              style:
-                                  AppFonts.titleRegular(color: AppColors.white))
                         ],
                       ),
+                      SizedBox(height: 20),
+                      RichText(
+                        textAlign: TextAlign.center,
+                        text: TextSpan(
+                          children: [
+                            TextSpan(
+                              text:
+                                  'By using this application you agree with our ',
+                            ),
+                            TextSpan(
+                              text: 'Terms of use',
+                              style: TextStyle(
+                                decoration: TextDecoration.underline,
+                              ),
+                              recognizer: TapGestureRecognizer()
+                                ..onTap = () {
+                                  Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) =>
+                                            TermsPrivacyScreen(),
+                                      ));
+                                },
+                            ),
+                            TextSpan(
+                                text: ' & ',
+                                recognizer: TapGestureRecognizer()),
+                            TextSpan(
+                              text: 'Privacy Policy',
+                              style: TextStyle(
+                                decoration: TextDecoration.underline,
+                              ),
+                              recognizer: TapGestureRecognizer()
+                                ..onTap = () {
+                                  Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) => PrivacyPolicy(),
+                                      ));
+                                },
+                            ),
+                          ],
+                        ),
+                      ),
+                      // Row(
+                      //   mainAxisAlignment: MainAxisAlignment.start,
+                      //   crossAxisAlignment: CrossAxisAlignment.start,
+                      //   mainAxisSize: MainAxisSize.min,
+                      //   children: [
+                      //     Checkbox(
+                      //       checkColor: AppColors.white,
+                      //       activeColor: AppColors.checkboxFillColor,
+                      //       // isError: true,
+                      //       value: isAgree,
+                      //       side: BorderSide(
+                      //           color: AppColors.checkboxFillColor, width: 2),
+                      //       visualDensity:
+                      //           VisualDensity(horizontal: 1, vertical: -4),
+                      //       onChanged: (value) {
+                      //         setState(() {
+                      //           isAgree = value!;
+                      //         });
+                      //       },
+                      //     ),
+                      //     Text('I agree to verify myself\nwith aadhar',
+                      //         style:
+                      //             AppFonts.titleRegular(color: AppColors.white))
+                      //   ],
+                      // ),
                       SizedBox(
                         height: 22,
                       ),
@@ -659,70 +838,79 @@ class _SignUPPage extends State<SignUPPage> {
                             ),
                             onPressed: userProvider.isLoading
                                 ? null
-                                :
-                            () async {
-                              if (signupFormKey.currentState?.validate() ??
-                                  false) {
-                                if (_gender == null) {
-                                  ShowDialog().showInfoDialog(context,'Select Gender');
-                                } else if (city == null) {
-                                  ShowDialog().showInfoDialog(context,'Select City');
-                                } else if (_selectedDate == null) {
-                                  ShowDialog().showInfoDialog(context,'Select DOB');
-                                } else if (isAgree == false) {
-                                  ShowDialog().showInfoDialog(context,'Agree the Terms');
-                                } else {
-                                  var signUpMap = {
-                                    'first_name': firstNameController.text,
-                                    'email': emailController.text,
-                                    'last_name': lastNameController.text,
-                                    'dob': DateFormat('yyyy-MM-dd')
-                                        .format(_selectedDate!),
-                                    'city': city,
-                                    'gender': _gender,
-                                    'is_agree': isAgree,
-                                  };
-                                  print('signUpMap');
-                                  print(signUpMap);
-                                  final success =
-                                      await userProvider.signUp(signUpMap);
-                                  print(success);
-                                  print(success.runtimeType);
-                                  print(success?.message);
-                                  if (success?.status == true) {
-                                    Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder: (context) =>
-                                              const AadharVerificationPage(),
-                                        ));
-                                  } else {
-                                    // SnackBarHelper.showSuccess(context, message: userProvider.errorMessage);
-                                    ShowDialog().showErrorDialog(context,userProvider.errorMessage);
-                                  }
-                                }
-                              } else {
-                                // _showErrorDialog('userProvider.errorMessage');
-                              }
-
-                            },
-                            child: userProvider.isLoading?SizedBox(
-                              width: 40,
-                              height: 40,
-                              child: CircularProgressIndicator(
-                                color: AppColors.primary,
-                                strokeWidth: 2,
-                              ),
-                            ):Padding(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 16.0, vertical: 0),
-                              child: Text(
-                                'JOIN',
-                                style: AppFonts.titleBold(
-                                  color: Theme.of(context).colorScheme.primary,
-                                ),
-                              ),
-                            ),
+                                : () async {
+                                    if (signupFormKey.currentState
+                                            ?.validate() ??
+                                        false) {
+                                      if (_gender == null) {
+                                        ShowDialog().showInfoDialog(
+                                            context, 'Select Gender');
+                                      } else if (city == null) {
+                                        ShowDialog().showInfoDialog(
+                                            context, 'Select City');
+                                      } else if (_selectedDate == null) {
+                                        ShowDialog().showInfoDialog(
+                                            context, 'Select DOB');
+                                      } else if (isAgree == false) {
+                                        ShowDialog().showInfoDialog(
+                                            context, 'Agree the Terms');
+                                      } else {
+                                        var signUpMap = {
+                                          'first_name':
+                                              firstNameController.text,
+                                          'email': emailController.text,
+                                          'last_name': lastNameController.text,
+                                          'dob': DateFormat('yyyy-MM-dd')
+                                              .format(_selectedDate!),
+                                          'city': city,
+                                          'gender': _gender,
+                                          'is_agree': isAgree,
+                                        };
+                                        print('signUpMap');
+                                        print(signUpMap);
+                                        final success = await userProvider
+                                            .signUp(signUpMap);
+                                        print(success);
+                                        print(success.runtimeType);
+                                        print(success?.message);
+                                        if (success?.status == true) {
+                                          Navigator.push(
+                                              context,
+                                              MaterialPageRoute(
+                                                builder: (context) =>
+                                                    const AadharVerificationPage(),
+                                              ));
+                                        } else {
+                                          // SnackBarHelper.showSuccess(context, message: userProvider.errorMessage);
+                                          ShowDialog().showErrorDialog(context,
+                                              userProvider.errorMessage);
+                                        }
+                                      }
+                                    } else {
+                                      // _showErrorDialog('userProvider.errorMessage');
+                                    }
+                                  },
+                            child: userProvider.isLoading
+                                ? SizedBox(
+                                    width: 40,
+                                    height: 40,
+                                    child: CircularProgressIndicator(
+                                      color: AppColors.primary,
+                                      strokeWidth: 2,
+                                    ),
+                                  )
+                                : Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 16.0, vertical: 0),
+                                    child: Text(
+                                      'JOIN',
+                                      style: AppFonts.titleBold(
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .primary,
+                                      ),
+                                    ),
+                                  ),
                           ),
                         ),
                       ),

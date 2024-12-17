@@ -1,70 +1,37 @@
-/// status : true
-/// message : "Membership count fetched successfully."
-/// data : {"membership_count":98}
-
 class MembershipCountModel {
-  String? detail;
-  MembershipCountModel({
-      bool? status, 
-      String? message, 
-      Data? data,}){
-    _status = status;
-    _message = message;
-    _data = data;
-}
+  bool? status;
+  String? message;
+  Data? data;
 
-  MembershipCountModel.fromJson(dynamic json) {
-    _status = json['status'];
-    _message = json['message'];
-    _data = json['data'] != null ? Data.fromJson(json['data']) : null;
+  MembershipCountModel({this.status, this.message, this.data});
+
+  MembershipCountModel.fromJson(Map<String, dynamic> json) {
+    status = json['status'];
+    message = json['message'];
+    data = json['data'] != null ? Data.fromJson(json['data']) : null;
   }
-  bool? _status;
-  String? _message;
-  Data? _data;
-MembershipCountModel copyWith({  bool? status,
-  String? message,
-  Data? data,
-}) => MembershipCountModel(  status: status ?? _status,
-  message: message ?? _message,
-  data: data ?? _data,
-);
-  bool? get status => _status;
-  String? get message => _message;
-  Data? get data => _data;
 
   Map<String, dynamic> toJson() {
     final map = <String, dynamic>{};
-    map['status'] = _status;
-    map['message'] = _message;
-    if (_data != null) {
-      map['data'] = _data?.toJson();
+    map['status'] = status;
+    map['message'] = message;
+    if (data != null) {
+      map['data'] = data?.toJson();
     }
     return map;
   }
-
 }
-
-/// membership_count : 98
 
 class Data {
-  Data({
-      num? membershipCount,}){
-    _membershipCount = membershipCount;
-}
+  int? totalUsers;
 
-  Data.fromJson(dynamic json) {
-    _membershipCount = json['membership_count'];
-  }
-  num? _membershipCount;
-Data copyWith({  num? membershipCount,
-}) => Data(  membershipCount: membershipCount ?? _membershipCount,
-);
-  num? get membershipCount => _membershipCount;
+  Data({this.totalUsers});
 
-  Map<String, dynamic> toJson() {
-    final map = <String, dynamic>{};
-    map['membership_count'] = _membershipCount;
-    return map;
+  Data.fromJson(Map<String, dynamic> json) {
+    totalUsers = json['total_users'];
   }
 
+  Map<String, dynamic> toJson() => {
+        'total_users': totalUsers,
+      };
 }

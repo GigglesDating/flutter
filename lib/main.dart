@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:giggles/screens/auth/aadhar_verification/adhar_verification_page.dart';
-import 'package:giggles/screens/auth/signUpPage.dart';
 import 'package:giggles/screens/splash_page.dart';
 import 'package:flutter/services.dart';
 import 'package:giggles/screens/user/white_waiting_events_page.dart';
@@ -10,7 +8,7 @@ import 'constants/appTheme.dart';
 import 'constants/database/shared_preferences_service.dart';
 import 'network/auth_provider.dart';
 
-void main() async {         
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   SharedPref.preferences = await SharedPreferences.getInstance();
   SystemChrome.setEnabledSystemUIMode(SystemUiMode.manual,
@@ -46,7 +44,7 @@ class _MyAppState extends State<MyApp> {
       themeMode: _themeMode,
       theme: lightTheme,
       darkTheme: darkTheme,
-      home: const SplashPage(),
+      home:  SplashPage(),
       debugShowCheckedModeBanner: false,
     );
   }

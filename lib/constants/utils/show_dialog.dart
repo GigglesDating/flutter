@@ -39,7 +39,7 @@ class ShowDialog {
                 child: Text(
                   'Cancel',
                   style:
-                      AppFonts.titleBold(color: AppColors.black, fontSize: 15),
+                      AppFonts.titleBold(color: AppColors.white, fontSize: 15),
                 )),
             ElevatedButton(
                 style: ElevatedButton.styleFrom(

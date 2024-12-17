@@ -16,7 +16,7 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 # https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html
 # In Windows, build-name is used as the major, minor, and patch parts
 # of the product and file versions while build-number is used as the build suffix.
-version: 1.0.0+1
+version: 1.0.0+3
 
 environment:
   sdk: ^3.5.3
@@ -53,6 +53,7 @@ dependencies:
   geolocator: ^13.0.1
   # For Snackbar
   awesome_snackbar_content: ^0.1.4
+  syncfusion_flutter_datepicker: ^28.1.33
   # overlapped_carousel: ^1.0.2
   # photo_manager:
   # location: ^7.0.1
@@ -82,6 +83,7 @@ dependencies:
   camera:
   # better_player: ^0.0.84
   video_player: ^2.9.2
+  sms_autofill: ^2.4.1
   flutter_svg: ^2.0.10+1
   chewie: ^1.8.5
   # better_player: ^0.0.84

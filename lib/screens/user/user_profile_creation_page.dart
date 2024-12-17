@@ -31,6 +31,7 @@ class UserProfileCreationPage extends StatefulWidget {
 }
 
 class _UserProfileCreationPage extends State<UserProfileCreationPage> {
+  bool _isLoading = false;
   final List<String> genderOrientationList = [
     'Straight',
     'Homosexual',
@@ -280,7 +281,7 @@ class _UserProfileCreationPage extends State<UserProfileCreationPage> {
                     padding: const EdgeInsets.all(8.0),
                     child: DropdownButton<String>(
                       underline: const Text(''),
-                      dropdownColor: AppColors.black,
+                      dropdownColor: AppColors.sosbuttonBgColor,
                       style:
                           AppFonts.hintTitle(color: AppColors.sosbuttonBgColor),
                       value: genderOrientation,
@@ -439,7 +440,7 @@ class _UserProfileCreationPage extends State<UserProfileCreationPage> {
                     padding: const EdgeInsets.all(8.0),
                     child: DropdownButton<String>(
                       underline: const Text(''),
-                      dropdownColor: AppColors.black,
+                      dropdownColor: AppColors.sosbuttonBgColor,
                       style:
                           AppFonts.hintTitle(color: AppColors.sosbuttonBgColor),
                       value: gender,
@@ -604,7 +605,7 @@ class _UserProfileCreationPage extends State<UserProfileCreationPage> {
                                             activity,
                                             maxLines: 1,
                                             overflow: TextOverflow.ellipsis,
-                                            style: AppFonts.titleBold(
+                                            style: AppFonts.fullBold(
                                                 color: isSelected
                                                     ? Theme.of(context)
                                                                 .brightness ==
@@ -619,7 +620,7 @@ class _UserProfileCreationPage extends State<UserProfileCreationPage> {
                                                 fontWeight: isSelected
                                                     ? FontWeight.bold
                                                     : FontWeight.normal,
-                                                fontSize: 12),
+                                                fontSize: 13),
                                           ),
                                         ),
                                         // const SizedBox(width: 4),
@@ -907,119 +908,206 @@ class _UserProfileCreationPage extends State<UserProfileCreationPage> {
                 const SizedBox(
                   height: 20,
                 ),
+                // Center(
+                //   child: Container(
+                //     height: 46,
+                //     //width:MediaQuery.of(context).size.width/2.5,
+                //     child: ElevatedButton(
+                //       style: ElevatedButton.styleFrom(
+                //         backgroundColor: AppColors.primary,
+                //         side: BorderSide(
+                //           color: Theme.of(context).colorScheme.tertiary,
+                //         ),
+                //       ),
+                //       onPressed: () async {
+                //         // Navigator.push(context, MaterialPageRoute(builder: (context) => const WhiteWaitingEventsPage(),));
+                //         if (genderOrientation == null) {
+                //           ShowDialog().showInfoDialog(
+                //               context, 'Select gender orientation');
+                //         } else if (_selectedDatingPrefrencesItems.isEmpty) {
+                //           ShowDialog().showInfoDialog(
+                //               context, 'Select dating preference');
+                //         } else if (gender == null) {
+                //           ShowDialog().showInfoDialog(
+                //               context, 'Select gender preference');
+                //         } else if (_currentRangeValues.start
+                //             .round()
+                //             .toString()
+                //             .isEmpty) {
+                //           ShowDialog()
+                //               .showInfoDialog(context, 'Select minimum age');
+                //         } else if (_currentRangeValues.end
+                //             .round()
+                //             .toString()
+                //             .isEmpty) {
+                //           ShowDialog()
+                //               .showInfoDialog(context, 'Select maximum age');
+                //         } else if (selectedActivities.isEmpty) {
+                //           ShowDialog().showInfoDialog(
+                //               context, 'Please select interest');
+                //         } else if (selectedActivities.length < 5) {
+                //           print('selectedActivities');
+                //           print(selectedActivities);
+                //           print(selectedActivities.length);
+                //           ShowDialog().showInfoDialog(
+                //               context, 'Please select minimum 5 interest');
+                //         } else if (bioTextController.text.isEmpty) {
+                //           ShowDialog().showInfoDialog(
+                //               context, 'Please write about yourself');
+                //         } else if (images.isEmpty) {
+                //           ShowDialog()
+                //               .showInfoDialog(context, 'Please add photos');
+                //         } else if (images.length < 3) {
+                //           ShowDialog().showInfoDialog(
+                //               context, 'Please select minimum 3 photos');
+                //         } else if (isYes == false && isNo == false) {
+                //           ShowDialog().showInfoDialog(context,
+                //               'check the box to clarify Is this your first application to Giigles');
+                //         } else {
+                //           // List<String> selectPref = _selectedDatingPrefrencesItems.map((item) => item.toString()).toList();
+                //           var userProfileMap = {
+                //             "gender_orientation": genderOrientation,
+                //             "gender_preferences": gender,
+                //             "age_min":
+                //                 _currentRangeValues.start.round().toString(),
+                //             "age_max":
+                //                 _currentRangeValues.end.round().toString(),
+                //             // "dating_preferencesq": _selectedDatingPrefrencesItems,
+                //             // "interests":selectedActivities,
+                //             "bio": bioTextController.text,
+                //             // 'images': images,
+                //             "is_first_time": isYes == true
+                //                 ? "True"
+                //                 : isNo == true
+                //                     ? 'False'
+                //                     : null,
+                //           };
+                //           print('filePath');
+                //           print(filePath);
+                //           final userProfileCreate =
+                //               await userProfileCreation.userProfileCreation(
+                //                   userProfileMap,
+                //                   images,
+                //                   _selectedDatingPrefrencesItems,
+                //                   selectedActivities);
+                //           if (userProfileCreate?.status == true) {
+                //             // final prefs = await SharedPreferences.getInstance();
+                //             await SharedPref.eventScreenSave();
+                //             // await prefs.setString('lastScreen', 'eventPage');
+                //             Navigator.push(
+                //                 context,
+                //                 MaterialPageRoute(
+                //                   builder: (context) =>
+                //                       const WhiteWaitingEventsPage(),
+                //                 ));
+                //             ShowDialog().showSuccessDialog(
+                //                 context, userProfileCreation.successMessage);
+                //           } else {
+                //             ShowDialog().showErrorDialog(
+                //                 context, userProfileCreation.errorMessage);
+                //           }
+                //         }
+                //       },
+                //       child: Padding(
+                //         padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                //         child: Text('Submit',
+                //             style: AppFonts.titleBold(
+                //                 color: AppColors.white, fontSize: 14)),
+                //       ),
+                //     ),
+                //   ),
+                // ),
                 Center(
-                  child: Container(
-                    height: 46,
-                    //width:MediaQuery.of(context).size.width/2.5,
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        // minimumSize: Size(250, 50),
-                        // foregroundColor: Theme.of(context).colorScheme.onPrimary,
-                        backgroundColor: AppColors.primary,
-                        side: BorderSide(
-                          color: Theme.of(context).colorScheme.tertiary,
-                        ),
-                        // shape: RoundedRectangleBorder( // Add rounded corners
-                        //   borderRadius: BorderRadius.circular(24.0),
-                        // ),
-                      ),
-                      onPressed: () async {
-                        // Navigator.push(context, MaterialPageRoute(builder: (context) => const WhiteWaitingEventsPage(),));
-                        if (genderOrientation == null) {
-                          ShowDialog().showInfoDialog(
-                              context, 'Select gender orientation');
-                        } else if (_selectedDatingPrefrencesItems.isEmpty) {
-                          ShowDialog().showInfoDialog(
-                              context, 'Select dating preference');
-                        } else if (gender == null) {
-                          ShowDialog().showInfoDialog(
-                              context, 'Select gender preference');
-                        } else if (_currentRangeValues.start
-                            .round()
-                            .toString()
-                            .isEmpty) {
-                          ShowDialog()
-                              .showInfoDialog(context, 'Select minimum age');
-                        } else if (_currentRangeValues.end
-                            .round()
-                            .toString()
-                            .isEmpty) {
-                          ShowDialog()
-                              .showInfoDialog(context, 'Select maximum age');
-                        } else if (selectedActivities.isEmpty) {
-                          ShowDialog().showInfoDialog(
-                              context, 'Please select interest');
-                        } else if (selectedActivities.length < 5) {
-                          print('selectedActivities');
-                          print(selectedActivities);
-                          print(selectedActivities.length);
-                          ShowDialog().showInfoDialog(
-                              context, 'Please select minimum 5 interest');
-                        } else if (bioTextController.text.isEmpty) {
-                          ShowDialog().showInfoDialog(
-                              context, 'Please write about yourself');
-                        } else if (images.isEmpty) {
-                          ShowDialog()
-                              .showInfoDialog(context, 'Please add photos');
-                        } else if (images.length < 3) {
-                          ShowDialog().showInfoDialog(
-                              context, 'Please select minimum 3 photos');
-                        } else if (isYes == false && isNo == false) {
-                          ShowDialog().showInfoDialog(context,
-                              'check the box to clarify Is this your first application to Giigles');
-                        } else {
-                          // List<String> selectPref = _selectedDatingPrefrencesItems.map((item) => item.toString()).toList();
-                          var userProfileMap = {
-                            "gender_orientation": genderOrientation,
-                            "gender_preferences": gender,
-                            "age_min":
-                                _currentRangeValues.start.round().toString(),
-                            "age_max":
-                                _currentRangeValues.end.round().toString(),
-                            // "dating_preferencesq": _selectedDatingPrefrencesItems,
-                            // "interests":selectedActivities,
-                            "bio": bioTextController.text,
-                            // 'images': images,
-                            "is_first_time": isYes == true
-                                ? "True"
-                                : isNo == true
-                                    ? 'False'
-                                    : null,
-                          };
-                          print('filePath');
-                          print(filePath);
-                          final userProfileCreate =
-                              await userProfileCreation.userProfileCreation(
+                  child: _isLoading
+                      ? CircularProgressIndicator() // Show loader while loading
+                      : Container(
+                          height: 46,
+                          child: ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppColors.primary,
+                              side: BorderSide(
+                                color: Theme.of(context).colorScheme.tertiary,
+                              ),
+                            ),
+                            onPressed: () async {
+                              // Disable interactions while loading
+                              setState(() {
+                                _isLoading = true;
+                              });
+
+                              if (genderOrientation == null) {
+                                ShowDialog().showInfoDialog(
+                                    context, 'Select gender orientation');
+                                setState(() {
+                                  _isLoading = false;
+                                });
+                              } else if (_selectedDatingPrefrencesItems
+                                  .isEmpty) {
+                                ShowDialog().showInfoDialog(
+                                    context, 'Select dating preference');
+                                setState(() {
+                                  _isLoading = false;
+                                });
+                              }
+                              // Add other validation checks here
+                              else {
+                                // API call and navigation logic
+                                var userProfileMap = {
+                                  "gender_orientation": genderOrientation,
+                                  "gender_preferences": gender,
+                                  "age_min": _currentRangeValues.start
+                                      .round()
+                                      .toString(),
+                                  "age_max": _currentRangeValues.end
+                                      .round()
+                                      .toString(),
+                                  "bio": bioTextController.text,
+                                  "is_first_time":
+                                      isYes == true ? "True" : "False",
+                                };
+
+                                final userProfileCreate =
+                                    await userProfileCreation
+                                        .userProfileCreation(
                                   userProfileMap,
                                   images,
                                   _selectedDatingPrefrencesItems,
-                                  selectedActivities);
-                          if (userProfileCreate?.status == true) {
-                            // final prefs = await SharedPreferences.getInstance();
-                            await SharedPref.eventScreenSave();
-                            // await prefs.setString('lastScreen', 'eventPage');
-                            Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) =>
-                                      const WhiteWaitingEventsPage(),
-                                ));
-                            ShowDialog().showSuccessDialog(
-                                context, userProfileCreation.successMessage);
-                          } else {
-                            ShowDialog().showErrorDialog(
-                                context, userProfileCreation.errorMessage);
-                          }
-                        }
-                      },
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 24.0),
-                        child: Text('Submit',
-                            style: AppFonts.titleBold(
-                                color: AppColors.white, fontSize: 14)),
-                      ),
-                    ),
-                  ),
+                                  selectedActivities,
+                                );
+
+                                if (userProfileCreate?.status == true) {
+                                  await SharedPref.eventScreenSave();
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) =>
+                                          const WhiteWaitingEventsPage(),
+                                    ),
+                                  );
+                                  ShowDialog().showSuccessDialog(context,
+                                      userProfileCreation.successMessage);
+                                } else {
+                                  ShowDialog().showErrorDialog(context,
+                                      userProfileCreation.errorMessage);
+                                }
+
+                                setState(() {
+                                  _isLoading =
+                                      false; // Stop loading after API call
+                                });
+                              }
+                            },
+                            child: Padding(
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 24.0),
+                              child: Text(
+                                'Submit',
+                                style: AppFonts.titleBold(
+                                    color: AppColors.white, fontSize: 14),
+                              ),
+                            ),
+                          ),
+                        ),
                 ),
                 const SizedBox(
                   height: kToolbarHeight,

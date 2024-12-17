@@ -151,8 +151,8 @@ class _WhiteWaitingEventsPage extends State<WhiteWaitingEventsPage> {
                       backgroundColor: Colors.red,
                     ),
                     onPressed: () {
-                      ShowDialog().showInfoDialogPopUp(
-                          context, 'Are you sure want to delete your profile ?',
+                      ShowDialog().showInfoDialogPopUp(context,
+                          'Be patient leaving now may mean a longer wait later. The best is worth the wait.',
                           () async {
                         Navigator.of(context).pop();
                         final success =
@@ -766,9 +766,6 @@ class _WhiteWaitingEventsPage extends State<WhiteWaitingEventsPage> {
                                   fontSize: 14,
                                 )),
                           ),
-                        ),
-                        SizedBox(
-                          height: 8,
                         ),
                       ],
                     ),

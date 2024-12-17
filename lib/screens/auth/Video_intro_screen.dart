@@ -80,7 +80,7 @@
 //         _navigateTo(const WhiteWaitingEventsPage());
 //       } else if (isUser == "Draft") {
 //         _navigateTo(SignUPPage());
-//       } 
+//       }
 //     } catch (e) {
 //       print("Error in checkIsUser: $e");
 //     }
@@ -200,7 +200,6 @@
 //   }
 // }
 
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:giggles/constants/appColors.dart';
@@ -226,7 +225,6 @@ class _VideoIntroPage extends State<VideoIntroPage> {
   bool isPlaying = false;
   bool _isFirstTimeCompleted = false;
   bool _isButtonVisible = false;
-
 
   void _enterFullPage() {
     SystemChrome.setEnabledSystemUIMode(
@@ -358,8 +356,7 @@ class _VideoIntroPage extends State<VideoIntroPage> {
           body: Stack(
             children: [
               Positioned.fill(
-                child:
-                _isInitialized
+                child: _isInitialized
                     ? FittedBox(
                         fit: BoxFit.cover,
                         child: SizedBox(
@@ -367,8 +364,7 @@ class _VideoIntroPage extends State<VideoIntroPage> {
                             height: _controller.value.size.height,
                             child: VideoPlayer(_controller)),
                       )
-                    :
-                Center(
+                    : Center(
                         child: Container(
                             width: 48,
                             height: 48,
@@ -397,17 +393,17 @@ class _VideoIntroPage extends State<VideoIntroPage> {
               //     size: 80.0,
               //   ),
               if (!_controller.value.isPlaying)
-                if(_isInitialized)
-                GestureDetector(
-                  onTap: _togglePlayPause,
-                  child: Center(
-                    child: Icon(
-                      Icons.play_arrow,
-                      color: AppColors.white,
-                      size: 100.0,
+                if (_isInitialized)
+                  GestureDetector(
+                    onTap: _togglePlayPause,
+                    child: Center(
+                      child: Icon(
+                        Icons.play_arrow,
+                        color: AppColors.white,
+                        size: 100.0,
+                      ),
                     ),
                   ),
-                ),
               // if (_isPlaying)
               //   GestureDetector(
               //     onTap: _togglePlayPause,
@@ -462,33 +458,34 @@ class _VideoIntroPage extends State<VideoIntroPage> {
                           color: AppColors.primary,
                         ))),
               if (_isButtonVisible)
-                if(_isInitialized)
-                Positioned(
-                    bottom: 0,
-                    right: 0,
-                    child: TextButton(
-                        onPressed: () {
-                          if (widget.value ?? false) {
-                            Navigator.of(context).pop();
-                          } else {
-                            _exitFullPage();
-                            Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => SignUPPage(),
-                                ));
-                          }
-                        },
-                        style: ButtonStyle(
-                            padding:
-                                WidgetStatePropertyAll(EdgeInsets.all(24))),
-                        child: Text(
-                          'Continue',
-                          style: AppFonts.titleMedium(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w500,
-                              color: Theme.of(context).primaryColor),
-                        )))
+                if (_isInitialized)
+                  Positioned(
+                      bottom: 0,
+                      right: 0,
+                      child: TextButton(
+                          onPressed: () {
+                            if (widget.value ?? false) {
+                              Navigator.of(context).pop();
+                            } else {
+                              _exitFullPage();
+                              _controller.dispose();
+                              Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => SignUPPage(),
+                                  ));
+                            }
+                          },
+                          style: ButtonStyle(
+                              padding:
+                                  WidgetStatePropertyAll(EdgeInsets.all(24))),
+                          child: Text(
+                            'Continue',
+                            style: AppFonts.titleMedium(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w500,
+                                color: Theme.of(context).primaryColor),
+                          )))
             ],
           )),
     );

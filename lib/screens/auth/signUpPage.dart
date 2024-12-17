@@ -16,6 +16,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:syncfusion_flutter_datepicker/datepicker.dart';
 
 import '../../network/auth_provider.dart';
 import 'aadhar_verification/adhar_verification_page.dart';
@@ -40,6 +41,37 @@ class _SignUPPage extends State<SignUPPage> {
 
   ThemeMode _themeMode = ThemeMode.system;
 
+  DateTime? _selectedDate;
+
+  void _openDatePicker(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) {
+        return Container(
+          padding: const EdgeInsets.all(16),
+          height: 300,
+          child: SfDateRangePicker(
+            initialSelectedDate: _selectedDate,
+            onSelectionChanged: (DateRangePickerSelectionChangedArgs args) {
+              if (args.value is DateTime) {
+                setState(() {
+                  _selectedDate = args.value;
+                });
+                Navigator.pop(context); // Close the bottom sheet
+              }
+            },
+            selectionMode: DateRangePickerSelectionMode.single,
+            showTodayButton: true,
+            todayHighlightColor: Colors.blue,
+          ),
+        );
+      },
+    );
+  }
+
   Future<void> saveLastScreen() async {
     await SharedPref.otpVerifiedScreen();
     // final prefs = await SharedPreferences.getInstance();
@@ -58,18 +90,17 @@ class _SignUPPage extends State<SignUPPage> {
   final List<String> cityList = [
     'Bangalore',
     'Mumbai',
-    'Pune',
-    'Chennai',
+    // 'Pune',
+    // 'Chennai',
     'Jaipur',
-    'Noida',
-    'Delhi',
+    // 'Noida',
+    // 'Delhi',
     'Hyderabad',
-    'Ahmedabad',
-    'Lucknow',
-    'Mysore',
-    'Kolkata'
+    // 'Ahmedabad',
+    // 'Lucknow',
+    // 'Mysore',
+    // 'Kolkata'
   ];
-  DateTime? _selectedDate;
   bool isAgree = false;
 
   Future<void> _selectDate(BuildContext context) async {
@@ -471,7 +502,7 @@ class _SignUPPage extends State<SignUPPage> {
                             child: Padding(
                               padding: const EdgeInsets.all(8.0),
                               child: DropdownButton<String>(
-                                dropdownColor: AppColors.black,
+                                dropdownColor: AppColors.sosbuttonBgColor,
                                 underline: Text(''),
                                 hint: Text(
                                   'Gender',
@@ -515,13 +546,9 @@ class _SignUPPage extends State<SignUPPage> {
                                 boxShadow: [
                                   BoxShadow(
                                     color: Colors.grey.withOpacity(0.3),
-                                    // Shadow color
                                     offset: const Offset(0, 2),
-                                    // Offset of the shadow
                                     blurRadius: 4,
-                                    // Blur radius of the shadow
-                                    spreadRadius:
-                                        1, // Spread radius of the shadow
+                                    spreadRadius: 1,
                                   ),
                                 ],
                                 border: Border.all(
@@ -529,7 +556,7 @@ class _SignUPPage extends State<SignUPPage> {
                                 ),
                               ),
                               child: InkWell(
-                                onTap: () => _selectDate(context),
+                                onTap: () => _openDatePicker(context),
                                 child: Padding(
                                   padding: const EdgeInsets.all(6.0),
                                   child: Row(
@@ -558,6 +585,58 @@ class _SignUPPage extends State<SignUPPage> {
                               ),
                             ),
                           ),
+                          // Expanded(
+                          //   child: Container(
+                          //     height: 48,
+                          //     decoration: BoxDecoration(
+                          //       color: AppColors.signUpTextFieldColor,
+                          //       borderRadius: BorderRadius.circular(20),
+                          //       boxShadow: [
+                          //         BoxShadow(
+                          //           color: Colors.grey.withOpacity(0.3),
+                          //           // Shadow color
+                          //           offset: const Offset(0, 2),
+                          //           // Offset of the shadow
+                          //           blurRadius: 4,
+                          //           // Blur radius of the shadow
+                          //           spreadRadius:
+                          //               1, // Spread radius of the shadow
+                          //         ),
+                          //       ],
+                          //       border: Border.all(
+                          //         color: AppColors.white,
+                          //       ),
+                          //     ),
+                          //     child: InkWell(
+                          //       onTap: () => _selectDate(context),
+                          //       child: Padding(
+                          //         padding: const EdgeInsets.all(6.0),
+                          //         child: Row(
+                          //           mainAxisAlignment:
+                          //               MainAxisAlignment.spaceBetween,
+                          //           crossAxisAlignment:
+                          //               CrossAxisAlignment.center,
+                          //           children: [
+                          //             Text(
+                          //               _selectedDate == null
+                          //                   ? 'Birthday'
+                          //                   : "${_selectedDate!.toLocal()}"
+                          //                       .split(' ')[0],
+                          //               style: AppFonts.hintTitle(
+                          //                   color: AppColors.white,
+                          //                   fontSize: 14),
+                          //             ),
+                          //             Icon(
+                          //               Icons.calendar_month,
+                          //               color: AppColors.white,
+                          //               size: 16,
+                          //             ),
+                          //           ],
+                          //         ),
+                          //       ),
+                          //     ),
+                          //   ),
+                          // ),
                           SizedBox(
                             width: 8,
                           ),
@@ -591,7 +670,7 @@ class _SignUPPage extends State<SignUPPage> {
                                   menuMaxHeight:
                                       MediaQuery.of(context).size.width / 2,
                                   underline: Text(''),
-                                  dropdownColor: AppColors.black,
+                                  dropdownColor: AppColors.sosbuttonBgColor,
                                   style: AppFonts.hintTitle(
                                       color: AppColors.white),
                                   value: city,
@@ -658,10 +737,16 @@ class _SignUPPage extends State<SignUPPage> {
                                     });
                                   },
                                 ),
-                                Text(
-                                  'I agree to verify myself\nwith aadhar',
-                                  style: AppFonts.titleRegular(
-                                      color: AppColors.white),
+                                Container(
+                                  constraints: BoxConstraints(maxWidth: 350),
+                                  child: Text(
+                                    'I agree to verify myself with aadhar',
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: AppFonts.titleRegular(
+                                      color: AppColors.white,
+                                    ),
+                                  ),
                                 ),
                               ],
                             ),

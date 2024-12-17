@@ -53,7 +53,6 @@ dependencies:
   geolocator: ^13.0.1
   # For Snackbar
   awesome_snackbar_content: ^0.1.4
-  syncfusion_flutter_datepicker: ^28.1.33
   # overlapped_carousel: ^1.0.2
   # photo_manager:
   # location: ^7.0.1
@@ -86,20 +85,21 @@ dependencies:
   sms_autofill: ^2.4.1
   flutter_svg: ^2.0.10+1
   chewie: ^1.8.5
+  syncfusion_flutter_datepicker: ^28.1.33
   # better_player: ^0.0.84
-#  video_player: ^2.9.1
-#  video_trimmer: ^3.0.1
-  
+  #  video_player: ^2.9.1
+  #  video_trimmer: ^3.0.1
+
 
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  flutter_launcher_icons: ^0.13.1  
+  flutter_launcher_icons: ^0.13.1
 flutter_icons:
   image_path: "assets/images/logolighttheme.png"
   andriod: true
-  ios: true  
+  ios: true
 
   # The "flutter_lints" package below contains a set of recommended lints to
   # encourage good coding practices. The lint set provided by the package is

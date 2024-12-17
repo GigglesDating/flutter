@@ -1,3 +1,4 @@
+import 'package:alt_sms_autofill/alt_sms_autofill.dart';
 import 'package:country_picker/country_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -28,6 +29,44 @@ class _OtpPageState extends State<OtpPage> {
   final TextEditingController otpController = TextEditingController();
   bool _otpFieldVisible = true;
   final signInFormKey = GlobalKey<FormState>();
+  String? _commingSms = 'Unknown';
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    initSmsListener();
+  }
+
+  Future<void> initSmsListener() async {
+    String? commingSms;
+    try {
+      commingSms = await AltSmsAutofill().listenForSms;
+    } on PlatformException {
+      commingSms = 'Failed to get SMS.';
+    }
+
+    if (!mounted) return;
+
+    // Extract only digits from the incoming SMS
+    final otpCode = _extractDigits(commingSms ?? '');
+
+    setState(() {
+      otpController.text = otpCode;
+    });
+  }
+
+// Helper function to extract only digits from the string
+  String _extractDigits(String input) {
+    final digitRegex = RegExp(r'\d+');
+    final match = digitRegex.firstMatch(input);
+    return match?.group(0) ?? '';
+  }
+
+  @override
+  void dispose() {
+    AltSmsAutofill().unregisterListener();
+    super.dispose();
+  }
 
   Country selectedCountry = Country(
     phoneCode: "91",
@@ -41,21 +80,6 @@ class _OtpPageState extends State<OtpPage> {
     displayNameNoCountryCode: "IN",
     e164Key: "",
   );
-
-  @override
-  void initState() {
-    super.initState();
-    SmsAutoFill().listenForCode();
-    // bool _otpFieldVisible = true;
-    // Uncomment below lines if you want to set full-screen immersive mode.
-    // SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
-  }
-
-  @override
-  void dispose() {
-    SmsAutoFill().unregisterListener();
-    super.dispose();
-  }
 
   void _closeKeyboard() {
     SystemChannels.textInput.invokeMethod('TextInput.hide');
@@ -116,28 +140,157 @@ class _OtpPageState extends State<OtpPage> {
                       const SizedBox(
                           height: kToolbarHeight + kTextTabBarHeight),
                       _otpFieldVisible
-                          ? PinFieldAutoFill(
+                          ? TextFormField(
                               controller: otpController,
-                              currentCode: otpController.text,
-                              decoration: UnderlineDecoration(
-                                colorBuilder:
-                                    FixedColorBuilder(AppColors.white),
-                                textStyle: AppFonts.hintTitle(
-                                  color: Theme.of(context).colorScheme.tertiary,
-                                ),
-                              ),
-                              codeLength: 6,
-                              onCodeChanged: (value) {
-                                if (value != null && value.length == 6) {
-                                  otpController.text = value;
+                              style: AppFonts.hintTitle(
+                                  color:
+                                      Theme.of(context).colorScheme.tertiary),
+                              cursorHeight: 20,
+                              maxLength: 6,
+                              maxLines: 1,
+                              minLines: 1,
+                              onChanged: (value) {
+                                if (value.length == 6) {
                                   _closeKeyboard();
                                 }
                               },
-                              onCodeSubmitted: (value) {
-                                otpController.text = value;
+                              keyboardType: TextInputType.phone,
+                              inputFormatters: <TextInputFormatter>[
+                                FilteringTextInputFormatter.digitsOnly
+                                // Allows only numbers
+                              ],
+                              validator: (value) {
+                                bool isValidLength(String text) {
+                                  return text.length >= 6;
+                                }
+
+                                if (value!.isEmpty) {
+                                  return 'OTP is empty';
+                                } else if (!isValidLength(value)) {
+                                  return 'Enter 6 digit OTP';
+                                }
+                                return null;
                               },
+                              decoration: InputDecoration(
+                                floatingLabelBehavior:
+                                    FloatingLabelBehavior.never,
+                                contentPadding:
+                                    EdgeInsets.symmetric(horizontal: 16),
+                                hintText: 'Otp',
+                                isDense: true,
+                                hintStyle: TextStyle(
+                                  color:
+                                      Theme.of(context).colorScheme.secondary,
+                                ),
+                                suffixIcon: Container(
+                                  width: MediaQuery.of(context).size.width / 3,
+                                  padding: EdgeInsets.only(right: 8),
+                                  child: Align(
+                                    alignment: Alignment.centerRight,
+                                    child: InkWell(
+                                      onTap: userProvider.isResendOTPLoading
+                                          ? null
+                                          : () async {
+                                              if (_otpFieldVisible) {
+                                                try {
+                                                  final isOtpValidate =
+                                                      await userProvider
+                                                          .postResendOTP();
+                                                  if (isOtpValidate == true) {
+                                                    ShowDialog().showSuccessDialog(
+                                                        context,
+                                                        'OTP Resend Successfully');
+                                                  } else {
+                                                    ShowDialog()
+                                                        .showErrorDialog(
+                                                            context,
+                                                            'Please Try Again');
+                                                  }
+                                                } catch (e) {
+                                                  ShowDialog().showErrorDialog(
+                                                      context,
+                                                      'Failed to Resend OTP: $e');
+                                                }
+                                              }
+                                            },
+                                      child: userProvider.isResendOTPLoading
+                                          ? SizedBox(
+                                              width: 20,
+                                              height: 20,
+                                              child: Align(
+                                                alignment: Alignment.center,
+                                                child:
+                                                    CircularProgressIndicator(
+                                                  color: AppColors.primary,
+                                                  strokeWidth: 2,
+                                                ),
+                                              ),
+                                            )
+                                          : Text(
+                                              'Resend OTP',
+                                              textAlign: TextAlign.start,
+                                              style: TextStyle(
+                                                  color: Theme.of(context)
+                                                      .hintColor),
+                                            ),
+                                    ),
+                                  ),
+                                ),
+                                counterText: '',
+                                filled: true,
+                                fillColor: Theme.of(context).brightness ==
+                                        Brightness.light
+                                    ? AppColors.white
+                                    : AppColors.black,
+                                border: OutlineInputBorder(
+                                    borderRadius:
+                                        BorderRadius.all(Radius.circular(22)),
+                                    borderSide:
+                                        BorderSide(color: AppColors.white)),
+                                focusedBorder: OutlineInputBorder(
+                                    borderRadius:
+                                        BorderRadius.all(Radius.circular(22)),
+                                    borderSide:
+                                        BorderSide(color: AppColors.white)),
+                                enabledBorder: const OutlineInputBorder(
+                                  // Border when enabled
+                                  borderSide:
+                                      BorderSide(color: AppColors.white),
+                                  borderRadius:
+                                      BorderRadius.all(Radius.circular(22)),
+                                ),
+                                errorBorder: const OutlineInputBorder(
+                                  borderRadius:
+                                      BorderRadius.all(Radius.circular(22)),
+                                  borderSide:
+                                      BorderSide(color: AppColors.error),
+                                ),
+                              ),
                             )
                           : SizedBox(),
+                      // _otpFieldVisible
+                      //     ? PinFieldAutoFill(
+                      //         controller: otpController,
+                      //         currentCode: otpController.text,
+                      //         decoration: UnderlineDecoration(
+                      //           colorBuilder:
+                      //               FixedColorBuilder(AppColors.white),
+                      //           textStyle: AppFonts.hintTitle(
+                      //             color: Theme.of(context).colorScheme.tertiary,
+                      //           ),
+                      //         ),
+                      //         codeLength: 6,
+                      //         onCodeChanged: (value) {
+                      //           if (value != null && value.length == 6) {
+                      //             otpController.text = value;
+                      //             _closeKeyboard();
+                      //           }
+                      //         },
+                      //         onCodeSubmitted: (value) {
+                      //           otpController.text = value;
+                      //         },
+                      //       )
+                      //     : SizedBox(),
                       const SizedBox(height: 16),
                       Container(
                         height: 50,

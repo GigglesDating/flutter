@@ -655,10 +655,19 @@ class _UserProfileCreationPage extends State<UserProfileCreationPage> {
                       color: Theme.of(context).colorScheme.tertiary),
                   minLines: 4,
                   maxLines: 4,
-                  keyboardType: TextInputType.text,
+                  // keyboardType: TextInputType.number,
                   maxLength: 300,
                   // textAlign: TextAlign.start,
                   controller: bioTextController,
+                  
+                  // inputFormatters: [
+                  //   FilteringTextInputFormatter.allow(RegExp(r'.*')),
+                  // ],
+                  inputFormatters: [
+                    FilteringTextInputFormatter.allow(
+                      RegExp(r'[\u0000-\uFFFF]'),
+                    ),
+                  ],
                   onChanged: (value) {},
                   decoration: InputDecoration(
                     errorMaxLines: 1,

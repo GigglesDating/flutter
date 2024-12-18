@@ -4,7 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:giggles/screens/auth/aadhar_verification/adhar_verification_page.dart';
 import 'package:giggles/screens/auth/signUpPage.dart';
 import 'package:giggles/screens/user/user_profile_creation_page.dart';
-import 'package:giggles/screens/user/white_waiting_events_page.dart';
+import 'package:giggles/screens/user/while_waiting_events_page.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'auth/signInPage.dart';
 

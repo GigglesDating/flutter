@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:giggles/constants/database/shared_preferences_service.dart';
+import 'package:giggles/models/customer_support_number_model.dart';
 import 'package:giggles/models/event_video.dart';
 import 'package:giggles/models/membership_count_model.dart';
 import 'package:giggles/models/otp_model.dart';
@@ -508,6 +509,7 @@ class AuthProvider extends ChangeNotifier {
       return null;
     }
   }
+  //store addhar data to our database
 
   Future<bool?> postAadharData(Map<String, dynamic> map) async {
     _isLoading = true;
@@ -515,7 +517,7 @@ class AuthProvider extends ChangeNotifier {
     final otpValidate = await _authService.postAadharDetails(map);
     _isLoading = false;
     if (otpValidate == false) {
-      _errorMessage = 'Enter Valid  OTP';
+      _errorMessage = 'Something went wrong';
     } else {
       _successMessage = 'Aadhar Data Post';
       // _user = otpValidate; // Store logged-in user data
@@ -523,5 +525,25 @@ class AuthProvider extends ChangeNotifier {
     _isLoading = false;
     notifyListeners();
     return otpValidate;
+  }
+
+
+  // customer support number
+
+
+  Future<CustomerSupportNumberModel?> getCustomerSupportNumber() async {
+    _isLoading = true;
+    notifyListeners();
+    final customerSupport = await _authService.fetchCustomerSupportNumber();
+    _isLoading = false;
+    if (customerSupport == false) {
+      _errorMessage = 'Something went wrong';
+    } else {
+      _successMessage = customerSupport.message.toString();
+      // _user = otpValidate; // Store logged-in user data
+    }
+    _isLoading = false;
+    notifyListeners();
+    return customerSupport;
   }
 }

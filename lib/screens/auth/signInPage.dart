@@ -11,7 +11,7 @@ import 'package:giggles/screens/auth/otpScreen.dart';
 import 'package:giggles/screens/auth/otp_page.dart';
 import 'package:giggles/screens/auth/signUpPage.dart';
 import 'package:giggles/screens/user/user_profile_creation_page.dart';
-import 'package:giggles/screens/user/white_waiting_events_page.dart';
+import 'package:giggles/screens/user/while_waiting_events_page.dart';
 import 'package:provider/provider.dart';
 import 'package:sms_autofill/sms_autofill.dart';
 import 'Video_intro_screen.dart';

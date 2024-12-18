@@ -33,6 +33,7 @@ class _WhiteWaitingEventsPage extends State<WhiteWaitingEventsPage> {
   String membershipCount = '';
   List<bool> isLiked = [];
   List<WaitingEventData> waitingEventList = [];
+  String phoneNumber ='';
   bool? isRegister = false;
 
   List<String> imageUrlList = [
@@ -100,12 +101,20 @@ class _WhiteWaitingEventsPage extends State<WhiteWaitingEventsPage> {
           }
         },
       );
+      Provider.of<AuthProvider>(context, listen: false).getCustomerSupportNumber().then(
+        (value) {
+          if (value?.status == true) {
+            setState(() {
+              phoneNumber = value!.data!.phoneNumber.toString();
+            });
+          }
+        },
+      );
     });
   }
 
   Future<void> openWhatsApp() async {
-    final Uri whatsappUrl = Uri.parse("https://wa.me/+91 9030373653");
-
+    final Uri whatsappUrl = Uri.parse("https://wa.me/+91 $phoneNumber");
     if (!await launchUrl(whatsappUrl, mode: LaunchMode.externalApplication)) {
       throw 'Could not launch $whatsappUrl';
     }
@@ -756,7 +765,7 @@ class _WhiteWaitingEventsPage extends State<WhiteWaitingEventsPage> {
                         Align(
                           alignment: Alignment.bottomCenter,
                           child: TextButton(
-                            onPressed: () {
+                            onPressed: () async{
                               openWhatsApp();
                             },
                             child: Text('Customer support',

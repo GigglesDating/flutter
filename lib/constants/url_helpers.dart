@@ -16,5 +16,6 @@ class UrlHelper {
   static const String waitingEventUrl = 'event/';
   static const String likeWaitingEventUrl = 'event_like/';
   static const String adharDataUrl = 'aadhar/';
+  static const String customerSupportUrl = 'support_number/';
   // static const String userInterrestUrl = 'user_interests/';
 }

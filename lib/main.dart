@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:giggles/screens/splash_page.dart';
 import 'package:flutter/services.dart';
 import 'package:giggles/screens/user/user_profile_creation_page.dart';
-import 'package:giggles/screens/user/white_waiting_events_page.dart';
+import 'package:giggles/screens/user/while_waiting_events_page.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'constants/appTheme.dart';
@@ -45,7 +45,7 @@ class _MyAppState extends State<MyApp> {
       themeMode: _themeMode,
       theme: lightTheme,
       darkTheme: darkTheme,
-      home:  UserProfileCreationPage(),
+      home:  SplashPage(),
       debugShowCheckedModeBanner: false,
     );
   }

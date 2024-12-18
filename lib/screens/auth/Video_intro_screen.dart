@@ -1,7 +1,7 @@
 // import 'package:flutter/material.dart';
 // import 'package:flutter/services.dart';
 // import 'package:giggles/screens/auth/signUpPage.dart';
-// import 'package:giggles/screens/user/white_waiting_events_page.dart';
+// import 'package:giggles/screens/user/while_waiting_events_page.dart';
 // import 'package:shared_preferences/shared_preferences.dart';
 // import 'package:video_player/video_player.dart';
 

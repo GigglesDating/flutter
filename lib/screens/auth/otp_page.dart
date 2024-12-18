@@ -11,11 +11,11 @@ import 'package:giggles/screens/auth/aadhar_verification/adhar_verification_page
 import 'package:giggles/screens/auth/otpScreen.dart';
 import 'package:giggles/screens/auth/signInPage.dart';
 import 'package:giggles/screens/auth/signUpPage.dart';
-import 'package:giggles/screens/user/user_profile_creation_page.dart';
-import 'package:giggles/screens/user/white_waiting_events_page.dart';
+import 'package:giggles/screens/user/while_waiting_events_page.dart';
 import 'package:provider/provider.dart';
 import 'package:sms_autofill/sms_autofill.dart';
-import 'Video_intro_screen.dart';
+
+import '../user/user_profile_creation_page.dart';
 
 class OtpPage extends StatefulWidget {
   const OtpPage({Key? key}) : super(key: key);
@@ -200,6 +200,10 @@ class _OtpPageState extends State<OtpPage> {
                                                     ShowDialog().showSuccessDialog(
                                                         context,
                                                         'OTP Resend Successfully');
+                                                    otpController.clear();
+                                                    initSmsListener();
+
+
                                                   } else {
                                                     ShowDialog()
                                                         .showErrorDialog(

@@ -16,7 +16,7 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 # https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html
 # In Windows, build-name is used as the major, minor, and patch parts
 # of the product and file versions while build-number is used as the build suffix.
-version: 1.0.0+3
+version: 1.0.0+4
 
 environment:
   sdk: ^3.5.3
@@ -53,7 +53,6 @@ dependencies:
   geolocator: ^13.0.1
   # For Snackbar
   awesome_snackbar_content: ^0.1.4
-  syncfusion_flutter_datepicker: ^28.1.33
   # overlapped_carousel: ^1.0.2
   # photo_manager:
   # location: ^7.0.1
@@ -71,7 +70,6 @@ dependencies:
   # device_preview: ^1.2.0
   # For Dating Part
   alt_sms_autofill: ^1.0.0
-
   intl:
   country_picker:
   pinput:
@@ -86,20 +84,23 @@ dependencies:
   sms_autofill: ^2.4.1
   flutter_svg: ^2.0.10+1
   chewie: ^1.8.5
+  syncfusion_flutter_datepicker: ^28.1.33
   # better_player: ^0.0.84
-#  video_player: ^2.9.1
-#  video_trimmer: ^3.0.1
-  
+  #  video_player: ^2.9.1
+  #  video_trimmer: ^3.0.1
+  # for emoji
+  emoji_picker_flutter: ^3.1.0
+
 
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  flutter_launcher_icons: ^0.13.1  
+  flutter_launcher_icons: ^0.13.1
 flutter_icons:
   image_path: "assets/images/logolighttheme.png"
   andriod: true
-  ios: true  
+  ios: true
 
   # The "flutter_lints" package below contains a set of recommended lints to
   # encourage good coding practices. The lint set provided by the package is

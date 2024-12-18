@@ -64,9 +64,9 @@ class _AadharVerificationPage extends State<AadharVerificationPage>
     // initializeCamera();
     final transactionId = 'giggles' + getRandomString(10);
     hyperKycConfig = HyperKycConfig.fromAppIdAppKey(
-      appId: 'o811fk',
+      appId: 'vhwa6g',
       //  Get this from Hyperverge team
-      appKey: '3ddhunl5z427du78rm10',
+      appKey: 'covm95gngm5bssmmuy2q',
       //  Get this from Hyperverge team
       workflowId: 'Aadhar_facematch',
       //  Get workflow-id from Hyperverge dashboard

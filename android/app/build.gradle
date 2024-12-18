@@ -7,7 +7,7 @@ plugins {
 
 // Move this block after plugins to adhere to Gradle's rules
 def keystoreProperties = new Properties()
-def keystorePropertiesFile = rootProject.file('../key.properties')
+def keystorePropertiesFile = rootProject.file('key.properties')
 if (keystorePropertiesFile.exists()) {
     keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
 }
@@ -49,7 +49,6 @@ android {
         release {
             // Use the release signing configuration
             signingConfig = signingConfigs.release
-
             // Disable code shrinking and resource shrinking for easier debugging
             minifyEnabled false
             shrinkResources false

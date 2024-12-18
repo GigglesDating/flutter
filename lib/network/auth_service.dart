@@ -1,7 +1,9 @@
 import 'dart:convert';
 import 'dart:io';
+
 import 'package:giggles/constants/database/shared_preferences_service.dart';
 import 'package:giggles/constants/url_helpers.dart';
+import 'package:giggles/models/customer_support_number_model.dart';
 import 'package:giggles/models/event_video.dart';
 import 'package:giggles/models/membership_count_model.dart';
 import 'package:giggles/models/otp_model.dart';
@@ -9,7 +11,6 @@ import 'package:giggles/models/privacy_model.dart';
 import 'package:giggles/models/term_model.dart';
 import 'package:giggles/models/user_interests_model.dart';
 import 'package:giggles/models/user_profile_creation_model.dart';
-import 'package:giggles/screens/auth/privacy.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -23,7 +24,9 @@ import '../models/wating_event_like_model.dart';
 class AuthService {
   String baseUrl = UrlHelper.baseUrl;
   String _introVideoUrl = '';
+
   String get introVideoUrl => _introVideoUrl;
+
   // SharedPref sharedPref =SharedPref();
 
   var headerWithToken = {
@@ -567,6 +570,26 @@ class AuthService {
       return true;
     } else {
       return false; // Login failed
+    }
+  }
+
+  // customer support whtsapp number
+  Future<CustomerSupportNumberModel> fetchCustomerSupportNumber() async {
+    final url = Uri.parse(baseUrl + (UrlHelper.customerSupportUrl));
+    final response = await http.get(
+      url,
+      headers: {
+        'Authorization': 'Token ${SharedPref().getTokenDetail()}',
+        'Content-Type': 'application/json'
+      },
+    );
+    print('response.statusCode');
+    print(response.statusCode);
+    print(response.body);
+    if (response.statusCode == 200) {
+      return CustomerSupportNumberModel.fromJson(jsonDecode(response.body));
+    } else {
+      throw Exception('Connection failed');
     }
   }
 }

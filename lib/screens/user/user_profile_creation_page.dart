@@ -11,7 +11,7 @@ import 'package:giggles/constants/utils/show_dialog.dart';
 import 'package:giggles/screens/auth/signUpPage.dart';
 import 'package:giggles/screens/user/user_photos_videos_page.dart';
 import 'package:giggles/screens/user/user_waitlist_page.dart';
-import 'package:giggles/screens/user/white_waiting_events_page.dart';
+import 'package:giggles/screens/user/while_waiting_events_page.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 import 'package:reorderable_grid_view/reorderable_grid_view.dart';
@@ -647,27 +647,18 @@ class _UserProfileCreationPage extends State<UserProfileCreationPage> {
                 const SizedBox(
                   height: 10,
                 ),
+
                 TextFormField(
-                  autocorrect: false,
+                  // autocorrect: false,
                   textAlignVertical: TextAlignVertical.top,
-                  enableSuggestions: false,
+                  // enableSuggestions: false,
                   style: AppFonts.titleMedium(
                       color: Theme.of(context).colorScheme.tertiary),
                   minLines: 4,
                   maxLines: 4,
-                  // keyboardType: TextInputType.number,
                   maxLength: 300,
                   // textAlign: TextAlign.start,
                   controller: bioTextController,
-                  
-                  // inputFormatters: [
-                  //   FilteringTextInputFormatter.allow(RegExp(r'.*')),
-                  // ],
-                  inputFormatters: [
-                    FilteringTextInputFormatter.allow(
-                      RegExp(r'[\u0000-\uFFFF]'),
-                    ),
-                  ],
                   onChanged: (value) {},
                   decoration: InputDecoration(
                     errorMaxLines: 1,

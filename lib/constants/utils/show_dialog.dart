@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:giggles/constants/appColors.dart';
 import 'package:giggles/constants/appFonts.dart';
-import 'package:giggles/screens/user/white_waiting_events_page.dart';
+import 'package:giggles/screens/user/while_waiting_events_page.dart';
 
 class ShowDialog {
   //show Error Dialog

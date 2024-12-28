@@ -1,19 +1,19 @@
+import 'dart:io';
+
 import 'package:alt_sms_autofill/alt_sms_autofill.dart';
 import 'package:country_picker/country_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:giggles/constants/appColors.dart';
 import 'package:giggles/constants/appFonts.dart';
-import 'package:giggles/constants/database/shared_preferences_service.dart';
 import 'package:giggles/constants/utils/show_dialog.dart';
 import 'package:giggles/network/auth_provider.dart';
+import 'package:giggles/screens/auth/Video_intro_screen.dart';
 import 'package:giggles/screens/auth/aadhar_verification/adhar_verification_page.dart';
-import 'package:giggles/screens/auth/otpScreen.dart';
 import 'package:giggles/screens/auth/signInPage.dart';
 import 'package:giggles/screens/auth/signUpPage.dart';
 import 'package:giggles/screens/user/while_waiting_events_page.dart';
 import 'package:provider/provider.dart';
-import 'package:sms_autofill/sms_autofill.dart';
 
 import '../user/user_profile_creation_page.dart';
 
@@ -27,6 +27,8 @@ class OtpPage extends StatefulWidget {
 class _OtpPageState extends State<OtpPage> {
   final TextEditingController phoneNumberController = TextEditingController();
   final TextEditingController otpController = TextEditingController();
+  final FocusNode _focusOTP = FocusNode();
+
   bool _otpFieldVisible = true;
   final signInFormKey = GlobalKey<FormState>();
   String? _commingSms = 'Unknown';
@@ -39,8 +41,11 @@ class _OtpPageState extends State<OtpPage> {
 
   Future<void> initSmsListener() async {
     String? commingSms;
+
     try {
       commingSms = await AltSmsAutofill().listenForSms;
+      print('otp prefix');
+      print(commingSms);
     } on PlatformException {
       commingSms = 'Failed to get SMS.';
     }
@@ -49,10 +54,11 @@ class _OtpPageState extends State<OtpPage> {
 
     // Extract only digits from the incoming SMS
     final otpCode = _extractDigits(commingSms ?? '');
-
-    setState(() {
-      otpController.text = otpCode;
-    });
+    if (Platform.isAndroid) {
+      setState(() {
+        otpController.text = otpCode;
+      });
+    }
   }
 
 // Helper function to extract only digits from the string
@@ -142,6 +148,7 @@ class _OtpPageState extends State<OtpPage> {
                       _otpFieldVisible
                           ? TextFormField(
                               controller: otpController,
+                              autofillHints: [AutofillHints.oneTimeCode],
                               style: AppFonts.hintTitle(
                                   color:
                                       Theme.of(context).colorScheme.tertiary),
@@ -155,6 +162,8 @@ class _OtpPageState extends State<OtpPage> {
                                 }
                               },
                               keyboardType: TextInputType.phone,
+                              textInputAction: TextInputAction.done,
+                              focusNode: _focusOTP,
                               inputFormatters: <TextInputFormatter>[
                                 FilteringTextInputFormatter.digitsOnly
                                 // Allows only numbers
@@ -202,8 +211,6 @@ class _OtpPageState extends State<OtpPage> {
                                                         'OTP Resend Successfully');
                                                     otpController.clear();
                                                     initSmsListener();
-
-
                                                   } else {
                                                     ShowDialog()
                                                         .showErrorDialog(
@@ -317,24 +324,85 @@ class _OtpPageState extends State<OtpPage> {
                                         var userMap = {
                                           'otp': otpController.text
                                         };
-
                                         final isOtpValidate = await userProvider
                                             .otpVerify(userMap);
-
+                                        print('isOtpValidate');
+                                        print(isOtpValidate.runtimeType);
+                                        print(isOtpValidate);
                                         if (isOtpValidate != null &&
                                             isOtpValidate.status == true) {
-                                          if (isOtpValidate
-                                                  .data!.aadhaarVerified !=
-                                              true) {
+
+                                          if(isOtpValidate
+                                              .data!.isAgree==false && isOtpValidate
+                                              .data!.aadhaarVerified==false &&isOtpValidate
+                                              .data!.isFirstTime==false){
+                                                    final success = await userProvider
+                                                        .fetchIntroVideoData();
+                                                    if (success?.status == true) {
+                                                      if (success!
+                                                          .data!.introVideo!
+                                                          .isNotEmpty) {
+                                                        Navigator.push(
+                                                            context,
+                                                            MaterialPageRoute(
+                                                                builder: (
+                                                                    context) =>
+                                                                    VideoIntroPage(
+                                                                      videoUrl: success
+                                                                          .data!
+                                                                          .introVideo,
+                                                                    )));
+                                                      } else {
+                                                        ShowDialog()
+                                                            .showErrorDialog(
+                                                            context,
+                                                            userProvider
+                                                                .errorMessage);
+                                                      }
+                                                    }
+
+
+
+
+                                          }else if(isOtpValidate.data!.isAgree!=true){
                                             Navigator.push(
                                               context,
                                               MaterialPageRoute(
                                                   builder: (context) =>
-                                                      AadharVerificationPage()),
+                                                      SignUPPage()),
                                             );
+
+                                          } else if (isOtpValidate.data!.aadhaarVerified != true) {
+                                            Navigator.push(
+                                                context,
+                                                MaterialPageRoute(
+                                                  builder: (context) =>
+                                                  const AadharVerificationPage(),
+                                                ));
+                                            // Navigator.push(
+                                            //   context,
+                                            //   MaterialPageRoute(
+                                            //       builder: (context) =>
+                                            //           WhiteWaitingEventsPage()),
+                                            // );
+                                            // if(Platform.isIOS){
+                                            //   Navigator.push(
+                                            //     context,
+                                            //     MaterialPageRoute(
+                                            //         builder: (context) =>
+                                            //             WhiteWaitingEventsPage()),
+                                            //   );
+                                            // }else{
+                                            //   Navigator.push(
+                                            //       context,
+                                            //       MaterialPageRoute(
+                                            //         builder: (context) =>
+                                            //         const AadharVerificationPage(),
+                                            //       ));
+                                            // //
+                                            // }
                                           } else if (isOtpValidate
-                                                  .data!.isFirstTime !=
-                                              true) {
+                                                  .data!.isFirstTime != true) {
                                             Navigator.push(
                                               context,
                                               MaterialPageRoute(
@@ -342,12 +410,14 @@ class _OtpPageState extends State<OtpPage> {
                                                       UserProfileCreationPage()),
                                             );
                                           } else {
-                                            Navigator.push(
-                                              context,
-                                              MaterialPageRoute(
-                                                  builder: (context) =>
-                                                      WhiteWaitingEventsPage()),
-                                            );
+
+                                              Navigator.push(
+                                                  context,
+                                                  MaterialPageRoute(
+                                                      builder: (context) =>
+                                                          WhiteWaitingEventsPage()));
+
+
                                           }
                                         } else {
                                           ShowDialog().showErrorDialog(context,
@@ -435,6 +505,42 @@ class _OtpPageState extends State<OtpPage> {
             ),
           ],
         ),
+        bottomSheet: Platform.isIOS?_focusOTP.hasFocus
+            ? CustomKeyboardToolbar(
+                onDonePressed: () {
+                  // print('Phone number entered: ${_controller.text}');
+                  _focusOTP.unfocus(); // Dismiss keyboard
+                },
+              )
+            : null: null,
+      ),
+    );
+  }
+}
+
+class CustomKeyboardToolbar extends StatelessWidget {
+  final VoidCallback onDonePressed;
+
+  const CustomKeyboardToolbar({required this.onDonePressed});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      color: AppColors.white,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.end,
+        children: [
+          TextButton(
+            onPressed: onDonePressed,
+            child: Text(
+              'Done',
+              style: TextStyle(
+                  color: Colors.blue,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16),
+            ),
+          ),
+        ],
       ),
     );
   }

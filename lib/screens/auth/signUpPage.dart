@@ -15,6 +15,7 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:syncfusion_flutter_datepicker/datepicker.dart';
 import '../../network/auth_provider.dart';
+import '../user/while_waiting_events_page.dart';
 import 'aadhar_verification/adhar_verification_page.dart';
 
 class SignUPPage extends StatefulWidget {
@@ -878,8 +879,30 @@ class _SignUPPage extends State<SignUPPage> {
                                               context,
                                               MaterialPageRoute(
                                                 builder: (context) =>
-                                                    const AadharVerificationPage(),
+                                                const AadharVerificationPage(),
                                               ));
+                                          // Navigator.push(
+                                          //   context,
+                                          //   MaterialPageRoute(
+                                          //       builder: (context) =>
+                                          //           WhiteWaitingEventsPage()),
+                                          // );
+                                          // if(Platform.isIOS){
+                                          //   Navigator.push(
+                                          //     context,
+                                          //     MaterialPageRoute(
+                                          //         builder: (context) =>
+                                          //             WhiteWaitingEventsPage()),
+                                          //   );
+                                          // }else{
+                                          //   Navigator.push(
+                                          //       context,
+                                          //       MaterialPageRoute(
+                                          //         builder: (context) =>
+                                          //         const AadharVerificationPage(),
+                                          //       ));
+                                          //   //
+                                          // }
                                         } else {
                                           // SnackBarHelper.showSuccess(context, message: userProvider.errorMessage);
                                           ShowDialog().showErrorDialog(context,

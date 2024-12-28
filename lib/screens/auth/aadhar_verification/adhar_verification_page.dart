@@ -417,7 +417,9 @@ class _AadharVerificationPage extends State<AadharVerificationPage>
                     ),
                     onPressed: () async {
                       startKYCProcess();
+
                     },
+
                     child: Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 16.0),
                       child: Text('Next',

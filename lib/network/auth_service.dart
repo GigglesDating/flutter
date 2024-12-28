@@ -80,7 +80,7 @@ class AuthService {
 
     print('response.statusCode');
     print(response.statusCode);
-    print(response.body);
+    print(baseUrl);
     final responseData = json.decode(response.body);
     if (response.statusCode == 200) {
       final prefs = await SharedPreferences.getInstance();

@@ -57,13 +57,15 @@ class _TermsPrivacyScreenState extends State<TermsPrivacyScreen> {
         ),
         body: Padding(
           padding: const EdgeInsets.all(16),
-          child: Column(children: [
-      
-            Text(
-              termsOfUse,
-              style: AppFonts.titleRegular(color: AppColors.black),
-            ),
-          ]),
+          child: SingleChildScrollView(
+            child: Column(children: [
+                  
+              Text(
+                termsOfUse,
+                style: AppFonts.titleRegular(color: AppColors.black),
+              ),
+            ]),
+          ),
         )
         
         );

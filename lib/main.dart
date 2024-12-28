@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:giggles/screens/auth/aadhar_verification/adhar_verification_page.dart';
 import 'package:giggles/screens/splash_page.dart';
 import 'package:flutter/services.dart';
 import 'package:giggles/screens/user/user_profile_creation_page.dart';

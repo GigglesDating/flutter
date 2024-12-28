@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'dart:ui';
 
 import 'package:carousel_slider/carousel_slider.dart';
@@ -114,12 +115,19 @@ class _WhiteWaitingEventsPage extends State<WhiteWaitingEventsPage> {
   }
 
   Future<void> openWhatsApp() async {
-    final Uri whatsappUrl = Uri.parse("https://wa.me/+91 $phoneNumber");
-    if (!await launchUrl(whatsappUrl, mode: LaunchMode.externalApplication)) {
-      throw 'Could not launch $whatsappUrl';
+    if(Platform.isIOS){
+      final Uri whatsappUrl = Uri.parse("https://wa.me/$phoneNumber");
+      if (!await launchUrl(whatsappUrl, mode: LaunchMode.externalApplication)) {
+        throw 'Could not launch $whatsappUrl';
+      }
+    }else{
+      final Uri whatsappUrl = Uri.parse("https://wa.me/+91 $phoneNumber");
+      if (!await launchUrl(whatsappUrl, mode: LaunchMode.externalApplication)) {
+        throw 'Could not launch $whatsappUrl';
+      }
     }
-  }
 
+  }
   @override
   Widget build(BuildContext context) {
     final registerProvider = Provider.of<AuthProvider>(context);
@@ -133,7 +141,7 @@ class _WhiteWaitingEventsPage extends State<WhiteWaitingEventsPage> {
         body: Container(
           decoration: BoxDecoration(
             image: DecorationImage(
-              image: AssetImage(imageUrlList[0]),
+              image: AssetImage('assets/images/stock_1.png'),
               fit: BoxFit.cover,
             ),
           ),
@@ -147,7 +155,8 @@ class _WhiteWaitingEventsPage extends State<WhiteWaitingEventsPage> {
                   ),
                 ),
               ),
-              const SizedBox(height: kToolbarHeight * 0.6),
+               Platform.isIOS?SizedBox(height: kToolbarHeight * 1):
+              SizedBox(height: kToolbarHeight * 0.6),
               Padding(
                 padding: const EdgeInsets.only(right: 20),
                 child: Align(
@@ -160,6 +169,7 @@ class _WhiteWaitingEventsPage extends State<WhiteWaitingEventsPage> {
                       backgroundColor: Colors.red,
                     ),
                     onPressed: () {
+
                       ShowDialog().showInfoDialogPopUp(context,
                           'Be patient leaving now may mean a longer wait later. The best is worth the wait.',
                           () async {

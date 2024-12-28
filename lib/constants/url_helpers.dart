@@ -1,5 +1,6 @@
 class UrlHelper {
-  // static const String baseUrl = 'http://192.168.29.109:8000/api/v1/';
+
+  // static const String baseUrl = 'http://192.168.29.109:8001/api/v1/';
   static const String baseUrl = 'https://api.gigglesdating.com/api/v1/';
   static const String loginUrl = 'login/';
   static const String signUpUrl = 'signup/';

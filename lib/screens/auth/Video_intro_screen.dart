@@ -250,6 +250,7 @@ class _VideoIntroPage extends State<VideoIntroPage> {
   void dispose() {
     // TODO: implement dispose
     _controller.dispose();
+
     _exitFullPage();
     super.dispose();
   }
@@ -266,9 +267,32 @@ class _VideoIntroPage extends State<VideoIntroPage> {
     print('12222222');
     print(widget.videoUrl.toString());
 
+
     _controller =
+        // VideoPlayerController.networkUrl(Uri.parse('https://gigglesdating.s3.ap-south-1.amazonaws.com/media/intro_video/Final_draftedited_1_HLy6XsL.mp4'))
         VideoPlayerController.networkUrl(Uri.parse(widget.videoUrl.toString()))
           // _initializeVideoPlayerFuture = _controller.initialize();
+          ..addListener(
+            () {
+              if (_controller.value.isInitialized &&
+                  !_controller.value.isPlaying &&
+                  _controller.value.position >= _controller.value.duration &&
+                  !_isButtonVisible) {
+                // If the video is over, mark it as paused
+
+                    // Show button only after the video completes the first time
+                    setState(() {
+                      _isButtonVisible = true;
+                      _isFirstTimeCompleted = true;
+                    });
+
+              }
+              setState(() {
+                isPlaying = false;
+                // _isButtonVisible = false;
+              });
+            },
+          )
           ..initialize().then((_) async {
             setState(() {
               _isInitialized = true;
@@ -276,23 +300,6 @@ class _VideoIntroPage extends State<VideoIntroPage> {
             _controller.play();
             // Rebuild to show the video once initialized
           });
-    _controller.addListener(() {
-      if (_controller.value.position == _controller.value.duration) {
-        // If the video is over, mark it as paused
-        setState(() {
-          if (!_isFirstTimeCompleted) {
-            // Show button only after the video completes the first time
-            setState(() {
-              _isButtonVisible = true;
-              _isFirstTimeCompleted = true;
-            });
-          }
-        });
-        setState(() {
-          isPlaying = false;
-        });
-      }
-    });
 
     setState(() {});
     // _controller.setLooping(true);
@@ -346,6 +353,10 @@ class _VideoIntroPage extends State<VideoIntroPage> {
 
   @override
   Widget build(BuildContext context) {
+    print('_isButtonVisible');
+    print(!_isFirstTimeCompleted);
+    print(_isButtonVisible);
+    print(_controller.value.position == _controller.value.duration);
     return WillPopScope(
       onWillPop: () async {
         // await _goBack(); // Ensure orientation changes before navigating back
@@ -458,34 +469,34 @@ class _VideoIntroPage extends State<VideoIntroPage> {
                           color: AppColors.primary,
                         ))),
               if (_isButtonVisible)
-                if (_isInitialized)
-                  Positioned(
-                      bottom: 0,
-                      right: 0,
-                      child: TextButton(
-                          onPressed: () {
-                            if (widget.value ?? false) {
-                              Navigator.of(context).pop();
-                            } else {
-                              _exitFullPage();
-                              _controller.dispose();
-                              Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => SignUPPage(),
-                                  ));
-                            }
-                          },
-                          style: ButtonStyle(
-                              padding:
-                                  WidgetStatePropertyAll(EdgeInsets.all(24))),
-                          child: Text(
-                            'Continue',
-                            style: AppFonts.titleMedium(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w500,
-                                color: Theme.of(context).primaryColor),
-                          )))
+                // if (_isInitialized)
+                Positioned(
+                    bottom: 0,
+                    right: 0,
+                    child: TextButton(
+                        onPressed: () {
+                          if (widget.value ?? false) {
+                            Navigator.of(context).pop();
+                          } else {
+                            _exitFullPage();
+                            _controller.dispose();
+                            Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => SignUPPage(),
+                                ));
+                          }
+                        },
+                        style: ButtonStyle(
+                            padding:
+                                WidgetStatePropertyAll(EdgeInsets.all(24))),
+                        child: Text(
+                          'Continue',
+                          style: AppFonts.titleMedium(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w500,
+                              color: Theme.of(context).primaryColor),
+                        )))
             ],
           )),
     );

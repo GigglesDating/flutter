@@ -60,7 +60,7 @@ class AuthProvider extends ChangeNotifier {
       print('userModel!.detail.toString()');
 
       if (userModel == null) {
-        _errorMessage = userModel!.detail.toString();
+        _errorMessage = userModel.detail.toString();
       } else {
         _successMessage = userModel.message.toString();
         _user = userModel;

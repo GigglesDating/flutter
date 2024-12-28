@@ -1,4 +1,3 @@
-import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -8,14 +7,10 @@ import 'package:giggles/constants/appColors.dart';
 import 'package:giggles/constants/appFonts.dart';
 import 'package:giggles/constants/database/shared_preferences_service.dart';
 import 'package:giggles/constants/utils/show_dialog.dart';
-import 'package:giggles/screens/auth/signUpPage.dart';
-import 'package:giggles/screens/user/user_photos_videos_page.dart';
-import 'package:giggles/screens/user/user_waitlist_page.dart';
 import 'package:giggles/screens/user/while_waiting_events_page.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 import 'package:reorderable_grid_view/reorderable_grid_view.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../constants/utils/multi_select_dialog.dart';
 import '../../models/user_interests_model.dart';
@@ -38,6 +33,7 @@ class _UserProfileCreationPage extends State<UserProfileCreationPage> {
     'Bisexual',
     'Asexual'
   ];
+
   // List<UserInterestsData> userInterestList = [];
   final data = [1, 2, 3, 4, 5, 6];
 
@@ -659,6 +655,7 @@ class _UserProfileCreationPage extends State<UserProfileCreationPage> {
                   maxLength: 300,
                   // textAlign: TextAlign.start,
                   controller: bioTextController,
+                  textInputAction: TextInputAction.done,
                   onChanged: (value) {},
                   decoration: InputDecoration(
                     errorMaxLines: 1,
@@ -708,7 +705,8 @@ class _UserProfileCreationPage extends State<UserProfileCreationPage> {
                   height: MediaQuery.of(context).size.height * 0.35,
                   child: ReorderableGridView.count(
                     crossAxisCount: 3,
-                    childAspectRatio: 1, // Aspect ratio for images
+                    childAspectRatio: 1,
+                    // Aspect ratio for images
                     mainAxisSpacing: 10,
                     crossAxisSpacing: 10,
                     physics: const NeverScrollableScrollPhysics(),
@@ -1034,6 +1032,9 @@ class _UserProfileCreationPage extends State<UserProfileCreationPage> {
                               setState(() {
                                 _isLoading = true;
                               });
+                              print('gender');
+                              print(gender);
+                              print(gender.runtimeType);
 
                               if (genderOrientation == null) {
                                 ShowDialog().showInfoDialog(
@@ -1048,9 +1049,70 @@ class _UserProfileCreationPage extends State<UserProfileCreationPage> {
                                 setState(() {
                                   _isLoading = false;
                                 });
-                              }
-                              // Add other validation checks here
-                              else {
+                              } else if (gender == null) {
+                                ShowDialog().showInfoDialog(
+                                    context, 'Select gender preference');
+                                setState(() {
+                                  _isLoading = false;
+                                });
+                              } else if (_currentRangeValues.start
+                                  .round()
+                                  .toString()
+                                  .isEmpty) {
+                                ShowDialog().showInfoDialog(
+                                    context, 'Select minimum age');
+                                setState(() {
+                                  _isLoading = false;
+                                });
+                              } else if (_currentRangeValues.end
+                                  .round()
+                                  .toString()
+                                  .isEmpty) {
+                                ShowDialog().showInfoDialog(
+                                    context, 'Select maximum age');
+                                setState(() {
+                                  _isLoading = false;
+                                });
+                              } else if (selectedActivities.isEmpty) {
+                                ShowDialog().showInfoDialog(
+                                    context, 'Please select interest');
+                                setState(() {
+                                  _isLoading = false;
+                                });
+                              } else if (selectedActivities.length < 5) {
+                                print('selectedActivities');
+                                print(selectedActivities);
+                                print(selectedActivities.length);
+                                ShowDialog().showInfoDialog(context,
+                                    'Please select minimum 5 interest');
+                                setState(() {
+                                  _isLoading = false;
+                                });
+                              } else if (bioTextController.text.isEmpty) {
+                                ShowDialog().showInfoDialog(
+                                    context, 'Please write about yourself');
+                                setState(() {
+                                  _isLoading = false;
+                                });
+                              } else if (images.isEmpty) {
+                                ShowDialog().showInfoDialog(
+                                    context, 'Please add photos');
+                                setState(() {
+                                  _isLoading = false;
+                                });
+                              } else if (images.length < 3) {
+                                ShowDialog().showInfoDialog(
+                                    context, 'Please select minimum 3 photos');
+                                setState(() {
+                                  _isLoading = false;
+                                });
+                              } else if (isYes == false && isNo == false) {
+                                ShowDialog().showInfoDialog(context,
+                                    'check the box to clarify Is this your first application to Giigles');
+                                setState(() {
+                                  _isLoading = false;
+                                });
+                              } else {
                                 // API call and navigation logic
                                 var userProfileMap = {
                                   "gender_orientation": genderOrientation,

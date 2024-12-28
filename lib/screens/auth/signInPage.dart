@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:country_picker/country_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -7,13 +9,12 @@ import 'package:giggles/constants/database/shared_preferences_service.dart';
 import 'package:giggles/constants/utils/show_dialog.dart';
 import 'package:giggles/network/auth_provider.dart';
 import 'package:giggles/screens/auth/aadhar_verification/adhar_verification_page.dart';
-import 'package:giggles/screens/auth/otpScreen.dart';
 import 'package:giggles/screens/auth/otp_page.dart';
-import 'package:giggles/screens/auth/signUpPage.dart';
 import 'package:giggles/screens/user/user_profile_creation_page.dart';
 import 'package:giggles/screens/user/while_waiting_events_page.dart';
 import 'package:provider/provider.dart';
 import 'package:sms_autofill/sms_autofill.dart';
+
 import 'Video_intro_screen.dart';
 
 class SigninPage extends StatefulWidget {
@@ -28,6 +29,7 @@ class SigninPage extends StatefulWidget {
 class _signInPageState extends State<SigninPage> {
   final TextEditingController phoneNumberController = TextEditingController();
   final TextEditingController otpController = TextEditingController();
+  final FocusNode _focusPhone = FocusNode();
   bool _otpFieldVisible = false;
   final signInFormKey = GlobalKey<FormState>();
 
@@ -44,7 +46,7 @@ class _signInPageState extends State<SigninPage> {
     e164Key: "",
   );
 
-  void _closeKeyboard() {
+  void closeKeyboard() {
     SystemChannels.textInput.invokeMethod('TextInput.hide');
   }
 
@@ -55,6 +57,7 @@ class _signInPageState extends State<SigninPage> {
     super.initState();
     // SmsAutoFill().listenForCode();
     // Hide only the status bar
+    closeKeyboard();
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
     SystemChrome.setPreferredOrientations([
       DeviceOrientation.portraitUp,
@@ -136,23 +139,32 @@ class _signInPageState extends State<SigninPage> {
                           ? const SizedBox()
                           : TextFormField(
                               controller: phoneNumberController,
+                        focusNode: _focusPhone,
+                        keyboardType: TextInputType.phone,
+
+                              textInputAction: TextInputAction.done,
                               style: AppFonts.hintTitle(
-                                  color:
-                                      Theme.of(context).colorScheme.tertiary),
+                                color: Theme.of(context).colorScheme.tertiary,
+                              ),
                               cursorHeight: 20,
                               maxLength: 10,
                               maxLines: 1,
                               minLines: 1,
+                              // onFieldSubmitted: (value) {
+                              //   // Called when the user presses the "Done" button
+                              //   closeKeyboard();
+                              //   // You can add any additional logic here
+                              // },
                               onChanged: (value) {
                                 if (value.length == 10) {
-                                  _closeKeyboard();
+                                  closeKeyboard();
                                 }
                               },
                               inputFormatters: <TextInputFormatter>[
                                 FilteringTextInputFormatter.digitsOnly
                                 // Allows only numbers
                               ],
-                              keyboardType: TextInputType.phone,
+
                               validator: (value) {
                                 bool isValidLength(String text) {
                                   return text.length >= 10;
@@ -217,11 +229,12 @@ class _signInPageState extends State<SigninPage> {
                                 ),
                               ),
                               // cursorHeight: 20,
-                              codeLength: 6, // Length of the OTP
+                              codeLength: 6,
+                              // Length of the OTP
                               onCodeChanged: (value) {
                                 if (value != null && value.length == 6) {
                                   otpController.text = value;
-                                  _closeKeyboard();
+                                  closeKeyboard();
                                   // You can add any additional action here, such as validation
                                 }
                               },
@@ -451,17 +464,30 @@ class _signInPageState extends State<SigninPage> {
                                               } else if (isOtpValidate
                                                       .data!.aadhaarVerified !=
                                                   true) {
-                                                print(
-                                                    "ayush12 ${isOtpValidate.data!.aadhaarVerified} ");
                                                 Navigator.push(
-                                                  context,
-                                                  MaterialPageRoute(
+                                                    context,
+                                                    MaterialPageRoute(
                                                       builder: (context) =>
-                                                          AadharVerificationPage()),
-                                                );
-                                              } else if (isOtpValidate
-                                                      .data!.isFirstTime !=
-                                                  true) {
+                                                      const AadharVerificationPage(),
+                                                    ));
+
+                                                // if(Platform.isIOS){
+                                                //   Navigator.push(
+                                                //     context,
+                                                //     MaterialPageRoute(
+                                                //         builder: (context) =>
+                                                //             WhiteWaitingEventsPage()),
+                                                //   );
+                                                // }else{
+                                                //   Navigator.push(
+                                                //       context,
+                                                //       MaterialPageRoute(
+                                                //         builder: (context) =>
+                                                //         const AadharVerificationPage(),
+                                                //       ));
+                                                //   //
+                                                // }
+                                              } else if (isOtpValidate.data!.isFirstTime !=true) {
                                                 print(
                                                     "ayush123 ${isOtpValidate.data!.isFirstTime} ");
                                                 Navigator.push(
@@ -512,6 +538,8 @@ class _signInPageState extends State<SigninPage> {
                                         // Call Login API
                                         final userLogin =
                                             await userProvider.login(userMap);
+                                        print('userLogin');
+                                        print(userLogin);
 
                                         if (userLogin != null) {
                                           Navigator.push(
@@ -651,6 +679,39 @@ class _signInPageState extends State<SigninPage> {
             ),
           ],
         ),
+
+        bottomSheet: Platform.isIOS?_focusPhone.hasFocus
+          ? CustomKeyboardToolbar(
+          onDonePressed: () {
+    // print('Phone number entered: ${_controller.text}');
+    _focusPhone.unfocus(); // Dismiss keyboard
+    },
+    )
+        : null:null,
+      ),
+    );
+  }
+}
+class CustomKeyboardToolbar extends StatelessWidget {
+  final VoidCallback onDonePressed;
+
+  const CustomKeyboardToolbar({required this.onDonePressed});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      color: AppColors.white,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.end,
+        children: [
+          TextButton(
+            onPressed: onDonePressed,
+            child: Text(
+              'Done',
+              style: TextStyle(color: Colors.blue, fontWeight: FontWeight.bold,fontSize: 16),
+            ),
+          ),
+        ],
       ),
     );
   }

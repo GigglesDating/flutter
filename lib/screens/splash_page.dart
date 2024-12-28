@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:giggles/screens/auth/aadhar_verification/adhar_verification_page.dart';
@@ -37,12 +38,34 @@ class _SplashPage extends State<SplashPage> {
           MaterialPageRoute(builder: (context) => UserProfileCreationPage()),
         );
       } else if (lastScreen == 'signUpVerified') {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-            builder: (context) => const AadharVerificationPage(),
-          ),
-        );
+        // Navigator.push(
+        //   context,
+        //   MaterialPageRoute(
+        //       builder: (context) =>
+        //           WhiteWaitingEventsPage()),
+        // );
+        Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) =>
+              const AadharVerificationPage(),
+            ));
+        // if(Platform.isIOS){
+        //   Navigator.pushReplacement(
+        //     context,
+        //     MaterialPageRoute(
+        //       builder: (context) => const WhiteWaitingEventsPage(),
+        //     ),
+        //   );
+        // }else{
+        //   Navigator.pushReplacement(
+        //     context,
+        //     MaterialPageRoute(
+        //       builder: (context) => const AadharVerificationPage(),
+        //     ),
+        //   );
+        // }
+
       } else if (lastScreen == 'otpVerified') {
         Navigator.pushReplacement(
           context,

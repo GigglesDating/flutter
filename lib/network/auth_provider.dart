@@ -9,8 +9,8 @@ import 'package:giggles/models/otp_model.dart';
 import 'package:giggles/models/privacy_model.dart';
 import 'package:giggles/models/term_model.dart';
 import 'package:giggles/models/user_profile_creation_model.dart';
-import 'package:giggles/screens/auth/privacy.dart';
-import 'package:giggles/screens/auth/privacy.dart';
+import 'package:giggles/screens/auth/privacy_policy_page.dart';
+import 'package:giggles/screens/auth/privacy_policy_page.dart';
 
 import '../models/intro_video_model.dart';
 import '../models/register_waitng_events_model.dart';
@@ -29,7 +29,7 @@ class AuthProvider extends ChangeNotifier {
   String _errorMessage = '';
   String _successMessage = '';
   UserModel? _user;
-  Otpverify? otpverifyUser;
+  OtpModel? otpverifyUser;
 
   String get getIntorVideoUrl => introVideoUrl;
 
@@ -79,7 +79,7 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
-  Future<Otpverify?> otpVerify(Map<String, dynamic> loginMap) async {
+  Future<OtpModel?> otpVerify(Map<String, dynamic> loginMap) async {
     try {
       _isLoading = true;
       notifyListeners();
@@ -521,6 +521,23 @@ class AuthProvider extends ChangeNotifier {
     } else {
       _successMessage = 'Aadhar Data Post';
       // _user = otpValidate; // Store logged-in user data
+    }
+    _isLoading = false;
+    notifyListeners();
+    return otpValidate;
+  }
+
+  // video watch complete successfully
+
+  Future<bool?> postVideoWatch(Map<String, dynamic> map) async {
+    _isLoading = true;
+    notifyListeners();
+    final otpValidate = await _authService.introVideoWatch(map);
+    _isLoading = false;
+    if (otpValidate == false) {
+      _errorMessage = 'Something went wrong';
+    } else {
+      _successMessage = '';
     }
     _isLoading = false;
     notifyListeners();

@@ -1,4 +1,5 @@
 import 'dart:io';
+
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -6,16 +7,15 @@ import 'package:giggles/constants/appColors.dart';
 import 'package:giggles/constants/appFonts.dart';
 import 'package:giggles/constants/database/shared_preferences_service.dart';
 import 'package:giggles/constants/utils/show_dialog.dart';
-import 'package:giggles/constants/utils/snackbar_popup.dart';
-import 'package:giggles/screens/auth/privacy.dart';
-import 'package:giggles/screens/auth/terms_and_condition.dart';
+import 'package:giggles/screens/auth/privacy_policy_page.dart';
+import 'package:giggles/screens/auth/terms_and_condition_page.dart';
 import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:syncfusion_flutter_datepicker/datepicker.dart';
+
 import '../../network/auth_provider.dart';
-import '../user/while_waiting_events_page.dart';
 import 'aadhar_verification/adhar_verification_page.dart';
 
 class SignUPPage extends StatefulWidget {
@@ -71,6 +71,12 @@ class _SignUPPage extends State<SignUPPage> {
 
   Future<void> saveLastScreen() async {
     await SharedPref.otpVerifiedScreen();
+    Future.microtask(() async {
+      var map={
+        'is_video_watched': true
+      };
+      Provider.of<AuthProvider>(context, listen: false).postVideoWatch(map);
+    });
     // final prefs = await SharedPreferences.getInstance();
     // await prefs.setString('lastScreen', 'otpVerified');
   }
@@ -569,12 +575,12 @@ class _SignUPPage extends State<SignUPPage> {
                                                 .split(' ')[0],
                                         style: AppFonts.hintTitle(
                                             color: AppColors.white,
-                                            fontSize: 14),
+                                            fontSize: 12),
                                       ),
                                       Icon(
                                         Icons.calendar_month,
                                         color: AppColors.white,
-                                        size: 16,
+                                        size: 15,
                                       ),
                                     ],
                                   ),
@@ -734,15 +740,13 @@ class _SignUPPage extends State<SignUPPage> {
                                     });
                                   },
                                 ),
-                                Container(
-                                  constraints: BoxConstraints(maxWidth: 350),
-                                  child: Text(
-                                    'I agree to verify myself with aadhar',
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: AppFonts.titleRegular(
-                                      color: AppColors.white,
-                                    ),
+                                Text(
+                                  'I agree to verify myself with aadhar',
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: AppFonts.titleRegular(
+                                    color: AppColors.white,
+                                    fontSize: 15
                                   ),
                                 ),
                               ],
@@ -770,7 +774,7 @@ class _SignUPPage extends State<SignUPPage> {
                                       context,
                                       MaterialPageRoute(
                                         builder: (context) =>
-                                            TermsPrivacyScreen(),
+                                            TermsAndConditionPage(),
                                       ));
                                 },
                             ),
@@ -879,7 +883,7 @@ class _SignUPPage extends State<SignUPPage> {
                                               context,
                                               MaterialPageRoute(
                                                 builder: (context) =>
-                                                const AadharVerificationPage(),
+                                                    const AadharVerificationPage(),
                                               ));
                                           // Navigator.push(
                                           //   context,

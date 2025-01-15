@@ -2,9 +2,22 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:giggles/constants/appColors.dart';
+import 'package:giggles/screens/notifications/notifications_page.dart';
+import 'package:giggles/screens/settings/account_center_page.dart';
+import 'package:giggles/screens/settings/account_privacy_page.dart';
+import 'package:giggles/screens/settings/activity_page.dart';
+import 'package:giggles/screens/settings/blocked_users_screen.dart';
+import 'package:giggles/screens/settings/features_page.dart';
+import 'package:giggles/screens/settings/login_info_page.dart';
+import 'package:giggles/screens/settings/notifications_page.dart';
+import 'package:giggles/screens/settings/support_screen.dart';
+import 'package:giggles/screens/subcription_plan/subscription_page.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../constants/appFonts.dart';
+import '../constants/database/shared_preferences_service.dart';
+import 'auth/signInPage.dart';
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
@@ -40,7 +53,7 @@ class _SettingsPageState extends State<SettingsPage> {
       if (_scrollController.offset > 100 && !_hasScrolledUp) {
         // Once scrolled past 100 pixels, set the AppBar color to fixed value
         setState(() {
-          _appBarColor = Colors.blue; // Fixed color after scrolling
+          _appBarColor = Colors.white; // Fixed color after scrolling
           _hasScrolledUp = true; // Mark that scrolling has happened
         });
       }
@@ -55,7 +68,6 @@ class _SettingsPageState extends State<SettingsPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: _appBarColor,
         systemOverlayStyle: SystemUiOverlayStyle(
           statusBarColor: Colors.transparent,
           statusBarIconBrightness: Theme.of(context).brightness == Brightness.dark
@@ -67,7 +79,7 @@ class _SettingsPageState extends State<SettingsPage> {
               : Brightness.light, // For iOS devices
         ),
         title: Text(
-          'Settings and Subscription',
+          'Settings',
           // style: AppFonts.titleMedium().copyWith(
           //   color: Theme.of(context).colorScheme.tertiary,
           // ),
@@ -75,7 +87,7 @@ class _SettingsPageState extends State<SettingsPage> {
         titleSpacing: 0,
         // foregroundColor: Theme.of(context).scaffoldBackgroundColor,
 
-        titleTextStyle: AppFonts.appBarTitle(color: Theme.of(context).colorScheme.tertiary,fontSize: 18),
+        titleTextStyle: AppFonts.appBarTitle(color: Theme.of(context).colorScheme.tertiary,fontSize: 20,fontWeight: FontWeight.w700),
       ),
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SingleChildScrollView(
@@ -85,169 +97,379 @@ class _SettingsPageState extends State<SettingsPage> {
           mainAxisAlignment: MainAxisAlignment.start,
           children: [
             Divider(thickness: 0.5,color:Theme.of(context).colorScheme.tertiary,),
-            SizedBox(height: 16,),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              child: Text(
-                'Your Account',
-                style: AppFonts.titleBold(fontSize: 18,color: Theme.of(context).colorScheme.tertiary),
-              ),
-            ),
+            SizedBox(height: 12,),
+            buildSectionTitle('Account Settings'),
+            SizedBox(height: 12,),
             InkWell(
-              onTap: () {},
-              child: ListTile(
-                leading: SvgPicture.asset('assets/icons/user_profile_circle_icon.svg',width: 40,height: 40,color: Theme.of(context).colorScheme.tertiary,),
-                title: Text(
-                  'Accounts Center',
-                ),
-                subtitle: Text('Biometric Login,Perdsonal detail,Security'),
-                subtitleTextStyle: AppFonts.titleRegular(fontSize: 12,color: Theme.of(context).colorScheme.tertiary),
-                titleTextStyle:  AppFonts.titleBold(fontSize: 15,color: Theme.of(context).colorScheme.tertiary),
-                trailing: Icon(Icons.arrow_forward_ios,size: 16,color: Theme.of(context).colorScheme.tertiary,),
-              ),
-            ),
-            // InkWell(
-            //   onTap: () async {
-            //     // await logout(context);
-            //   },
-            //   child: ListTile(
-            //     leading: Icon(Icons.person),
-            //     title: Text(
-            //       'Log Out',
-            //     ),
-            //     trailing: Icon(Icons.arrow_forward),
-            //   ),
-            // ),
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const AccountCenterScreen(),
+                  ),
+                );
+              },
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                height: 54,
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Icon(Icons.manage_accounts_rounded, size: 30, color: Theme.of(context).colorScheme.tertiary),
+                  SizedBox(width: 8,),
+                  Text(
+                    'Accounts Center',
+                    style: AppFonts.titleBold(fontSize: 16,color: Theme.of(context).colorScheme.tertiary),
+                  ),
+                  Spacer(),
+                  Icon(Icons.arrow_forward_ios, color: Theme.of(context).colorScheme.tertiary,size: 18),
+                ],
+                            ),
+              ),),
             InkWell(
-              onTap: () {},
-              child: ListTile(
-                leading: SvgPicture.asset('assets/icons/block_icon.svg',width: 40,height: 40,color: Theme.of(context).colorScheme.tertiary,),
-                title: Text(
-                  'Blocked Accounts',
-                ),
-                subtitle: Text('Temporary restrictions,Hidden profile'),
-                subtitleTextStyle: AppFonts.titleRegular(fontSize: 12,color: Theme.of(context).colorScheme.tertiary),
-                titleTextStyle:  AppFonts.titleBold(fontSize: 15,color: Theme.of(context).colorScheme.tertiary),
-                trailing: Icon(Icons.arrow_forward_ios,size: 16,color: Theme.of(context).colorScheme.tertiary,),
-              ),
-            ),
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const AccountPrivacyScreen(),
+                  ),
+                );
+
+              },
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                height: 54,
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Icon(Icons.privacy_tip_rounded, size: 30, color: Theme.of(context).colorScheme.tertiary),
+                  SizedBox(width: 8,),
+                  Text(
+                    'Account Privacy',
+                    style: AppFonts.titleBold(fontSize: 16,color: Theme.of(context).colorScheme.tertiary),
+                  ),
+                  Spacer(),
+                  Icon(Icons.arrow_forward_ios, color: Theme.of(context).colorScheme.tertiary,size: 18),
+                ],
+                            ),
+              ),),
             InkWell(
-              onTap: () {},
-              child: ListTile(
-                leading:SvgPicture.asset('assets/icons/notification_icon.svg',width: 40,height: 40,color: Theme.of(context).colorScheme.tertiary,),
-                title: Text(
-                  'Notifications',
-                ),
-                subtitle: Text('Sleep setting,DND,Away mode'),
-                subtitleTextStyle: AppFonts.titleRegular(fontSize: 12,color: Theme.of(context).colorScheme.tertiary),
-                titleTextStyle:  AppFonts.titleBold(fontSize: 15,color: Theme.of(context).colorScheme.tertiary),
-                trailing: Icon(Icons.arrow_forward_ios,size: 16,color: Theme.of(context).colorScheme.tertiary,),
-              ),
-            ),
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) =>  ActivityScreen(),
+                  ),
+                );
+              },
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                height: 54,
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Icon(Icons.access_time_filled, size: 30, color: Theme.of(context).colorScheme.tertiary),
+                  SizedBox(width: 8,),
+                  Text(
+                    'Your Activity',
+                    style: AppFonts.titleBold(fontSize: 16,color: Theme.of(context).colorScheme.tertiary),
+                  ),
+                  Spacer(),
+                  Icon(Icons.arrow_forward_ios, color: Theme.of(context).colorScheme.tertiary,size: 18),
+                ],
+                            ),
+              ),),
             Divider(thickness: 0.5,color: Theme.of(context).colorScheme.tertiary,),
-            SizedBox(height: 16,),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              child: Text(
-                'How to Use HD ?',
-                style:  AppFonts.titleBold(fontSize: 18,color: Theme.of(context).colorScheme.tertiary),
-              ),
-            ),
+            SizedBox(height: 12,),
+            buildSectionTitle('DnD and Restrictions'),
+            SizedBox(height: 12,),
             InkWell(
-              onTap: () {},
-              child: ListTile(
-                leading:SvgPicture.asset('assets/icons/watch_intro_icon.svg',height: 30,color: Theme.of(context).colorScheme.tertiary,),
-        
-                title: Text(
-                  'Watch Intro',
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) =>  NotificationsScreen(),
+                  ),
+                );
+              },
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                height: 54,
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Icon(Icons.notifications, size: 30, color: Theme.of(context).colorScheme.tertiary),
+                    SizedBox(width: 8,),
+                    Text(
+                      'Notifications',
+                      style: AppFonts.titleBold(fontSize: 16,color: Theme.of(context).colorScheme.tertiary),
+                    ),
+                    Spacer(),
+                    Icon(Icons.arrow_forward_ios, color: Theme.of(context).colorScheme.tertiary,size: 18),
+                  ],
                 ),
-                titleTextStyle:  AppFonts.titleBold(fontSize: 15,color: Theme.of(context).colorScheme.tertiary),
-                // trailing: Icon(Icons.arrow_forward_ios,size: 16,),
-              ),
-            ),
-            SizedBox(height: 10,),
+              ),),
             InkWell(
-              onTap: () {},
-              child: ListTile(
-                leading: SvgPicture.asset('assets/icons/faq_icon.svg',width: 40,height: 40,color: Theme.of(context).colorScheme.tertiary,),
-                title: Text(
-                  'FAQS',
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) =>  BlockedUsersScreen(),
+                  ),
+                );
+              },
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                height: 54,
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Icon(Icons.block, size: 30, color: Theme.of(context).colorScheme.tertiary),
+                    SizedBox(width: 8,),
+                    Text(
+                      'Blocked Users',
+                      style: AppFonts.titleBold(fontSize: 16,color: Theme.of(context).colorScheme.tertiary),
+                    ),
+                    Spacer(),
+                    Icon(Icons.arrow_forward_ios, color: Theme.of(context).colorScheme.tertiary,size: 18),
+                  ],
                 ),
-                titleTextStyle:  AppFonts.titleBold(fontSize: 15,color: Theme.of(context).colorScheme.tertiary),
-                // trailing: Icon(Icons.arrow_forward_ios,size: 16,),
-              ),
-            ),
-            SizedBox(height: 10,),
-            InkWell(
-              onTap: () {},
-              child: ListTile(
-                leading:  SvgPicture.asset('assets/icons/contactsupport_icon.svg',width: 40,height: 40,color: Theme.of(context).colorScheme.tertiary,),
-                title: Text(
-                  'Contact Support',
-                ),
-                titleTextStyle:  AppFonts.titleBold(fontSize: 15,color: Theme.of(context).colorScheme.tertiary),
-                // trailing: Icon(Icons.arrow_forward_ios,size: 16,),
-              ),
-            ),
+              ),),
+
+
             Divider(thickness: 0.5,color: Theme.of(context).colorScheme.tertiary,),
-            SizedBox(height: 16,),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              child: Text(
-                'Wallet & Payments',
-                style: AppFonts.titleBold(fontSize: 18,color: Theme.of(context).colorScheme.tertiary)
-              ),
-            ),
+            SizedBox(height: 12,),
+            buildSectionTitle('Membership'),
+            SizedBox(height: 12,),
             InkWell(
-              onTap: () {},
-              child: ListTile(
-                leading: SvgPicture.asset('assets/icons/payout_icon.svg',width: 40,height: 40,color: Theme.of(context).colorScheme.tertiary,),
-                title: Text(
-                  'Request Payout',
+              onTap: () {
+                showSubscription(context);
+              },
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                height: 54,
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Icon(Icons.subscriptions, size: 30, color: Theme.of(context).colorScheme.tertiary),
+                    SizedBox(width: 8,),
+                    Text(
+                      'Subscription',
+                      style: AppFonts.titleBold(fontSize: 16,color: Theme.of(context).colorScheme.tertiary),
+                    ),
+                    Spacer(),
+                    Icon(Icons.arrow_forward_ios, color: Theme.of(context).colorScheme.tertiary,size: 18),
+                  ],
                 ),
-                titleTextStyle:  AppFonts.titleBold(fontSize: 15,color: Theme.of(context).colorScheme.tertiary),
-              ),
-            ),
-            SizedBox(height: 10,),
+              ),),
             InkWell(
-              onTap: () {},
-              child: ListTile(
-                leading: SvgPicture.asset('assets/icons/date_history_icon.svg',width: 40,height: 40,color: Theme.of(context).colorScheme.tertiary,),
-                title: Text(
-                  'Date History',
+              onTap: () {
+                Share.share('https://play.google.com/store/apps/details?id=com.platonicdating.giggles');
+              },
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                height: 54,
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Icon(Icons.share, size: 30, color: Theme.of(context).colorScheme.tertiary),
+                    SizedBox(width: 8,),
+                    Text(
+                      'Share your membership',
+                      style: AppFonts.titleBold(fontSize: 16,color: Theme.of(context).colorScheme.tertiary),
+                    ),
+                    Spacer(),
+                    Icon(Icons.arrow_forward_ios, color: Theme.of(context).colorScheme.tertiary,size: 18),
+                  ],
                 ),
-                titleTextStyle:  AppFonts.titleBold(fontSize: 15,color: Theme.of(context).colorScheme.tertiary),
-              ),
-            ),
-            const SizedBox(height: 10,),
+              ),),
+
+            Divider(thickness: 0.5,color: Theme.of(context).colorScheme.tertiary,),
+            SizedBox(height: 12,),
+            buildSectionTitle('Help'),
+            SizedBox(height: 12,),
             InkWell(
-              onTap: () {},
-              child: ListTile(
-                leading:  SvgPicture.asset('assets/icons/set_prices_icon.svg',width: 40,height: 40,color: Theme.of(context).colorScheme.tertiary,),
-                title: const Text(
-                  'Set Prices',
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) =>  FeaturesScreen(),
+                  ),
+                );
+              },
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                height: 54,
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Icon(Icons.star, size: 30, color: Theme.of(context).colorScheme.tertiary),
+                    SizedBox(width: 8,),
+                    Text(
+                      'Features',
+                      style: AppFonts.titleBold(fontSize: 16,color: Theme.of(context).colorScheme.tertiary),
+                    ),
+                    Spacer(),
+                    Icon(Icons.arrow_forward_ios, color: Theme.of(context).colorScheme.tertiary,size: 18),
+                  ],
                 ),
-                titleTextStyle:  AppFonts.titleBold(fontSize: 15,color: Theme.of(context).colorScheme.tertiary),
-              ),
-            ),
-            SizedBox(height: 16,),
+              ),),
             InkWell(
-              onTap: () {},
-              child: ListTile(
-                tileColor: AppColors.primaryDark,
-                leading: SvgPicture.asset('assets/icons/logout_icon.svg',width: 40,height: 40,color: Theme.of(context).colorScheme.tertiary,),
-                title: Text(
-                  'Logout',
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) =>  SupportScreen(),
+                  ),
+                );
+              },
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                height: 54,
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Icon(Icons.headset_mic, size: 30, color: Theme.of(context).colorScheme.tertiary),
+                    SizedBox(width: 8,),
+                    Text(
+                      'Support',
+                      style: AppFonts.titleBold(fontSize: 16,color: Theme.of(context).colorScheme.tertiary)),
+                    Spacer(),
+                    Icon(Icons.arrow_forward_ios, color: Theme.of(context).colorScheme.tertiary,size: 18),
+                  ],
                 ),
-                // subtitle: Text('Temporary restrictions,Hidden profile'),
-                // subtitleTextStyle: AppFonts.titleRegular(fontSize: 12,color: Theme.of(context).colorScheme.tertiary),
-                titleTextStyle:  AppFonts.titleBold(fontSize: 15,color: Theme.of(context).colorScheme.tertiary),
-                trailing: Icon(Icons.arrow_forward_ios,size: 16,color: Theme.of(context).colorScheme.tertiary,),
-              ),
-            ),
+              ),),
+            InkWell(
+              onTap: () async {
+                await SharedPref().clearUserData();
+                Navigator.push(context, MaterialPageRoute(builder: (context) => SigninPage(),));
+              },
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                height: 54,
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Icon(Icons.logout, size: 28, color: AppColors.error),
+                    SizedBox(width: 8,),
+                    Text(
+                      'Logout',
+                      style: AppFonts.titleBold(fontSize: 16,color: AppColors.error),
+                    ),
+                    Spacer(),
+                    Icon(Icons.arrow_forward_ios, color: AppColors.error,size: 18),
+                  ],
+                ),
+              ),),
             const SizedBox(height: 24,),
           ],
         ),
+      ),
+    );
+  }
+
+  void showSubscription(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            const Text('Cancel/Renew'),
+            IconButton(onPressed: (){
+              Navigator.pop(context);
+            }, icon: Icon(Icons.close))
+          ],
+        ),
+        titleTextStyle: AppFonts.titleBold(fontSize: 20),
+        content:  Text(
+          ' you are Cancel or Renew this plan',
+          style: AppFonts.titleMedium(),
+        ),
+
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              showCancelSubscription(context);
+            },
+            child:  Text('Cancel',style: AppFonts.titleBold(),),
+          ),
+          TextButton(
+            onPressed: () {
+              // Handle unblock action
+              Navigator.pop(context);
+              showRenewSubscription(context);
+
+            },
+            child:  Text('Renew',style: AppFonts.titleBold(color: AppColors.primary),),
+          ),
+        ],
+      ),
+    );
+  }
+  void showCancelSubscription(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        // title: const Text('Unblock User'),
+        // titleTextStyle: AppFonts.titleBold(fontSize: 20),
+        content:  Text(
+          'Are you sure you want to cancel your subscription?',
+          style: AppFonts.titleMedium(),
+        ),
+
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child:  Text('Cancel',style: AppFonts.titleBold(),),
+          ),
+          TextButton(
+            onPressed: () {
+              // Handle unblock action
+              Navigator.pop(context);
+            },
+            child:  Text('Confirm',style: AppFonts.titleBold(color: AppColors.primary),),
+          ),
+        ],
+      ),
+    );
+  }
+  void showRenewSubscription(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        // title: const Text('Unblock User'),
+        // titleTextStyle: AppFonts.titleBold(fontSize: 20),
+        content:  Text(
+          'You will be redirected to our payment gateway partner',
+          style: AppFonts.titleMedium(),
+        ),
+
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child:  Text('Cancel',style: AppFonts.titleBold(),),
+          ),
+          TextButton(
+            onPressed: () {
+
+              Navigator.pop(context);
+              Navigator.push(context, MaterialPageRoute(builder: (context) => SubscriptionPage(),));
+            },
+            child:  Text('Confirm',style: AppFonts.titleBold(color: AppColors.primary),),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget buildSectionTitle(String title) {
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: 16),
+      child: Text(
+        title,
+        style: AppFonts.titleBold(fontSize: 18,color: Theme.of(context).colorScheme.tertiary),
       ),
     );
   }

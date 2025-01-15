@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_widget_from_html/flutter_widget_from_html.dart';
 import 'package:giggles/constants/appColors.dart';
 import 'package:giggles/constants/appFonts.dart';
 import 'package:giggles/network/auth_provider.dart';
 import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class PrivacyPolicy extends StatefulWidget {
   final bool? isFromTermsOfUse;
@@ -34,7 +36,7 @@ class _PrivacyPolicyState extends State<PrivacyPolicy> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        backgroundColor: Colors.white,
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         appBar: AppBar(
           elevation: 1,
           shadowColor: const Color(0xffDDDDDD),
@@ -43,10 +45,10 @@ class _PrivacyPolicyState extends State<PrivacyPolicy> {
               onTap: () {
                 Navigator.of(context).pop();
               },
-              child: Icon(Icons.arrow_back)),
+              child: Icon(Icons.arrow_back,color: Theme.of(context).colorScheme.tertiary,)),
           title: Text(
             "Privacy and Policy",
-            style: AppFonts.titleRegular(color: AppColors.white, fontSize: 20),
+            style: AppFonts.titleRegular(color: Theme.of(context).colorScheme.tertiary, fontSize: 20),
           ),
           // AppText(
           //     widget.isFromTermsOfUse!
@@ -58,10 +60,24 @@ class _PrivacyPolicyState extends State<PrivacyPolicy> {
         body: Padding(
           padding: const EdgeInsets.all(16),
           child: Column(children: [
-            Text(
-              PrivacyPolicy,
-              style: AppFonts.titleRegular(color: AppColors.black),
+
+            HtmlWidget(
+              PrivacyPolicy ?? '',
+              onTapUrl: (url) async{
+                return launchUrl(Uri.parse(url));
+
+              },
+              textStyle: TextStyle(
+                  // color: AppColors.appColor,
+                  fontSize: 12,
+                  // letterSpacing: 2,
+                  fontFamily: "Poppins",
+                  fontWeight: FontWeight.w400),
             ),
+            // Text(
+            //   PrivacyPolicy,
+            //   style: AppFonts.titleRegular(color: Theme.of(context).colorScheme.tertiary),
+            // ),
           ]),
         ));
   }

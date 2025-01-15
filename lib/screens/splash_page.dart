@@ -1,12 +1,15 @@
 import 'dart:async';
-import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:giggles/constants/database/shared_preferences_service.dart';
+import 'package:giggles/screens/auth/Video_intro_screen.dart';
 import 'package:giggles/screens/auth/aadhar_verification/adhar_verification_page.dart';
 import 'package:giggles/screens/auth/signUpPage.dart';
 import 'package:giggles/screens/user/user_profile_creation_page.dart';
 import 'package:giggles/screens/user/while_waiting_events_page.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
 import 'auth/signInPage.dart';
 
 class SplashPage extends StatefulWidget {
@@ -19,25 +22,31 @@ class SplashPage extends StatefulWidget {
 class _SplashPage extends State<SplashPage> {
   // Function to check login status and navigate accordingly
   Future<void> checkLoginStatus() async {
-    final prefs = await SharedPreferences.getInstance();
-    final token = prefs.getString('userToken');
-    final lastScreen = prefs.getString('lastScreen');
-
-
-    if (token != null) {
-      if (lastScreen == 'eventPage') {
+    if (SharedPref().getTokenDetail() != null) {
+      if (SharedPref.fetchCurrentPosition()>0.0 && SharedPref.fetchCurrentPosition() <SharedPref.fetchTotalDuration()) {
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
-            builder: (context) => const WhiteWaitingEventsPage(),
+            builder: (context) => VideoIntroPage(
+              videoUrl:
+                  'https://gigglesdating.s3.ap-south-1.amazonaws.com/media/intro_video/Final_draftedited_1_HLy6XsL.mp4',
+            ),
           ),
         );
-      } else if (lastScreen == 'digiCheck') {
+      } else
+        if (SharedPref.lastScreen() == 'eventPage') {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) => const WhileWaitingEventsPage(),
+          ),
+        );
+      } else if (SharedPref.lastScreen() == 'digiCheck') {
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (context) => UserProfileCreationPage()),
         );
-      } else if (lastScreen == 'signUpVerified') {
+      } else if (SharedPref.lastScreen() == 'signUpVerified') {
         // Navigator.push(
         //   context,
         //   MaterialPageRoute(
@@ -47,8 +56,7 @@ class _SplashPage extends State<SplashPage> {
         Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (context) =>
-              const AadharVerificationPage(),
+              builder: (context) => const AadharVerificationPage(),
             ));
         // if(Platform.isIOS){
         //   Navigator.pushReplacement(
@@ -65,14 +73,14 @@ class _SplashPage extends State<SplashPage> {
         //     ),
         //   );
         // }
+      } else if (SharedPref.lastScreen() == 'otpVerified') {
 
-      } else if (lastScreen == 'otpVerified') {
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (context) => SignUPPage()),
         );
+
       } else {
-        print("sadasdasd");
         Timer(
           const Duration(seconds: 2),
           () {

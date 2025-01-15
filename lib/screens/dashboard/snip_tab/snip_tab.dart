@@ -2,6 +2,7 @@ import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:video_player/video_player.dart';
 
 import '../../../constants/appColors.dart';
@@ -32,9 +33,11 @@ class _SnipTab extends State<SnipTab> with SingleTickerProviderStateMixin {
   void toggleVolume() {
     setState(() {
       _isMuted = !_isMuted;
-      _controller.setVolume(_isMuted ? 0.0 : 1.0); // Set volume to 0.0 if muted, 1.0 if unmuted
+      _controller.setVolume(
+          _isMuted ? 0.0 : 1.0); // Set volume to 0.0 if muted, 1.0 if unmuted
     });
   }
+
   @override
   void initState() {
     super.initState();
@@ -70,16 +73,16 @@ class _SnipTab extends State<SnipTab> with SingleTickerProviderStateMixin {
       parent: _animationController,
       curve: Curves.easeOut,
     );
-
-
-
   }
+
   void onDoubleTap() {
     if (!_isLiked) {
       setState(() {
         _isLiked = true;
       });
-      _animationController.forward().then((_) => _animationController.reverse());
+      _animationController
+          .forward()
+          .then((_) => _animationController.reverse());
     }
   }
 
@@ -100,9 +103,8 @@ class _SnipTab extends State<SnipTab> with SingleTickerProviderStateMixin {
             scrollDirection: Axis.vertical,
             itemBuilder: (context, index) {
               return GestureDetector(
-                onTap:toggleVolume,
+                onTap: toggleVolume,
                 onDoubleTap: onDoubleTap,
-
                 child: Stack(
                   children: [
                     Positioned.fill(
@@ -129,12 +131,10 @@ class _SnipTab extends State<SnipTab> with SingleTickerProviderStateMixin {
                     Padding(
                       padding: const EdgeInsets.only(right: 16.0),
                       child: Align(
-                       alignment:Alignment.centerRight,
-
-
+                        alignment: Alignment.centerRight,
                         child: Container(
                           width: 52,
-                          height:MediaQuery.of(context).size.width/2,
+                          height: MediaQuery.of(context).size.width / 2,
                           decoration: BoxDecoration(
                             borderRadius: BorderRadius.circular(22),
                             color: AppColors.white,
@@ -149,9 +149,7 @@ class _SnipTab extends State<SnipTab> with SingleTickerProviderStateMixin {
                           ),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.center,
-
                             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-
                             children: [
                               SizedBox(
                                 height: 16,
@@ -163,7 +161,8 @@ class _SnipTab extends State<SnipTab> with SingleTickerProviderStateMixin {
                                   onPressed: () {
                                     // handleLike();
                                   },
-                                  icon: SvgPicture.asset('assets/icons/like_icon.svg'),
+                                  icon: SvgPicture.asset(
+                                      'assets/icons/like_icon.svg'),
                                 ),
                               ),
                               SizedBox(
@@ -173,7 +172,8 @@ class _SnipTab extends State<SnipTab> with SingleTickerProviderStateMixin {
                                 width: 40,
                                 height: 40,
                                 child: IconButton(
-                                    onPressed: () => showCommentBottomSheet(context),
+                                    onPressed: () =>
+                                        showCommentBottomSheet(context),
                                     icon: SvgPicture.asset(
                                         'assets/icons/comment_icon.svg')),
                               ),
@@ -183,14 +183,14 @@ class _SnipTab extends State<SnipTab> with SingleTickerProviderStateMixin {
                               Container(
                                 width: 40,
                                 height: 40,
-
                                 child: IconButton(
                                     key: _buttonKey,
-                                    onPressed: () async{
+                                    onPressed: () async {
                                       // Get button's position
                                       showPopupMenu();
                                     },
-                                    icon: SvgPicture.asset('assets/icons/ping_icon.svg')),
+                                    icon: SvgPicture.asset(
+                                        'assets/icons/ping_icon.svg')),
                               ),
                               SizedBox(
                                 height: 16,
@@ -255,58 +255,66 @@ class _SnipTab extends State<SnipTab> with SingleTickerProviderStateMixin {
               );
             },
           ),
-
           Positioned(
-              top: kToolbarHeight,
-              left: 16,
+            top: kToolbarHeight,
+            left: 16,
+            child: Stack(
+              clipBehavior: Clip.none,
+              children: [
+                Positioned(
+                    top: 6,
+                    left: 46,
+                    child: SvgPicture.asset(
+                      'assets/icons/snip_icon.svg',
+                      width: 30,
+                      height: 30,
+                    )),
+                Text(
+                  'Snip',
+                  style: AppFonts.titleBold(
+                      color: AppColors.black,
+                      fontSize: 28,
+                      fontWeight: FontWeight.w900),
+                )
+              ],
+            ),
+          ),
+          Positioned(
+            top: kToolbarHeight,
+            right: 20,
+            child: InkWell(
+              onTap: () {
+                Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => VideoCameraScreen(),
+                    ));
+              },
               child: Stack(
                 clipBehavior: Clip.none,
                 children: [
+                  SvgPicture.asset(
+                    'assets/icons/snip_camera_icon.svg',
+                    width: 40,
+                    height: 40,
+                  ),
                   Positioned(
-                      top: 6,
-                      left: 46,
+                      top: 20,
+                      left: 18,
                       child: SvgPicture.asset(
-                        'assets/icons/snip_icon.svg',
-                        width: 30,
-                        height: 30,
+                        'assets/icons/snip_upload_icon.svg',
+                        width: 24,
+                        height: 24,
                       )),
-                  Text(
-                    'Snip',
-                    style: AppFonts.titleBold(
-                        color: AppColors.black,
-                        fontSize: 28,
-                        fontWeight: FontWeight.w900),
-                  )
                 ],
-              ),),
-          Positioned(
-              top: kToolbarHeight,
-              right: 20,
-              child: InkWell(
-                onTap: (){
-                  Navigator.push(context, MaterialPageRoute(builder: (context) => VideoCameraScreen(),));
-                },
-                child: Stack(
-                  clipBehavior: Clip.none,
-                  children: [
-                    SvgPicture.asset('assets/icons/snip_camera_icon.svg', width: 40,
-                      height: 40,),
-                    Positioned(
-                        top: 20,
-                        left: 18,
-                        child: SvgPicture.asset(
-                          'assets/icons/snip_upload_icon.svg',
-                          width: 24,
-                          height: 24,
-                        )),
-                
-                  ],
-                ),
-              ),),
+              ),
+            ),
+          ),
         ],
       ),
     );
   }
+
   void showCommentBottomSheet(BuildContext context) async {
     await showModalBottomSheet(
       context: context,
@@ -343,8 +351,7 @@ class _SnipTab extends State<SnipTab> with SingleTickerProviderStateMixin {
                       Center(
                         child: Text(
                           'Comments',
-                          style: AppFonts.titleBold(
-                              color: AppColors.black),
+                          style: AppFonts.titleBold(color: AppColors.black),
                         ),
                       ),
                       SizedBox(height: 10),
@@ -356,8 +363,8 @@ class _SnipTab extends State<SnipTab> with SingleTickerProviderStateMixin {
                         itemBuilder: (context, index) {
                           // CommentModel comment = comments[index];
                           return ListTile(
-                            visualDensity: const VisualDensity(
-                                horizontal: 0, vertical: 0),
+                            visualDensity:
+                                const VisualDensity(horizontal: 0, vertical: 0),
                             contentPadding: EdgeInsets.zero,
                             leading: ClipOval(
                               child: Image.asset(
@@ -365,36 +372,34 @@ class _SnipTab extends State<SnipTab> with SingleTickerProviderStateMixin {
                             ),
                             title: Text('Nitanshu'),
                             titleTextStyle: AppFonts.titleBold(
-                                fontSize: 14,
-                                color:
-                                AppColors.black),
+                                fontSize: 14, color: AppColors.black),
                             subtitle: Text('i want to be there next time'),
                             subtitleTextStyle: AppFonts.titleMedium(
-                                fontSize: 12,
-                                color:
-                                AppColors.black),
-                            trailing: Icon(Icons.replay,color: AppColors.black,),
+                                fontSize: 12, color: AppColors.black),
+                            trailing: Icon(
+                              Icons.replay,
+                              color: AppColors.black,
+                            ),
                           );
                         },
                       ),
                       ListTile(
-                        visualDensity: const VisualDensity(
-                            horizontal: 0, vertical: 0),
+                        visualDensity:
+                            const VisualDensity(horizontal: 0, vertical: 0),
                         contentPadding: EdgeInsets.only(left: 50),
                         leading: ClipOval(
                           child: Image.asset(
-                            'assets/images/user2.png',width: 32,height: 32,),
+                            'assets/images/user2.png',
+                            width: 32,
+                            height: 32,
+                          ),
                         ),
                         title: Text('sree'),
                         titleTextStyle: AppFonts.titleBold(
-                            fontSize: 14,
-                            color:
-                            AppColors.black),
+                            fontSize: 14, color: AppColors.black),
                         subtitle: Text('see you soon'),
                         subtitleTextStyle: AppFonts.titleMedium(
-                            fontSize: 12,
-                            color:
-                            AppColors.black),
+                            fontSize: 12, color: AppColors.black),
                       ),
                     ],
                   ),
@@ -406,8 +411,7 @@ class _SnipTab extends State<SnipTab> with SingleTickerProviderStateMixin {
                       controller: commentController,
                       focusNode: commentFocusNode,
 
-                      style: AppFonts.titleMedium(
-                          color: AppColors.black),
+                      style: AppFonts.titleMedium(color: AppColors.black),
 
                       cursorHeight: 20,
                       cursorColor: AppColors.black,
@@ -425,8 +429,7 @@ class _SnipTab extends State<SnipTab> with SingleTickerProviderStateMixin {
                         floatingLabelBehavior: FloatingLabelBehavior.never,
                         contentPadding: EdgeInsets.symmetric(horizontal: 12),
                         hintText: 'Post your comment',
-                        hintStyle: AppFonts.hintTitle(
-                            color: AppColors.black),
+                        hintStyle: AppFonts.hintTitle(color: AppColors.black),
                         // suffix: Container(
                         //   width: 40,
                         //   height: 40,
@@ -453,7 +456,10 @@ class _SnipTab extends State<SnipTab> with SingleTickerProviderStateMixin {
                         //     child:  Icon(Icons.send,color: AppColors.white,),),
                         // ),
                         suffixIcon: IconButton(
-                          icon: Icon(Icons.send,color: AppColors.black,),
+                          icon: Icon(
+                            Icons.send,
+                            color: AppColors.black,
+                          ),
                           onPressed: () {
                             // Handle send button press here
                             String message = commentController.text;
@@ -466,29 +472,17 @@ class _SnipTab extends State<SnipTab> with SingleTickerProviderStateMixin {
                         ),
 
                         enabledBorder: OutlineInputBorder(
-                            borderRadius:
-                            BorderRadius.all(Radius.circular(12)),
-                            borderSide: BorderSide(
-                                color:
-                                AppColors.black)),
+                            borderRadius: BorderRadius.all(Radius.circular(12)),
+                            borderSide: BorderSide(color: AppColors.black)),
                         errorBorder: OutlineInputBorder(
-                            borderRadius:
-                            BorderRadius.all(Radius.circular(12)),
-                            borderSide: BorderSide(
-                                color:
-                                AppColors.black)),
+                            borderRadius: BorderRadius.all(Radius.circular(12)),
+                            borderSide: BorderSide(color: AppColors.black)),
                         border: OutlineInputBorder(
-                            borderRadius:
-                            BorderRadius.all(Radius.circular(12)),
-                            borderSide: BorderSide(
-                                color:
-                                AppColors.black)),
+                            borderRadius: BorderRadius.all(Radius.circular(12)),
+                            borderSide: BorderSide(color: AppColors.black)),
                         focusedBorder: OutlineInputBorder(
-                            borderRadius:
-                            BorderRadius.all(Radius.circular(12)),
-                            borderSide: BorderSide(
-                                color:
-                                AppColors.black)),
+                            borderRadius: BorderRadius.all(Radius.circular(12)),
+                            borderSide: BorderSide(color: AppColors.black)),
                       ),
                     ),
                   ),
@@ -533,34 +527,54 @@ class _SnipTab extends State<SnipTab> with SingleTickerProviderStateMixin {
 
   void showPopupMenu() {
     // Get button's position
-    final RenderBox button = _buttonKey.currentContext!.findRenderObject() as RenderBox;
-    final RenderBox overlay = Overlay.of(context).context.findRenderObject() as RenderBox;
+    final RenderBox button =
+        _buttonKey.currentContext!.findRenderObject() as RenderBox;
+    final RenderBox overlay =
+        Overlay.of(context).context.findRenderObject() as RenderBox;
     final RelativeRect position = RelativeRect.fromLTRB(
       button.localToGlobal(Offset.zero, ancestor: overlay).dx, // X position
-      button.localToGlobal(Offset.zero, ancestor: overlay).dy - button.size.height, // Y position above button
-      button.localToGlobal(Offset.zero, ancestor: overlay).dx + button.size.width,
+      button.localToGlobal(Offset.zero, ancestor: overlay).dy -
+          button.size.height, // Y position above button
+      button.localToGlobal(Offset.zero, ancestor: overlay).dx +
+          button.size.width,
       button.localToGlobal(Offset.zero, ancestor: overlay).dy,
     );
 
     showMenu(
       context: context,
       position: position,
-
       items: [
         PopupMenuItem<int>(
           value: 0,
-
           child: Row(
-            crossAxisAlignment: CrossAxisAlignment
-                .center,
+            crossAxisAlignment: CrossAxisAlignment.center,
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Padding(
                 padding: const EdgeInsets.only(top: 4.0),
                 child: Icon(Icons.message),
               ),
-              SizedBox(width: 4,),
+              SizedBox(
+                width: 4,
+              ),
               Text("Send Message"),
+            ],
+          ),
+        ),
+        PopupMenuItem<int>(
+          value: 1,
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            mainAxisAlignment: MainAxisAlignment.start,
+            children: [
+              Padding(
+                padding: const EdgeInsets.only(top: 4.0, left: 6),
+                child: Icon(Icons.report),
+              ),
+              SizedBox(
+                width: 4,
+              ),
+              Text("Report"),
             ],
           ),
         ),
@@ -575,7 +589,30 @@ class _SnipTab extends State<SnipTab> with SingleTickerProviderStateMixin {
       ],
     ).then((value) {
       if (value != null) {
-        Navigator.push(context,MaterialPageRoute(builder: (context) => const MessengerPage(),));
+        if (value == 1) {
+          // ScaffoldMessenger.of(context).showSnackBar(
+          //   SnackBar(
+          //     content: Text('Reported successfully'),
+          //   ),
+          // );
+          Fluttertoast.showToast(
+              msg: "Reported successfully",
+              toastLength: Toast.LENGTH_SHORT,
+              gravity: ToastGravity.TOP,
+              timeInSecForIosWeb: 1,
+              backgroundColor: Colors.black,
+              textColor: Colors.white,
+              fontSize: 16.0
+          );
+
+          // Navigator.pop(context);
+        } else {
+          Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const MessengerPage(),
+              ));
+        }
       }
     });
   }

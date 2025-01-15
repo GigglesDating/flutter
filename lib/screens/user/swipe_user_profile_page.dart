@@ -116,17 +116,26 @@ class _SwipeUserProfilePage extends State<SwipeUserProfilePage> {
                   SizedBox(
                     height: kToolbarHeight,
                   ),
-                  InkWell(
-                    onTap: () {
-                      Navigator.pop(context);
-                      print('object');
-                    },
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                      child: Align(
-                          alignment: Alignment.topRight,
-                          child: SvgPicture.asset('assets/icons/close_redbg_icon.svg')),
-                    ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      IconButton(onPressed: (){
+                        showReported(context);
+                      }, icon: Icon(Icons.report_outlined,size: 40,color: AppColors.primary,)),
+                      InkWell(
+                        onTap: () {
+                          Navigator.pop(context);
+                          print('object');
+                        },
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                          child: Align(
+                              alignment: Alignment.topRight,
+                              child: SvgPicture.asset('assets/icons/close_redbg_icon.svg')),
+                        ),
+                      ),
+
+                    ],
                   ),
                   Container(
                     width: MediaQuery.of(context).size.width / 1.5,
@@ -565,6 +574,37 @@ class _SwipeUserProfilePage extends State<SwipeUserProfilePage> {
               ),
             ),
           )
+        ],
+      ),
+    );
+  }
+  void showReported(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        // title: const Text('Unblock User'),
+        // titleTextStyle: AppFonts.titleBold(fontSize: 20),
+        content:  Text(
+          'Are you sure to report this profile',
+          style: AppFonts.titleMedium(),
+        ),
+
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child:  Text('Cancel',style: AppFonts.titleBold(),),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('Reported successfully'),
+                ),
+              );
+            },
+            child:  Text('Confirm',style: AppFonts.titleBold(color: AppColors.primary),),
+          ),
         ],
       ),
     );

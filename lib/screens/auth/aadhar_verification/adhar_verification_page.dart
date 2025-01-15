@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:giggles/constants/appColors.dart';
 import 'package:giggles/constants/appFonts.dart';
@@ -10,7 +11,6 @@ import 'package:hyperkyc_flutter/hyperkyc_flutter.dart';
 import 'package:hyperkyc_flutter/hyperkyc_result.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../constants/utils/show_dialog.dart';
 import '../../../network/auth_provider.dart';
@@ -417,9 +417,7 @@ class _AadharVerificationPage extends State<AadharVerificationPage>
                     ),
                     onPressed: () async {
                       startKYCProcess();
-
                     },
-
                     child: Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 16.0),
                       child: Text('Next',

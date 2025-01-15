@@ -2,8 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:giggles/constants/appColors.dart';
 import 'package:giggles/screens/dashboard/snip_tab/snip_tab.dart';
-
-import '../maps/sos_map_page.dart';
+import 'package:giggles/screens/maps/sos_map_page.dart';
 import '../user/user_profile_page.dart';
 import 'explore_tab/explore_tab.dart';
 import 'home_tab/home_tab.dart';
@@ -50,6 +49,7 @@ class _DashboardPage extends State<DashboardPage> {
               bottomBarPages.length, (index) => bottomBarPages[index]),
         ),
         floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
+
         floatingActionButton: Padding(
           padding: const EdgeInsets.only(bottom: 40),
           child: Align(
@@ -59,10 +59,7 @@ class _DashboardPage extends State<DashboardPage> {
               shape: const CircleBorder(),
               onPressed: () {
                 // _pageController.jumpToPage(2);
-                Navigator.push(context, MaterialPageRoute(builder: (_) => SosMapPage()));
-
-                // );
-
+                Navigator.push(context, MaterialPageRoute(builder: (context) => SosMapPage(),));
               },
               child: SvgPicture.asset(
                 'assets/icons/sos_icon.svg',

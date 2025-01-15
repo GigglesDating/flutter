@@ -35,7 +35,7 @@ class AuthService {
     'Content-Type': 'application/json'
   };
 
-  Future<Otpverify?> otpverify(Map<String, dynamic> loginMap) async {
+  Future<OtpModel?> otpverify(Map<String, dynamic> loginMap) async {
     final url = Uri.parse(baseUrl + UrlHelper.otpVerificationUrl);
 
     try {
@@ -59,7 +59,7 @@ class AuthService {
         await SharedPref.otpVerifiedScreen();
         // await prefs.setString('lastScreen', 'otpVerified');
 
-        return Otpverify.fromJson(responseData);
+        return OtpModel.fromJson(responseData);
       } else {
         print('Error in OTP Verify API: ${response.body}');
         return null;
@@ -530,7 +530,7 @@ class AuthService {
     final url = Uri.parse(baseUrl + UrlHelper.userProfileUrl);
     final response = await http.delete(
       url,
-      headers: {
+      headers:{
         'Authorization': 'Token ${SharedPref().getTokenDetail()}',
         'Content-Type': 'application/json'
       },
@@ -570,6 +570,24 @@ class AuthService {
       return true;
     } else {
       return false; // Login failed
+    }
+  }
+
+  //  intro video watch complete
+  Future<bool?> introVideoWatch(Map<String, dynamic> watchVideo) async {
+    final url = Uri.parse(baseUrl + UrlHelper.isVideoWatchedUrl);
+    final response = await http.post(
+      url,
+      body: jsonEncode(watchVideo),
+      headers: {
+        'Authorization': 'Token ${SharedPref().getTokenDetail()}',
+        'Content-Type': 'application/json'
+      },
+    );
+    if (response.statusCode == 200) {
+      return true;
+    } else {
+      return false;
     }
   }
 

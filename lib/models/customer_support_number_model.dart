@@ -1,6 +1,6 @@
 /// status : true
 /// message : "support number found successfully"
-/// data : {"id":1,"phone_number":8121841657}
+/// data : {"support_number":{"id":1,"phone_number":8121841657},"user_phone":9928821640}
 
 class CustomerSupportNumberModel {
   String? detail;
@@ -44,26 +44,62 @@ CustomerSupportNumberModel copyWith({  bool? status,
 
 }
 
-/// id : 1
-/// phone_number : 8121841657
+/// support_number : {"id":1,"phone_number":8121841657}
+/// user_phone : 9928821640
 
 class Data {
   Data({
+      SupportNumber? supportNumber, 
+      num? userPhone,}){
+    _supportNumber = supportNumber;
+    _userPhone = userPhone;
+}
+
+  Data.fromJson(dynamic json) {
+    _supportNumber = json['support_number'] != null ? SupportNumber.fromJson(json['support_number']) : null;
+    _userPhone = json['user_phone'];
+  }
+  SupportNumber? _supportNumber;
+  num? _userPhone;
+Data copyWith({  SupportNumber? supportNumber,
+  num? userPhone,
+}) => Data(  supportNumber: supportNumber ?? _supportNumber,
+  userPhone: userPhone ?? _userPhone,
+);
+  SupportNumber? get supportNumber => _supportNumber;
+  num? get userPhone => _userPhone;
+
+  Map<String, dynamic> toJson() {
+    final map = <String, dynamic>{};
+    if (_supportNumber != null) {
+      map['support_number'] = _supportNumber?.toJson();
+    }
+    map['user_phone'] = _userPhone;
+    return map;
+  }
+
+}
+
+/// id : 1
+/// phone_number : 8121841657
+
+class SupportNumber {
+  SupportNumber({
       num? id, 
       num? phoneNumber,}){
     _id = id;
     _phoneNumber = phoneNumber;
 }
 
-  Data.fromJson(dynamic json) {
+  SupportNumber.fromJson(dynamic json) {
     _id = json['id'];
     _phoneNumber = json['phone_number'];
   }
   num? _id;
   num? _phoneNumber;
-Data copyWith({  num? id,
+SupportNumber copyWith({  num? id,
   num? phoneNumber,
-}) => Data(  id: id ?? _id,
+}) => SupportNumber(  id: id ?? _id,
   phoneNumber: phoneNumber ?? _phoneNumber,
 );
   num? get id => _id;

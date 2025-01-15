@@ -1,7 +1,6 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:giggles/constants/appColors.dart';
 import 'package:giggles/constants/appFonts.dart';
 import 'package:giggles/screens/messenger/messenger_page.dart';
@@ -54,7 +53,7 @@ class _UserDashboardComponentState extends State<UserDashboardComponent> {
           ),
         ),
         isScrollControlled: true,
-      backgroundColor: AppColors.white.withOpacity(0.9),
+        backgroundColor: AppColors.white.withOpacity(0.9),
         builder: (context) {
           return Padding(
             padding: MediaQuery.of(context).viewInsets,
@@ -81,8 +80,7 @@ class _UserDashboardComponentState extends State<UserDashboardComponent> {
                         Center(
                           child: Text(
                             'Comments',
-                            style: AppFonts.titleBold(
-                                color: AppColors.black),
+                            style: AppFonts.titleBold(color: AppColors.black),
                           ),
                         ),
                         SizedBox(height: 10),
@@ -103,36 +101,34 @@ class _UserDashboardComponentState extends State<UserDashboardComponent> {
                               ),
                               title: Text('Nitanshu'),
                               titleTextStyle: AppFonts.titleBold(
-                                  fontSize: 14,
-                                  color:
-                                      AppColors.black),
+                                  fontSize: 14, color: AppColors.black),
                               subtitle: Text('i want to be there next time'),
                               subtitleTextStyle: AppFonts.titleMedium(
-                                  fontSize: 12,
-                                  color:
-                                  AppColors.black),
-                              trailing: Icon(Icons.replay,color: AppColors.black,),
+                                  fontSize: 12, color: AppColors.black),
+                              trailing: Icon(
+                                Icons.replay,
+                                color: AppColors.black,
+                              ),
                             );
                           },
                         ),
                         ListTile(
-                          visualDensity: const VisualDensity(
-                              horizontal: 0, vertical: 0),
+                          visualDensity:
+                              const VisualDensity(horizontal: 0, vertical: 0),
                           contentPadding: EdgeInsets.only(left: 50),
                           leading: ClipOval(
                             child: Image.asset(
-                              'assets/images/user2.png',width: 32,height: 32,),
+                              'assets/images/user2.png',
+                              width: 32,
+                              height: 32,
+                            ),
                           ),
                           title: Text('sree'),
                           titleTextStyle: AppFonts.titleBold(
-                              fontSize: 14,
-                              color:
-                              AppColors.black),
+                              fontSize: 14, color: AppColors.black),
                           subtitle: Text('see you soon'),
                           subtitleTextStyle: AppFonts.titleMedium(
-                              fontSize: 12,
-                              color:
-                              AppColors.black),
+                              fontSize: 12, color: AppColors.black),
                         ),
                       ],
                     ),
@@ -144,8 +140,7 @@ class _UserDashboardComponentState extends State<UserDashboardComponent> {
                         controller: commentController,
                         focusNode: commentFocusNode,
 
-                        style: AppFonts.titleMedium(
-                            color: AppColors.black),
+                        style: AppFonts.titleMedium(color: AppColors.black),
 
                         cursorHeight: 20,
                         cursorColor: AppColors.black,
@@ -163,8 +158,7 @@ class _UserDashboardComponentState extends State<UserDashboardComponent> {
                           floatingLabelBehavior: FloatingLabelBehavior.never,
                           contentPadding: EdgeInsets.symmetric(horizontal: 12),
                           hintText: 'Post your comment',
-                          hintStyle: AppFonts.hintTitle(
-                              color: AppColors.black),
+                          hintStyle: AppFonts.hintTitle(color: AppColors.black),
                           // suffix: Container(
                           //   width: 40,
                           //   height: 40,
@@ -191,7 +185,10 @@ class _UserDashboardComponentState extends State<UserDashboardComponent> {
                           //     child:  Icon(Icons.send,color: AppColors.white,),),
                           // ),
                           suffixIcon: IconButton(
-                            icon: Icon(Icons.send,color: AppColors.black,),
+                            icon: Icon(
+                              Icons.send,
+                              color: AppColors.black,
+                            ),
                             onPressed: () {
                               // Handle send button press here
                               String message = commentController.text;
@@ -205,28 +202,20 @@ class _UserDashboardComponentState extends State<UserDashboardComponent> {
 
                           enabledBorder: OutlineInputBorder(
                               borderRadius:
-                              BorderRadius.all(Radius.circular(12)),
-                              borderSide: BorderSide(
-                                  color:
-                                  AppColors.black)),
+                                  BorderRadius.all(Radius.circular(12)),
+                              borderSide: BorderSide(color: AppColors.black)),
                           errorBorder: OutlineInputBorder(
                               borderRadius:
-                              BorderRadius.all(Radius.circular(12)),
-                              borderSide: BorderSide(
-                                  color:
-                                  AppColors.black)),
+                                  BorderRadius.all(Radius.circular(12)),
+                              borderSide: BorderSide(color: AppColors.black)),
                           border: OutlineInputBorder(
                               borderRadius:
                                   BorderRadius.all(Radius.circular(12)),
-                              borderSide: BorderSide(
-                                  color:
-                                  AppColors.black)),
+                              borderSide: BorderSide(color: AppColors.black)),
                           focusedBorder: OutlineInputBorder(
                               borderRadius:
                                   BorderRadius.all(Radius.circular(12)),
-                              borderSide: BorderSide(
-                                  color:
-                                  AppColors.black)),
+                              borderSide: BorderSide(color: AppColors.black)),
                         ),
                       ),
                     ),
@@ -357,10 +346,9 @@ class _UserDashboardComponentState extends State<UserDashboardComponent> {
                     Container(
                       width: 40,
                       height: 40,
-
                       child: IconButton(
                           key: _buttonKey,
-                          onPressed: () async{
+                          onPressed: () async {
                             // Get button's position
                             showPopupMenu();
                           },
@@ -470,36 +458,58 @@ class _UserDashboardComponentState extends State<UserDashboardComponent> {
       ],
     );
   }
+
   void showPopupMenu() {
     // Get button's position
-    final RenderBox button = _buttonKey.currentContext!.findRenderObject() as RenderBox;
-    final RenderBox overlay = Overlay.of(context).context.findRenderObject() as RenderBox;
+    final RenderBox button =
+        _buttonKey.currentContext!.findRenderObject() as RenderBox;
+    final RenderBox overlay =
+        Overlay.of(context).context.findRenderObject() as RenderBox;
     final RelativeRect position = RelativeRect.fromLTRB(
       button.localToGlobal(Offset.zero, ancestor: overlay).dx, // X position
-      button.localToGlobal(Offset.zero, ancestor: overlay).dy - button.size.height, // Y position above button
-      button.localToGlobal(Offset.zero, ancestor: overlay).dx + button.size.width,
+      button.localToGlobal(Offset.zero, ancestor: overlay).dy -
+          button.size.height, // Y position above button
+      button.localToGlobal(Offset.zero, ancestor: overlay).dx +
+          button.size.width,
       button.localToGlobal(Offset.zero, ancestor: overlay).dy,
     );
 
     showMenu(
       context: context,
       position: position,
-      
+
       items: [
         PopupMenuItem<int>(
           value: 0,
-
           child: Row(
-            crossAxisAlignment: CrossAxisAlignment
-            .center,
+            crossAxisAlignment: CrossAxisAlignment.center,
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Padding(
                 padding: const EdgeInsets.only(top: 4.0),
                 child: Icon(Icons.message),
               ),
-              SizedBox(width: 4,),
+              SizedBox(
+                width: 4,
+              ),
               Text("Send Message"),
+            ],
+          ),
+        ),
+        PopupMenuItem<int>(
+          value: 1,
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            mainAxisAlignment: MainAxisAlignment.start,
+            children: [
+              Padding(
+                padding: const EdgeInsets.only(top: 4.0,left: 6),
+                child: Icon(Icons.report),
+              ),
+              SizedBox(
+                width: 4,
+              ),
+              Text("Report"),
             ],
           ),
         ),
@@ -514,9 +524,28 @@ class _UserDashboardComponentState extends State<UserDashboardComponent> {
       ],
     ).then((value) {
       if (value != null) {
-       Navigator.push(context,MaterialPageRoute(builder: (context) => const MessengerPage(),));
+        if (value==1) {
+          Fluttertoast.showToast(
+              msg: "Reported successfully",
+              toastLength: Toast.LENGTH_SHORT,
+              gravity: ToastGravity.CENTER,
+              timeInSecForIosWeb: 1,
+              backgroundColor: Colors.black,
+              textColor: Colors.white,
+              fontSize: 16.0
+          );
+          // Navigator.pop(context);
+
+
+        }  else{
+          Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const MessengerPage(),
+              ));
+        }
+
       }
     });
   }
-
 }

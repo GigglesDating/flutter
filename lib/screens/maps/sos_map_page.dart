@@ -1,5 +1,8 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:giggles/constants/appColors.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 class SosMapPage extends StatefulWidget {
@@ -8,38 +11,42 @@ class SosMapPage extends StatefulWidget {
 }
 
 class _SosMapPage extends State<SosMapPage> {
-   GoogleMapController? mapController;
+  GoogleMapController? mapController;
+
   // BitmapDescriptor? customIcon;
-   Set<Marker> _markers = {};
-   Set<Circle> _circles = {};
+  Set<Marker> _markers = {};
+  Set<Circle> _circles = {};
+
   // final LatLng _center = LatLng(12.934056, 77.610116); // Replace with your location
-  LatLng? _currentLocation ; // Default location (e.g., San Francisco)
+  LatLng? _currentLocation; // Default location (e.g., San Francisco)
   bool _locationFetched = false;
+
   @override
   void initState() {
     super.initState();
     _fetchCurrentLocation();
-
   }
-   Future<void> _fetchCurrentLocation() async {
-     LocationPermission permission = await Geolocator.checkPermission();
-     if (permission == LocationPermission.denied) {
-       permission = await Geolocator.requestPermission();
-       if (permission == LocationPermission.denied) {
-         return;
-       }
-     }
 
-     if (permission == LocationPermission.deniedForever) {
-       return;
-     }
+  Future<void> _fetchCurrentLocation() async {
+    LocationPermission permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+      if (permission == LocationPermission.denied) {
+        return;
+      }
+    }
 
-     Position position = await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
-     setState(() {
-       _currentLocation = LatLng(position.latitude, position.longitude);
-       _addMarkerWithRadialEffect(_currentLocation!);
-     });
-   }
+    if (permission == LocationPermission.deniedForever) {
+      return;
+    }
+
+    Position position = await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.high);
+    setState(() {
+      _currentLocation = LatLng(position.latitude, position.longitude);
+      _addMarkerWithRadialEffect(_currentLocation!);
+    });
+  }
 
   // Future<void> _loadCustomMarkerIcon() async {
   //   customIcon = await BitmapDescriptor.asset(
@@ -49,72 +56,95 @@ class _SosMapPage extends State<SosMapPage> {
   //   setState(() {}); // Refresh to show custom marker
   // }
 
-   void _addMarkerWithRadialEffect(LatLng position) {
-     setState(() {
-       // Add the main marker
-       _markers.add(
-         Marker(
-           markerId: MarkerId('currentLocation'),
-           position: position,
-           icon: BitmapDescriptor.defaultMarker,
-         ),
-       );
+  void _addMarkerWithRadialEffect(LatLng position) {
+    setState(() {
+      // Add the main marker
+      _markers.add(
+        Marker(
+          markerId: MarkerId('currentLocation'),
+          position: position,
+          icon: BitmapDescriptor.defaultMarker,
+        ),
+      );
 
-       // Add circles for the radial effect
-       _circles = {
+      // Add circles for the radial effect
+      _circles = {
+        Circle(
+          circleId: CircleId("circle1"),
+          center: position,
+          radius: 100,
+          // radius in meters
+          fillColor: Colors.blue.withOpacity(0.3),
+          strokeColor: Colors.blue.withOpacity(0.3),
+          strokeWidth: 1,
+        ),
+        Circle(
+          circleId: CircleId("circle2"),
+          center: position,
+          radius: 200,
+          // larger radius for outer effect
+          fillColor: Colors.blue.withOpacity(0.1),
+          strokeColor: Colors.blue.withOpacity(0.1),
+          strokeWidth: 1,
+        ),
+      };
+    });
+  }
 
-         Circle(
-           circleId: CircleId("circle1"),
-           center: position,
-           radius: 100, // radius in meters
-           fillColor: Colors.blue.withOpacity(0.3),
-           strokeColor: Colors.blue.withOpacity(0.3),
-           strokeWidth: 1,
-         ),
-         Circle(
-           circleId: CircleId("circle2"),
-           center: position,
-           radius: 200, // larger radius for outer effect
-           fillColor: Colors.blue.withOpacity(0.1),
-           strokeColor: Colors.blue.withOpacity(0.1),
-           strokeWidth: 1,
-         ),
-       };
-     });
-   }
-
-
-   @override
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: Stack(
         children: [
           _currentLocation == null
-              ? Center(child: CircularProgressIndicator(color:Theme.of(context).colorScheme.tertiary,)) // Loading indicator
-              :GoogleMap(
-            onMapCreated: (controller) {
-              setState(() {
-                mapController = controller;
-                if (_locationFetched) {
-                  mapController?.animateCamera(
-                    CameraUpdate.newCameraPosition(
-                      CameraPosition(target: _currentLocation!, zoom: 15.0),
-                    ),
-                  );
-                }
-              });
-
-            },
-            initialCameraPosition: CameraPosition(target: _currentLocation!, zoom: 15),
-            myLocationEnabled: true,
-            myLocationButtonEnabled: true,
-            circles: _circles,
-            markers:
-            // customIcon == null
-            //     ? {}
-            //     :
-            _markers,
-          ),
+              ? Center(
+                  child: CircularProgressIndicator(
+                  color: Theme.of(context).colorScheme.tertiary,
+                )) // Loading indicator
+              : GoogleMap(
+                  onMapCreated: (controller) {
+                    setState(() {
+                      mapController = controller;
+                      if (_locationFetched) {
+                        mapController?.animateCamera(
+                          CameraUpdate.newCameraPosition(
+                            CameraPosition(
+                                target: _currentLocation!, zoom: 15.0),
+                          ),
+                        );
+                      }
+                    });
+                  },
+                  initialCameraPosition:
+                      CameraPosition(target: _currentLocation!, zoom: 15),
+                  myLocationEnabled: true,
+                  myLocationButtonEnabled: true,
+                  circles: _circles,
+                  markers:
+                      // customIcon == null
+                      //     ? {}
+                      //     :
+                      _markers,
+                ),
+          Positioned(
+              top: kToolbarHeight,
+              left: 16,
+              child: IconButton(
+                  onPressed: () {
+                    Navigator.pop(context);
+                  },
+                  padding: EdgeInsets.zero,
+                  style: ButtonStyle(
+                      shape: WidgetStatePropertyAll(RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(24))),
+                      backgroundColor: WidgetStatePropertyAll(AppColors.black),
+                      padding: WidgetStatePropertyAll(EdgeInsets.only(
+                        left: Platform.isIOS ? 8 : 0,
+                      ))),
+                  icon: Icon(
+                    Platform.isIOS ? Icons.arrow_back_ios : Icons.arrow_back,
+                    color: AppColors.white,
+                  )))
           // Overlay the concentric circles
           // Positioned(
           //   left: MediaQuery.of(context).size.width / 2 - 64,

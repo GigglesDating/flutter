@@ -11,7 +11,6 @@ import 'package:giggles/screens/user/while_waiting_events_page.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 import 'package:reorderable_grid_view/reorderable_grid_view.dart';
-
 import '../../constants/utils/multi_select_dialog.dart';
 import '../../models/user_interests_model.dart';
 import '../../network/auth_provider.dart';
@@ -221,9 +220,10 @@ class _UserProfileCreationPage extends State<UserProfileCreationPage> {
   @override
   Widget build(BuildContext context) {
     final userProfileCreation = context.watch<AuthProvider>();
-    return WillPopScope(
-      onWillPop: () async {
-        return true;
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult : (isBool,didPop){
+        // logic
       },
       child: Scaffold(
         backgroundColor: Theme.of(context).scaffoldBackgroundColor,
@@ -1143,7 +1143,7 @@ class _UserProfileCreationPage extends State<UserProfileCreationPage> {
                                     context,
                                     MaterialPageRoute(
                                       builder: (context) =>
-                                          const WhiteWaitingEventsPage(),
+                                          const WhileWaitingEventsPage(),
                                     ),
                                   );
                                   ShowDialog().showSuccessDialog(context,

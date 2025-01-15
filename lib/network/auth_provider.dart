@@ -2,14 +2,15 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:giggles/constants/database/shared_preferences_service.dart';
+import 'package:giggles/models/customer_support_number_model.dart';
 import 'package:giggles/models/event_video.dart';
 import 'package:giggles/models/membership_count_model.dart';
 import 'package:giggles/models/otp_model.dart';
 import 'package:giggles/models/privacy_model.dart';
 import 'package:giggles/models/term_model.dart';
 import 'package:giggles/models/user_profile_creation_model.dart';
-import 'package:giggles/screens/auth/privacy.dart';
-import 'package:giggles/screens/auth/privacy.dart';
+import 'package:giggles/screens/auth/privacy_policy_page.dart';
+import 'package:giggles/screens/auth/privacy_policy_page.dart';
 
 import '../models/intro_video_model.dart';
 import '../models/register_waitng_events_model.dart';
@@ -28,7 +29,7 @@ class AuthProvider extends ChangeNotifier {
   String _errorMessage = '';
   String _successMessage = '';
   UserModel? _user;
-  Otpverify? otpverifyUser;
+  OtpModel? otpverifyUser;
 
   String get getIntorVideoUrl => introVideoUrl;
 
@@ -59,7 +60,7 @@ class AuthProvider extends ChangeNotifier {
       print('userModel!.detail.toString()');
 
       if (userModel == null) {
-        _errorMessage = userModel!.detail.toString();
+        _errorMessage = userModel.detail.toString();
       } else {
         _successMessage = userModel.message.toString();
         _user = userModel;
@@ -78,7 +79,7 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
-  Future<Otpverify?> otpVerify(Map<String, dynamic> loginMap) async {
+  Future<OtpModel?> otpVerify(Map<String, dynamic> loginMap) async {
     try {
       _isLoading = true;
       notifyListeners();
@@ -508,6 +509,7 @@ class AuthProvider extends ChangeNotifier {
       return null;
     }
   }
+  //store addhar data to our database
 
   Future<bool?> postAadharData(Map<String, dynamic> map) async {
     _isLoading = true;
@@ -515,7 +517,7 @@ class AuthProvider extends ChangeNotifier {
     final otpValidate = await _authService.postAadharDetails(map);
     _isLoading = false;
     if (otpValidate == false) {
-      _errorMessage = 'Enter Valid  OTP';
+      _errorMessage = 'Something went wrong';
     } else {
       _successMessage = 'Aadhar Data Post';
       // _user = otpValidate; // Store logged-in user data
@@ -523,5 +525,42 @@ class AuthProvider extends ChangeNotifier {
     _isLoading = false;
     notifyListeners();
     return otpValidate;
+  }
+
+  // video watch complete successfully
+
+  Future<bool?> postVideoWatch(Map<String, dynamic> map) async {
+    _isLoading = true;
+    notifyListeners();
+    final otpValidate = await _authService.introVideoWatch(map);
+    _isLoading = false;
+    if (otpValidate == false) {
+      _errorMessage = 'Something went wrong';
+    } else {
+      _successMessage = '';
+    }
+    _isLoading = false;
+    notifyListeners();
+    return otpValidate;
+  }
+
+
+  // customer support number
+
+
+  Future<CustomerSupportNumberModel?> getCustomerSupportNumber() async {
+    _isLoading = true;
+    notifyListeners();
+    final customerSupport = await _authService.fetchCustomerSupportNumber();
+    _isLoading = false;
+    if (customerSupport == false) {
+      _errorMessage = 'Something went wrong';
+    } else {
+      _successMessage = customerSupport.message.toString();
+      // _user = otpValidate; // Store logged-in user data
+    }
+    _isLoading = false;
+    notifyListeners();
+    return customerSupport;
   }
 }

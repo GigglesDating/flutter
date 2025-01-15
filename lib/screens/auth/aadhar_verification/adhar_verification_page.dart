@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:giggles/constants/appColors.dart';
 import 'package:giggles/constants/appFonts.dart';
@@ -10,7 +11,6 @@ import 'package:hyperkyc_flutter/hyperkyc_flutter.dart';
 import 'package:hyperkyc_flutter/hyperkyc_result.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../constants/utils/show_dialog.dart';
 import '../../../network/auth_provider.dart';
@@ -64,9 +64,9 @@ class _AadharVerificationPage extends State<AadharVerificationPage>
     // initializeCamera();
     final transactionId = 'giggles' + getRandomString(10);
     hyperKycConfig = HyperKycConfig.fromAppIdAppKey(
-      appId: 'o811fk',
+      appId: 'vhwa6g',
       //  Get this from Hyperverge team
-      appKey: '3ddhunl5z427du78rm10',
+      appKey: 'covm95gngm5bssmmuy2q',
       //  Get this from Hyperverge team
       workflowId: 'Aadhar_facematch',
       //  Get workflow-id from Hyperverge dashboard

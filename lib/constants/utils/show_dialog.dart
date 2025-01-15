@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:giggles/constants/appColors.dart';
 import 'package:giggles/constants/appFonts.dart';
-import 'package:giggles/screens/user/white_waiting_events_page.dart';
+import 'package:giggles/screens/user/while_waiting_events_page.dart';
 
 class ShowDialog {
   //show Error Dialog
@@ -39,7 +39,7 @@ class ShowDialog {
                 child: Text(
                   'Cancel',
                   style:
-                      AppFonts.titleBold(color: AppColors.white, fontSize: 15),
+                      AppFonts.titleBold(color: Theme.of(context).brightness==Brightness.light?AppColors.black:AppColors.white, fontSize: 15),
                 )),
             ElevatedButton(
                 style: ElevatedButton.styleFrom(

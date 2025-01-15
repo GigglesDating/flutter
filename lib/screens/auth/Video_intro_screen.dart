@@ -1,7 +1,7 @@
 // import 'package:flutter/material.dart';
 // import 'package:flutter/services.dart';
 // import 'package:giggles/screens/auth/signUpPage.dart';
-// import 'package:giggles/screens/user/white_waiting_events_page.dart';
+// import 'package:giggles/screens/user/while_waiting_events_page.dart';
 // import 'package:shared_preferences/shared_preferences.dart';
 // import 'package:video_player/video_player.dart';
 
@@ -204,6 +204,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:giggles/constants/appColors.dart';
 import 'package:giggles/constants/appFonts.dart';
+import 'package:giggles/constants/database/shared_preferences_service.dart';
 import 'package:giggles/screens/auth/signUpPage.dart';
 import 'package:video_player/video_player.dart';
 
@@ -217,7 +218,7 @@ class VideoIntroPage extends StatefulWidget {
   State<VideoIntroPage> createState() => _VideoIntroPage();
 }
 
-class _VideoIntroPage extends State<VideoIntroPage> {
+class _VideoIntroPage extends State<VideoIntroPage> with WidgetsBindingObserver {
   late VideoPlayerController _controller;
   bool _isInitialized = false;
 
@@ -247,56 +248,98 @@ class _VideoIntroPage extends State<VideoIntroPage> {
   }
 
   @override
+  void initState() {
+    // TODO: implement initState
+    WidgetsBinding.instance.addObserver(this);
+    super.initState();
+    _enterFullPage();
+
+    initializeVideoPlayer();
+    // _controller.setLooping(true);
+    // _controller.play();
+  }
+
+  Future<void> initializeVideoPlayer() async {
+    final savedPosition = SharedPref.fetchCurrentPosition();
+    _controller =
+        // VideoPlayerController.networkUrl(Uri.parse('https://gigglesdating.s3.ap-south-1.amazonaws.com/media/intro_video/Final_draftedited_1_HLy6XsL.mp4'))
+
+        VideoPlayerController.networkUrl(Uri.parse(widget.videoUrl.toString()))
+          // _initializeVideoPlayerFuture = _controller.initialize();
+          ..addListener(
+            () async {
+              if (_controller.value.isInitialized &&
+                  !_controller.value.isPlaying &&
+                  _controller.value.position >= _controller.value.duration &&
+                  !_isButtonVisible) {
+                print('valueinseconds');
+                print(_controller.value.position.inSeconds.toDouble());
+
+                saveVideoPosition();
+                // If the video is over, mark it as paused
+                // Show button only after the video completes the first time
+                setState(() {
+                  _isButtonVisible = true;
+                  _isFirstTimeCompleted = true;
+                });
+              }
+              setState(() {
+
+                isPlaying = false;
+                // _isButtonVisible = false;
+              });
+            },
+          )
+          ..initialize().then((_) async {
+            setState(() {
+              _isInitialized = true;
+            });
+            _controller.seekTo(Duration(seconds: savedPosition.toInt()));
+            _controller.play();
+            // Rebuild to show the video once initialized
+          });
+  }
+  Future<void> saveVideoPosition() async {
+    if (_controller.value.isInitialized) {
+      final currentPosition =
+      _controller.value.position.inSeconds.toDouble();
+     await SharedPref.introVideoDuration(currentPosition);
+     await SharedPref.introVideoTotalDuration( _controller.value.duration.inSeconds.toDouble());
+    }
+  }
+
+  @override
+ Future<void> didChangeAppLifecycleState(AppLifecycleState state) async {
+    if (state == AppLifecycleState.paused) {
+      // Save video position when the app is paused
+      print('objectbackground');
+
+      saveVideoPosition();
+    }else if (state == AppLifecycleState.detached) {
+      // Save video position when the app is paused
+      print('objectbackground121111');
+
+      saveVideoPosition();
+    } else if (state == AppLifecycleState.resumed) {
+      // Resume video playback when the app is resumed
+      final savedPosition = SharedPref.fetchCurrentPosition();
+      _controller.seekTo(Duration(seconds: savedPosition.toInt()));
+      _controller.play();
+    }
+  }
+
+  @override
   void dispose() {
     // TODO: implement dispose
+    WidgetsBinding.instance.removeObserver(this);
     _controller.dispose();
+
     _exitFullPage();
     super.dispose();
   }
 
   void _closeKeyboard() {
     SystemChannels.textInput.invokeMethod('TextInput.hide');
-  }
-
-  @override
-  void initState() {
-    // TODO: implement initState
-    super.initState();
-    _enterFullPage();
-    print('12222222');
-    print(widget.videoUrl.toString());
-
-    _controller =
-        VideoPlayerController.networkUrl(Uri.parse(widget.videoUrl.toString()))
-          // _initializeVideoPlayerFuture = _controller.initialize();
-          ..initialize().then((_) async {
-            setState(() {
-              _isInitialized = true;
-            });
-            _controller.play();
-            // Rebuild to show the video once initialized
-          });
-    _controller.addListener(() {
-      if (_controller.value.position == _controller.value.duration) {
-        // If the video is over, mark it as paused
-        setState(() {
-          if (!_isFirstTimeCompleted) {
-            // Show button only after the video completes the first time
-            setState(() {
-              _isButtonVisible = true;
-              _isFirstTimeCompleted = true;
-            });
-          }
-        });
-        setState(() {
-          isPlaying = false;
-        });
-      }
-    });
-
-    setState(() {});
-    // _controller.setLooping(true);
-    // _controller.play();
   }
 
   void _showSuccessDialog(String message) {
@@ -372,6 +415,10 @@ class _VideoIntroPage extends State<VideoIntroPage> {
                               color: AppColors.primary,
                             ))),
               ),
+              if (_controller.value.isBuffering)
+                Center(
+                  child: CircularProgressIndicator(  color: AppColors.primary,),
+                ),
               // Play/Pause button at the center
               // Center(
               //   child: GestureDetector(
@@ -392,6 +439,7 @@ class _VideoIntroPage extends State<VideoIntroPage> {
               //     color: Colors.white,
               //     size: 80.0,
               //   ),
+              if(!_controller.value.isBuffering)
               if (!_controller.value.isPlaying)
                 if (_isInitialized)
                   GestureDetector(
@@ -458,34 +506,34 @@ class _VideoIntroPage extends State<VideoIntroPage> {
                           color: AppColors.primary,
                         ))),
               if (_isButtonVisible)
-                if (_isInitialized)
-                  Positioned(
-                      bottom: 0,
-                      right: 0,
-                      child: TextButton(
-                          onPressed: () {
-                            if (widget.value ?? false) {
-                              Navigator.of(context).pop();
-                            } else {
-                              _exitFullPage();
-                              _controller.dispose();
-                              Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => SignUPPage(),
-                                  ));
-                            }
-                          },
-                          style: ButtonStyle(
-                              padding:
-                                  WidgetStatePropertyAll(EdgeInsets.all(24))),
-                          child: Text(
-                            'Continue',
-                            style: AppFonts.titleMedium(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w500,
-                                color: Theme.of(context).primaryColor),
-                          )))
+                // if (_isInitialized)
+                Positioned(
+                    bottom: 0,
+                    right: 0,
+                    child: TextButton(
+                        onPressed: () {
+                          if (widget.value ?? false) {
+                            Navigator.of(context).pop();
+                          } else {
+                            _exitFullPage();
+                            _controller.dispose();
+                            Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => SignUPPage(),
+                                ));
+                          }
+                        },
+                        style: ButtonStyle(
+                            padding:
+                                WidgetStatePropertyAll(EdgeInsets.all(24))),
+                        child: Text(
+                          'Continue',
+                          style: AppFonts.titleMedium(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w500,
+                              color: Theme.of(context).primaryColor),
+                        )))
             ],
           )),
     );

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_frontend/screens/waitlist/login.dart';
 import 'package:flutter_frontend/screens/waitlist/signup.dart';
 import 'package:video_player/video_player.dart';
 
@@ -56,7 +55,7 @@ class _IntroVideoScreenState extends State<IntroVideoScreen> {
     super.initState();
     _enterFullPage();
     _videoPlayerController =
-        VideoPlayerController.asset("assets/video/placeholder.mp4");
+        VideoPlayerController.asset("assets/video/placeholderv.mp4");
     // _videoPlayerController.setLooping(true);
     _videoPlayerController.initialize().then((_) async {
       setState(() {

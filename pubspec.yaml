@@ -38,7 +38,7 @@ flutter:
     - assets/light/favicon.png
     - assets/light/bgs/
     #video
-    - assets/video/placeholder.mp4
+    - assets/video/placeholderv.mp4
     
 
 

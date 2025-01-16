@@ -1,0 +1,43 @@
+name: flutter_frontend
+description: "A new Flutter project."
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.6.0
+
+dependencies:
+  flutter:
+    sdk: flutter
+  cupertino_icons: ^1.0.8
+  http: ^1.1.0
+  shared_preferences: ^2.0.15
+  intl: ^0.18.0
+  logging: ^1.2.0
+  flutter_datetime_picker_plus: ^2.1.0
+  image_picker: ^1.0.7
+  image_cropper: ^5.0.1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^5.0.0
+
+flutter:
+  uses-material-design: true
+  
+  assets:
+    # Dark mode assets
+    - assets/dark/favicon.png
+    - assets/dark/bgs/
+    
+    # Light mode assets
+    - assets/light/favicon.png
+    - assets/light/bgs/
+
+  fonts:
+    - family: CustomFont  # Replace with your actual font family name
+      fonts:
+        - asset: assets/fonts/Sukar-Regular.ttf
+        - asset: assets/fonts/Sukar-Bold.ttf
+          weight: 700

@@ -116,14 +116,14 @@ class _SignupScreenState extends State<SignupScreen> {
                           ),
                           child: ClipOval(
                             child: BackdropFilter(
-                              filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
+                              filter: ImageFilter.blur(sigmaX: 0, sigmaY: 0),
                               child: Container(
                                 width: logoSize,
                                 height: logoSize,
                                 padding: EdgeInsets.all(logoSize * 0.2),
                                 decoration: BoxDecoration(
                                   shape: BoxShape.circle,
-                                  color: Colors.white.withAlpha(26),
+                                  color: Colors.white.withAlpha(15),
                                   border: Border.all(
                                     color: isDarkMode
                                         ? Colors.black
@@ -210,16 +210,17 @@ class _SignupScreenState extends State<SignupScreen> {
                                       child: DropdownButtonFormField<String>(
                                         value: _gender,
                                         style: const TextStyle(
-                                            color: Colors.white),
+                                            color: Color.fromARGB(255, 255, 255, 255)),
                                         icon: const SizedBox.shrink(),
                                         dropdownColor:
                                             Colors.black.withAlpha(204),
                                         decoration: inputDecoration.copyWith(
                                           hintText: 'Gender',
-                                          suffixIcon: const Icon(
-                                            Icons.arrow_drop_down,
-                                            color: Colors.white,
-                                          ),
+                                          hintStyle: TextStyle(color: const Color.fromARGB(255, 2, 2, 2))
+                                          // suffixIcon: const Icon(
+                                          //   Icons.arrow_drop_down,
+                                          //   color: Colors.white,
+                                          // ),
                                         ),
                                         items: ['Male', 'Female', 'Other']
                                             .map((e) => DropdownMenuItem(
@@ -456,7 +457,7 @@ class _SignupScreenState extends State<SignupScreen> {
         titleHeight: 44.0,
         itemHeight: 40.0,
         backgroundColor: Colors.black.withAlpha(230),
-        headerColor: Colors.blue,
+        headerColor: const Color.fromARGB(255, 0, 0, 0),
         itemStyle: const TextStyle(
           color: Colors.white,
           fontSize: 18,

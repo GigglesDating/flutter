@@ -19,6 +19,7 @@ dependencies:
   image_cropper: ^5.0.1
   video_player: ^2.9.2
   provider: ^6.1.2
+  carousel_slider: ^5.0.0
   card_swiper: ^3.0.1
   
 
@@ -32,13 +33,17 @@ flutter:
   
   assets:
     # Dark mode assets
-    - assets/dark/favicon.png
+    - assets/dark/
     - assets/dark/bgs/
     
     # Light mode assets
-    - assets/light/favicon.png
+    - assets/light/
     - assets/light/bgs/
-    #video
+    
+    # Temporary images
+    - assets/tempImages/
+    
+    # Video assets
     - assets/video/placeholderv.mp4
     
 

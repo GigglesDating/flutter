@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
+<<<<<<< HEAD
 import 'waitlist/waitlist.dart';
+=======
+import 'waitlist//login.dart';
+>>>>>>> 124b704757bbbd1beeff3b6474de38923f27c128
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});

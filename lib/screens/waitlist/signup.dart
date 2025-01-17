@@ -210,18 +210,21 @@ class _SignupScreenState extends State<SignupScreen> {
                                       child: DropdownButtonFormField<String>(
                                         value: _gender,
                                         style: const TextStyle(
-                                            color: Color.fromARGB(255, 255, 255, 255)),
+                                            color: Color.fromARGB(
+                                                255, 255, 255, 255)),
                                         icon: const SizedBox.shrink(),
                                         dropdownColor:
                                             Colors.black.withAlpha(204),
                                         decoration: inputDecoration.copyWith(
-                                          hintText: 'Gender',
-                                          hintStyle: TextStyle(color: const Color.fromARGB(255, 2, 2, 2))
-                                          // suffixIcon: const Icon(
-                                          //   Icons.arrow_drop_down,
-                                          //   color: Colors.white,
-                                          // ),
-                                        ),
+                                            hintText: 'Gender',
+                                            hintStyle: TextStyle(
+                                                color: const Color.fromARGB(
+                                                    255, 2, 2, 2))
+                                            // suffixIcon: const Icon(
+                                            //   Icons.arrow_drop_down,
+                                            //   color: Colors.white,
+                                            // ),
+                                            ),
                                         items: ['Male', 'Female', 'Other']
                                             .map((e) => DropdownMenuItem(
                                                   value: e,
@@ -389,7 +392,7 @@ class _SignupScreenState extends State<SignupScreen> {
                                               ),
                                               const TextSpan(
                                                 text:
-                                                    '. I consent to verify myself with Aadhar.',
+                                                    '. I consent to verify myself with Aadhar',
                                               ),
                                             ],
                                           ),

@@ -17,6 +17,9 @@ dependencies:
   flutter_datetime_picker_plus: ^2.1.0
   image_picker: ^1.0.7
   image_cropper: ^5.0.1
+  video_player: ^2.9.2
+  provider: ^6.1.2
+  
 
 dev_dependencies:
   flutter_test:
@@ -34,6 +37,10 @@ flutter:
     # Light mode assets
     - assets/light/favicon.png
     - assets/light/bgs/
+    #video
+    - assets/video/placeholderv.mp4
+    
+
 
   fonts:
     - family: CustomFont  # Replace with your actual font family name

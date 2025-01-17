@@ -84,7 +84,7 @@ class MyApp extends StatelessWidget {
       routes: {
         '/': (context) => const SplashScreen(),
         '/login': (context) => const LoginScreen(),
-        '/intro-video': (context) => const IntroVideoScreen(),
+        '/intro-video': (context) => IntroVideoScreen(),
         '/signup': (context) => const SignupScreen(),
         '/waitlist': (context) => const WaitlistScreen(),
         // Add other routes as needed

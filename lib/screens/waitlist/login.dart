@@ -1,6 +1,18 @@
+import 'dart:convert';
+
+import 'package:flutter_frontend/network/auth_provider.dart';
+import 'package:flutter_frontend/screens/waitlist/intro_video.dart';
+import 'package:flutter_frontend/screens/waitlist/kycScreens/aadhar_status_screen.dart';
+import 'package:flutter_frontend/screens/waitlist/profileCreationScreens/profile_creation1.dart';
+import 'package:flutter_frontend/screens/waitlist/profileCreationScreens/profile_creation2.dart';
+import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'dart:async';
+
+import 'package:provider/provider.dart';
+import 'package:flutter_frontend/screens/waitlist/signup.dart';
+import 'package:flutter_frontend/screens/waitlist/waitlist.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -12,6 +24,9 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> {
   String _phoneNumber = '';
   String _otp = '';
+  String? _requestId;
+  String? _regProcess;
+  String? _message;
   bool _isPressed = false;
   bool _isLoading = false;
   bool _isOtpSent = false;
@@ -44,12 +59,13 @@ class _LoginScreenState extends State<LoginScreen> {
     });
   }
 
-  Future<void> _requestOtp() async {
+  Future _requestOtp() async {
     if (_phoneNumber.length != 10) {
-      setState(() {
-        _errorMessage = 'Please enter a valid 10-digit phone number';
-      });
-      return;
+      setState(
+        () {
+          _errorMessage = 'Please enter a valid 10-digit phone number';
+        },
+      );
     }
 
     setState(() {
@@ -82,11 +98,125 @@ class _LoginScreenState extends State<LoginScreen> {
       _errorMessage = null;
     });
 
-    await Future.delayed(const Duration(seconds: 2));
+    try {
+      final authProvider = Provider.of<AuthProvider>(context, listen: false);
+      print(
+          'Verifying OTP: $_otp for phone: $_phoneNumber with requestId: $_requestId');
 
-    if (!mounted) return;
+      final response = await authProvider.verifyOtp(
+        phoneNumber: '+91$_phoneNumber',
+        otp: _otp,
+        requestId: _requestId!,
+      );
 
-    Navigator.pushReplacementNamed(context, '/intro-video');
+      print('Verification response: $response');
+
+      if (!mounted) return;
+
+      if (response['status'] == true || response['success'] == true) {
+        print('OTP verified successfully');
+
+        // Store the message from response
+        if (response['message'] != null) {
+          _message = response['message'].toString();
+          print('Message received: $_message');
+        }
+
+        // Store the registration process status
+        if (response['reg_process'] != null) {
+          _regProcess = response['reg_process'].toString();
+          print('Registration process status: $_regProcess');
+        }
+
+        setState(() {
+          _isLoading = false;
+        });
+
+        // Navigate based on registration process status
+        if (mounted) {
+          switch (_regProcess) {
+            case 'New User':
+              Navigator.of(context).pushAndRemoveUntil(
+                MaterialPageRoute(
+                  builder: (context) => IntroVideoScreen(),
+                ),
+                (route) => false,
+              );
+              break;
+
+            case 'reg_started':
+              Navigator.of(context).pushAndRemoveUntil(
+                MaterialPageRoute(
+                  builder: (context) => IntroVideoScreen(),
+                ),
+                (route) => false,
+              );
+              break;
+
+            case 'aadhar_failed':
+              Navigator.of(context).pushAndRemoveUntil(
+                MaterialPageRoute(
+                  builder: (context) => const AadharStatusScreen(),
+                ),
+                (route) => false,
+              );
+              break;
+
+            case 'aadhar_successful':
+              Navigator.of(context).pushAndRemoveUntil(
+                MaterialPageRoute(
+                  builder: (context) => const ProfileCreation1(),
+                ),
+                (route) => false,
+              );
+              break;
+
+            case 'profile_created':
+              Navigator.of(context).pushAndRemoveUntil(
+                MaterialPageRoute(
+                  builder: (context) => const ProfileCreation2(),
+                ),
+                (route) => false,
+              );
+              break;
+
+            case 'waitlisted':
+              Navigator.of(context).pushAndRemoveUntil(
+                MaterialPageRoute(
+                  builder: (context) => const WaitlistScreen(),
+                ),
+                (route) => false,
+              );
+              break;
+
+            default:
+              // If reg_process is null or unknown, start from beginning
+              Navigator.of(context).pushAndRemoveUntil(
+                MaterialPageRoute(
+                  builder: (context) => IntroVideoScreen(),
+                ),
+                (route) => false,
+              );
+              break;
+          }
+        }
+      } else {
+        print(
+            'OTP verification failed: ${response['error'] ?? response['message']}');
+        setState(() {
+          _isLoading = false;
+          _errorMessage =
+              response['message'] ?? response['error'] ?? 'Invalid OTP';
+        });
+      }
+    } catch (e) {
+      print('Error during OTP verification: $e');
+      if (!mounted) return;
+      setState(() {
+        _isLoading = false;
+        _errorMessage = 'Failed to verify OTP';
+      });
+    }
   }
 
   void _showEditNumberSheet() {
@@ -169,6 +299,8 @@ class _LoginScreenState extends State<LoginScreen> {
     final adaptiveLogoSize = logoSize.clamp(minLogoSize, maxLogoSize);
 
     final topPadding = padding.top + (size.height * 0.20);
+
+    final authProvider = Provider.of<AuthProvider>(context);
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -367,10 +499,10 @@ class _LoginScreenState extends State<LoginScreen> {
                                       setState(() => _isPressed = false),
                                   onTap: _isLoading
                                       ? null
-                                      : () {
+                                      : () async {
                                           if (_isOtpSent) {
                                             if (_otp.length == 4) {
-                                              _verifyOtp();
+                                              await _verifyOtp();
                                             } else {
                                               setState(() {
                                                 _errorMessage =
@@ -379,7 +511,47 @@ class _LoginScreenState extends State<LoginScreen> {
                                             }
                                           } else {
                                             if (_phoneNumber.length == 10) {
-                                              _requestOtp();
+                                              setState(() {
+                                                _isLoading = true;
+                                                _errorMessage = null;
+                                              });
+
+                                              final response =
+                                                  await authProvider.requestOtp(
+                                                phoneNumber: _phoneNumber,
+                                              );
+
+                                              print(
+                                                  'Response received: $response');
+
+                                              if (!mounted) return;
+
+                                              if (response['status'] == true ||
+                                                  response['success'] == true ||
+                                                  response['requestId'] !=
+                                                      null) {
+                                                setState(() {
+                                                  _isLoading = false;
+                                                  _isOtpSent = true;
+                                                  _requestId =
+                                                      response['requestId'];
+                                                  _otp = '';
+                                                  _inputController.clear();
+                                                  _startResendTimer();
+                                                });
+                                                print(
+                                                    'OTP sent successfully, _isOtpSent: $_isOtpSent');
+                                              } else {
+                                                setState(() {
+                                                  _isLoading = false;
+                                                  _errorMessage =
+                                                      response['message'] ??
+                                                          response['error'] ??
+                                                          'Failed to send OTP';
+                                                });
+                                                print(
+                                                    'Failed to send OTP: $_errorMessage');
+                                              }
                                             } else {
                                               setState(() {
                                                 _errorMessage =

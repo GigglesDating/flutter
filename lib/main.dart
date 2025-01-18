@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:provider/provider.dart';
+import 'network/auth_provider.dart';
 import 'screens/splash.dart';
 import 'screens/waitlist/login.dart';
 import 'screens/waitlist/signup.dart';
@@ -58,7 +60,11 @@ void main() {
   // Force full screen
   SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
 
-  runApp(const MyApp());
+  runApp(
+    MultiProvider(providers: [
+      ChangeNotifierProvider(create: (_) => AuthProvider()),
+    ], child: MyApp()),
+  );
 }
 
 class MyApp extends StatelessWidget {

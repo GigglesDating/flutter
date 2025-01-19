@@ -18,6 +18,8 @@ class AuthProvider extends ChangeNotifier {
       _isLoading = true;
       notifyListeners();
 
+      print('Sending OTP request for: $phoneNumber'); // Debug print
+
       final response = await http
           .post(
             Uri.parse(ApiConfig.requestOtp),
@@ -30,12 +32,14 @@ class AuthProvider extends ChangeNotifier {
             Duration(milliseconds: ApiConfig.connectionTimeout),
           );
 
+      print('Response status code: ${response.statusCode}'); // Debug print
+      print('Response body: ${response.body}'); // Debug print
+
       final decodedResponse = jsonDecode(response.body);
 
       // Store requestId if available
       if (decodedResponse['requestId'] != null) {
         _requestId = decodedResponse['requestId'];
-        // If we got a requestId, the OTP was sent successfully
         decodedResponse['status'] = true;
       }
 
@@ -43,6 +47,7 @@ class AuthProvider extends ChangeNotifier {
       notifyListeners();
       return decodedResponse;
     } catch (e) {
+      print('Error during OTP request: $e'); // Debug print
       _isLoading = false;
       notifyListeners();
       return {
@@ -62,6 +67,8 @@ class AuthProvider extends ChangeNotifier {
       _isLoading = true;
       notifyListeners();
 
+      print('Verifying OTP for: $phoneNumber'); // Debug print
+
       final response = await http
           .post(
             Uri.parse(ApiConfig.verifyOtp),
@@ -76,10 +83,19 @@ class AuthProvider extends ChangeNotifier {
             Duration(milliseconds: ApiConfig.connectionTimeout),
           );
 
+      print('Response status code: ${response.statusCode}'); // Debug print
+      print('Response body: ${response.body}'); // Debug print
+
+      if (response.statusCode >= 500) {
+        throw Exception('Server error: ${response.statusCode}');
+      }
+
       final decodedResponse = jsonDecode(response.body);
 
-      // Set status to true if verification is successful
-      if (response.statusCode == 200 || decodedResponse['success'] == true) {
+      // Set status to true for successful responses
+      if (response.statusCode == 200 ||
+          response.statusCode == 201 ||
+          decodedResponse['success'] == true) {
         decodedResponse['status'] = true;
       }
 
@@ -87,8 +103,17 @@ class AuthProvider extends ChangeNotifier {
       notifyListeners();
       return decodedResponse;
     } catch (e) {
+      print('Error during verification: $e'); // Debug print
       _isLoading = false;
       notifyListeners();
+
+      if (e.toString().contains('TimeoutException')) {
+        return {
+          'status': false,
+          'error': 'Connection timed out. Please try again.',
+        };
+      }
+
       return {
         'status': false,
         'error': 'Failed to connect to server',

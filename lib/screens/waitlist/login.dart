@@ -242,7 +242,7 @@ class _LoginScreenState extends State<LoginScreen> {
             ),
             const SizedBox(height: 20),
             ElevatedButton(
-              onPressed: () {
+              onPressed: () async {
                 if (tempNumber.length == 10) {
                   Navigator.pop(context);
                   setState(() {
@@ -251,7 +251,41 @@ class _LoginScreenState extends State<LoginScreen> {
                     _otp = '';
                     _inputController.clear();
                   });
-                  _requestOtp();
+
+                  // Call requestOtp API with new number
+                  final authProvider =
+                      Provider.of<AuthProvider>(context, listen: false);
+
+                  setState(() {
+                    _isLoading = true;
+                    _errorMessage = null;
+                  });
+
+                  final response = await authProvider.requestOtp(
+                    phoneNumber: _phoneNumber,
+                  );
+
+                  if (!mounted) return;
+
+                  if (response['status'] == true ||
+                      response['success'] == true ||
+                      response['requestId'] != null) {
+                    setState(() {
+                      _isLoading = false;
+                      _isOtpSent = true;
+                      _requestId = response['requestId'];
+                      _otp = '';
+                      _inputController.clear();
+                      _startResendTimer();
+                    });
+                  } else {
+                    setState(() {
+                      _isLoading = false;
+                      _errorMessage = response['message'] ??
+                          response['error'] ??
+                          'Failed to send OTP';
+                    });
+                  }
                 }
               },
               child: const Text('Update & Request OTP'),
@@ -415,7 +449,56 @@ class _LoginScreenState extends State<LoginScreen> {
                                         suffixIcon: _isOtpSent
                                             ? TextButton(
                                                 onPressed: _canResendOtp
-                                                    ? _requestOtp
+                                                    ? () async {
+                                                        // Call requestOtp API when resend is pressed
+                                                        final authProvider =
+                                                            Provider.of<
+                                                                    AuthProvider>(
+                                                                context,
+                                                                listen: false);
+
+                                                        setState(() {
+                                                          _isLoading = true;
+                                                          _errorMessage = null;
+                                                        });
+
+                                                        final response =
+                                                            await authProvider
+                                                                .requestOtp(
+                                                          phoneNumber:
+                                                              _phoneNumber,
+                                                        );
+
+                                                        if (!mounted) return;
+
+                                                        if (response['status'] == true ||
+                                                            response[
+                                                                    'success'] ==
+                                                                true ||
+                                                            response[
+                                                                    'requestId'] !=
+                                                                null) {
+                                                          setState(() {
+                                                            _isLoading = false;
+                                                            _requestId =
+                                                                response[
+                                                                    'requestId'];
+                                                            _otp = '';
+                                                            _inputController
+                                                                .clear();
+                                                            _startResendTimer();
+                                                          });
+                                                        } else {
+                                                          setState(() {
+                                                            _isLoading = false;
+                                                            _errorMessage = response[
+                                                                    'message'] ??
+                                                                response[
+                                                                    'error'] ??
+                                                                'Failed to send OTP';
+                                                          });
+                                                        }
+                                                      }
                                                     : null,
                                                 child: Text(
                                                   _canResendOtp

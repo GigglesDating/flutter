@@ -18,7 +18,6 @@ class AuthProvider extends ChangeNotifier {
       _isLoading = true;
       notifyListeners();
 
-      print('Sending OTP request for: $phoneNumber');
       final response = await http
           .post(
             Uri.parse(ApiConfig.requestOtp),
@@ -32,7 +31,6 @@ class AuthProvider extends ChangeNotifier {
           );
 
       final decodedResponse = jsonDecode(response.body);
-      print('OTP Response: $decodedResponse'); // Debug log
 
       // Store requestId if available
       if (decodedResponse['requestId'] != null) {
@@ -45,7 +43,6 @@ class AuthProvider extends ChangeNotifier {
       notifyListeners();
       return decodedResponse;
     } catch (e) {
-      print('Error in requestOtp: $e'); // Debug log
       _isLoading = false;
       notifyListeners();
       return {
@@ -65,10 +62,6 @@ class AuthProvider extends ChangeNotifier {
       _isLoading = true;
       notifyListeners();
 
-      print('Verifying OTP for: $phoneNumber');
-      print('RequestId: $requestId');
-      print('OTP: $otp');
-
       final response = await http
           .post(
             Uri.parse(ApiConfig.verifyOtp),
@@ -84,7 +77,6 @@ class AuthProvider extends ChangeNotifier {
           );
 
       final decodedResponse = jsonDecode(response.body);
-      print('Verify OTP Response: $decodedResponse');
 
       // Set status to true if verification is successful
       if (response.statusCode == 200 || decodedResponse['success'] == true) {
@@ -95,7 +87,6 @@ class AuthProvider extends ChangeNotifier {
       notifyListeners();
       return decodedResponse;
     } catch (e) {
-      print('Error in verifyOtp: $e');
       _isLoading = false;
       notifyListeners();
       return {

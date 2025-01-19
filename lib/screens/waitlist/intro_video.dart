@@ -4,8 +4,8 @@ import 'package:flutter_frontend/screens/waitlist/signup.dart';
 import 'package:video_player/video_player.dart';
 
 class IntroVideoScreen extends StatefulWidget {
-  bool? value;
-  IntroVideoScreen({
+  final bool? value;
+  const IntroVideoScreen({
     super.key,
     this.value,
   });
@@ -162,27 +162,27 @@ class _IntroVideoScreenState extends State<IntroVideoScreen> {
                       },
                       style: ButtonStyle(
                           padding: WidgetStatePropertyAll(EdgeInsets.all(24))),
-                      child:_replay? Text(
-                        'Skip >',
-                        style: TextStyle(
-      fontSize: 16,
-      fontFamily: 'Sukar',
-      height: 1.0,
-      fontWeight: FontWeight.w500,
-      color: Colors.black,
-    ),
-                      ):Text(
-                        'Continue >',
-                        style: TextStyle(
-      fontSize: 16,
-      fontFamily: 'Sukar',
-      height: 1.0,
-      fontWeight: FontWeight.w500,
-      color: Colors.black,
-    ),
-                      )
-                      )
-                      )
+                      child: _replay
+                          ? Text(
+                              'Skip >',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontFamily: 'Sukar',
+                                height: 1.0,
+                                fontWeight: FontWeight.w500,
+                                color: Colors.black,
+                              ),
+                            )
+                          : Text(
+                              'Continue >',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontFamily: 'Sukar',
+                                height: 1.0,
+                                fontWeight: FontWeight.w500,
+                                color: Colors.black,
+                              ),
+                            )))
         ],
       ),
     );

@@ -70,375 +70,365 @@ class _SignupScreenState extends State<SignupScreen> {
         onTap: () {
           FocusScope.of(context).unfocus();
         },
-        child: Container(
-          width: size.width,
-          height: size.height,
-          child: Stack(
-            fit: StackFit.expand,
-            children: [
-              // Background Image
-              Positioned.fill(
-                child: Image.asset(
-                  isDarkMode
-                      ? 'assets/dark/bgs/signupbg.png'
-                      : 'assets/light/bgs/signupbg.png',
-                  fit: BoxFit.cover,
-                ),
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            // Background Image
+            Positioned.fill(
+              child: Image.asset(
+                isDarkMode
+                    ? 'assets/dark/bgs/signupbg.png'
+                    : 'assets/light/bgs/signupbg.png',
+                fit: BoxFit.cover,
               ),
+            ),
 
-              // Content
-              SafeArea(
-                bottom: false,
-                child: SingleChildScrollView(
-                  physics: const ClampingScrollPhysics(),
-                  child: Container(
-                    constraints: BoxConstraints(
-                      minHeight: size.height -
-                          (MediaQuery.of(context).padding.top +
-                              MediaQuery.of(context).padding.bottom),
-                    ),
-                    padding: EdgeInsets.fromLTRB(
-                      horizontalPadding,
-                      topPadding,
-                      horizontalPadding,
-                      bottomInset + verticalSpacing,
-                    ),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        // Logo Section
-                        Container(
-                          alignment: Alignment.center,
-                          margin: EdgeInsets.only(
-                            top: logoTopMargin,
-                            bottom: verticalSpacing * 6,
-                          ),
-                          child: ClipOval(
-                            child: BackdropFilter(
-                              filter: ImageFilter.blur(sigmaX: 0, sigmaY: 0),
-                              child: Container(
-                                width: logoSize,
-                                height: logoSize,
-                                padding: EdgeInsets.all(logoSize * 0.2),
-                                decoration: BoxDecoration(
-                                  shape: BoxShape.circle,
-                                  color: Colors.white.withAlpha(15),
-                                  border: Border.all(
-                                    color: isDarkMode
-                                        ? Colors.black
-                                        : Colors.white,
-                                    width: 2,
-                                  ),
+            // Content
+            SafeArea(
+              bottom: false,
+              child: SingleChildScrollView(
+                physics: const ClampingScrollPhysics(),
+                child: Container(
+                  constraints: BoxConstraints(
+                    minHeight: size.height -
+                        (MediaQuery.of(context).padding.top +
+                            MediaQuery.of(context).padding.bottom),
+                  ),
+                  padding: EdgeInsets.fromLTRB(
+                    horizontalPadding,
+                    topPadding,
+                    horizontalPadding,
+                    bottomInset + verticalSpacing,
+                  ),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      // Logo Section
+                      Container(
+                        alignment: Alignment.center,
+                        margin: EdgeInsets.only(
+                          top: logoTopMargin,
+                          bottom: verticalSpacing * 6,
+                        ),
+                        child: ClipOval(
+                          child: BackdropFilter(
+                            filter: ImageFilter.blur(sigmaX: 0, sigmaY: 0),
+                            child: Container(
+                              width: logoSize,
+                              height: logoSize,
+                              padding: EdgeInsets.all(logoSize * 0.2),
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: Colors.white.withAlpha(15),
+                                border: Border.all(
+                                  color:
+                                      isDarkMode ? Colors.black : Colors.white,
+                                  width: 2,
                                 ),
-                                child: Image.asset(
-                                  isDarkMode
-                                      ? 'assets/light/favicon.png'
-                                      : 'assets/dark/favicon.png',
-                                  fit: BoxFit.contain,
-                                ),
+                              ),
+                              child: Image.asset(
+                                isDarkMode
+                                    ? 'assets/light/favicon.png'
+                                    : 'assets/dark/favicon.png',
+                                fit: BoxFit.contain,
                               ),
                             ),
                           ),
                         ),
+                      ),
 
-                        // Form Section
-                        Container(
-                          margin: EdgeInsets.only(
-                              top: verticalSpacing * 2,
-                              bottom: verticalSpacing),
-                          child: Column(
-                            children: [
-                              // Names Row
-                              Row(
-                                children: [
-                                  Expanded(
-                                    child: glassContainer(
-                                      child: TextFormField(
-                                        controller: _firstNameController,
-                                        style: const TextStyle(
-                                          color: Colors.white,
-                                          fontWeight: FontWeight.w500,
-                                        ),
-                                        decoration: inputDecoration.copyWith(
-                                          hintText: 'First Name',
-                                        ),
+                      // Form Section
+                      Container(
+                        margin: EdgeInsets.only(
+                            top: verticalSpacing * 2, bottom: verticalSpacing),
+                        child: Column(
+                          children: [
+                            // Names Row
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: glassContainer(
+                                    child: TextFormField(
+                                      controller: _firstNameController,
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                      decoration: inputDecoration.copyWith(
+                                        hintText: 'First Name',
                                       ),
                                     ),
                                   ),
-                                  SizedBox(width: fieldSpacing),
-                                  Expanded(
-                                    child: glassContainer(
-                                      child: TextFormField(
-                                        controller: _lastNameController,
-                                        style: const TextStyle(
-                                          color: Colors.white,
-                                          fontWeight: FontWeight.w500,
-                                        ),
-                                        decoration: inputDecoration.copyWith(
-                                          hintText: 'Last Name',
-                                        ),
+                                ),
+                                SizedBox(width: fieldSpacing),
+                                Expanded(
+                                  child: glassContainer(
+                                    child: TextFormField(
+                                      controller: _lastNameController,
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                      decoration: inputDecoration.copyWith(
+                                        hintText: 'Last Name',
                                       ),
                                     ),
                                   ),
-                                ],
-                              ),
-                              SizedBox(height: verticalSpacing),
+                                ),
+                              ],
+                            ),
+                            SizedBox(height: verticalSpacing),
 
-                              // Email and Gender Row
-                              Row(
-                                children: [
-                                  Expanded(
-                                    flex: 60,
-                                    child: glassContainer(
-                                      child: TextFormField(
-                                        controller: _emailController,
-                                        style: const TextStyle(
-                                          color: Colors.white,
-                                          fontWeight: FontWeight.w500,
-                                        ),
-                                        decoration: inputDecoration.copyWith(
-                                          hintText: 'E-mail',
-                                        ),
+                            // Email and Gender Row
+                            Row(
+                              children: [
+                                Expanded(
+                                  flex: 60,
+                                  child: glassContainer(
+                                    child: TextFormField(
+                                      controller: _emailController,
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                      decoration: inputDecoration.copyWith(
+                                        hintText: 'E-mail',
                                       ),
                                     ),
                                   ),
-                                  SizedBox(width: fieldSpacing),
-                                  Expanded(
-                                    flex: 40,
-                                    child: glassContainer(
-                                      child: DropdownButtonFormField<String>(
-                                        value: _gender,
-                                        style: const TextStyle(
-                                            color: Color.fromARGB(
-                                                255, 255, 255, 255)),
-                                        icon: const SizedBox.shrink(),
-                                        dropdownColor:
-                                            Colors.black.withAlpha(204),
-                                        decoration: inputDecoration.copyWith(
-                                            hintText: 'Gender',
-                                            hintStyle: TextStyle(
-                                                color: const Color.fromARGB(
-                                                    255, 2, 2, 2))
-                                            // suffixIcon: const Icon(
-                                            //   Icons.arrow_drop_down,
-                                            //   color: Colors.white,
-                                            // ),
-                                            ),
-                                        items: ['Male', 'Female', 'Other']
-                                            .map((e) => DropdownMenuItem(
-                                                  value: e,
-                                                  child: Text(e),
-                                                ))
-                                            .toList(),
-                                        onChanged: (value) =>
-                                            setState(() => _gender = value),
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              SizedBox(height: verticalSpacing),
-
-                              // Birthday and City Row
-                              Row(
-                                children: [
-                                  Expanded(
-                                    child: glassContainer(
-                                      child: InkWell(
-                                        onTap: _selectDate,
-                                        borderRadius: BorderRadius.circular(30),
-                                        child: Container(
-                                          padding: EdgeInsets.symmetric(
-                                            horizontal: 16,
-                                            vertical: isIOS ? 16 : 14,
+                                ),
+                                SizedBox(width: fieldSpacing),
+                                Expanded(
+                                  flex: 40,
+                                  child: glassContainer(
+                                    child: DropdownButtonFormField<String>(
+                                      value: _gender,
+                                      style: const TextStyle(
+                                          color: Color.fromARGB(
+                                              255, 255, 255, 255)),
+                                      icon: const SizedBox.shrink(),
+                                      dropdownColor:
+                                          Colors.black.withAlpha(204),
+                                      decoration: inputDecoration.copyWith(
+                                          hintText: 'Gender',
+                                          hintStyle: TextStyle(
+                                              color: const Color.fromARGB(
+                                                  255, 2, 2, 2))
+                                          // suffixIcon: const Icon(
+                                          //   Icons.arrow_drop_down,
+                                          //   color: Colors.white,
+                                          // ),
                                           ),
-                                          child: Row(
-                                            children: [
-                                              Expanded(
-                                                child: Text(
-                                                  _birthday == null
-                                                      ? 'Birthday'
-                                                      : DateFormat('dd/MM/yyyy')
-                                                          .format(_birthday!),
-                                                  style: TextStyle(
-                                                    color: Colors.white
-                                                        .withAlpha(
-                                                            _birthday == null
-                                                                ? 230
-                                                                : 255),
-                                                    fontWeight: FontWeight.w500,
-                                                  ),
-                                                ),
-                                              ),
-                                              const Icon(Icons.calendar_today,
-                                                  color: Colors.white,
-                                                  size: 20),
-                                            ],
-                                          ),
-                                        ),
-                                      ),
+                                      items: ['Male', 'Female', 'Other']
+                                          .map((e) => DropdownMenuItem(
+                                                value: e,
+                                                child: Text(e),
+                                              ))
+                                          .toList(),
+                                      onChanged: (value) =>
+                                          setState(() => _gender = value),
                                     ),
                                   ),
-                                  SizedBox(width: fieldSpacing),
-                                  Expanded(
-                                    child: glassContainer(
-                                      child: DropdownButtonFormField<String>(
-                                        value: _city,
-                                        style: const TextStyle(
-                                          color: Colors.white,
-                                          fontWeight: FontWeight.w500,
-                                        ),
-                                        dropdownColor:
-                                            Colors.black.withAlpha(204),
-                                        decoration: inputDecoration.copyWith(
-                                          hintText: 'City',
-                                          suffixIcon: const Icon(
-                                            Icons.location_on,
-                                            color: Colors.white,
-                                          ),
-                                        ),
-                                        items: [
-                                          'Bangalore',
-                                          'Mumbai',
-                                          'Delhi',
-                                          'Chennai'
-                                        ]
-                                            .map((e) => DropdownMenuItem(
-                                                  value: e,
-                                                  child: Text(e),
-                                                ))
-                                            .toList(),
-                                        onChanged: (value) =>
-                                            setState(() => _city = value),
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
-                        ),
+                                ),
+                              ],
+                            ),
+                            SizedBox(height: verticalSpacing),
 
-                        // Bottom Section
-                        Container(
-                          margin: EdgeInsets.only(top: verticalSpacing),
-                          child: Column(
-                            children: [
-                              // Terms Row
-                              Padding(
-                                padding:
-                                    const EdgeInsets.symmetric(horizontal: 8),
-                                child: Row(
-                                  crossAxisAlignment: CrossAxisAlignment.center,
-                                  children: [
-                                    Transform.translate(
-                                      offset: const Offset(0, 2),
-                                      child: Checkbox(
-                                        value: _agreeToTerms,
-                                        onChanged: (value) => setState(() =>
-                                            _agreeToTerms = value ?? false),
-                                        fillColor:
-                                            WidgetStateProperty.resolveWith(
-                                          (states) => states.contains(
-                                                  WidgetState.selected)
-                                              ? Colors.blue
-                                              : Colors.white,
-                                        ),
-                                      ),
-                                    ),
-                                    Expanded(
+                            // Birthday and City Row
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: glassContainer(
+                                    child: InkWell(
+                                      onTap: _selectDate,
+                                      borderRadius: BorderRadius.circular(30),
                                       child: Container(
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: 12,
-                                          vertical: 8,
+                                        padding: EdgeInsets.symmetric(
+                                          horizontal: 16,
+                                          vertical: isIOS ? 16 : 14,
                                         ),
-                                        child: RichText(
-                                          textAlign: TextAlign.center,
-                                          text: TextSpan(
-                                            style: const TextStyle(
-                                              color: Colors.white,
-                                              height: 1.5,
-                                              fontSize: 14,
-                                              fontWeight: FontWeight.w500,
+                                        child: Row(
+                                          children: [
+                                            Expanded(
+                                              child: Text(
+                                                _birthday == null
+                                                    ? 'Birthday'
+                                                    : DateFormat('dd/MM/yyyy')
+                                                        .format(_birthday!),
+                                                style: TextStyle(
+                                                  color: Colors.white.withAlpha(
+                                                      _birthday == null
+                                                          ? 230
+                                                          : 255),
+                                                  fontWeight: FontWeight.w500,
+                                                ),
+                                              ),
                                             ),
-                                            children: [
-                                              const TextSpan(
-                                                  text: 'I have read '),
-                                              TextSpan(
-                                                text: 'Privacy Policy',
-                                                style: const TextStyle(
-                                                  color: Colors.blue,
-                                                  fontWeight: FontWeight.bold,
-                                                ),
-                                                recognizer:
-                                                    TapGestureRecognizer()
-                                                      ..onTap = () {
-                                                        // Handle Privacy Policy tap
-                                                      },
-                                              ),
-                                              const TextSpan(text: ' and '),
-                                              TextSpan(
-                                                text: 'Terms and Conditions',
-                                                style: const TextStyle(
-                                                  color: Colors.blue,
-                                                  fontWeight: FontWeight.bold,
-                                                ),
-                                                recognizer:
-                                                    TapGestureRecognizer()
-                                                      ..onTap = () {
-                                                        // Handle Terms tap
-                                                      },
-                                              ),
-                                              const TextSpan(
-                                                text:
-                                                    '. I consent to verify myself with Aadhar',
-                                              ),
-                                            ],
-                                          ),
+                                            const Icon(Icons.calendar_today,
+                                                color: Colors.white, size: 20),
+                                          ],
                                         ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              SizedBox(height: verticalSpacing * 1.5),
-
-                              // Join Button
-                              Center(
-                                child: SizedBox(
-                                  width: size.width * 0.5,
-                                  height: 48,
-                                  child: ElevatedButton(
-                                    onPressed: _submitForm,
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor: Colors.white,
-                                      foregroundColor: Colors.blue,
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(30),
-                                      ),
-                                      elevation: 0,
-                                    ),
-                                    child: const Text(
-                                      'JOIN',
-                                      style: TextStyle(
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.bold,
                                       ),
                                     ),
                                   ),
                                 ),
-                              ),
-                            ],
-                          ),
+                                SizedBox(width: fieldSpacing),
+                                Expanded(
+                                  child: glassContainer(
+                                    child: DropdownButtonFormField<String>(
+                                      value: _city,
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                      dropdownColor:
+                                          Colors.black.withAlpha(204),
+                                      decoration: inputDecoration.copyWith(
+                                        hintText: 'City',
+                                        suffixIcon: const Icon(
+                                          Icons.location_on,
+                                          color: Colors.white,
+                                        ),
+                                      ),
+                                      items: [
+                                        'Bangalore',
+                                        'Mumbai',
+                                        'Delhi',
+                                        'Chennai'
+                                      ]
+                                          .map((e) => DropdownMenuItem(
+                                                value: e,
+                                                child: Text(e),
+                                              ))
+                                          .toList(),
+                                      onChanged: (value) =>
+                                          setState(() => _city = value),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
                         ),
-                      ],
-                    ),
+                      ),
+
+                      // Bottom Section
+                      Container(
+                        margin: EdgeInsets.only(top: verticalSpacing),
+                        child: Column(
+                          children: [
+                            // Terms Row
+                            Padding(
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 8),
+                              child: Row(
+                                crossAxisAlignment: CrossAxisAlignment.center,
+                                children: [
+                                  Transform.translate(
+                                    offset: const Offset(0, 2),
+                                    child: Checkbox(
+                                      value: _agreeToTerms,
+                                      onChanged: (value) => setState(
+                                          () => _agreeToTerms = value ?? false),
+                                      fillColor:
+                                          WidgetStateProperty.resolveWith(
+                                        (states) => states
+                                                .contains(WidgetState.selected)
+                                            ? Colors.blue
+                                            : Colors.white,
+                                      ),
+                                    ),
+                                  ),
+                                  Expanded(
+                                    child: Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 12,
+                                        vertical: 8,
+                                      ),
+                                      child: RichText(
+                                        textAlign: TextAlign.center,
+                                        text: TextSpan(
+                                          style: const TextStyle(
+                                            color: Colors.white,
+                                            height: 1.5,
+                                            fontSize: 14,
+                                            fontWeight: FontWeight.w500,
+                                          ),
+                                          children: [
+                                            const TextSpan(
+                                                text: 'I have read '),
+                                            TextSpan(
+                                              text: 'Privacy Policy',
+                                              style: const TextStyle(
+                                                color: Colors.blue,
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                              recognizer: TapGestureRecognizer()
+                                                ..onTap = () {
+                                                  // Handle Privacy Policy tap
+                                                },
+                                            ),
+                                            const TextSpan(text: ' and '),
+                                            TextSpan(
+                                              text: 'Terms and Conditions',
+                                              style: const TextStyle(
+                                                color: Colors.blue,
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                              recognizer: TapGestureRecognizer()
+                                                ..onTap = () {
+                                                  // Handle Terms tap
+                                                },
+                                            ),
+                                            const TextSpan(
+                                              text:
+                                                  '. I consent to verify myself with Aadhar',
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            SizedBox(height: verticalSpacing * 1.5),
+
+                            // Join Button
+                            Center(
+                              child: SizedBox(
+                                width: size.width * 0.5,
+                                height: 48,
+                                child: ElevatedButton(
+                                  onPressed: _submitForm,
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: Colors.white,
+                                    foregroundColor: Colors.blue,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(30),
+                                    ),
+                                    elevation: 0,
+                                  ),
+                                  child: const Text(
+                                    'JOIN',
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );

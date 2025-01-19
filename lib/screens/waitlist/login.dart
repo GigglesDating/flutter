@@ -1,17 +1,12 @@
-import 'dart:convert';
-
 import 'package:flutter_frontend/network/auth_provider.dart';
 import 'package:flutter_frontend/screens/waitlist/intro_video.dart';
 import 'package:flutter_frontend/screens/waitlist/kycScreens/aadhar_status_screen.dart';
 import 'package:flutter_frontend/screens/waitlist/profileCreationScreens/profile_creation1.dart';
 import 'package:flutter_frontend/screens/waitlist/profileCreationScreens/profile_creation2.dart';
-import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'dart:async';
-
 import 'package:provider/provider.dart';
-import 'package:flutter_frontend/screens/waitlist/signup.dart';
 import 'package:flutter_frontend/screens/waitlist/waitlist.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -26,7 +21,6 @@ class _LoginScreenState extends State<LoginScreen> {
   String _otp = '';
   String? _requestId;
   String? _regProcess;
-  String? _message;
   bool _isPressed = false;
   bool _isLoading = false;
   bool _isOtpSent = false;
@@ -100,8 +94,6 @@ class _LoginScreenState extends State<LoginScreen> {
 
     try {
       final authProvider = Provider.of<AuthProvider>(context, listen: false);
-      print(
-          'Verifying OTP: $_otp for phone: $_phoneNumber with requestId: $_requestId');
 
       final response = await authProvider.verifyOtp(
         phoneNumber: '+91$_phoneNumber',
@@ -109,23 +101,12 @@ class _LoginScreenState extends State<LoginScreen> {
         requestId: _requestId!,
       );
 
-      print('Verification response: $response');
-
       if (!mounted) return;
 
       if (response['status'] == true || response['success'] == true) {
-        print('OTP verified successfully');
-
-        // Store the message from response
-        if (response['message'] != null) {
-          _message = response['message'].toString();
-          print('Message received: $_message');
-        }
-
         // Store the registration process status
         if (response['reg_process'] != null) {
           _regProcess = response['reg_process'].toString();
-          print('Registration process status: $_regProcess');
         }
 
         setState(() {
@@ -201,8 +182,6 @@ class _LoginScreenState extends State<LoginScreen> {
           }
         }
       } else {
-        print(
-            'OTP verification failed: ${response['error'] ?? response['message']}');
         setState(() {
           _isLoading = false;
           _errorMessage =
@@ -210,7 +189,6 @@ class _LoginScreenState extends State<LoginScreen> {
         });
       }
     } catch (e) {
-      print('Error during OTP verification: $e');
       if (!mounted) return;
       setState(() {
         _isLoading = false;
@@ -521,9 +499,6 @@ class _LoginScreenState extends State<LoginScreen> {
                                                 phoneNumber: _phoneNumber,
                                               );
 
-                                              print(
-                                                  'Response received: $response');
-
                                               if (!mounted) return;
 
                                               if (response['status'] == true ||
@@ -539,8 +514,6 @@ class _LoginScreenState extends State<LoginScreen> {
                                                   _inputController.clear();
                                                   _startResendTimer();
                                                 });
-                                                print(
-                                                    'OTP sent successfully, _isOtpSent: $_isOtpSent');
                                               } else {
                                                 setState(() {
                                                   _isLoading = false;
@@ -549,8 +522,6 @@ class _LoginScreenState extends State<LoginScreen> {
                                                           response['error'] ??
                                                           'Failed to send OTP';
                                                 });
-                                                print(
-                                                    'Failed to send OTP: $_errorMessage');
                                               }
                                             } else {
                                               setState(() {
@@ -598,7 +569,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                     padding: const EdgeInsets.symmetric(
                                         horizontal: 16, vertical: 8),
                                     decoration: BoxDecoration(
-                                      color: Colors.white.withAlpha(26),
+                                      color: Colors.white.withAlpha(140),
                                       borderRadius: BorderRadius.circular(20),
                                     ),
                                     child: Text(

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:carousel_slider/carousel_slider.dart';
+import 'package:flutter_frontend/screens/waitlist/login.dart';
 
 class WaitlistScreen extends StatefulWidget {
   const WaitlistScreen({super.key});
@@ -10,47 +11,31 @@ class WaitlistScreen extends StatefulWidget {
 }
 
 class _WaitlistScreenState extends State<WaitlistScreen> {
-  final List<Map<String, dynamic>> events = [
-    {
-      'name': 'Team Mates',
-      'type': 'Paintball',
-      'date': 'Dec 16',
-      'time': '5 PM',
-      'entries': '14/20',
-      'image': 'assets/tempImages/paintball.jpg',
-      'isLiked': false,
-    },
-    {
-      'name': 'Showdown',
-      'type': 'Badminton',
-      'date': 'Dec 28',
-      'time': '5 PM',
-      'entries': '10/20',
-      'image': 'assets/tempImages/badminton.jpg',
-      'isLiked': false,
-    },
-    {
-      'name': 'Sneak Snooker',
-      'type': 'Snooker',
-      'date': 'Jan 19',
-      'time': '5 PM',
-      'entries': '14/20',
-      'image': 'assets/tempImages/snooker.jpg',
-      'isLiked': false,
-    },
-  ];
-
   @override
   void initState() {
     super.initState();
+    SystemChrome.setSystemUIOverlayStyle(
+      const SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent,
+      ),
+    );
     _precacheImages();
   }
 
+  @override
+  void dispose() {
+    super.dispose();
+  }
+
   Future<void> _precacheImages() async {
+    if (!mounted) return;
+
     await precacheImage(
       const AssetImage('assets/tempImages/waitlist_bg.jpg'),
       context,
     );
+
+    if (!mounted) return;
 
     await Future.wait([
       for (var event in events)
@@ -61,185 +46,434 @@ class _WaitlistScreenState extends State<WaitlistScreen> {
     ]);
   }
 
+  final List<Map<String, dynamic>> events = [
+    {
+      'name': 'Team Mates',
+      'type': 'Paintball',
+      'date': 'Dec 16',
+      'time': '5 PM',
+      'price': '800',
+      'entries': '14/20',
+      'image': 'assets/tempImages/paintball.jpg',
+      'isLiked': false,
+    },
+    {
+      'name': 'Showdown',
+      'type': 'Badminton',
+      'date': 'Dec 28',
+      'time': '5 PM',
+      'price': '600',
+      'entries': '10/20',
+      'image': 'assets/tempImages/badminton.jpg',
+      'isLiked': false,
+    },
+    {
+      'name': 'Sneak Snooker',
+      'type': 'Snooker',
+      'date': 'Jan 19',
+      'time': '5 PM',
+      'price': '500',
+      'entries': '14/20',
+      'image': 'assets/tempImages/snooker.jpg',
+      'isLiked': false,
+    },
+  ];
+
+  void _showDeleteConfirmation() {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          backgroundColor: isDarkMode ? const Color(0xFF121212) : Colors.white,
+          title: Text(
+            'Delete Account',
+            style: TextStyle(
+              color: isDarkMode ? Colors.white : Colors.black,
+            ),
+          ),
+          content: Text(
+            'If you delete your account your waitlist number may increase the next time around.',
+            style: TextStyle(
+              color: isDarkMode ? Colors.white70 : Colors.black87,
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context); // Close dialog
+              },
+              child: Text(
+                'Cancel',
+                style: TextStyle(
+                  color: isDarkMode ? Colors.white70 : Colors.black87,
+                ),
+              ),
+            ),
+            TextButton(
+              onPressed: () {
+                // TODO: Add delete account API call here
+                Navigator.pop(context); // Close dialog
+                Navigator.pop(context); // Close bottom sheet
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const LoginScreen(),
+                  ),
+                );
+              },
+              child: const Text(
+                'Delete',
+                style: TextStyle(
+                  color: Colors.red,
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _showBottomMenu() {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      useSafeArea: true,
+      builder: (context) => Padding(
+        padding: EdgeInsets.only(
+          bottom: MediaQuery.of(context).viewInsets.bottom +
+              MediaQuery.of(context).padding.bottom,
+        ),
+        child: Container(
+          constraints: BoxConstraints(
+            maxHeight: MediaQuery.of(context).size.height * 0.7,
+          ),
+          decoration: BoxDecoration(
+            color: isDarkMode ? const Color(0xFF121212) : Colors.white,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                margin: const EdgeInsets.only(top: 8),
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: isDarkMode ? Colors.white38 : Colors.black38,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              Flexible(
+                child: SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      ListTile(
+                        leading: Icon(
+                          Icons.edit_outlined,
+                          color: isDarkMode ? Colors.white : Colors.black,
+                        ),
+                        title: Text(
+                          'Edit Profile',
+                          style: TextStyle(
+                            color: isDarkMode ? Colors.white : Colors.black,
+                          ),
+                        ),
+                        onTap: () {
+                          Navigator.pop(context);
+                          // Will implement Edit Profile navigation
+                        },
+                      ),
+                      ListTile(
+                        leading: Icon(
+                          Icons.help_outline,
+                          color: isDarkMode ? Colors.white : Colors.black,
+                        ),
+                        title: Text(
+                          'FAQs',
+                          style: TextStyle(
+                            color: isDarkMode ? Colors.white : Colors.black,
+                          ),
+                        ),
+                        onTap: () {
+                          Navigator.pop(context);
+                          // TODO: Navigate to FAQs screen
+                          // Navigator.push(
+                          //   context,
+                          //   MaterialPageRoute(
+                          //     builder: (context) => const FAQsScreen(),
+                          //   ),
+                          // );
+                        },
+                      ),
+                      ListTile(
+                        leading: Icon(
+                          Icons.support_agent_outlined,
+                          color: isDarkMode ? Colors.white : Colors.black,
+                        ),
+                        title: Text(
+                          'Customer Support',
+                          style: TextStyle(
+                            color: isDarkMode ? Colors.white : Colors.black,
+                          ),
+                        ),
+                        onTap: () {
+                          Navigator.pop(context);
+                          // Handle customer support
+                        },
+                      ),
+                      ListTile(
+                        leading: Icon(
+                          Icons.logout_outlined,
+                          color: isDarkMode ? Colors.white : Colors.black,
+                        ),
+                        title: Text(
+                          'Logout',
+                          style: TextStyle(
+                            color: isDarkMode ? Colors.white : Colors.black,
+                          ),
+                        ),
+                        onTap: () {
+                          Navigator.pop(context); // Close bottom sheet
+                          // TODO: Add logout API call here
+                          Navigator.pushReplacement(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const LoginScreen(),
+                            ),
+                          );
+                        },
+                      ),
+                      ListTile(
+                        leading: const Icon(
+                          Icons.delete_outline,
+                          color: Colors.red,
+                        ),
+                        title: const Text(
+                          'Delete Account',
+                          style: TextStyle(
+                            color: Colors.red,
+                          ),
+                        ),
+                        onTap: () {
+                          Navigator.pop(context);
+                          _showDeleteConfirmation();
+                        },
+                      ),
+                      SizedBox(
+                          height: MediaQuery.of(context).padding.bottom + 16),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
 
-    return Scaffold(
-      body: Column(
-        children: [
-          // Top section with overlay
-          Container(
-            height: size.height * 0.28,
-            width: double.infinity,
-            decoration: const BoxDecoration(
-              image: DecorationImage(
-                image: AssetImage('assets/tempImages/waitlist_bg.jpg'),
-                fit: BoxFit.cover,
-              ),
-            ),
-            child: Stack(
-              children: [
-                // Semi-transparent overlay
-                Container(
-                  color: Colors.white.withAlpha(180),
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent,
+        statusBarIconBrightness:
+            isDarkMode ? Brightness.light : Brightness.dark,
+        statusBarBrightness: isDarkMode ? Brightness.dark : Brightness.light,
+        systemNavigationBarColor:
+            isDarkMode ? const Color(0xFF121212) : Colors.white,
+        systemNavigationBarIconBrightness:
+            isDarkMode ? Brightness.light : Brightness.dark,
+      ),
+      child: Scaffold(
+        backgroundColor: isDarkMode ? const Color(0xFF121212) : Colors.white,
+        body: Column(
+          children: [
+            Container(
+              height: size.height * 0.28,
+              width: double.infinity,
+              decoration: const BoxDecoration(
+                image: DecorationImage(
+                  image: AssetImage('assets/tempImages/waitlist_bg.jpg'),
+                  fit: BoxFit.cover,
                 ),
-                // Content
-                SafeArea(
-                  child: Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
+              ),
+              child: Stack(
+                children: [
+                  Container(
+                    color: isDarkMode
+                        ? Colors.black.withAlpha(180)
+                        : Colors.white.withAlpha(180),
+                  ),
+                  SafeArea(
+                    child: Stack(
                       children: [
-                        const Text(
-                          '2154',
-                          style: TextStyle(
-                            fontSize: 48,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.black,
-                            height: 1,
+                        Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(
+                                '2154',
+                                style: TextStyle(
+                                  fontSize: size.width * 0.12,
+                                  fontWeight: FontWeight.w600,
+                                  color:
+                                      isDarkMode ? Colors.white : Colors.black,
+                                  height: 1,
+                                ),
+                              ),
+                              Text(
+                                'waiting list',
+                                style: TextStyle(
+                                  fontSize: size.width * 0.04,
+                                  color: isDarkMode
+                                      ? Colors.white70
+                                      : Colors.black54,
+                                  height: 1.5,
+                                ),
+                              ),
+                              SizedBox(height: size.height * 0.02),
+                              Container(
+                                width: size.width * 0.12,
+                                height: size.width * 0.12,
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  color: isDarkMode
+                                      ? Colors.white.withAlpha(25)
+                                      : Colors.black.withAlpha(25),
+                                ),
+                                child: Icon(
+                                  Icons.play_arrow_rounded,
+                                  color:
+                                      isDarkMode ? Colors.white : Colors.black,
+                                  size: size.width * 0.06,
+                                ),
+                              ),
+                            ],
                           ),
                         ),
-                        const Text(
-                          'waiting list',
-                          style: TextStyle(
-                            fontSize: 16,
-                            color: Colors.black54,
-                            height: 1.5,
-                          ),
-                        ),
-                        const SizedBox(height: 20),
-                        Container(
-                          width: 48,
-                          height: 48,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: Colors.black.withAlpha(25),
-                          ),
-                          child: const Icon(
-                            Icons.play_arrow_rounded,
-                            color: Colors.black,
-                            size: 24,
+                        Positioned(
+                          top: 8,
+                          left: 16,
+                          child: IconButton(
+                            icon: Icon(
+                              Icons.menu,
+                              color: isDarkMode ? Colors.white : Colors.black,
+                              size: size.width * 0.06,
+                            ),
+                            onPressed: () {
+                              HapticFeedback.mediumImpact();
+                              _showBottomMenu();
+                            },
                           ),
                         ),
                       ],
                     ),
                   ),
-                ),
-              ],
-            ),
-          ),
-
-          // Content section
-          Expanded(
-            child: Container(
-              transform: Matrix4.translationValues(0, -30, 0),
-              decoration: const BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
+                ],
               ),
-              child: SingleChildScrollView(
-                child: Padding(
-                  padding: EdgeInsets.only(
-                    bottom: MediaQuery.of(context).padding.bottom + 16,
+            ),
+            Expanded(
+              child: Container(
+                transform:
+                    Matrix4.translationValues(0, -size.height * 0.025, 0),
+                decoration: BoxDecoration(
+                  color: isDarkMode ? const Color(0xFF121212) : Colors.white,
+                  borderRadius: const BorderRadius.vertical(
+                    top: Radius.circular(30),
                   ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.fromLTRB(24, 32, 24, 24),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Text(
-                              'While you are waiting',
-                              style: TextStyle(
-                                fontSize: 28,
-                                fontWeight: FontWeight.w600,
-                                height: 1.2,
-                              ),
-                            ),
-                            const SizedBox(height: 8),
-                            const Text(
-                              'Finding the one, but also the fun!',
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w500,
-                                height: 1.2,
-                              ),
-                            ),
-                            const SizedBox(height: 16),
-                            Text(
-                              'Checkout our exclusive events, whether you\'re looking to '
-                              'grow closer, meet new people, or simply find a better '
-                              'match, we have exciting gatherings designed to bring '
-                              'people together.',
-                              textAlign: TextAlign.justify,
-                              style: TextStyle(
-                                fontSize: 14,
-                                color: Colors.grey[600],
-                                height: 1.4,
-                              ),
-                            ),
-                          ],
-                        ),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Padding(
+                      padding: EdgeInsets.fromLTRB(
+                        size.width * 0.06,
+                        size.height * 0.01,
+                        size.width * 0.06,
+                        size.height * 0.01,
                       ),
-
-                      // Carousel for event cards
-                      SizedBox(
-                        height: MediaQuery.of(context).size.height * 0.45,
-                        child: CarouselSlider.builder(
-                          itemCount: events.length,
-                          options: CarouselOptions(
-                            height: MediaQuery.of(context).size.height * 0.45,
-                            viewportFraction: 0.75,
-                            enlargeCenterPage: true,
-                            enableInfiniteScroll: true,
-                          ),
-                          itemBuilder: (context, index, realIndex) {
-                            final event = events[index];
-                            return EventCard(
-                              event: event,
-                              onLike: () {
-                                setState(() {
-                                  event['isLiked'] = !event['isLiked'];
-                                });
-                                HapticFeedback.selectionClick();
-                              },
-                              onRegister: () {
-                                HapticFeedback.mediumImpact();
-                              },
-                            );
-                          },
-                        ),
-                      ),
-
-                      const SizedBox(height: 8),
-
-                      // Customer Support
-                      Center(
-                        child: TextButton(
-                          onPressed: () {
-                            HapticFeedback.mediumImpact();
-                          },
-                          child: Text(
-                            'customer support',
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'While you are waiting',
                             style: TextStyle(
-                              color: Colors.grey[600],
-                              fontSize: 16,
-                              decoration: TextDecoration.underline,
-                              decorationColor: Colors.grey[600],
+                              fontSize: size.width * 0.07,
+                              fontWeight: FontWeight.w600,
+                              color: isDarkMode ? Colors.white : Colors.black,
+                              height: 1.2,
                             ),
                           ),
-                        ),
+                          SizedBox(height: size.height * 0.01),
+                          Text(
+                            'Finding the one, but also the fun!',
+                            style: TextStyle(
+                              fontSize: size.width * 0.04,
+                              fontWeight: FontWeight.w500,
+                              color: isDarkMode ? Colors.white : Colors.black,
+                              height: 1.2,
+                            ),
+                          ),
+                          SizedBox(height: size.height * 0.015),
+                          Text(
+                            'Participate in one of our free online / offline fun competitions,'
+                            ' if you win, you can skip the waitlist instantly.',
+                            textAlign: TextAlign.justify,
+                            style: TextStyle(
+                              fontSize: size.width * 0.035,
+                              color: isDarkMode
+                                  ? Colors.white70
+                                  : Colors.grey[600],
+                              height: 1.4,
+                            ),
+                          ),
+                        ],
                       ),
-                      const SizedBox(height: 8),
-                    ],
-                  ),
+                    ),
+                    SizedBox(
+                      height: size.height * 0.50,
+                      child: CarouselSlider.builder(
+                        itemCount: events.length,
+                        options: CarouselOptions(
+                          height: size.height * 0.50,
+                          viewportFraction: 0.75,
+                          enlargeCenterPage: true,
+                          enableInfiniteScroll: true,
+                        ),
+                        itemBuilder: (context, index, realIndex) {
+                          final event = events[index];
+                          return EventCard(
+                            event: event,
+                            onLike: () {
+                              setState(() {
+                                event['isLiked'] = !event['isLiked'];
+                              });
+                              HapticFeedback.selectionClick();
+                            },
+                            onRegister: () {
+                              HapticFeedback.mediumImpact();
+                            },
+                          );
+                        },
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -259,6 +493,8 @@ class EventCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final size = MediaQuery.of(context).size;
+
     return Container(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(24),
@@ -298,30 +534,29 @@ class EventCard extends StatelessWidget {
 
             // Content
             Padding(
-              padding: const EdgeInsets.all(20),
+              padding: EdgeInsets.all(size.width * 0.04), // Responsive padding
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Entries Left and Like Button
+                  // Top section with entries and heart
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text(
+                          Text(
                             'Entries Left',
                             style: TextStyle(
                               color: Colors.white,
-                              fontSize: 12,
+                              fontSize: size.width * 0.03,
                             ),
                           ),
                           Text(
                             event['entries'],
-                            style: const TextStyle(
+                            style: TextStyle(
                               color: Colors.white,
-                              fontSize: 14,
+                              fontSize: size.width * 0.035,
                               fontWeight: FontWeight.bold,
                             ),
                           ),
@@ -333,8 +568,8 @@ class EventCard extends StatelessWidget {
                           event['isLiked']
                               ? Icons.favorite
                               : Icons.favorite_outline,
-                          color: Colors.white,
-                          size: 24,
+                          color: event['isLiked'] ? Colors.red : Colors.white,
+                          size: size.width * 0.06,
                         ),
                         padding: EdgeInsets.zero,
                         constraints: const BoxConstraints(),
@@ -344,38 +579,79 @@ class EventCard extends StatelessWidget {
 
                   const Spacer(),
 
-                  // Bottom Content
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                  // Event type
+                  Text(
+                    event['type'],
+                    style: TextStyle(
+                      color: Colors.white70,
+                      fontSize: size.width * 0.035,
+                    ),
+                  ),
+                  SizedBox(height: size.height * 0.005),
+
+                  // Event name
+                  Text(
+                    event['name'],
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: size.width * 0.055,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  SizedBox(height: size.height * 0.01),
+
+                  // Price section
+                  Row(
                     children: [
                       Text(
-                        event['type'],
-                        style: const TextStyle(
+                        '₹${event['price']}',
+                        style: TextStyle(
                           color: Colors.white70,
-                          fontSize: 14,
+                          fontSize: size.width * 0.04,
+                          decoration: TextDecoration.lineThrough,
+                          decorationColor: Colors.red,
+                          decorationThickness: 2,
                         ),
                       ),
-                      const SizedBox(height: 4),
+                      SizedBox(width: size.width * 0.02),
                       Text(
-                        event['name'],
-                        style: const TextStyle(
+                        '₹0',
+                        style: TextStyle(
                           color: Colors.white,
-                          fontSize: 24,
+                          fontSize: size.width * 0.04,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
-                      const SizedBox(height: 20),
-                      Row(
-                        children: [
-                          _buildPill(event['date']),
-                          const SizedBox(width: 8),
-                          _buildPill(event['time']),
-                        ],
-                      ),
-                      const SizedBox(height: 16),
-                      _buildRegisterButton(),
                     ],
                   ),
+                  SizedBox(height: size.height * 0.015),
+
+                  // Pills row with horizontal scroll if needed
+                  SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: Row(
+                      children: [
+                        _buildPill(context, event['date']),
+                        SizedBox(width: size.width * 0.02),
+                        _buildPill(context, event['time']),
+                        SizedBox(width: size.width * 0.02),
+                        GestureDetector(
+                          onTap: () {
+                            HapticFeedback.selectionClick();
+                          },
+                          child: _buildPill(
+                            context,
+                            'Venue',
+                            isClickable: true,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  SizedBox(height: size.height * 0.015),
+
+                  // Register button
+                  _buildRegisterButton(context),
                 ],
               ),
             ),
@@ -385,64 +661,81 @@ class EventCard extends StatelessWidget {
     );
   }
 
-  Widget _buildPill(String text) {
+  Widget _buildPill(BuildContext context, String text,
+      {bool isClickable = false}) {
+    final size = MediaQuery.of(context).size;
     return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: 16,
-        vertical: 8,
+      padding: EdgeInsets.symmetric(
+        horizontal: size.width * 0.03,
+        vertical: size.height * 0.008,
       ),
       decoration: BoxDecoration(
         color: Colors.white.withAlpha(30),
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(size.width * 0.04),
+        border: isClickable ? Border.all(color: Colors.white30) : null,
       ),
-      child: Text(
-        text,
-        style: const TextStyle(
-          color: Colors.white,
-          fontSize: 14,
-        ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            text,
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: size.width * 0.035,
+            ),
+          ),
+          if (isClickable) ...[
+            SizedBox(width: size.width * 0.01),
+            Icon(
+              Icons.location_on_outlined,
+              color: Colors.white,
+              size: size.width * 0.035,
+            ),
+          ],
+        ],
       ),
     );
   }
 
-  Widget _buildRegisterButton() {
+  Widget _buildRegisterButton(BuildContext context) {
+    final size = MediaQuery.of(context).size;
     return Container(
       width: double.infinity,
-      height: 48,
+      height: size.height * 0.06,
       decoration: BoxDecoration(
         color: Colors.white.withAlpha(30),
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(size.width * 0.06),
       ),
       child: Material(
         color: Colors.transparent,
         child: InkWell(
           onTap: onRegister,
-          borderRadius: BorderRadius.circular(24),
+          borderRadius: BorderRadius.circular(size.width * 0.06),
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
+            padding: EdgeInsets.symmetric(horizontal: size.width * 0.04),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text(
+                Text(
                   'Register',
                   style: TextStyle(
                     color: Colors.white,
-                    fontSize: 16,
+                    fontSize: size.width * 0.04,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
                 Container(
-                  width: 32,
-                  height: 32,
+                  width: size.width * 0.08,
+                  height: size.width * 0.08,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     color: Colors.white.withAlpha(30),
                   ),
-                  child: const Center(
+                  child: Center(
                     child: Icon(
                       Icons.arrow_forward,
                       color: Colors.white,
-                      size: 24,
+                      size: size.width * 0.05,
                     ),
                   ),
                 ),

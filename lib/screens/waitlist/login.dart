@@ -53,7 +53,7 @@ class _LoginScreenState extends State<LoginScreen> {
     });
   }
 
-  Future _requestOtp() async {
+  Future requestOtp() async {
     if (_phoneNumber.length != 10) {
       setState(
         () {

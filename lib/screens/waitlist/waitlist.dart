@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter_frontend/screens/waitlist/login.dart';
+import 'package:flutter_frontend/screens/events/event_details_screen.dart';
 
 class WaitlistScreen extends StatefulWidget {
   const WaitlistScreen({super.key});
@@ -113,7 +114,7 @@ class _WaitlistScreenState extends State<WaitlistScreen> {
             ),
             TextButton(
               onPressed: () {
-                // TODO: Add delete account API call here
+                // TODO: Add delete account API call here (need to write think function)
                 Navigator.pop(context); // Close dialog
                 Navigator.pop(context); // Close bottom sheet
                 Navigator.pushReplacement(
@@ -203,7 +204,7 @@ class _WaitlistScreenState extends State<WaitlistScreen> {
                         ),
                         onTap: () {
                           Navigator.pop(context);
-                          // TODO: Navigate to FAQs screen
+                          // TODO: Navigate to FAQs screen (need to create a new design)
                           // Navigator.push(
                           //   context,
                           //   MaterialPageRoute(
@@ -241,7 +242,7 @@ class _WaitlistScreenState extends State<WaitlistScreen> {
                         ),
                         onTap: () {
                           Navigator.pop(context); // Close bottom sheet
-                          // TODO: Add logout API call here
+                          // TODO: Add logout API call here  (Hard navigate implimented to login screen)
                           Navigator.pushReplacement(
                             context,
                             MaterialPageRoute(
@@ -368,7 +369,9 @@ class _WaitlistScreenState extends State<WaitlistScreen> {
                           child: IconButton(
                             icon: Icon(
                               Icons.menu,
-                              color: isDarkMode ? Colors.white : Colors.black,
+                              color: isDarkMode
+                                  ? const Color.fromARGB(255, 193, 35, 35)
+                                  : const Color.fromARGB(255, 238, 58, 58),
                               size: size.width * 0.06,
                             ),
                             onPressed: () {
@@ -709,7 +712,15 @@ class EventCard extends StatelessWidget {
       child: Material(
         color: Colors.transparent,
         child: InkWell(
-          onTap: onRegister,
+          onTap: () {
+            HapticFeedback.mediumImpact();
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => EventDetailsScreen(event: event),
+              ),
+            );
+          },
           borderRadius: BorderRadius.circular(size.width * 0.06),
           child: Padding(
             padding: EdgeInsets.symmetric(horizontal: size.width * 0.04),

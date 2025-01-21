@@ -18,8 +18,6 @@ class AuthProvider extends ChangeNotifier {
       _isLoading = true;
       notifyListeners();
 
-      print('Sending OTP request for: $phoneNumber'); // Debug print
-
       final response = await http
           .post(
             Uri.parse(ApiConfig.requestOtp),
@@ -31,9 +29,6 @@ class AuthProvider extends ChangeNotifier {
           .timeout(
             Duration(milliseconds: ApiConfig.connectionTimeout),
           );
-
-      print('Response status code: ${response.statusCode}'); // Debug print
-      print('Response body: ${response.body}'); // Debug print
 
       final decodedResponse = jsonDecode(response.body);
 
@@ -47,7 +42,6 @@ class AuthProvider extends ChangeNotifier {
       notifyListeners();
       return decodedResponse;
     } catch (e) {
-      print('Error during OTP request: $e'); // Debug print
       _isLoading = false;
       notifyListeners();
       return {
@@ -67,8 +61,6 @@ class AuthProvider extends ChangeNotifier {
       _isLoading = true;
       notifyListeners();
 
-      print('Verifying OTP for: $phoneNumber'); // Debug print
-
       final response = await http
           .post(
             Uri.parse(ApiConfig.verifyOtp),
@@ -82,9 +74,6 @@ class AuthProvider extends ChangeNotifier {
           .timeout(
             Duration(milliseconds: ApiConfig.connectionTimeout),
           );
-
-      print('Response status code: ${response.statusCode}'); // Debug print
-      print('Response body: ${response.body}'); // Debug print
 
       if (response.statusCode >= 500) {
         throw Exception('Server error: ${response.statusCode}');
@@ -103,7 +92,6 @@ class AuthProvider extends ChangeNotifier {
       notifyListeners();
       return decodedResponse;
     } catch (e) {
-      print('Error during verification: $e'); // Debug print
       _isLoading = false;
       notifyListeners();
 

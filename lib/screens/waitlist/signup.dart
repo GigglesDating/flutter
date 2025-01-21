@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_frontend/screens/waitlist/kycScreens/aadhar_status_screen.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter/gestures.dart';
 import 'dart:ui';
@@ -383,7 +384,7 @@ class _SignupScreenState extends State<SignupScreen> {
                                             ),
                                             const TextSpan(
                                               text:
-                                                  '. I consent to verify myself with Aadhar',
+                                                  '.I consent to verify myself with Aadhar',
                                             ),
                                           ],
                                         ),
@@ -470,9 +471,27 @@ class _SignupScreenState extends State<SignupScreen> {
   }
 
   void _submitForm() {
-    if (_formKey.currentState!.validate()) {
-      // TODO: Implement form submission
-    }
+    // Collect form data
+    final formData = {
+      'firstName': _firstNameController.text,
+      'lastName': _lastNameController.text,
+      'email': _emailController.text,
+      'birthday': _birthday,
+      'gender': _gender,
+      'city': _city,
+      'agreeToTerms': _agreeToTerms,
+    };
+
+    // Print the data to verify (you can remove this in production)
+    print('Form Data: $formData');
+
+    // Navigate to next screen
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(
+        builder: (context) => AadharStatusScreen(),
+      ),
+    );
   }
 
   @override

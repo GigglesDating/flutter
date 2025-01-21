@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_frontend/screens/waitlist/waitlist.dart';
 
 class ProfileCreation3 extends StatefulWidget {
   const ProfileCreation3({super.key});
@@ -386,8 +387,11 @@ class _ProfileCreation3State extends State<ProfileCreation3> {
                             width: size.width * 0.6,
                             child: ElevatedButton(
                               onPressed: _selectedDefaultInterests.length >= 5
-                                  ? () => Navigator.pushNamed(
-                                      context, '/next-screen')
+                                  ? () => Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) => WaitlistScreen(),
+                                      ))
                                   : null,
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: Colors.black,

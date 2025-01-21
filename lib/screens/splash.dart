@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
-import 'waitlist/waitlist.dart';
+import 'package:flutter_frontend/screens/waitlist/signup.dart';
 import 'waitlist/login.dart';
-import 'waitlist/signup.dart';
-import 'waitlist/profileCreationScreens/profile_creation1.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -43,7 +41,7 @@ class _SplashScreenState extends State<SplashScreen>
         transitionDuration: const Duration(milliseconds: 800),
         pageBuilder: (context, animation, secondaryAnimation) => FadeTransition(
           opacity: animation,
-          child: const LoginScreen(),
+          child: const SignupScreen(),
         ),
       ),
     );

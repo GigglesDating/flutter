@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 import 'config.dart';
 
@@ -81,10 +82,18 @@ class AuthProvider extends ChangeNotifier {
 
       final decodedResponse = jsonDecode(response.body);
 
-      // Set status to true for successful responses
-      if (response.statusCode == 200 ||
-          response.statusCode == 201 ||
-          decodedResponse['success'] == true) {
+      // If verification successful, store UUID in SharedPreferences
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        if (decodedResponse['uuid'] != null) {
+          final prefs = await SharedPreferences.getInstance();
+          await prefs.setString('user_uuid', decodedResponse['uuid']);
+
+          // Also store registration status if needed
+          if (decodedResponse['reg_process'] != null) {
+            await prefs.setString(
+                'reg_process', decodedResponse['reg_process']);
+          }
+        }
         decodedResponse['status'] = true;
       }
 
@@ -107,5 +116,24 @@ class AuthProvider extends ChangeNotifier {
         'error': 'Failed to connect to server',
       };
     }
+  }
+
+  // Add method to get stored UUID
+  static Future<String?> getStoredUuid() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString('user_uuid');
+  }
+
+  // Add method to get registration status
+  static Future<String?> getRegProcess() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString('reg_process');
+  }
+
+  // Add method to clear stored data (for logout)
+  static Future<void> clearStoredData() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('user_uuid');
+    await prefs.remove('reg_process');
   }
 }

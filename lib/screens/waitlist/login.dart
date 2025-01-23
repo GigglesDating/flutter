@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'dart:async';
 import 'package:provider/provider.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 import '../barrel.dart';
 
@@ -18,7 +17,6 @@ class _LoginScreenState extends State<LoginScreen> {
   String _phoneNumber = '';
   String _otp = '';
   String? _requestId;
-  String? _regProcess;
   bool _isPressed = false;
   bool _isLoading = false;
   bool _isOtpSent = false;
@@ -101,11 +99,9 @@ class _LoginScreenState extends State<LoginScreen> {
 
       if (!mounted) return;
 
-      if (response['status'] == true || response['success'] == true) {
-        // Store the registration process status
-        if (response['reg_process'] != null) {
-          _regProcess = response['reg_process'].toString();
-        }
+      if (response['status'] == true) {
+        // UUID is automatically stored by AuthProvider
+        final regProcess = response['reg_process'];
 
         setState(() {
           _isLoading = false;
@@ -113,11 +109,11 @@ class _LoginScreenState extends State<LoginScreen> {
 
         // Navigate based on registration process status
         if (mounted) {
-          switch (_regProcess) {
-            case 'New User':
+          switch (regProcess) {
+            case 'new_user':
               Navigator.of(context).pushAndRemoveUntil(
                 MaterialPageRoute(
-                  builder: (context) => IntroVideoScreen(),
+                  builder: (context) => const SignupScreen(),
                 ),
                 (route) => false,
               );
@@ -126,7 +122,8 @@ class _LoginScreenState extends State<LoginScreen> {
             case 'reg_started':
               Navigator.of(context).pushAndRemoveUntil(
                 MaterialPageRoute(
-                  builder: (context) => IntroVideoScreen(),
+                  builder: (context) =>
+                      const AadharStatusScreen(), //placeholder need to updated as needed
                 ),
                 (route) => false,
               );
@@ -172,16 +169,13 @@ class _LoginScreenState extends State<LoginScreen> {
               // If reg_process is null or unknown, start from beginning
               Navigator.of(context).pushAndRemoveUntil(
                 MaterialPageRoute(
-                  builder: (context) => IntroVideoScreen(),
+                  builder: (context) => const SignupScreen(),
                 ),
                 (route) => false,
               );
               break;
           }
         }
-
-        // Handle login success
-        _handleLoginSuccess(response['uuid'] ?? '');
       } else {
         setState(() {
           _isLoading = false;
@@ -195,18 +189,6 @@ class _LoginScreenState extends State<LoginScreen> {
         _isLoading = false;
         _errorMessage = 'Failed to verify OTP';
       });
-    }
-  }
-
-  void _handleLoginSuccess(String uuid) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('user_uuid', uuid);
-
-    if (mounted) {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const SignupScreen()),
-      );
     }
   }
 

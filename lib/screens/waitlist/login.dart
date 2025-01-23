@@ -17,6 +17,7 @@ class _LoginScreenState extends State<LoginScreen> {
   String _phoneNumber = '';
   String _otp = '';
   String? _requestId;
+  String? _regProcess;
   bool _isPressed = false;
   bool _isLoading = false;
   bool _isOtpSent = false;
@@ -99,31 +100,33 @@ class _LoginScreenState extends State<LoginScreen> {
 
       if (!mounted) return;
 
-      if (response['status'] == true) {
-        // UUID is automatically stored by AuthProvider
-        final regProcess = response['reg_process'];
-
+      if (response['status'] == true || response['success'] == true) {
         setState(() {
           _isLoading = false;
         });
 
         // Navigate based on registration process status
         if (mounted) {
-          switch (regProcess) {
-            case 'new_user':
-              Navigator.of(context).pushAndRemoveUntil(
-                MaterialPageRoute(
-                  builder: (context) => const SignupScreen(),
-                ),
-                (route) => false,
-              );
-              break;
+          // If reg_process is null or not in response, navigate to IntroVideo
+          if (response['reg_process'] == null) {
+            Navigator.of(context).pushAndRemoveUntil(
+              MaterialPageRoute(
+                builder: (context) => IntroVideoScreen(),
+              ),
+              (route) => false,
+            );
+            return;
+          }
 
+          // Store the registration process status
+          _regProcess = response['reg_process'].toString();
+
+          switch (_regProcess) {
+            case 'New User':
             case 'reg_started':
               Navigator.of(context).pushAndRemoveUntil(
                 MaterialPageRoute(
-                  builder: (context) =>
-                      const AadharStatusScreen(), //placeholder need to updated as needed
+                  builder: (context) => IntroVideoScreen(),
                 ),
                 (route) => false,
               );
@@ -166,10 +169,10 @@ class _LoginScreenState extends State<LoginScreen> {
               break;
 
             default:
-              // If reg_process is null or unknown, start from beginning
+              // If reg_process is unknown, also start from beginning
               Navigator.of(context).pushAndRemoveUntil(
                 MaterialPageRoute(
-                  builder: (context) => const SignupScreen(),
+                  builder: (context) => IntroVideoScreen(),
                 ),
                 (route) => false,
               );

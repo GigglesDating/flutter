@@ -16,7 +16,6 @@ class _ProfileCreation1State extends State<ProfileCreation1> {
   File? _profileImage;
   final List<File> _mediaFiles = [];
   String? _orientation;
-  bool _isNewUser = true;
 
   final _orientations = ['Straight', 'Bisexual', 'Gay', 'Lesbian', 'Other'];
 
@@ -305,21 +304,6 @@ class _ProfileCreation1State extends State<ProfileCreation1> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Back Button
-                GestureDetector(
-                  onTap: () => Navigator.pop(context),
-                  child: Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: Colors.grey[200],
-                    ),
-                    child: const Icon(Icons.arrow_back, size: 24),
-                  ),
-                ),
-
-                SizedBox(height: size.height * 0.02),
-
                 const Text(
                   "Let's Personalise your Profile",
                   style: TextStyle(
@@ -463,56 +447,6 @@ class _ProfileCreation1State extends State<ProfileCreation1> {
                     },
                   ),
                 ),
-                SizedBox(height: size.height * 0.03),
-
-                // New User Question with Animation
-                AnimatedContainer(
-                  duration: const Duration(milliseconds: 200),
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: Colors.grey[100],
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      const Text(
-                        'Are you new to Giggles?',
-                        style: TextStyle(fontSize: 16),
-                      ),
-                      Row(
-                        children: [
-                          const Text('Yes'),
-                          Checkbox(
-                            value: _isNewUser,
-                            onChanged: (value) {
-                              setState(() {
-                                _isNewUser = true;
-                              });
-                              HapticFeedback.selectionClick();
-                            },
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(4),
-                            ),
-                          ),
-                          const Text('No'),
-                          Checkbox(
-                            value: !_isNewUser,
-                            onChanged: (value) {
-                              setState(() {
-                                _isNewUser = false;
-                              });
-                              HapticFeedback.selectionClick();
-                            },
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(4),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
                 SizedBox(height: size.height * 0.04),
 
                 // Next Button
@@ -531,7 +465,6 @@ class _ProfileCreation1State extends State<ProfileCreation1> {
                             'bio': _bioController.text,
                             'mediaFiles': _mediaFiles,
                             'orientation': _orientation,
-                            'isNewUser': _isNewUser,
                           };
                           Navigator.push(
                             context,

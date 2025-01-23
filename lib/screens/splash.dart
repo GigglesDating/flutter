@@ -40,7 +40,7 @@ class _SplashScreenState extends State<SplashScreen>
         transitionDuration: const Duration(milliseconds: 800),
         pageBuilder: (context, animation, secondaryAnimation) => FadeTransition(
           opacity: animation,
-          child: SignupScreen(),
+          child: const ProfileCreation1(),
         ),
       ),
     );
@@ -53,7 +53,7 @@ class _SplashScreenState extends State<SplashScreen>
     final size = MediaQuery.of(context).size;
 
     return Scaffold(
-      backgroundColor: isDarkMode ? Colors.white : Colors.black,
+      backgroundColor: isDarkMode ? Colors.black : Colors.white,
       body: Center(
         child: FadeTransition(
           opacity: _fadeAnimation,

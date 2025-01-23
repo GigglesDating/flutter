@@ -38,9 +38,8 @@ class ThinkProvider {
     required String dob,
     required String email,
     required String gender,
-    required bool privacyPolicyConsent,
-    required bool termsConditionsConsent,
-    required bool kycConsent,
+    required String city,
+    required bool consent,
   }) async {
     return _callFunction('signup', {
       'uuid': uuid,
@@ -49,9 +48,8 @@ class ThinkProvider {
       'dob': dob,
       'email': email,
       'gender': gender,
-      'privacy_policy_consent': privacyPolicyConsent,
-      'terms_conditions_consent': termsConditionsConsent,
-      'kyc_consent': kycConsent,
+      'city': city,
+      'consent': consent,
     });
   }
 

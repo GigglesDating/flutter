@@ -11,12 +11,12 @@ dependencies:
     sdk: flutter
   cupertino_icons: ^1.0.8
   http: ^1.1.0
-  shared_preferences: ^2.0.15
-  intl: ^0.18.0
+  shared_preferences: ^2.3.5
+  intl: ^0.20.1
   logging: ^1.2.0
   flutter_datetime_picker_plus: ^2.1.0
   image_picker: ^1.0.7
-  image_cropper: ^5.0.1
+  image_cropper: ^8.1.0
   video_player: ^2.9.2
   provider: ^6.1.2
   carousel_slider: ^5.0.0

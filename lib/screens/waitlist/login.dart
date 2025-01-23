@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'dart:async';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../barrel.dart';
 
@@ -178,6 +179,9 @@ class _LoginScreenState extends State<LoginScreen> {
               break;
           }
         }
+
+        // Handle login success
+        _handleLoginSuccess(response['uuid'] ?? '');
       } else {
         setState(() {
           _isLoading = false;
@@ -191,6 +195,18 @@ class _LoginScreenState extends State<LoginScreen> {
         _isLoading = false;
         _errorMessage = 'Failed to verify OTP';
       });
+    }
+  }
+
+  void _handleLoginSuccess(String uuid) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('user_uuid', uuid);
+
+    if (mounted) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const SignupScreen()),
+      );
     }
   }
 

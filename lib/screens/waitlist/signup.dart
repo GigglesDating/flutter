@@ -4,6 +4,9 @@ import 'package:flutter/gestures.dart';
 import 'dart:ui';
 import 'package:flutter_datetime_picker_plus/flutter_datetime_picker_plus.dart'
     as picker;
+import '../../network/think.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import '../barrel.dart';
 
 class SignupScreen extends StatefulWidget {
   const SignupScreen({super.key});
@@ -21,6 +24,30 @@ class _SignupScreenState extends State<SignupScreen> {
   String? _gender;
   String? _city;
   bool _agreeToTerms = false;
+  String? _uuid;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUuid();
+  }
+
+  Future<void> _loadUuid() async {
+    final prefs = await SharedPreferences.getInstance();
+    final uuid = prefs.getString('user_uuid');
+    if (uuid != null) {
+      setState(() {
+        _uuid = uuid;
+      });
+    } else {
+      if (mounted) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const LoginScreen()),
+        );
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -411,7 +438,7 @@ class _SignupScreenState extends State<SignupScreen> {
                                     elevation: 0,
                                   ),
                                   child: const Text(
-                                    'JOIN',
+                                    'SUBMIT',
                                     style: TextStyle(
                                       fontSize: 16,
                                       fontWeight: FontWeight.bold,
@@ -435,11 +462,15 @@ class _SignupScreenState extends State<SignupScreen> {
   }
 
   void _selectDate() {
+    final now = DateTime.now();
+    final minAge = now.subtract(const Duration(days: 365 * 100)); // Max age 100
+    final maxAge = now.subtract(const Duration(days: 365 * 18)); // Min age 18
+
     picker.DatePicker.showDatePicker(
       context,
       showTitleActions: true,
-      minTime: DateTime(1900, 1, 1),
-      maxTime: DateTime.now(),
+      minTime: minAge,
+      maxTime: maxAge, // Set to 18 years ago
       onConfirm: (date) {
         setState(() {
           _birthday = date;
@@ -469,10 +500,106 @@ class _SignupScreenState extends State<SignupScreen> {
     );
   }
 
-  void _submitForm() {
-    if (_formKey.currentState!.validate()) {
-      // TODO: Implement form submission -abhishek is working on it#
+  void _submitForm() async {
+    if (_uuid == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Session expired. Please login again.')),
+      );
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const LoginScreen()),
+      );
+      return;
     }
+
+    if (!_validateFields()) return;
+
+    try {
+      final thinkProvider = ThinkProvider();
+
+      final response = await thinkProvider.signup(
+        uuid: _uuid!,
+        firstName: _firstNameController.text.trim(),
+        lastName: _lastNameController.text.trim(),
+        email: _emailController.text.trim(),
+        dob: DateFormat('yyyy-MM-dd').format(_birthday!),
+        gender: _gender!,
+        city: _city!,
+        consent: _agreeToTerms,
+      );
+
+      if (response['status'] == 'success') {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Successfully registered!')),
+          );
+          // Navigate based on the registration flow
+          // The backend will return reg_status: 'reg_started'
+          // This means the user needs to complete Aadhar verification next
+        }
+      } else {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+                content: Text(response['message'] ?? 'Registration failed')),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: ${e.toString()}')),
+        );
+      }
+    }
+  }
+
+  bool _validateFields() {
+    // Check if form is valid
+    if (!_formKey.currentState!.validate()) return false;
+
+    // Birthday validation
+    if (_birthday == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please select your birthday')),
+      );
+      return false;
+    }
+
+    // Age validation (18+)
+    final age = DateTime.now().difference(_birthday!).inDays / 365;
+    if (age < 18) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('You must be 18 or older to register')),
+      );
+      return false;
+    }
+
+    // Gender validation
+    if (_gender == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please select your gender')),
+      );
+      return false;
+    }
+
+    // Terms validation
+    if (!_agreeToTerms) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please accept the terms and conditions')),
+      );
+      return false;
+    }
+
+    // City validation
+    if (_city == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please select your city')),
+      );
+      return false;
+    }
+
+    return true;
   }
 
   @override

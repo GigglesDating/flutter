@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:carousel_slider/carousel_slider.dart';
-import 'package:flutter_frontend/screens/waitlist/login.dart';
-import 'package:flutter_frontend/screens/events/event_details_screen.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'dart:math' show pi;
+
+import '../barrel.dart';
 
 class WaitlistScreen extends StatefulWidget {
   const WaitlistScreen({super.key});
@@ -11,7 +13,13 @@ class WaitlistScreen extends StatefulWidget {
   State<WaitlistScreen> createState() => _WaitlistScreenState();
 }
 
-class _WaitlistScreenState extends State<WaitlistScreen> {
+class _WaitlistScreenState extends State<WaitlistScreen>
+    with SingleTickerProviderStateMixin {
+  int? _selectedEventIndex;
+  late AnimationController _expandController;
+  late Animation<double> _rotationAnimation;
+  late Animation<double> _fadeAnimation;
+
   @override
   void initState() {
     super.initState();
@@ -21,10 +29,35 @@ class _WaitlistScreenState extends State<WaitlistScreen> {
       ),
     );
     _precacheImages();
+    _expandController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 800),
+    );
+
+    _rotationAnimation = Tween<double>(
+      begin: 0,
+      end: pi,
+    ).animate(
+      CurvedAnimation(
+        parent: _expandController,
+        curve: Curves.easeInOut,
+      ),
+    );
+
+    _fadeAnimation = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(
+      CurvedAnimation(
+        parent: _expandController,
+        curve: const Interval(0.5, 1.0, curve: Curves.easeOut),
+      ),
+    );
   }
 
   @override
   void dispose() {
+    _expandController.dispose();
     super.dispose();
   }
 
@@ -280,9 +313,26 @@ class _WaitlistScreenState extends State<WaitlistScreen> {
     );
   }
 
+  void _handleEventRegistration(int index) {
+    try {
+      HapticFeedback.mediumImpact();
+      setState(() {
+        _selectedEventIndex = index;
+      });
+      _expandController.forward();
+    } catch (e) {
+      setState(() {
+        _selectedEventIndex = index;
+      });
+      print('Animation error: $e');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
+    final padding = MediaQuery.of(context).padding;
+    final isIOS = Theme.of(context).platform == TargetPlatform.iOS;
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
 
     return AnnotatedRegion<SystemUiOverlayStyle>(
@@ -344,20 +394,32 @@ class _WaitlistScreenState extends State<WaitlistScreen> {
                                 ),
                               ),
                               SizedBox(height: size.height * 0.02),
-                              Container(
-                                width: size.width * 0.12,
-                                height: size.width * 0.12,
-                                decoration: BoxDecoration(
-                                  shape: BoxShape.circle,
-                                  color: isDarkMode
-                                      ? Colors.white.withAlpha(25)
-                                      : Colors.black.withAlpha(25),
-                                ),
-                                child: Icon(
-                                  Icons.play_arrow_rounded,
-                                  color:
-                                      isDarkMode ? Colors.white : Colors.black,
-                                  size: size.width * 0.06,
+                              GestureDetector(
+                                onTap: () {
+                                  HapticFeedback.mediumImpact();
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => WaitlistVideo(),
+                                    ),
+                                  );
+                                },
+                                child: Container(
+                                  width: size.width * 0.12,
+                                  height: size.width * 0.12,
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    color: isDarkMode
+                                        ? Colors.white.withAlpha(25)
+                                        : Colors.black.withAlpha(25),
+                                  ),
+                                  child: Icon(
+                                    Icons.play_arrow_rounded,
+                                    color: isDarkMode
+                                        ? Colors.white
+                                        : Colors.black,
+                                    size: size.width * 0.06,
+                                  ),
                                 ),
                               ),
                             ],
@@ -370,12 +432,12 @@ class _WaitlistScreenState extends State<WaitlistScreen> {
                             icon: Icon(
                               Icons.menu,
                               color: isDarkMode
-                                  ? const Color.fromARGB(255, 193, 35, 35)
-                                  : const Color.fromARGB(255, 238, 58, 58),
+                                  ? const Color.fromARGB(255, 255, 255, 255)
+                                  : const Color.fromARGB(255, 255, 255, 255),
                               size: size.width * 0.06,
                             ),
                             onPressed: () {
-                              HapticFeedback.mediumImpact();
+                              //         HapticFeedback.mediumImpact();
                               _showBottomMenu();
                             },
                           ),
@@ -388,91 +450,105 @@ class _WaitlistScreenState extends State<WaitlistScreen> {
             ),
             Expanded(
               child: Container(
-                transform:
-                    Matrix4.translationValues(0, -size.height * 0.025, 0),
+                transform: Matrix4.translationValues(
+                    0,
+                    _selectedEventIndex != null
+                        ? -size.height * 0.02 // Height for expanded view
+                        : -size.height *
+                            0.045, // Original height for waitlist view
+                    0),
                 decoration: BoxDecoration(
                   color: isDarkMode ? const Color(0xFF121212) : Colors.white,
                   borderRadius: const BorderRadius.vertical(
                     top: Radius.circular(30),
                   ),
                 ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Padding(
-                      padding: EdgeInsets.fromLTRB(
-                        size.width * 0.06,
-                        size.height * 0.01,
-                        size.width * 0.06,
-                        size.height * 0.01,
-                      ),
-                      child: Column(
+                child: _selectedEventIndex != null
+                    ? _buildExpandedEventView(events[_selectedEventIndex!])
+                    : Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
-                            'While you are waiting',
-                            style: TextStyle(
-                              fontSize: size.width * 0.07,
-                              fontWeight: FontWeight.w600,
-                              color: isDarkMode ? Colors.white : Colors.black,
-                              height: 1.2,
+                          Padding(
+                            padding: EdgeInsets.fromLTRB(
+                              size.width * 0.06,
+                              size.height * 0.01,
+                              size.width * 0.06,
+                              padding.bottom +
+                                  (isIOS
+                                      ? size.width * 0.08
+                                      : size.width * 0.06),
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'While you are waiting',
+                                  style: TextStyle(
+                                    fontSize: size.width * 0.07,
+                                    fontWeight: FontWeight.w600,
+                                    color: isDarkMode
+                                        ? Colors.white
+                                        : Colors.black,
+                                    height: 1.2,
+                                  ),
+                                ),
+                                SizedBox(height: size.height * 0.01),
+                                Text(
+                                  'Finding the one, but also the fun!',
+                                  style: TextStyle(
+                                    fontSize: size.width * 0.04,
+                                    fontWeight: FontWeight.w500,
+                                    color: isDarkMode
+                                        ? Colors.white
+                                        : Colors.black,
+                                    height: 1.2,
+                                  ),
+                                ),
+                                SizedBox(height: size.height * 0.015),
+                                Text(
+                                  'Participate in one of our free online / offline fun competitions,'
+                                  ' if you win, you can skip the waitlist instantly.',
+                                  textAlign: TextAlign.justify,
+                                  style: TextStyle(
+                                    fontSize: size.width * 0.035,
+                                    color: isDarkMode
+                                        ? Colors.white70
+                                        : Colors.grey[600],
+                                    height: 1.4,
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
-                          SizedBox(height: size.height * 0.01),
-                          Text(
-                            'Finding the one, but also the fun!',
-                            style: TextStyle(
-                              fontSize: size.width * 0.04,
-                              fontWeight: FontWeight.w500,
-                              color: isDarkMode ? Colors.white : Colors.black,
-                              height: 1.2,
-                            ),
-                          ),
-                          SizedBox(height: size.height * 0.015),
-                          Text(
-                            'Participate in one of our free online / offline fun competitions,'
-                            ' if you win, you can skip the waitlist instantly.',
-                            textAlign: TextAlign.justify,
-                            style: TextStyle(
-                              fontSize: size.width * 0.035,
-                              color: isDarkMode
-                                  ? Colors.white70
-                                  : Colors.grey[600],
-                              height: 1.4,
+                          SizedBox(
+                            height: size.height *
+                                0.50, // Maintain original height for carousel
+                            child: CarouselSlider.builder(
+                              itemCount: events.length,
+                              options: CarouselOptions(
+                                height: size.height * 0.50,
+                                viewportFraction: 0.75,
+                                enlargeCenterPage: true,
+                                enableInfiniteScroll: true,
+                              ),
+                              itemBuilder: (context, index, realIndex) {
+                                final event = events[index];
+                                return EventCard(
+                                  event: event,
+                                  index: index,
+                                  onLike: () {
+                                    setState(() {
+                                      event['isLiked'] = !event['isLiked'];
+                                    });
+                                    HapticFeedback.selectionClick();
+                                  },
+                                  onRegister: _handleEventRegistration,
+                                );
+                              },
                             ),
                           ),
                         ],
                       ),
-                    ),
-                    SizedBox(
-                      height: size.height * 0.50,
-                      child: CarouselSlider.builder(
-                        itemCount: events.length,
-                        options: CarouselOptions(
-                          height: size.height * 0.50,
-                          viewportFraction: 0.75,
-                          enlargeCenterPage: true,
-                          enableInfiniteScroll: true,
-                        ),
-                        itemBuilder: (context, index, realIndex) {
-                          final event = events[index];
-                          return EventCard(
-                            event: event,
-                            onLike: () {
-                              setState(() {
-                                event['isLiked'] = !event['isLiked'];
-                              });
-                              HapticFeedback.selectionClick();
-                            },
-                            onRegister: () {
-                              HapticFeedback.mediumImpact();
-                            },
-                          );
-                        },
-                      ),
-                    ),
-                  ],
-                ),
               ),
             ),
           ],
@@ -480,18 +556,570 @@ class _WaitlistScreenState extends State<WaitlistScreen> {
       ),
     );
   }
+
+  Widget _buildExpandedEventView(Map<String, dynamic> event) {
+    final size = MediaQuery.of(context).size;
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+
+    if (event['image'] == null) {
+      return Container(
+        decoration: BoxDecoration(
+          color: isDarkMode ? Colors.grey[900] : Colors.grey[200],
+          borderRadius: BorderRadius.vertical(
+            top: Radius.circular(size.width * 0.08),
+          ),
+        ),
+      );
+    }
+
+    return AnimatedBuilder(
+      animation: _expandController,
+      builder: (context, child) {
+        if (_rotationAnimation.value < pi / 2) {
+          // First half of flip (original card)
+          return Transform(
+            alignment: Alignment.center,
+            transform: Matrix4.identity()
+              ..setEntry(3, 2, 0.001)
+              ..rotateY(_rotationAnimation.value),
+            child: Transform.translate(
+              offset:
+                  Offset(size.width * (_rotationAnimation.value / pi) * 0.2, 0),
+              child: Container(
+                decoration: BoxDecoration(
+                  image: DecorationImage(
+                    image: AssetImage(event['image']),
+                    fit: BoxFit.cover,
+                  ),
+                  borderRadius: BorderRadius.vertical(
+                    top: Radius.circular(size.width * 0.08),
+                  ),
+                ),
+                child: Container(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.vertical(
+                      top: Radius.circular(size.width * 0.08),
+                    ),
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [
+                        Colors.black.withAlpha(200),
+                        Colors.black.withAlpha(230),
+                      ],
+                    ),
+                  ),
+                  child: Padding(
+                    padding: EdgeInsets.fromLTRB(
+                      size.width * 0.06,
+                      size.width * 0.15, // Top padding for content
+                      size.width * 0.06,
+                      size.width * 0.06,
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Header with Entries and Event Type
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Entries Left',
+                                  style: TextStyle(
+                                    color: Colors.white60,
+                                    fontSize: size.width * 0.035,
+                                  ),
+                                ),
+                                Text(
+                                  '${event['entries'] ?? '14/20'}',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: size.width * 0.04,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.end,
+                              children: [
+                                Text(
+                                  event['type'] ?? 'Talk Show',
+                                  style: TextStyle(
+                                    color: Colors.white60,
+                                    fontSize: size.width * 0.035,
+                                  ),
+                                ),
+                                Text(
+                                  event['title'] ?? 'The Exchange',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: size.width * 0.04,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+
+                        SizedBox(height: size.height * 0.08),
+
+                        // Event Details (Date, Time, Venue)
+                        _buildDetailRow('Date', event['date'] ?? '25th August'),
+                        SizedBox(height: size.height * 0.08),
+                        _buildDetailRow('Time', event['time'] ?? '05:00 PM'),
+                        SizedBox(height: size.height * 0.08),
+
+                        // Clickable Venue Row
+                        GestureDetector(
+                          onTap: () async {
+                            final Uri url = Uri.parse(
+                                'https://www.google.com/maps/search/?api=1&query=${event['venue'] ?? 'Koramangala'}');
+                            if (await canLaunchUrl(url)) {
+                              await launchUrl(url,
+                                  mode: LaunchMode.externalApplication);
+                            }
+                          },
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                'Venue',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: size.width * 0.045,
+                                ),
+                              ),
+                              Row(
+                                children: [
+                                  Text(
+                                    event['venue'] ?? 'Koramangala',
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: size.width * 0.045,
+                                    ),
+                                  ),
+                                  SizedBox(width: size.width * 0.02),
+                                  Icon(
+                                    Icons.location_on_outlined,
+                                    color: Colors.white,
+                                    size: size.width * 0.05,
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+
+                        SizedBox(height: size.height * 0.04),
+
+                        // Description
+                        Text(
+                          event['description'] ??
+                              'Lorem ipsum dolor sit amet...',
+                          style: TextStyle(
+                            color: Colors.white70,
+                            fontSize: size.width * 0.035,
+                            height: 1.5,
+                          ),
+                        ),
+
+                        const Spacer(),
+
+                        // Bottom Action Bar
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            // Unregister Button
+                            Container(
+                              width: size.width * 0.70,
+                              height: size.height * 0.065,
+                              decoration: BoxDecoration(
+                                color: Colors.white24,
+                                borderRadius:
+                                    BorderRadius.circular(size.width * 0.13),
+                              ),
+                              child: Material(
+                                color: Colors.transparent,
+                                child: InkWell(
+                                  onTap: () {
+                                    HapticFeedback.mediumImpact();
+                                    _handleUnregister();
+                                  },
+                                  borderRadius:
+                                      BorderRadius.circular(size.width * 0.13),
+                                  child: Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Padding(
+                                        padding: EdgeInsets.only(
+                                            left: size.width * 0.06),
+                                        child: Text(
+                                          'Unregister',
+                                          style: TextStyle(
+                                            color: Colors.white,
+                                            fontSize: size.width * 0.042,
+                                            fontWeight: FontWeight.w500,
+                                          ),
+                                        ),
+                                      ),
+                                      Container(
+                                        width: size.height * 0.055,
+                                        height: size.height * 0.055,
+                                        decoration: const BoxDecoration(
+                                          color: Colors.white,
+                                          shape: BoxShape.circle,
+                                        ),
+                                        child: const Icon(
+                                          Icons.arrow_forward,
+                                          color: Colors.black,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+                            // Like Button with Count
+                            Column(
+                              children: [
+                                GestureDetector(
+                                  onTap: () {
+                                    setState(() {
+                                      event['isLiked'] =
+                                          !(event['isLiked'] ?? false);
+                                    });
+                                    HapticFeedback.selectionClick();
+                                  },
+                                  child: Icon(
+                                    event['isLiked'] ?? false
+                                        ? Icons.favorite
+                                        : Icons.favorite_border,
+                                    color: event['isLiked'] ?? false
+                                        ? Colors.red
+                                        : Colors.white,
+                                    size: size.width * 0.08,
+                                  ),
+                                ),
+                                SizedBox(height: size.width * 0.01),
+                                Text(
+                                  '${event['likes'] ?? 312}',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: size.width * 0.035,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          );
+        } else {
+          // Second half of flip (expanded view)
+          return Transform(
+            alignment: Alignment.center,
+            transform: Matrix4.identity()
+              ..setEntry(3, 2, 0.001)
+              ..rotateY(pi - _rotationAnimation.value),
+            child: FadeTransition(
+              opacity: _fadeAnimation,
+              child: Container(
+                decoration: BoxDecoration(
+                  image: DecorationImage(
+                    image: AssetImage(event['image']),
+                    fit: BoxFit.cover,
+                  ),
+                  borderRadius: BorderRadius.vertical(
+                    top: Radius.circular(size.width * 0.08),
+                  ),
+                ),
+                child: Container(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.vertical(
+                      top: Radius.circular(size.width * 0.08),
+                    ),
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [
+                        Colors.black.withAlpha(200),
+                        Colors.black.withAlpha(230),
+                      ],
+                    ),
+                  ),
+                  child: Padding(
+                    padding: EdgeInsets.all(size.width * 0.06),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Header with Entries and Event Type
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Entries Left',
+                                  style: TextStyle(
+                                    color: Colors.white60,
+                                    fontSize: size.width * 0.035,
+                                  ),
+                                ),
+                                Text(
+                                  '${event['entries'] ?? '14/20'}',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: size.width * 0.04,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.end,
+                              children: [
+                                Text(
+                                  event['type'] ?? 'Talk Show',
+                                  style: TextStyle(
+                                    color: Colors.white60,
+                                    fontSize: size.width * 0.035,
+                                  ),
+                                ),
+                                Text(
+                                  event['title'] ?? 'The Exchange',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: size.width * 0.04,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+
+                        SizedBox(height: size.height * 0.08),
+
+                        // Event Details (Date, Time, Venue)
+                        _buildDetailRow('Date', event['date'] ?? '25th August'),
+                        SizedBox(height: size.height * 0.08),
+                        _buildDetailRow('Time', event['time'] ?? '05:00 PM'),
+                        SizedBox(height: size.height * 0.08),
+
+                        // Clickable Venue Row
+                        GestureDetector(
+                          onTap: () async {
+                            final Uri url = Uri.parse(
+                                'https://www.google.com/maps/search/?api=1&query=${event['venue'] ?? 'Koramangala'}');
+                            if (await canLaunchUrl(url)) {
+                              await launchUrl(url,
+                                  mode: LaunchMode.externalApplication);
+                            }
+                          },
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                'Venue',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: size.width * 0.045,
+                                ),
+                              ),
+                              Row(
+                                children: [
+                                  Text(
+                                    event['venue'] ?? 'Koramangala',
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: size.width * 0.045,
+                                    ),
+                                  ),
+                                  SizedBox(width: size.width * 0.02),
+                                  Icon(
+                                    Icons.location_on_outlined,
+                                    color: Colors.white,
+                                    size: size.width * 0.05,
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+
+                        SizedBox(height: size.height * 0.04),
+
+                        // Description
+                        Text(
+                          event['description'] ??
+                              'Lorem ipsum dolor sit amet...',
+                          style: TextStyle(
+                            color: Colors.white70,
+                            fontSize: size.width * 0.035,
+                            height: 1.5,
+                          ),
+                        ),
+
+                        const Spacer(),
+
+                        // Bottom Action Bar
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            // Unregister Button
+                            Container(
+                              width: size.width * 0.70,
+                              height: size.height * 0.065,
+                              decoration: BoxDecoration(
+                                color: Colors.white24,
+                                borderRadius:
+                                    BorderRadius.circular(size.width * 0.13),
+                              ),
+                              child: Material(
+                                color: Colors.transparent,
+                                child: InkWell(
+                                  onTap: () {
+                                    HapticFeedback.mediumImpact();
+                                    _handleUnregister();
+                                  },
+                                  borderRadius:
+                                      BorderRadius.circular(size.width * 0.13),
+                                  child: Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Padding(
+                                        padding: EdgeInsets.only(
+                                            left: size.width * 0.06),
+                                        child: Text(
+                                          'Unregister',
+                                          style: TextStyle(
+                                            color: Colors.white,
+                                            fontSize: size.width * 0.042,
+                                            fontWeight: FontWeight.w500,
+                                          ),
+                                        ),
+                                      ),
+                                      Container(
+                                        width: size.height * 0.055,
+                                        height: size.height * 0.055,
+                                        decoration: const BoxDecoration(
+                                          color: Colors.white,
+                                          shape: BoxShape.circle,
+                                        ),
+                                        child: const Icon(
+                                          Icons.arrow_forward,
+                                          color: Colors.black,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+                            // Like Button with Count
+                            Column(
+                              children: [
+                                GestureDetector(
+                                  onTap: () {
+                                    setState(() {
+                                      event['isLiked'] =
+                                          !(event['isLiked'] ?? false);
+                                    });
+                                    HapticFeedback.selectionClick();
+                                  },
+                                  child: Icon(
+                                    event['isLiked'] ?? false
+                                        ? Icons.favorite
+                                        : Icons.favorite_border,
+                                    color: event['isLiked'] ?? false
+                                        ? Colors.red
+                                        : Colors.white,
+                                    size: size.width * 0.08,
+                                  ),
+                                ),
+                                SizedBox(height: size.width * 0.01),
+                                Text(
+                                  '${event['likes'] ?? 312}',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: size.width * 0.035,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          );
+        }
+      },
+    );
+  }
+
+  // Helper method for detail rows
+  Widget _buildDetailRow(String label, String value) {
+    final size = MediaQuery.of(context).size;
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(
+          label,
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: size.width * 0.045,
+          ),
+        ),
+        Text(
+          value,
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: size.width * 0.045,
+          ),
+        ),
+      ],
+    );
+  }
+
+  // Add this method to handle going back to the waitlist view
+  void _handleUnregister() {
+    if (!mounted) return;
+
+    HapticFeedback.mediumImpact();
+    _expandController.reverse().then((_) {
+      if (!mounted) return;
+      setState(() {
+        _selectedEventIndex = null;
+      });
+    });
+  }
 }
 
 class EventCard extends StatelessWidget {
   final Map<String, dynamic> event;
   final VoidCallback onLike;
-  final VoidCallback onRegister;
+  final Function(int) onRegister;
+  final int index;
 
   const EventCard({
     super.key,
     required this.event,
     required this.onLike,
     required this.onRegister,
+    required this.index,
   });
 
   @override
@@ -714,12 +1342,7 @@ class EventCard extends StatelessWidget {
         child: InkWell(
           onTap: () {
             HapticFeedback.mediumImpact();
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => EventDetailsScreen(event: event),
-              ),
-            );
+            onRegister(index);
           },
           borderRadius: BorderRadius.circular(size.width * 0.06),
           child: Padding(

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'waitlist/waitlist.dart';
+import 'barrel.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -40,7 +40,7 @@ class _SplashScreenState extends State<SplashScreen>
         transitionDuration: const Duration(milliseconds: 800),
         pageBuilder: (context, animation, secondaryAnimation) => FadeTransition(
           opacity: animation,
-          child: const WaitlistScreen(),
+          child: WaitlistVideo(),
         ),
       ),
     );

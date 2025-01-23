@@ -1,13 +1,10 @@
 import 'package:flutter_frontend/network/auth_provider.dart';
-import 'package:flutter_frontend/screens/waitlist/intro_video.dart';
-import 'package:flutter_frontend/screens/waitlist/kycScreens/aadhar_status_screen.dart';
-import 'package:flutter_frontend/screens/waitlist/profileCreationScreens/profile_creation1.dart';
-import 'package:flutter_frontend/screens/waitlist/profileCreationScreens/profile_creation2.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'dart:async';
 import 'package:provider/provider.dart';
-import 'package:flutter_frontend/screens/waitlist/waitlist.dart';
+
+import '../barrel.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});

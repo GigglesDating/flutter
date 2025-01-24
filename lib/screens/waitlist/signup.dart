@@ -510,6 +510,12 @@ class _SignupScreenState extends State<SignupScreen> {
         MaterialPageRoute(builder: (context) => const LoginScreen()),
       );
       return;
+    } else {
+      Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) => AadharStatusScreen(),
+          ));
     }
 
     if (!_validateFields()) return;

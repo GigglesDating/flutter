@@ -30,7 +30,7 @@ class ThinkProvider {
     });
   }
 
-  // Signup user
+  // Initial signup with user details
   Future<Map<String, dynamic>> signup({
     required String uuid,
     required String firstName,
@@ -50,6 +50,104 @@ class ThinkProvider {
       'gender': gender,
       'city': city,
       'consent': consent,
+    });
+  }
+
+  // Profile Creation Step 1
+  Future<Map<String, dynamic>> pC1Submit({
+    required String uuid,
+    required String firstName,
+    required String lastName,
+    required String dob,
+    required String email,
+    required String gender,
+    required String city,
+    required bool consent,
+  }) async {
+    return _callFunction('p_c1_submit', {
+      'uuid': uuid,
+      'first_name': firstName,
+      'last_name': lastName,
+      'dob': dob,
+      'email': email,
+      'gender': gender,
+      'city': city,
+      'consent': consent,
+    });
+  }
+
+  // Profile Creation Step 2
+  Future<Map<String, dynamic>> pC2Submit({
+    required String uuid,
+    required String bio,
+    required String nickname,
+    required String username,
+    required List<String> photos,
+  }) async {
+    return _callFunction('p_c2_submit', {
+      'uuid': uuid,
+      'bio': bio,
+      'nickname': nickname,
+      'username': username,
+      'photos': photos,
+    });
+  }
+
+  // Profile Creation Step 3
+  Future<Map<String, dynamic>> pC3Submit({
+    required String uuid,
+    required List<Map<String, dynamic>> selectedInterests,
+  }) async {
+    return _callFunction('p_c3_submit', {
+      'uuid': uuid,
+      'selected_interests': selectedInterests,
+    });
+  }
+
+  // Get all interests from D1BackendDb
+  Future<Map<String, dynamic>> getInterests() async {
+    return _callFunction('get_interests', {});
+  }
+
+  // Add a custom interest
+  Future<Map<String, dynamic>> addCustomInterest({
+    required String uuid,
+    required String interestName,
+  }) async {
+    return _callFunction('add_custom_interest', {
+      'uuid': uuid,
+      'interest_name': interestName,
+    });
+  }
+
+  // Verify OTP
+  Future<Map<String, dynamic>> verifyOtp({
+    required String phone,
+    required String otp,
+  }) async {
+    return _callFunction('verify_otp', {
+      'phone': phone,
+      'otp': otp,
+    });
+  }
+
+  // Get User Profile
+  Future<Map<String, dynamic>> getUserProfile({
+    required String uuid,
+  }) async {
+    return _callFunction('get_user_profile', {
+      'uuid': uuid,
+    });
+  }
+
+  // Update User Profile
+  Future<Map<String, dynamic>> updateUserProfile({
+    required String uuid,
+    required Map<String, dynamic> data,
+  }) async {
+    return _callFunction('update_user_profile', {
+      'uuid': uuid,
+      'data': data,
     });
   }
 

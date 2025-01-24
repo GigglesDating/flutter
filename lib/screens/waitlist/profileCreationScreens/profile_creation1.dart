@@ -156,7 +156,7 @@ class _ProfileCreation1State extends State<ProfileCreation1> {
           ),
         ),
         // Required indicator
-        if (index < 3)
+        if (index < 2)
           Positioned(
             bottom: 8,
             left: 8,
@@ -212,9 +212,9 @@ class _ProfileCreation1State extends State<ProfileCreation1> {
             Icon(
               Icons.add_photo_alternate_outlined,
               size: 30,
-              color: index < 3 ? Colors.black : Colors.grey,
+              color: index < 2 ? Colors.black : Colors.grey,
             ),
-            if (index < 3) ...[
+            if (index < 2) ...[
               const SizedBox(height: 8),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -457,7 +457,7 @@ class _ProfileCreation1State extends State<ProfileCreation1> {
                       onPressed: () {
                         if (_profileImage != null &&
                             _bioController.text.isNotEmpty &&
-                            _mediaFiles.length >= 3 &&
+                            _mediaFiles.length >= 2 &&
                             _orientation != null) {
                           HapticFeedback.mediumImpact();
                           final profileData = {
@@ -477,7 +477,7 @@ class _ProfileCreation1State extends State<ProfileCreation1> {
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(
                               content: Text(
-                                  'Please fill in all required fields and add at least 3 photos'),
+                                  'Please fill in all required fields and add at least 2 photos'),
                             ),
                           );
                         }

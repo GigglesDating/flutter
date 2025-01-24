@@ -165,7 +165,6 @@ class ThinkProvider {
           ...data,
         }),
       );
-
       return jsonDecode(response.body);
     } catch (e) {
       throw Exception('Failed to call function $function: $e');

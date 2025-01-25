@@ -22,6 +22,7 @@ export 'waitlist/waitlist_video.dart';
 export 'waitlist/waitlist.dart';
 
 export 'waitlist/kycScreens/aadhar_status_screen.dart';
+export 'waitlist/kycScreens/aadhar_verification.dart';
 
 export 'waitlist/profileCreationScreens/profile_creation1.dart';
 export 'waitlist/profileCreationScreens/profile_creation2.dart';

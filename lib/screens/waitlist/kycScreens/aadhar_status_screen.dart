@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_frontend/screens/barrel.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-
-import 'dart:async';
 import 'package:flutter_svg/svg.dart';
+import 'package:flutter_frontend/screens/barrel.dart';
 
+enum AadharStatus { verified, failed, inReview }
 
 class AadharStatusScreen extends StatefulWidget {
   const AadharStatusScreen({super.key});
@@ -14,175 +14,195 @@ class AadharStatusScreen extends StatefulWidget {
 }
 
 class _AadharStatusScreenState extends State<AadharStatusScreen> {
+  late AadharStatus _status;
+  bool _isLoading = true;
+
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      body: Center(
-        child: ElevatedButton(
-          onPressed: () {
-            Navigator.pushReplacement(context,
-                MaterialPageRoute(builder: (context) => ProfileCreation1()));
-          },
-          child: const Text('Launch HyperVerge SDK'),
+  void initState() {
+    super.initState();
+    _checkAadharStatus();
+  }
+
+  Future<void> _checkAadharStatus() async {
+    // Simulating API call delay
+    await Future.delayed(const Duration(seconds: 1));
+
+    // For testing different scenarios, change this value:
+    // AadharStatus.verified
+    // AadharStatus.failed
+    // AadharStatus.inReview
+    setState(() {
+      _status = AadharStatus.inReview; // Change this to test different states
+      _isLoading = false;
+    });
+
+    // Later, this will be replaced with actual SharedPreferences check:
+    // final prefs = await SharedPreferences.getInstance();
+    // final status = prefs.getString('aadhar_status');
+    // setState(() {
+    //   _status = _getStatusFromString(status);
+    //   _isLoading = false;
+    // });
+  }
+
+  // This will be useful later when reading from SharedPreferences
+  AadharStatus _getStatusFromString(String? status) {
+    switch (status) {
+      case 'verified':
+        return AadharStatus.verified;
+      case 'failed':
+        return AadharStatus.failed;
+      case 'in_review':
+        return AadharStatus.inReview;
+      default:
+        return AadharStatus.failed;
+    }
+  }
+
+  Widget _buildStatusIcon(BuildContext context) {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    final size = MediaQuery.of(context).size;
+    final iconSize = size.width * 0.25; // 25% of screen width
+
+    switch (_status) {
+      case AadharStatus.verified:
+        return Icon(
+          Icons.check_circle_outline,
+          size: iconSize,
+          color: Colors.green,
+        );
+      case AadharStatus.failed:
+        return Icon(
+          Icons.error_outline,
+          size: iconSize,
+          color: Colors.red,
+        );
+      case AadharStatus.inReview:
+        return Icon(
+          Icons.pending_outlined,
+          size: iconSize,
+          color: Colors.orange,
+        );
+    }
+  }
+
+  String _getStatusMessage() {
+    switch (_status) {
+      case AadharStatus.verified:
+        return 'Your identity has been verified! Go ahead and personalize your profile.';
+      case AadharStatus.failed:
+        return 'Your Aadhar verification failed. Please try again.';
+      case AadharStatus.inReview:
+        return 'Your Aadhar verification needs manual review. Our support team will contact you soon.';
+    }
+  }
+
+  Widget _buildActionButton(BuildContext context) {
+    final size = MediaQuery.of(context).size;
+    final isIOS = Theme.of(context).platform == TargetPlatform.iOS;
+
+    return Padding(
+      padding: EdgeInsets.symmetric(
+        horizontal: size.width * 0.1, // 10% padding on each side
+      ),
+      child: ElevatedButton(
+        onPressed: () {
+          switch (_status) {
+            case AadharStatus.verified:
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(
+                    builder: (context) => const ProfileCreation1()),
+              );
+              break;
+            case AadharStatus.failed:
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(
+                    builder: (context) => const AadharVerificationScreen()),
+              );
+              break;
+            case AadharStatus.inReview:
+              // TODO: Implement support contact functionality
+              break;
+          }
+        },
+        style: ElevatedButton.styleFrom(
+          backgroundColor: _status == AadharStatus.verified
+              ? Colors.green
+              : _status == AadharStatus.failed
+                  ? Colors.red
+                  : Colors.orange,
+          foregroundColor: Colors.white,
+          padding: EdgeInsets.symmetric(
+            vertical: size.height * 0.02,
+            horizontal: size.width * 0.08,
+          ),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(isIOS ? 8 : 4),
+          ),
+        ),
+        child: Text(
+          _status == AadharStatus.verified
+              ? 'Personalize Profile'
+              : _status == AadharStatus.failed
+                  ? 'Retry Verification'
+                  : 'Contact Support',
+          style: TextStyle(
+            fontSize: size.width * 0.04,
+            fontWeight: FontWeight.bold,
+          ),
         ),
       ),
     );
   }
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-class AadharVerificationResultPage extends StatefulWidget {
-  String resultStatus;
-  String resultDescription;
-  String resultImageUrl;
-  String resultButtonText;
-
-  VoidCallback onPressed;
-
-  AadharVerificationResultPage({
-    super.key,
-    required this.resultStatus,
-    required this.resultDescription,
-    required this.resultImageUrl,
-    required this.resultButtonText,
-    required this.onPressed,
-  });
-
-  @override
-  State<AadharVerificationResultPage> createState() =>
-      _AadharVerificationResultPage();
-}
-
-class _AadharVerificationResultPage
-    extends State<AadharVerificationResultPage> {
-  @override
-  void initState() {
-    super.initState();
-    check();
-  }
-
-  check() async {
-    if (widget.resultStatus == 'Successful') {
-      await SharedPref.digiScreenSave();
-      // final prefs = await SharedPreferences.getInstance();
-      // await prefs.setString('lastScreen','digiCheck');
-    }
-  }
-
-  @override
-  void dispose() {
-    super.dispose();
-  }
 
   @override
   Widget build(BuildContext context) {
-    return WillPopScope(
-      onWillPop: () async {
-        return false;
-      },
-      child: Scaffold(
-        backgroundColor: widget.resultStatus == 'Successful'
-            ? Color(0xFF000000)
-            : widget.resultStatus == 'Failed'
-                ? Color(0xFF000000)
-                : Color(0xFF000000),
-        resizeToAvoidBottomInset: true,
-        body: Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          mainAxisAlignment: MainAxisAlignment.center,
-          // mainAxisSize: MainAxisSize.min,
-          children: [
-            const SizedBox(
-              height: kToolbarHeight + kToolbarHeight,
-            ),
-            Padding(
-              padding: const EdgeInsets.all(12.0),
-              child: Align(
-                alignment: Alignment.center,
-                child: SvgPicture.asset(
-                  widget.resultImageUrl,
-                  width: MediaQuery.of(context).size.width / 1.4,
-                  height: MediaQuery.of(context).size.width / 1.4,
+    final size = MediaQuery.of(context).size;
+    final padding = MediaQuery.of(context).padding;
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+
+    return Scaffold(
+      backgroundColor: isDarkMode ? Colors.black : Colors.white,
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : SafeArea(
+              child: Padding(
+                padding: EdgeInsets.fromLTRB(
+                  size.width * 0.05,
+                  padding.top,
+                  size.width * 0.05,
+                  padding.bottom,
+                ),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    _buildStatusIcon(context),
+                    SizedBox(height: size.height * 0.04),
+                    Text(
+                      'Aadhar Verification Status',
+                      style: TextStyle(
+                        fontSize: size.width * 0.06,
+                        fontWeight: FontWeight.bold,
+                        color: isDarkMode ? Colors.white : Colors.black,
+                      ),
+                    ),
+                    SizedBox(height: size.height * 0.02),
+                    Text(
+                      _getStatusMessage(),
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: size.width * 0.04,
+                        color: isDarkMode ? Colors.white70 : Colors.black87,
+                      ),
+                    ),
+                    SizedBox(height: size.height * 0.06),
+                    _buildActionButton(context),
+                  ],
                 ),
               ),
             ),
-            SizedBox(
-              height: kTextTabBarHeight,
-            ),
-            Padding(
-              padding: const EdgeInsets.all(12.0),
-              child: Text(
-                widget.resultStatus,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                    color: Color(0xFF000000),
-                    fontSize: MediaQuery.of(context).size.width * 0.1),
-              ),
-            ),
-            const SizedBox(
-              height: 8,
-            ),
-            Padding(
-              padding: const EdgeInsets.all(12.0),
-              child: Text(
-                widget.resultDescription,
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                    color: Color(0xFF000000),
-                    fontSize: MediaQuery.of(context).size.width * 0.04),
-              ),
-            ),
-            const Spacer(),
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: SizedBox(
-                  height: 48,
-                  width: MediaQuery.of(context).size.width / 2,
-                  child: ElevatedButton(
-                    style: ButtonStyle(
-                        elevation: WidgetStatePropertyAll(8),
-                        backgroundColor: WidgetStateProperty.all(
-                            widget.resultStatus == 'Successful'
-                                ? Color(0xFF000000)
-                                : widget.resultStatus == 'Failed'
-                                    ? Color(0xFF000000)
-                                    : Color(0xFF000000)),
-                        shape: WidgetStateProperty.all<RoundedRectangleBorder>(
-                            const RoundedRectangleBorder(
-                                borderRadius:
-                                    BorderRadius.all(Radius.circular(10)),
-                                side: BorderSide(color: Color(0xFF000000)))),
-                    onPressed: () {
-                      Navigator.pushReplacement(context,
-                          MaterialPageRoute(builder: (context) => ProfileCreation1()));
-                    },
-                    child: Text(
-                      widget.resultButtonText,
-                      style: TextStyle(
-                          color: Color(0xFF000000),
-                          fontSize: MediaQuery.of(context).size.width * 0.05),
-                    ),
-                  )),
-            ),
-            const SizedBox(
-              height: 16,
-            )
-          ],
-        ),
-      ),
     );
   }
 }

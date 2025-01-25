@@ -1,3 +1,5 @@
+export 'splash.dart';
+
 export 'banned.dart';
 
 export 'member/home.dart';

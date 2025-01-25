@@ -30,7 +30,7 @@ class ThinkProvider {
     });
   }
 
-  // Initial signup with user details
+  // Initial signup
   Future<Map<String, dynamic>> signup({
     required String uuid,
     required String firstName,
@@ -56,40 +56,37 @@ class ThinkProvider {
   // Profile Creation Step 1
   Future<Map<String, dynamic>> pC1Submit({
     required String uuid,
-    required String firstName,
-    required String lastName,
-    required String dob,
-    required String email,
-    required String gender,
-    required String city,
-    required bool consent,
+    required String profileImage,
+    required String bio,
+    required String mandateImage1,
+    required String mandateImage2,
+    required String genderOrientation,
+    String? optionalImage1,
+    String? optionalImage2,
   }) async {
     return _callFunction('p_c1_submit', {
       'uuid': uuid,
-      'first_name': firstName,
-      'last_name': lastName,
-      'dob': dob,
-      'email': email,
-      'gender': gender,
-      'city': city,
-      'consent': consent,
+      'profile_image': profileImage,
+      'bio': bio,
+      'mandate_image_1': mandateImage1,
+      'mandate_image_2': mandateImage2,
+      'gender_orientation': genderOrientation,
+      if (optionalImage1 != null) 'optional_image_1': optionalImage1,
+      if (optionalImage2 != null) 'optional_image_2': optionalImage2,
     });
   }
 
   // Profile Creation Step 2
   Future<Map<String, dynamic>> pC2Submit({
     required String uuid,
-    required String bio,
-    required String nickname,
-    required String username,
-    required List<String> photos,
+    required List<String>
+        genderPreference, // Can be ['men', 'women', 'non-binary', 'everyone']
+    required Map<String, dynamic> agePreference,
   }) async {
     return _callFunction('p_c2_submit', {
       'uuid': uuid,
-      'bio': bio,
-      'nickname': nickname,
-      'username': username,
-      'photos': photos,
+      'gender_preference': genderPreference,
+      'age_preference': agePreference,
     });
   }
 
@@ -120,37 +117,6 @@ class ThinkProvider {
     });
   }
 
-  // Verify OTP
-  Future<Map<String, dynamic>> verifyOtp({
-    required String phone,
-    required String otp,
-  }) async {
-    return _callFunction('verify_otp', {
-      'phone': phone,
-      'otp': otp,
-    });
-  }
-
-  // Get User Profile
-  Future<Map<String, dynamic>> getUserProfile({
-    required String uuid,
-  }) async {
-    return _callFunction('get_user_profile', {
-      'uuid': uuid,
-    });
-  }
-
-  // Update User Profile
-  Future<Map<String, dynamic>> updateUserProfile({
-    required String uuid,
-    required Map<String, dynamic> data,
-  }) async {
-    return _callFunction('update_user_profile', {
-      'uuid': uuid,
-      'data': data,
-    });
-  }
-
   // Generic function caller
   Future<Map<String, dynamic>> _callFunction(
     String function,
@@ -165,6 +131,7 @@ class ThinkProvider {
           ...data,
         }),
       );
+
       return jsonDecode(response.body);
     } catch (e) {
       throw Exception('Failed to call function $function: $e');

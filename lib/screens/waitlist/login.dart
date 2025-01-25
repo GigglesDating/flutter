@@ -123,10 +123,18 @@ class _LoginScreenState extends State<LoginScreen> {
 
           switch (_regProcess) {
             case 'New User':
+              Navigator.of(context).pushAndRemoveUntil(
+                MaterialPageRoute(
+                  builder: (context) => SignupScreen(),
+                ),
+                (route) => false,
+              );
+              break;
+
             case 'reg_started':
               Navigator.of(context).pushAndRemoveUntil(
                 MaterialPageRoute(
-                  builder: (context) => IntroVideoScreen(),
+                  builder: (context) => const AadharStatusScreen(),
                 ),
                 (route) => false,
               );
@@ -150,10 +158,19 @@ class _LoginScreenState extends State<LoginScreen> {
               );
               break;
 
-            case 'profile_created':
+            case 'profile_creation2':
               Navigator.of(context).pushAndRemoveUntil(
                 MaterialPageRoute(
                   builder: (context) => const ProfileCreation2(),
+                ),
+                (route) => false,
+              );
+              break;
+
+            case 'profile_creation3':
+              Navigator.of(context).pushAndRemoveUntil(
+                MaterialPageRoute(
+                  builder: (context) => const ProfileCreation3(),
                 ),
                 (route) => false,
               );
@@ -172,7 +189,7 @@ class _LoginScreenState extends State<LoginScreen> {
               // If reg_process is unknown, also start from beginning
               Navigator.of(context).pushAndRemoveUntil(
                 MaterialPageRoute(
-                  builder: (context) => IntroVideoScreen(),
+                  builder: (context) => SplashScreen(),
                 ),
                 (route) => false,
               );

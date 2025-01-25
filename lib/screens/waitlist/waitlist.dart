@@ -324,7 +324,6 @@ class _WaitlistScreenState extends State<WaitlistScreen>
       setState(() {
         _selectedEventIndex = index;
       });
-      print('Animation error: $e');
     }
   }
 

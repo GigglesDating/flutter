@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_frontend/screens/waitlist/profileCreationScreens/pc2.dart';
+import 'package:flutter_frontend/screens/waitlist/siup1.dart';
 import 'barrel.dart';
 
 class SplashScreen extends StatefulWidget {

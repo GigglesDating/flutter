@@ -52,20 +52,68 @@ class _AadharVerificationScreenState extends State<AadharVerificationScreen> {
     }
   }
 
-  void handleKYCResult(HyperKycResult result) {
+  void handleKYCResult(HyperKycResult result) async {
     String? status = result.status?.value;
+    final prefs = await SharedPreferences.getInstance();
+
     switch (status) {
       case 'auto_approved':
-      // workflow successful
+        await prefs.setString('aadhar_status', 'verified');
+        if (mounted) {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => const AadharStatusScreen()),
+          );
+        }
+        break;
+
       case 'auto_declined':
-      // workflow successful
+        await prefs.setString('aadhar_status', 'failed');
+        if (mounted) {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => const AadharStatusScreen()),
+          );
+        }
+        break;
+
       case 'needs_review':
-      // workflow successful
+        await prefs.setString('aadhar_status', 'inReview');
+        if (mounted) {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => const AadharStatusScreen()),
+          );
+        }
+        break;
+
       case 'error':
-      // failure
+        await prefs.setString('aadhar_status', 'error');
+        if (mounted) {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => const AadharStatusScreen()),
+          );
+        }
+        break;
+
       case 'user_cancelled':
-      // user cancelled
+        if (mounted) {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => const WaitlistScreen()),
+          );
+        }
+        break;
+
       default:
+        await prefs.setString('aadhar_status', 'failed');
+        if (mounted) {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => const AadharStatusScreen()),
+          );
+        }
     }
   }
 

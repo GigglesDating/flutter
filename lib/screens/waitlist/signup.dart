@@ -514,7 +514,7 @@ class _SignupScreenState extends State<SignupScreen> {
       Navigator.pushReplacement(
           context,
           MaterialPageRoute(
-            builder: (context) => AadharStatusScreen(),
+            builder: (context) => KycConsentScreen(),
           ));
     }
 

@@ -2,11 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'network/auth_provider.dart';
-import 'screens/splash.dart';
-import 'screens/waitlist/login.dart';
-import 'screens/waitlist/signup.dart';
-import 'screens/waitlist/waitlist.dart';
-import 'screens/waitlist/intro_video.dart';
+import 'screens/barrel.dart';
 
 // Placeholder Screen Template
 class PlaceholderScreen extends StatelessWidget {
@@ -90,7 +86,6 @@ class MyApp extends StatelessWidget {
       routes: {
         '/': (context) => const SplashScreen(),
         '/login': (context) => const LoginScreen(),
-        '/intro-video': (context) => IntroVideoScreen(),
         '/signup': (context) => const SignupScreen(),
         '/waitlist': (context) => const WaitlistScreen(),
         // Add other routes as needed

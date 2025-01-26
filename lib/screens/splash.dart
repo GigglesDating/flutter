@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_frontend/screens/waitlist/profileCreationScreens/pc2.dart';
-import 'package:flutter_frontend/screens/waitlist/siup1.dart';
 import 'barrel.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -42,7 +40,7 @@ class _SplashScreenState extends State<SplashScreen>
         transitionDuration: const Duration(milliseconds: 800),
         pageBuilder: (context, animation, secondaryAnimation) => FadeTransition(
           opacity: animation,
-          child: const ProfileCreation1(),
+          child: const AadharStatusScreen(),
         ),
       ),
     );

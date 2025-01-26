@@ -3,6 +3,8 @@ import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter_frontend/network/think.dart';
+import 'dart:convert';
 
 class SupportScreen extends StatefulWidget {
   const SupportScreen({super.key});
@@ -58,23 +60,67 @@ class _SupportScreenState extends State<SupportScreen> {
     setState(() => _isSubmitting = true);
     HapticFeedback.mediumImpact();
 
-    // TODO: Implement API call to submit ticket
-    await Future.delayed(const Duration(seconds: 2)); // Simulating API call
-
-    if (mounted) {
-      // Save ticket submission status
+    try {
+      final thinkProvider = ThinkProvider();
       final prefs = await SharedPreferences.getInstance();
-      await prefs.setBool('has_submitted_ticket', true);
+      final uuid = prefs.getString('uuid') ?? '';
+
+      // Convert images to base64 if they exist
+      String? image1;
+      String? image2;
+      if (_screenshots.isNotEmpty) {
+        image1 = base64Encode(await _screenshots[0].readAsBytes());
+        if (_screenshots.length > 1) {
+          image2 = base64Encode(await _screenshots[1].readAsBytes());
+        }
+      }
+
+      final response = await thinkProvider.submitSupportTicket(
+        uuid: uuid,
+        screenName: 'KYC_Verification',
+        supportText: _concernController.text.trim(),
+        image1: image1,
+        image2: image2,
+      );
+
+      if (!mounted) return;
+
+      if (response['status'] == 'success') {
+        // Save ticket submission status
+        await prefs.setBool('has_submitted_ticket', true);
+
+        if (!mounted) return;
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+                'Your ticket has been received. We\'ll contact you soon with a solution.'),
+            duration: Duration(seconds: 3),
+          ),
+        );
+
+        Navigator.pop(context);
+      } else {
+        if (!mounted) return;
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Failed to submit ticket. Please try again.'),
+            duration: Duration(seconds: 3),
+          ),
+        );
+        setState(() => _isSubmitting = false);
+      }
+    } catch (e) {
+      if (!mounted) return;
 
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text(
-              'Your ticket has been received. We\'ll contact you soon with a solution.'),
+          content: Text('An error occurred. Please try again.'),
           duration: Duration(seconds: 3),
         ),
       );
-
-      Navigator.pop(context); // Return to previous screen
+      setState(() => _isSubmitting = false);
     }
   }
 

@@ -6,6 +6,8 @@ import 'package:hyperkyc_flutter/hyperkyc_config.dart';
 import 'package:hyperkyc_flutter/hyperkyc_flutter.dart';
 import 'package:hyperkyc_flutter/hyperkyc_result.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter_frontend/network/think.dart';
+import 'package:logger/logger.dart';
 
 class KycConsentScreen extends StatefulWidget {
   const KycConsentScreen({super.key});
@@ -19,6 +21,7 @@ class _KycConsentScreenState extends State<KycConsentScreen>
   late final AnimationController _animationController;
   bool _isLoading = false;
   bool _isPressed = false;
+  final _logger = Logger();
 
   @override
   void initState() {
@@ -53,6 +56,29 @@ class _KycConsentScreenState extends State<KycConsentScreen>
     switch (status) {
       case 'auto_approved':
         await prefs.setString('aadhar_status', 'verified');
+
+        // Submit KYC data to backend using microtask
+        Future.microtask(() async {
+          try {
+            final uuid = prefs.getString('uuid') ?? '';
+            final kycJsonData = Map<String, dynamic>.from(result.details ?? {});
+
+            final thinkProvider = ThinkProvider();
+            final response = await thinkProvider.submitAadharInfo(
+              uuid: uuid,
+              kycData: kycJsonData,
+            );
+
+            if (response['status'] != 'success') {
+              _logger.w('KYC data submission failed: ${response['message']}');
+              // Optionally handle the failure
+            }
+          } catch (e) {
+            _logger.e('Error submitting KYC data', error: e);
+            // Optionally handle the error
+          }
+        });
+
         if (mounted) {
           Navigator.pushReplacement(
             context,

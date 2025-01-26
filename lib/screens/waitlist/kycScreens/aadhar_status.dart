@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_frontend/screens/barrel.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:async';
 
 enum AadharStatus { verified, failed, inReview, error }
 
@@ -15,38 +16,70 @@ class _AadharStatusScreenState extends State<AadharStatusScreen> {
   late AadharStatus _status;
   bool _isLoading = true;
   bool _hasContactedSupport = false;
+  Timer? _statusCheckTimer;
 
   @override
   void initState() {
     super.initState();
     _checkAadharStatus();
     _checkTicketStatus();
+    _startPeriodicStatusCheck();
+  }
+
+  void _startPeriodicStatusCheck() {
+    if (_statusCheckTimer != null) return;
+    _statusCheckTimer = Timer.periodic(const Duration(seconds: 300), (_) {
+      if (_status == AadharStatus.inReview) {
+        _checkAadharStatus();
+      } else {
+        _statusCheckTimer?.cancel();
+        _statusCheckTimer = null;
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _statusCheckTimer?.cancel();
+    super.dispose();
   }
 
   Future<void> _checkAadharStatus() async {
-    await Future.delayed(const Duration(seconds: 1));
-    final prefs = await SharedPreferences.getInstance();
-    final status = prefs.getString('aadhar_status');
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final status = prefs.getString('aadhar_status');
 
-    setState(() {
-      switch (status) {
-        case 'verified':
-          _status = AadharStatus.verified;
-          break;
-        case 'failed':
-          _status = AadharStatus.failed;
-          break;
-        case 'inReview':
-          _status = AadharStatus.inReview;
-          break;
-        case 'error':
-          _status = AadharStatus.error;
-          break;
-        default:
-          _status = AadharStatus.error;
-      }
-      _isLoading = false;
-    });
+      if (!mounted) return;
+
+      setState(() {
+        switch (status) {
+          case 'verified':
+            _status = AadharStatus.verified;
+            break;
+          case 'failed':
+            _status = AadharStatus.failed;
+            break;
+          case 'inReview':
+            _status = AadharStatus.inReview;
+            break;
+          case 'error':
+            _status = AadharStatus.error;
+            break;
+          default:
+            _status = AadharStatus.error;
+        }
+        _isLoading = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _status = AadharStatus.error;
+        _isLoading = false;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error checking status: $e')),
+      );
+    }
   }
 
   Future<void> _checkTicketStatus() async {

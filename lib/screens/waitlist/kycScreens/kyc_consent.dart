@@ -71,87 +71,69 @@ class _KycConsentScreenState extends State<KycConsentScreen>
 
             if (response['status'] != 'success') {
               _logger.w('KYC data submission failed: ${response['message']}');
-              // Optionally handle the failure
+              await prefs.setString('aadhar_status', 'error');
             }
           } catch (e) {
             _logger.e('Error submitting KYC data', error: e);
-            // Optionally handle the error
+            await prefs.setString('aadhar_status', 'error');
           }
         });
-
-        if (mounted) {
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (context) => const AadharStatusScreen()),
-          );
-        }
         break;
 
       case 'auto_declined':
         await prefs.setString('aadhar_status', 'failed');
-        if (mounted) {
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (context) => const AadharStatusScreen()),
-          );
-        }
         break;
 
       case 'needs_review':
         await prefs.setString('aadhar_status', 'inReview');
-        if (mounted) {
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (context) => const AadharStatusScreen()),
-          );
-        }
         break;
 
       case 'error':
         await prefs.setString('aadhar_status', 'error');
-        if (mounted) {
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (context) => const AadharStatusScreen()),
-          );
-        }
         break;
 
       case 'user_cancelled':
-        if (mounted) {
-          showDialog(
-            context: context,
-            builder: (context) => AlertDialog(
-              title: Text('Verification Cancelled'),
-              content: Text('Would you like to try again or contact support?'),
-              actions: [
-                TextButton(
-                  onPressed: () {
-                    Navigator.pop(context); // Close dialog
-                  },
-                  child: Text('Try Again'),
-                ),
-                TextButton(
-                  onPressed: () {
-                    // TODO: Implement support contact
-                    Navigator.pop(context);
-                  },
-                  child: Text('Contact Support'),
-                ),
-              ],
-            ),
-          );
-        }
-        break;
+        if (!mounted) return;
+        return showDialog(
+          context: context,
+          builder: (dialogContext) => AlertDialog(
+            title: const Text('Verification Cancelled'),
+            content:
+                const Text('Would you like to try again or contact support?'),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.pop(dialogContext); // Close dialog
+                },
+                child: const Text('Try Again'),
+              ),
+              TextButton(
+                onPressed: () async {
+                  await prefs.setString('aadhar_status', 'failed');
+                  if (!mounted) return;
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => const AadharStatusScreen()),
+                  );
+                },
+                child: const Text('Contact Support'),
+              ),
+            ],
+          ),
+        );
 
       default:
         await prefs.setString('aadhar_status', 'failed');
-        if (mounted) {
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (context) => const AadharStatusScreen()),
-          );
-        }
+        break;
+    }
+
+    // Navigate to status screen for all cases except user_cancelled
+    if (status != 'user_cancelled' && mounted) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const AadharStatusScreen()),
+      );
     }
   }
 

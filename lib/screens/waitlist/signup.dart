@@ -24,29 +24,11 @@ class _SignupScreenState extends State<SignupScreen> {
   String? _gender;
   String? _city;
   bool _agreeToTerms = false;
-  String? _uuid;
+  bool _isLoading = false;
 
   @override
   void initState() {
     super.initState();
-    _loadUuid();
-  }
-
-  Future<void> _loadUuid() async {
-    final prefs = await SharedPreferences.getInstance();
-    final uuid = prefs.getString('user_uuid');
-    if (uuid != null) {
-      setState(() {
-        _uuid = uuid;
-      });
-    } else {
-      if (mounted) {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => const LoginScreen()),
-        );
-      }
-    }
   }
 
   @override
@@ -107,6 +89,26 @@ class _SignupScreenState extends State<SignupScreen> {
                     ? 'assets/dark/bgs/signupbg.png'
                     : 'assets/light/bgs/signupbg.png',
                 fit: BoxFit.cover,
+              ),
+            ),
+
+            // Overlay Container
+            Positioned.fill(
+              child: Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      isDarkMode
+                          ? Colors.black.withAlpha(179)
+                          : Colors.white.withAlpha(153),
+                      isDarkMode
+                          ? Colors.black.withAlpha(204)
+                          : Colors.white.withAlpha(179),
+                    ],
+                  ),
+                ),
               ),
             ),
 
@@ -428,7 +430,7 @@ class _SignupScreenState extends State<SignupScreen> {
                                 width: size.width * 0.5,
                                 height: 48,
                                 child: ElevatedButton(
-                                  onPressed: _submitForm,
+                                  onPressed: _isLoading ? null : _handleSignup,
                                   style: ElevatedButton.styleFrom(
                                     backgroundColor: Colors.white,
                                     foregroundColor: Colors.blue,
@@ -437,13 +439,24 @@ class _SignupScreenState extends State<SignupScreen> {
                                     ),
                                     elevation: 0,
                                   ),
-                                  child: const Text(
-                                    'SUBMIT',
-                                    style: TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
+                                  child: _isLoading
+                                      ? const SizedBox(
+                                          height: 20,
+                                          width: 20,
+                                          child: CircularProgressIndicator(
+                                            valueColor:
+                                                AlwaysStoppedAnimation<Color>(
+                                                    Colors.white),
+                                            strokeWidth: 2,
+                                          ),
+                                        )
+                                      : const Text(
+                                          'SUBMIT',
+                                          style: TextStyle(
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
                                 ),
                               ),
                             ),
@@ -500,62 +513,67 @@ class _SignupScreenState extends State<SignupScreen> {
     );
   }
 
-  void _submitForm() async {
-    if (_uuid == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Session expired. Please login again.')),
-      );
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const LoginScreen()),
-      );
-      return;
-    } else {
-      Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-            builder: (context) => KycConsentScreen(),
-          ));
-    }
-
+  Future<void> _handleSignup() async {
     if (!_validateFields()) return;
 
-    try {
-      final thinkProvider = ThinkProvider();
+    setState(() => _isLoading = true);
 
+    try {
+      // Get UUID from SharedPreferences
+      final prefs = await SharedPreferences.getInstance();
+      final uuid = prefs.getString('uuid');
+
+      if (uuid == null) {
+        throw Exception('User ID not found. Please try logging in again.');
+      }
+
+      final thinkProvider = ThinkProvider();
       final response = await thinkProvider.signup(
-        uuid: _uuid!,
+        uuid: uuid,
         firstName: _firstNameController.text.trim(),
         lastName: _lastNameController.text.trim(),
-        email: _emailController.text.trim(),
         dob: DateFormat('yyyy-MM-dd').format(_birthday!),
+        email: _emailController.text.trim(),
         gender: _gender!,
         city: _city!,
         consent: _agreeToTerms,
       );
 
+      if (!mounted) return;
+
       if (response['status'] == 'success') {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Successfully registered!')),
-          );
-          // Navigate based on the registration flow
-          // The backend will return reg_status: 'reg_started'
-          // This means the user needs to complete Aadhar verification next
-        }
+        // Save registration status
+        await prefs.setString('reg_process', 'reg_started');
+
+        if (!mounted) return;
+
+        // Navigate to KYC screen
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) => const KycConsentScreen(),
+          ),
+        );
       } else {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-                content: Text(response['message'] ?? 'Registration failed')),
-          );
-        }
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content:
+                Text(response['message'] ?? 'Signup failed. Please try again.'),
+            duration: const Duration(seconds: 3),
+          ),
+        );
       }
     } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error during signup: $e'),
+          duration: const Duration(seconds: 3),
+        ),
+      );
+    } finally {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: ${e.toString()}')),
-        );
+        setState(() => _isLoading = false);
       }
     }
   }

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'profile_creation3.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter_frontend/network/think.dart';
 
 class ProfileCreation2 extends StatefulWidget {
   const ProfileCreation2({super.key});
@@ -13,6 +15,72 @@ class _ProfileCreation2State extends State<ProfileCreation2> {
   String _selectedPreference = '';
   RangeValues _ageRange = const RangeValues(18, 35);
   final List<String> _preferences = ['Men', 'Women', 'Everyone', 'Nonbinary'];
+  bool _isSubmitting = false;
+
+  Future<void> _submitPreferences() async {
+    setState(() => _isSubmitting = true);
+
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final uuid = prefs.getString('uuid') ?? '';
+
+      // Convert preference to list format as required by API
+      List<String> genderPreference;
+      switch (_selectedPreference.toLowerCase()) {
+        case 'everyone':
+          genderPreference = ['men', 'women', 'non-binary'];
+          break;
+        case 'nonbinary':
+          genderPreference = ['non-binary'];
+          break;
+        default:
+          genderPreference = [_selectedPreference.toLowerCase()];
+      }
+
+      // Format age preference
+      final agePreference = {
+        'min': _ageRange.start.round(),
+        'max': _ageRange.end.round(),
+      };
+
+      final thinkProvider = ThinkProvider();
+      final response = await thinkProvider.pC2Submit(
+        uuid: uuid,
+        genderPreference: genderPreference,
+        agePreference: agePreference,
+      );
+
+      if (response['status'] != 'success') {
+        throw Exception(response['message'] ?? 'Failed to submit preferences');
+      }
+
+      if (!mounted) return;
+
+      // Navigate to next screen
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => const ProfileCreation3(),
+          settings: RouteSettings(
+            arguments: {
+              'preference': _selectedPreference,
+              'ageRange': {
+                'start': _ageRange.start.round(),
+                'end': _ageRange.end.round(),
+              },
+            },
+          ),
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error saving preferences: $e')),
+      );
+    } finally {
+      if (mounted) setState(() => _isSubmitting = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -206,23 +274,10 @@ class _ProfileCreation2State extends State<ProfileCreation2> {
               child: SizedBox(
                 width: size.width * 0.5,
                 child: ElevatedButton(
-                  onPressed: _selectedPreference.isNotEmpty
+                  onPressed: _selectedPreference.isNotEmpty && !_isSubmitting
                       ? () {
                           HapticFeedback.mediumImpact();
-                          final profileData = {
-                            'preference': _selectedPreference,
-                            'ageRange': {
-                              'start': _ageRange.start.round(),
-                              'end': _ageRange.end.round(),
-                            },
-                          };
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => const ProfileCreation3(),
-                              settings: RouteSettings(arguments: profileData),
-                            ),
-                          );
+                          _submitPreferences();
                         }
                       : null,
                   style: ElevatedButton.styleFrom(
@@ -237,13 +292,23 @@ class _ProfileCreation2State extends State<ProfileCreation2> {
                     elevation: 2,
                     disabledBackgroundColor: Colors.grey[300],
                   ),
-                  child: const Text(
-                    'Next',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
+                  child: _isSubmitting
+                      ? const SizedBox(
+                          height: 20,
+                          width: 20,
+                          child: CircularProgressIndicator(
+                            valueColor:
+                                AlwaysStoppedAnimation<Color>(Colors.white),
+                            strokeWidth: 2,
+                          ),
+                        )
+                      : const Text(
+                          'Next',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                 ),
               ),
             ),

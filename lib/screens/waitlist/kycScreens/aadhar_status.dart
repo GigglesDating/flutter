@@ -20,6 +20,7 @@ class _AadharStatusScreenState extends State<AadharStatusScreen> {
   void initState() {
     super.initState();
     _checkAadharStatus();
+    _checkTicketStatus();
   }
 
   Future<void> _checkAadharStatus() async {
@@ -46,6 +47,16 @@ class _AadharStatusScreenState extends State<AadharStatusScreen> {
       }
       _isLoading = false;
     });
+  }
+
+  Future<void> _checkTicketStatus() async {
+    final prefs = await SharedPreferences.getInstance();
+    final hasSubmittedTicket = prefs.getBool('has_submitted_ticket') ?? false;
+    if (mounted) {
+      setState(() {
+        _hasContactedSupport = hasSubmittedTicket;
+      });
+    }
   }
 
   Widget _buildStatusIcon(BuildContext context) {
@@ -129,7 +140,7 @@ class _AadharStatusScreenState extends State<AadharStatusScreen> {
                         MaterialPageRoute(
                             builder: (context) => const SupportScreen()),
                       );
-                      setState(() => _hasContactedSupport = true);
+                      await _checkTicketStatus();
                     },
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.grey[800],

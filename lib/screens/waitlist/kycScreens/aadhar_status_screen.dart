@@ -57,7 +57,6 @@ class _AadharStatusScreenState extends State<AadharStatusScreen> {
   }
 
   Widget _buildStatusIcon(BuildContext context) {
-    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
     final size = MediaQuery.of(context).size;
     final iconSize = size.width * 0.25; // 25% of screen width
 
@@ -100,7 +99,7 @@ class _AadharStatusScreenState extends State<AadharStatusScreen> {
 
     return Padding(
       padding: EdgeInsets.symmetric(
-        horizontal: size.width * 0.1, // 10% padding on each side
+        horizontal: size.width * 0.1,
       ),
       child: ElevatedButton(
         onPressed: () {
@@ -116,11 +115,14 @@ class _AadharStatusScreenState extends State<AadharStatusScreen> {
               Navigator.pushReplacement(
                 context,
                 MaterialPageRoute(
-                    builder: (context) => const AadharStatusScreen()),
+                    builder: (context) => const KycConsentScreen()),
               );
               break;
             case AadharStatus.inReview:
-              // TODO: Implement support contact functionality
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const SupportScreen()),
+              );
               break;
           }
         },

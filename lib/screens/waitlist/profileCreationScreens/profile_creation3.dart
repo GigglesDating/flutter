@@ -124,7 +124,7 @@ class _ProfileCreation3State extends State<ProfileCreation3> {
     if (interest.isNotEmpty) {
       try {
         final prefs = await SharedPreferences.getInstance();
-        final uuid = prefs.getString('uuid') ?? '';
+        final uuid = prefs.getString('user_uuid') ?? '';
 
         // Submit custom interest to backend
         final thinkProvider = ThinkProvider();
@@ -161,7 +161,7 @@ class _ProfileCreation3State extends State<ProfileCreation3> {
   Future<void> _submitInterests() async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      final uuid = prefs.getString('uuid') ?? '';
+      final uuid = prefs.getString('user_uuid') ?? '';
 
       // Convert selected interests to required format
       final selectedInterests = _selectedDefaultInterests.map((interest) {

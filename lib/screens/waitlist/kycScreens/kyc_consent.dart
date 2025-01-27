@@ -60,7 +60,7 @@ class _KycConsentScreenState extends State<KycConsentScreen>
         // Submit KYC data to backend using microtask
         Future.microtask(() async {
           try {
-            final uuid = prefs.getString('uuid') ?? '';
+            final uuid = prefs.getString('user_uuid') ?? '';
             final kycJsonData = Map<String, dynamic>.from(result.details ?? {});
 
             final thinkProvider = ThinkProvider();

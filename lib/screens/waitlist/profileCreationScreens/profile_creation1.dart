@@ -288,7 +288,7 @@ class _ProfileCreation1State extends State<ProfileCreation1> {
   Future<void> _submitProfileData() async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      final uuid = prefs.getString('uuid') ?? '';
+      final uuid = prefs.getString('user_uuid') ?? '';
 
       // Convert images to base64
       final profileImageBase64 =

@@ -22,7 +22,7 @@ class _ProfileCreation2State extends State<ProfileCreation2> {
 
     try {
       final prefs = await SharedPreferences.getInstance();
-      final uuid = prefs.getString('uuid') ?? '';
+      final uuid = prefs.getString('user_uuid') ?? '';
 
       // Convert preference to list format as required by API
       List<String> genderPreference;

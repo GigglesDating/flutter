@@ -101,11 +101,11 @@ class _SignupScreenState extends State<SignupScreen> {
                     end: Alignment.bottomCenter,
                     colors: [
                       isDarkMode
-                          ? Colors.black.withAlpha(80)
-                          : Colors.white.withAlpha(80),
+                          ? Colors.black.withAlpha(30)
+                          : Colors.white.withAlpha(30),
                       isDarkMode
-                          ? Colors.black.withAlpha(80)
-                          : Colors.white.withAlpha(80),
+                          ? Colors.black.withAlpha(30)
+                          : Colors.white.withAlpha(30),
                     ],
                   ),
                 ),
@@ -541,7 +541,7 @@ class _SignupScreenState extends State<SignupScreen> {
     try {
       // Get UUID from SharedPreferences
       final prefs = await SharedPreferences.getInstance();
-      final uuid = prefs.getString('uuid');
+      final uuid = prefs.getString('user_uuid');
 
       if (uuid == null) {
         throw Exception('User ID not found. Please try logging in again.');

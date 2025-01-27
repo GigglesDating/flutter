@@ -15,14 +15,15 @@ export 'submenus/settings/subpages/features.dart';
 export 'submenus/settings/subpages/login_info.dart';
 export 'submenus/settings/subpages/notifications.dart';
 
-export 'waitlist/intro_video.dart';
 export 'waitlist/login.dart';
 export 'waitlist/signup.dart';
 export 'waitlist/waitlist_video.dart';
 export 'waitlist/waitlist.dart';
 
-export 'waitlist/kycScreens/aadhar_status_screen.dart';
-export 'waitlist/kycScreens/aadhar_verification.dart';
+export 'waitlist/support.dart';
+
+export 'waitlist/kycScreens/aadhar_status.dart';
+export 'waitlist/kycScreens/kyc_consent.dart';
 
 export 'waitlist/profileCreationScreens/profile_creation1.dart';
 export 'waitlist/profileCreationScreens/profile_creation2.dart';

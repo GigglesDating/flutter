@@ -111,7 +111,7 @@ class _LoginScreenState extends State<LoginScreen> {
           if (response['reg_process'] == null) {
             Navigator.of(context).pushAndRemoveUntil(
               MaterialPageRoute(
-                builder: (context) => IntroVideoScreen(),
+                builder: (context) => SignupScreen(),
               ),
               (route) => false,
             );

@@ -117,6 +117,35 @@ class ThinkProvider {
     });
   }
 
+  // Submit Aadhar Information
+  Future<Map<String, dynamic>> submitAadharInfo({
+    required String uuid,
+    required Map<String, dynamic>
+        kycData, // The complete JSON data from KYC service
+  }) async {
+    return _callFunction('submit_aadhar_info', {
+      'uuid': uuid,
+      ...kycData, // Spread the KYC data into the request
+    });
+  }
+
+  // Submit Support Ticket
+  Future<Map<String, dynamic>> submitSupportTicket({
+    required String uuid,
+    required String screenName,
+    required String supportText,
+    String? image1, // base64 encoded image
+    String? image2, // base64 encoded image
+  }) async {
+    return _callFunction('submit_support_ticket', {
+      'uuid': uuid,
+      'screen_name': screenName,
+      'support_text': supportText,
+      if (image1 != null) 'image1': image1,
+      if (image2 != null) 'image2': image2,
+    });
+  }
+
   // Generic function caller
   Future<Map<String, dynamic>> _callFunction(
     String function,

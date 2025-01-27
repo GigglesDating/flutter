@@ -3,6 +3,9 @@ import 'dart:io';
 import 'package:image_picker/image_picker.dart';
 import 'profile_creation2.dart';
 import 'package:flutter/services.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter_frontend/network/think.dart';
+import 'dart:convert';
 
 class ProfileCreation1 extends StatefulWidget {
   const ProfileCreation1({super.key});
@@ -282,6 +285,95 @@ class _ProfileCreation1State extends State<ProfileCreation1> {
     );
   }
 
+  Future<void> _submitProfileData() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final uuid = prefs.getString('uuid') ?? '';
+
+      // Convert images to base64
+      final profileImageBase64 =
+          base64Encode(await _profileImage!.readAsBytes());
+      final mandateImage1Base64 =
+          base64Encode(await _mediaFiles[0].readAsBytes());
+      final mandateImage2Base64 =
+          base64Encode(await _mediaFiles[1].readAsBytes());
+
+      // Optional images
+      String? optionalImage1;
+      String? optionalImage2;
+      if (_mediaFiles.length > 2) {
+        optionalImage1 = base64Encode(await _mediaFiles[2].readAsBytes());
+        if (_mediaFiles.length > 3) {
+          optionalImage2 = base64Encode(await _mediaFiles[3].readAsBytes());
+        }
+      }
+
+      final thinkProvider = ThinkProvider();
+      final response = await thinkProvider.pC1Submit(
+        uuid: uuid,
+        profileImage: profileImageBase64,
+        bio: _bioController.text.trim(),
+        mandateImage1: mandateImage1Base64,
+        mandateImage2: mandateImage2Base64,
+        genderOrientation: _orientation!,
+        optionalImage1: optionalImage1,
+        optionalImage2: optionalImage2,
+      );
+
+      if (response['status'] != 'success') {
+        throw Exception(response['message'] ?? 'Failed to submit profile data');
+      }
+
+      // Pass data to next screen
+      final profileData = {
+        'profileImage': _profileImage,
+        'bio': _bioController.text,
+        'mediaFiles': _mediaFiles,
+        'orientation': _orientation,
+      };
+
+      if (!mounted) return;
+
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => const ProfileCreation2(),
+          settings: RouteSettings(arguments: profileData),
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error saving profile: $e')),
+      );
+    }
+  }
+
+  String _getValidationMessage() {
+    // Check fields in order of appearance (top to bottom)
+    if (_profileImage == null) {
+      return 'Please add a profile picture';
+    }
+
+    if (_bioController.text.trim().isEmpty) {
+      return 'Please write something about yourself';
+    }
+
+    if (_orientation == null) {
+      return 'Please select your gender orientation';
+    }
+
+    if (_mediaFiles.isEmpty) {
+      return 'Please add some photos to your profile (minimum 2 required)';
+    } else if (_mediaFiles.length == 1) {
+      return 'Please add one more photo to your profile';
+    } else if (_mediaFiles.length < 2) {
+      return 'Please add at least 2 photos to your profile';
+    }
+
+    return ''; // All validations passed
+  }
+
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
@@ -455,29 +547,16 @@ class _ProfileCreation1State extends State<ProfileCreation1> {
                     width: size.width * 0.5,
                     child: ElevatedButton(
                       onPressed: () {
-                        if (_profileImage != null &&
-                            _bioController.text.isNotEmpty &&
-                            _mediaFiles.length >= 2 &&
-                            _orientation != null) {
+                        final validationMessage = _getValidationMessage();
+                        if (validationMessage.isEmpty) {
                           HapticFeedback.mediumImpact();
-                          final profileData = {
-                            'profileImage': _profileImage,
-                            'bio': _bioController.text,
-                            'mediaFiles': _mediaFiles,
-                            'orientation': _orientation,
-                          };
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => const ProfileCreation2(),
-                              settings: RouteSettings(arguments: profileData),
-                            ),
-                          );
+                          _submitProfileData();
                         } else {
                           ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text(
-                                  'Please fill in all required fields and add at least 2 photos'),
+                            SnackBar(
+                              content: Text(validationMessage),
+                              duration: const Duration(seconds: 2),
+                              behavior: SnackBarBehavior.floating,
                             ),
                           );
                         }

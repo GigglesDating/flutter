@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_frontend/screens/barrel.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter_frontend/network/think.dart';
 
 class ProfileCreation3 extends StatefulWidget {
   const ProfileCreation3({super.key});
@@ -19,25 +21,67 @@ class _ProfileCreation3State extends State<ProfileCreation3> {
   String _searchQuery = '';
   bool _isAddingCustom = false;
   final FocusNode _customInterestFocus = FocusNode();
+  List<Map<String, dynamic>> _defaultInterests = [];
+  bool _isLoading = true;
 
-  // Default interests with their icons
-  final List<Map<String, dynamic>> _defaultInterests = [
-    {'name': 'Coffee', 'icon': Icons.coffee},
-    {'name': 'Shopping', 'icon': Icons.shopping_bag},
-    {'name': 'Cinema', 'icon': Icons.movie},
-    {'name': 'Cycling', 'icon': Icons.directions_bike},
-    {'name': 'Hiking', 'icon': Icons.hiking},
-    {'name': 'Swimming', 'icon': Icons.pool},
-    {'name': 'Pottery', 'icon': Icons.gesture},
-    {'name': 'Cooking', 'icon': Icons.restaurant},
-    {'name': 'Yoga', 'icon': Icons.self_improvement},
-    {'name': 'Book Club', 'icon': Icons.book},
-    {'name': 'Clubbing', 'icon': Icons.nightlife},
-    {'name': 'Long drive', 'icon': Icons.directions_car},
-    {'name': 'Gymming', 'icon': Icons.fitness_center},
-    {'name': 'Pet Club', 'icon': Icons.pets},
-    {'name': 'Karaoke', 'icon': Icons.mic},
-  ];
+  // Map backend icon names to Flutter Icons
+  static final Map<String, IconData> _iconMapping = {
+    'coffee': Icons.coffee,
+    'shopping_bag': Icons.shopping_bag,
+    'movie': Icons.movie,
+    'directions_bike': Icons.directions_bike,
+    'hiking': Icons.hiking,
+    'pool': Icons.pool,
+    'gesture': Icons.gesture,
+    'restaurant': Icons.restaurant,
+    'self_improvement': Icons.self_improvement,
+    'book': Icons.book,
+    'nightlife': Icons.nightlife,
+    'directions_car': Icons.directions_car,
+    'fitness_center': Icons.fitness_center,
+    'pets': Icons.pets,
+    'mic': Icons.mic,
+  };
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchInterests();
+  }
+
+  Future<void> _fetchInterests() async {
+    try {
+      final thinkProvider = ThinkProvider();
+      final response = await thinkProvider.getInterests();
+
+      if (response['status'] == 'success') {
+        final interestsList = (response['data'] as List).map((interest) {
+          return {
+            'name': interest['name'],
+            'id': interest['id'],
+            'category': interest['category'],
+            'icon': _iconMapping[interest['icon_name']] ?? Icons.star,
+          };
+        }).toList();
+
+        if (mounted) {
+          setState(() {
+            _defaultInterests = interestsList;
+            _isLoading = false;
+          });
+        }
+      } else {
+        throw Exception(response['message'] ?? 'Failed to fetch interests');
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error loading interests: $e')),
+        );
+        setState(() => _isLoading = false);
+      }
+    }
+  }
 
   List<Map<String, dynamic>> get _filteredInterests {
     List<Map<String, dynamic>> allInterests = List.from(_defaultInterests);
@@ -75,16 +119,88 @@ class _ProfileCreation3State extends State<ProfileCreation3> {
     HapticFeedback.selectionClick();
   }
 
-  void _addCustomInterest() {
+  Future<void> _addCustomInterest() async {
     final interest = _customInterestController.text.trim();
     if (interest.isNotEmpty) {
-      setState(() {
-        _selectedInterests.add(interest);
-        _customInterests.add(interest);
-        _customInterestController.clear();
-        _isAddingCustom = false;
-      });
-      HapticFeedback.mediumImpact();
+      try {
+        final prefs = await SharedPreferences.getInstance();
+        final uuid = prefs.getString('uuid') ?? '';
+
+        // Submit custom interest to backend
+        final thinkProvider = ThinkProvider();
+        final response = await thinkProvider.addCustomInterest(
+          uuid: uuid,
+          interestName: interest,
+        );
+
+        if (response['status'] != 'success') {
+          throw Exception(
+              response['message'] ?? 'Failed to add custom interest');
+        }
+
+        if (!mounted) return;
+
+        // Update local state after successful submission
+        setState(() {
+          _selectedInterests.add(interest);
+          _customInterests.add(interest);
+          _customInterestController.clear();
+          _isAddingCustom = false;
+        });
+
+        HapticFeedback.mediumImpact();
+      } catch (e) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error adding custom interest: $e')),
+        );
+      }
+    }
+  }
+
+  Future<void> _submitInterests() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final uuid = prefs.getString('uuid') ?? '';
+
+      // Convert selected interests to required format
+      final selectedInterests = _selectedDefaultInterests.map((interest) {
+        final interestData = _defaultInterests.firstWhere(
+          (i) => i['name'] == interest,
+          orElse: () => {'name': interest, 'icon': 'custom'},
+        );
+
+        return {
+          'name': interest,
+          'icon': interestData['icon'].toString(),
+          'is_custom': _customInterests.contains(interest),
+        };
+      }).toList();
+
+      final thinkProvider = ThinkProvider();
+      final response = await thinkProvider.pC3Submit(
+        uuid: uuid,
+        selectedInterests: selectedInterests,
+      );
+
+      if (response['status'] != 'success') {
+        throw Exception(response['message'] ?? 'Failed to submit interests');
+      }
+
+      if (!mounted) return;
+
+      // Navigate to waitlist screen
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => const WaitlistScreen(),
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error saving interests: $e')),
+      );
     }
   }
 
@@ -271,67 +387,73 @@ class _ProfileCreation3State extends State<ProfileCreation3> {
 
                     // Interests Grid
                     Expanded(
-                      child: SingleChildScrollView(
-                        physics: const AlwaysScrollableScrollPhysics(),
-                        padding: const EdgeInsets.symmetric(horizontal: 20),
-                        child: Wrap(
-                          spacing: 8,
-                          runSpacing: 8,
-                          children: _filteredInterests.map((interest) {
-                            final isSelected =
-                                _selectedInterests.contains(interest['name']);
-                            final isCustom = interest['isCustom'] ?? false;
-                            return GestureDetector(
-                              onTap: () =>
-                                  _toggleInterest(interest['name'], isCustom),
-                              child: AnimatedContainer(
-                                duration: const Duration(milliseconds: 200),
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 16,
-                                  vertical: 8,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: isSelected
-                                      ? Colors.black
-                                      : Colors.grey[100],
-                                  borderRadius: BorderRadius.circular(20),
-                                  boxShadow: isSelected
-                                      ? [
-                                          BoxShadow(
-                                            color: Colors.black.withAlpha(26),
-                                            blurRadius: 8,
-                                            offset: const Offset(0, 4),
-                                          )
-                                        ]
-                                      : null,
-                                ),
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Icon(
-                                      interest['icon'],
-                                      size: 18,
-                                      color: isSelected
-                                          ? Colors.white
-                                          : Colors.black,
-                                    ),
-                                    const SizedBox(width: 8),
-                                    Text(
-                                      interest['name'],
-                                      style: TextStyle(
+                      child: _isLoading
+                          ? const Center(child: CircularProgressIndicator())
+                          : SingleChildScrollView(
+                              physics: const AlwaysScrollableScrollPhysics(),
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 20),
+                              child: Wrap(
+                                spacing: 8,
+                                runSpacing: 8,
+                                children: _filteredInterests.map((interest) {
+                                  final isSelected = _selectedInterests
+                                      .contains(interest['name']);
+                                  final isCustom =
+                                      interest['isCustom'] ?? false;
+                                  return GestureDetector(
+                                    onTap: () => _toggleInterest(
+                                        interest['name'], isCustom),
+                                    child: AnimatedContainer(
+                                      duration:
+                                          const Duration(milliseconds: 200),
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 16,
+                                        vertical: 8,
+                                      ),
+                                      decoration: BoxDecoration(
                                         color: isSelected
-                                            ? Colors.white
-                                            : Colors.black,
-                                        fontWeight: FontWeight.w500,
+                                            ? Colors.black
+                                            : Colors.grey[100],
+                                        borderRadius: BorderRadius.circular(20),
+                                        boxShadow: isSelected
+                                            ? [
+                                                BoxShadow(
+                                                  color: Colors.black
+                                                      .withAlpha(26),
+                                                  blurRadius: 8,
+                                                  offset: const Offset(0, 4),
+                                                )
+                                              ]
+                                            : null,
+                                      ),
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Icon(
+                                            interest['icon'],
+                                            size: 18,
+                                            color: isSelected
+                                                ? Colors.white
+                                                : Colors.black,
+                                          ),
+                                          const SizedBox(width: 8),
+                                          Text(
+                                            interest['name'],
+                                            style: TextStyle(
+                                              color: isSelected
+                                                  ? Colors.white
+                                                  : Colors.black,
+                                              fontWeight: FontWeight.w500,
+                                            ),
+                                          ),
+                                        ],
                                       ),
                                     ),
-                                  ],
-                                ),
+                                  );
+                                }).toList(),
                               ),
-                            );
-                          }).toList(),
-                        ),
-                      ),
+                            ),
                     ),
 
                     // Bottom Section - Updated red message visibility
@@ -387,11 +509,10 @@ class _ProfileCreation3State extends State<ProfileCreation3> {
                             width: size.width * 0.6,
                             child: ElevatedButton(
                               onPressed: _selectedDefaultInterests.length >= 5
-                                  ? () => Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) => WaitlistScreen(),
-                                      ))
+                                  ? () {
+                                      HapticFeedback.mediumImpact();
+                                      _submitInterests();
+                                    }
                                   : null,
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: Colors.black,

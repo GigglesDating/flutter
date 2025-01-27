@@ -116,7 +116,7 @@ class _AadharStatusScreenState extends State<AadharStatusScreen> {
               Navigator.pushReplacement(
                 context,
                 MaterialPageRoute(
-                    builder: (context) => const AadharVerificationScreen()),
+                    builder: (context) => const AadharStatusScreen()),
               );
               break;
             case AadharStatus.inReview:

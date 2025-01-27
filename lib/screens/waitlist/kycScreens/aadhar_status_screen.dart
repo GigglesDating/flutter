@@ -1,8 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_frontend/screens/barrel.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:flutter_svg/svg.dart';
-import 'package:flutter_frontend/screens/barrel.dart';
 
 enum AadharStatus { verified, failed, inReview }
 

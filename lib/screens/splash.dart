@@ -61,8 +61,8 @@ class _SplashScreenState extends State<SplashScreen>
             tag: 'app_logo',
             child: Image.asset(
               isDarkMode
-                  ? 'assets/light/favicon.png'
-                  : 'assets/dark/favicon.png',
+                  ? 'assets/dark/favicon.png'
+                  : 'assets/light/favicon.png',
               width: size.width * 0.4,
               height: size.width * 0.4,
             ),

@@ -101,11 +101,11 @@ class _SignupScreenState extends State<SignupScreen> {
                     end: Alignment.bottomCenter,
                     colors: [
                       isDarkMode
-                          ? Colors.black.withAlpha(179)
-                          : Colors.white.withAlpha(153),
+                          ? Colors.black.withAlpha(80)
+                          : Colors.white.withAlpha(80),
                       isDarkMode
-                          ? Colors.black.withAlpha(204)
-                          : Colors.white.withAlpha(179),
+                          ? Colors.black.withAlpha(80)
+                          : Colors.white.withAlpha(80),
                     ],
                   ),
                 ),
@@ -168,9 +168,8 @@ class _SignupScreenState extends State<SignupScreen> {
                       ),
 
                       // Form Section
-                      Container(
-                        margin: EdgeInsets.only(
-                            top: verticalSpacing * 2, bottom: verticalSpacing),
+                      Form(
+                        key: _formKey,
                         child: Column(
                           children: [
                             // Names Row
@@ -187,6 +186,13 @@ class _SignupScreenState extends State<SignupScreen> {
                                       decoration: inputDecoration.copyWith(
                                         hintText: 'First Name',
                                       ),
+                                      validator: (value) {
+                                        if (value == null ||
+                                            value.trim().isEmpty) {
+                                          return 'Please enter your first name';
+                                        }
+                                        return null;
+                                      },
                                     ),
                                   ),
                                 ),
@@ -202,6 +208,13 @@ class _SignupScreenState extends State<SignupScreen> {
                                       decoration: inputDecoration.copyWith(
                                         hintText: 'Last Name',
                                       ),
+                                      validator: (value) {
+                                        if (value == null ||
+                                            value.trim().isEmpty) {
+                                          return 'Please enter your last name';
+                                        }
+                                        return null;
+                                      },
                                     ),
                                   ),
                                 ),
@@ -224,6 +237,13 @@ class _SignupScreenState extends State<SignupScreen> {
                                       decoration: inputDecoration.copyWith(
                                         hintText: 'E-mail',
                                       ),
+                                      validator: (value) {
+                                        if (value == null ||
+                                            value.trim().isEmpty) {
+                                          return 'Please enter your email';
+                                        }
+                                        return null;
+                                      },
                                     ),
                                   ),
                                 ),

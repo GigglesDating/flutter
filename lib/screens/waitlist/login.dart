@@ -122,7 +122,7 @@ class _LoginScreenState extends State<LoginScreen> {
           _regProcess = response['reg_process'].toString();
 
           switch (_regProcess) {
-            case 'New User':
+            case 'new_user':
               Navigator.of(context).pushAndRemoveUntil(
                 MaterialPageRoute(
                   builder: (context) => SignupScreen(),

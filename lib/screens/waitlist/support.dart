@@ -63,7 +63,7 @@ class _SupportScreenState extends State<SupportScreen> {
     try {
       final thinkProvider = ThinkProvider();
       final prefs = await SharedPreferences.getInstance();
-      final uuid = prefs.getString('uuid') ?? '';
+      final uuid = prefs.getString('user_uuid') ?? '';
 
       // Convert images to base64 if they exist
       String? image1;

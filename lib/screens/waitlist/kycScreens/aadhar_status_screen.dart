@@ -43,18 +43,18 @@ class _AadharStatusScreenState extends State<AadharStatusScreen> {
   }
 
   // This will be useful later when reading from SharedPreferences
-  AadharStatus _getStatusFromString(String? status) {
-    switch (status) {
-      case 'verified':
-        return AadharStatus.verified;
-      case 'failed':
-        return AadharStatus.failed;
-      case 'in_review':
-        return AadharStatus.inReview;
-      default:
-        return AadharStatus.failed;
-    }
-  }
+  //AadharStatus _getStatusFromString(String? status) {
+  //  switch (status) {
+  //    case 'verified':
+  //      return AadharStatus.verified;
+  //    case 'failed':
+  //      return AadharStatus.failed;
+  //    case 'in_review':
+  //      return AadharStatus.inReview;
+  //    default:
+  //      return AadharStatus.failed;
+  //  }
+  //}
 
   Widget _buildStatusIcon(BuildContext context) {
     final size = MediaQuery.of(context).size;

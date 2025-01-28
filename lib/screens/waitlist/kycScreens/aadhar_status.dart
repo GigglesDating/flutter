@@ -251,7 +251,31 @@ class _AadharStatusScreenState extends State<AadharStatusScreen> {
       case AadharStatus.verified:
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => const ProfileCreation1()),
+          PageRouteBuilder(
+            pageBuilder: (context, animation, secondaryAnimation) =>
+                const ProfileCreation1(),
+            transitionsBuilder:
+                (context, animation, secondaryAnimation, child) {
+              const begin = Offset(0.0, 1.0); // Slide from bottom
+              const end = Offset.zero;
+              const curve = Curves.easeInOutCubic;
+
+              var tween = Tween(begin: begin, end: end).chain(
+                CurveTween(curve: curve),
+              );
+
+              var offsetAnimation = animation.drive(tween);
+
+              return FadeTransition(
+                opacity: animation,
+                child: SlideTransition(
+                  position: offsetAnimation,
+                  child: child,
+                ),
+              );
+            },
+            transitionDuration: const Duration(milliseconds: 500),
+          ),
         );
         break;
       case AadharStatus.failed:

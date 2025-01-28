@@ -567,11 +567,33 @@ class _SignupScreenState extends State<SignupScreen> {
 
         if (!mounted) return;
 
-        // Navigate to KYC screen
+        // Navigate to KYC screen with animation
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(
-            builder: (context) => const KycConsentScreen(),
+          PageRouteBuilder(
+            pageBuilder: (context, animation, secondaryAnimation) =>
+                const KycConsentScreen(),
+            transitionsBuilder:
+                (context, animation, secondaryAnimation, child) {
+              const begin = Offset(1.0, 0.0);
+              const end = Offset.zero;
+              const curve = Curves.easeInOutCubic;
+
+              var tween = Tween(begin: begin, end: end).chain(
+                CurveTween(curve: curve),
+              );
+
+              var offsetAnimation = animation.drive(tween);
+
+              return FadeTransition(
+                opacity: animation,
+                child: SlideTransition(
+                  position: offsetAnimation,
+                  child: child,
+                ),
+              );
+            },
+            transitionDuration: const Duration(milliseconds: 500),
           ),
         );
       } else {

@@ -59,8 +59,29 @@ class _ProfileCreation2State extends State<ProfileCreation2> {
       // Navigate to next screen
       Navigator.push(
         context,
-        MaterialPageRoute(
-          builder: (context) => const ProfileCreation3(),
+        PageRouteBuilder(
+          pageBuilder: (context, animation, secondaryAnimation) =>
+              const ProfileCreation3(),
+          transitionsBuilder: (context, animation, secondaryAnimation, child) {
+            const begin = Offset(1.0, 0.0); // Slide from right
+            const end = Offset.zero;
+            const curve = Curves.easeInOutCubic;
+
+            var tween = Tween(begin: begin, end: end).chain(
+              CurveTween(curve: curve),
+            );
+
+            var offsetAnimation = animation.drive(tween);
+
+            return FadeTransition(
+              opacity: animation,
+              child: SlideTransition(
+                position: offsetAnimation,
+                child: child,
+              ),
+            );
+          },
+          transitionDuration: const Duration(milliseconds: 500),
           settings: RouteSettings(
             arguments: {
               'preference': _selectedPreference,

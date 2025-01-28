@@ -141,6 +141,48 @@ class _KycConsentScreenState extends State<KycConsentScreen>
     setState(() => _isLoading = true);
 
     try {
+      // Create a fade-out animation before launching SDK
+      await Navigator.of(context).push(
+        PageRouteBuilder(
+          opaque: false,
+          pageBuilder: (BuildContext context, _, __) {
+            return Container(
+              color: Colors.black.withAlpha(150),
+              child: Center(
+                child: Container(
+                  padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: const Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      CircularProgressIndicator(),
+                      SizedBox(height: 20),
+                      Text(
+                        'Launching Verification...',
+                        style: TextStyle(
+                          color: Colors.black87,
+                          fontSize: 16,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            );
+          },
+          transitionsBuilder: (context, animation, secondaryAnimation, child) {
+            return FadeTransition(
+              opacity: animation,
+              child: child,
+            );
+          },
+          transitionDuration: const Duration(milliseconds: 300),
+        ),
+      );
+
       final hyperKycConfig = HyperKycConfig.fromAppIdAppKey(
         appId: 'o811fk',
         appKey: '3ddhunl5z427du78rm10',

@@ -192,8 +192,29 @@ class _ProfileCreation3State extends State<ProfileCreation3> {
       // Navigate to waitlist screen
       Navigator.push(
         context,
-        MaterialPageRoute(
-          builder: (context) => const WaitlistScreen(),
+        PageRouteBuilder(
+          pageBuilder: (context, animation, secondaryAnimation) =>
+              const WaitlistScreen(),
+          transitionsBuilder: (context, animation, secondaryAnimation, child) {
+            const begin = Offset(1.0, 0.0); // Slide from right
+            const end = Offset.zero;
+            const curve = Curves.easeInOutCubic;
+
+            var tween = Tween(begin: begin, end: end).chain(
+              CurveTween(curve: curve),
+            );
+
+            var offsetAnimation = animation.drive(tween);
+
+            return FadeTransition(
+              opacity: animation,
+              child: SlideTransition(
+                position: offsetAnimation,
+                child: child,
+              ),
+            );
+          },
+          transitionDuration: const Duration(milliseconds: 500),
         ),
       );
     } catch (e) {

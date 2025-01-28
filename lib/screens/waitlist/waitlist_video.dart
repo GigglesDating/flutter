@@ -22,7 +22,7 @@ class _WaitlistVideo extends State<WaitlistVideo> {
   // late Future<void> _initializeVideoPlayerFuture;
   bool isPlaying = false;
   bool _isFirstTimeCompleted = false;
-  bool _isButtonVisible = false;
+  // bool _isButtonVisible = false;
   bool _replay = false;
 
   void _enterFullPage() {
@@ -56,7 +56,7 @@ class _WaitlistVideo extends State<WaitlistVideo> {
     super.initState();
     _enterFullPage();
     _videoPlayerController =
-        VideoPlayerController.asset("assets/video/Intro_video_downsized.mp4");
+        VideoPlayerController.asset("assets/video/Intro_video.mp4");
     // _videoPlayerController.setLooping(true);
     _videoPlayerController.initialize().then((_) async {
       setState(() {
@@ -78,7 +78,7 @@ class _WaitlistVideo extends State<WaitlistVideo> {
           if (!_isFirstTimeCompleted) {
             // Show button only after the video completes
             setState(() {
-              _isButtonVisible = true;
+              // _isButtonVisible = true;
               _isFirstTimeCompleted = true;
             });
           }

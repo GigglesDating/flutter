@@ -487,8 +487,14 @@ class _LoginScreenState extends State<LoginScreen> {
                                         setState(() {
                                           if (_isOtpSent) {
                                             _otp = value;
+                                            if (value.length == 4) {
+                                              FocusScope.of(context).unfocus();
+                                            }
                                           } else {
                                             _phoneNumber = value;
+                                            if (value.length == 10) {
+                                              FocusScope.of(context).unfocus();
+                                            }
                                           }
                                           _errorMessage = null;
                                         });

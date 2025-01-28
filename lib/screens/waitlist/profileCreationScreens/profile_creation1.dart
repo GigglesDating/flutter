@@ -517,7 +517,9 @@ class _ProfileCreation1State extends State<ProfileCreation1> {
                     decoration: InputDecoration(
                       hintText: 'Write about yourself...',
                       hintStyle: TextStyle(
-                        color: isDarkMode ? Colors.grey[400] : Colors.grey[500],
+                        color: isDarkMode
+                            ? const Color.fromARGB(255, 0, 0, 0)
+                            : const Color.fromARGB(255, 255, 255, 255),
                       ),
                       border: InputBorder.none,
                       contentPadding: const EdgeInsets.all(20),
@@ -545,15 +547,24 @@ class _ProfileCreation1State extends State<ProfileCreation1> {
                 // Gender Orientation Dropdown
                 Container(
                   decoration: BoxDecoration(
-                    color: Colors.grey[100],
+                    color: isDarkMode ? Colors.grey[900] : Colors.grey[100],
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: DropdownButtonFormField<String>(
                     value: _orientation,
-                    decoration: const InputDecoration(
+                    decoration: InputDecoration(
                       labelText: 'Your gender orientation',
+                      labelStyle: TextStyle(
+                        color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
+                      ),
                       border: InputBorder.none,
-                      contentPadding: EdgeInsets.symmetric(horizontal: 20),
+                      contentPadding:
+                          const EdgeInsets.symmetric(horizontal: 20),
+                    ),
+                    dropdownColor:
+                        isDarkMode ? Colors.grey[900] : Colors.grey[100],
+                    style: TextStyle(
+                      color: isDarkMode ? Colors.white : Colors.black,
                     ),
                     items: _orientations.map((String value) {
                       return DropdownMenuItem<String>(
@@ -592,8 +603,10 @@ class _ProfileCreation1State extends State<ProfileCreation1> {
                         }
                       },
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.black,
-                        foregroundColor: Colors.white,
+                        backgroundColor:
+                            isDarkMode ? Colors.white : Colors.black,
+                        foregroundColor:
+                            isDarkMode ? Colors.black : Colors.white,
                         padding:
                             EdgeInsets.symmetric(vertical: size.height * 0.02),
                         shape: RoundedRectangleBorder(

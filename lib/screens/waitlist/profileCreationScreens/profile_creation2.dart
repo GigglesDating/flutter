@@ -234,11 +234,12 @@ class _ProfileCreation2State extends State<ProfileCreation2> {
                       SizedBox(height: size.height * 0.06),
 
                       // Age Preference with Custom Slider
-                      const Text(
+                      Text(
                         'Age Preference',
                         style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.w600,
+                          color: isDarkMode ? Colors.white : Colors.black,
                         ),
                       ),
                       SizedBox(height: size.height * 0.02),
@@ -249,8 +250,11 @@ class _ProfileCreation2State extends State<ProfileCreation2> {
                             min: 18,
                             max: 60,
                             divisions: 42,
-                            activeColor: Colors.black,
-                            inactiveColor: Colors.grey[300],
+                            activeColor:
+                                isDarkMode ? Colors.white : Colors.black,
+                            inactiveColor: isDarkMode
+                                ? Colors.grey[800]
+                                : Colors.grey[300],
                             labels: RangeLabels(
                               _ageRange.start.round().toString(),
                               _ageRange.end.round().toString(),
@@ -269,9 +273,12 @@ class _ProfileCreation2State extends State<ProfileCreation2> {
                               children: [
                                 Text(
                                   '${_ageRange.start.round()} - ${_ageRange.end.round()} years',
-                                  style: const TextStyle(
+                                  style: TextStyle(
                                     fontWeight: FontWeight.w500,
                                     fontSize: 16,
+                                    color: isDarkMode
+                                        ? Colors.white
+                                        : Colors.black,
                                   ),
                                 ),
                               ],

@@ -109,9 +109,10 @@ class _ProfileCreation2State extends State<ProfileCreation2> {
     final padding = MediaQuery.of(context).padding;
     final isIOS = Theme.of(context).platform == TargetPlatform.iOS;
     final keyboardPadding = MediaQuery.of(context).viewInsets.bottom;
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: isDarkMode ? Colors.black : Colors.white,
       body: SafeArea(
         child: Column(
           children: [
@@ -135,20 +136,26 @@ class _ProfileCreation2State extends State<ProfileCreation2> {
                           padding: const EdgeInsets.all(8),
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
-                            color: Colors.grey[200],
+                            color: isDarkMode
+                                ? Colors.grey[900]
+                                : Colors.grey[200],
                           ),
-                          child: const Icon(Icons.arrow_back, size: 24),
+                          child: Icon(
+                            Icons.arrow_back,
+                            color: isDarkMode ? Colors.white : Colors.black,
+                          ),
                         ),
                       ),
 
                       SizedBox(height: size.height * 0.03),
 
                       // Title and Subtitle
-                      const Text(
+                      Text(
                         'Tell us about Your\ndating preference...',
                         style: TextStyle(
                           fontSize: 28,
                           fontWeight: FontWeight.bold,
+                          color: isDarkMode ? Colors.white : Colors.black,
                         ),
                       ),
                       SizedBox(height: size.height * 0.02),
@@ -156,7 +163,8 @@ class _ProfileCreation2State extends State<ProfileCreation2> {
                         "By selecting 'Share Only with Friends',\nyour content will be visible exclusively to\nyour approved connections.",
                         style: TextStyle(
                           fontSize: 14,
-                          color: Colors.grey[600],
+                          color:
+                              isDarkMode ? Colors.grey[400] : Colors.grey[600],
                           height: 1.4,
                         ),
                       ),
@@ -168,16 +176,14 @@ class _ProfileCreation2State extends State<ProfileCreation2> {
                         spacing: 10,
                         runSpacing: 10,
                         children: _preferences.map((preference) {
+                          final isSelected = _selectedPreference == preference;
                           return AnimatedScale(
-                            scale:
-                                _selectedPreference == preference ? 1.05 : 1.0,
+                            scale: isSelected ? 1.05 : 1.0,
                             duration: const Duration(milliseconds: 200),
                             child: GestureDetector(
                               onTap: () {
-                                setState(() {
-                                  _selectedPreference = preference;
-                                });
-                                // Add haptic feedback
+                                setState(
+                                    () => _selectedPreference = preference);
                                 HapticFeedback.lightImpact();
                               },
                               child: Container(
@@ -186,14 +192,20 @@ class _ProfileCreation2State extends State<ProfileCreation2> {
                                   vertical: 12,
                                 ),
                                 decoration: BoxDecoration(
-                                  color: _selectedPreference == preference
-                                      ? Colors.black
-                                      : Colors.grey[200],
+                                  color: isSelected
+                                      ? (isDarkMode
+                                          ? Colors.white
+                                          : Colors.black)
+                                      : (isDarkMode
+                                          ? Colors.grey[900]
+                                          : Colors.grey[200]),
                                   borderRadius: BorderRadius.circular(25),
-                                  boxShadow: _selectedPreference == preference
+                                  boxShadow: isSelected
                                       ? [
                                           BoxShadow(
-                                            color: Colors.black.withAlpha(26),
+                                            color: isDarkMode
+                                                ? Colors.white.withAlpha(20)
+                                                : Colors.black.withAlpha(26),
                                             blurRadius: 8,
                                             offset: const Offset(0, 4),
                                           )
@@ -203,11 +215,14 @@ class _ProfileCreation2State extends State<ProfileCreation2> {
                                 child: Text(
                                   preference,
                                   style: TextStyle(
-                                    color: _selectedPreference == preference
-                                        ? Colors.white
-                                        : Colors.black,
+                                    color: isSelected
+                                        ? (isDarkMode
+                                            ? Colors.black
+                                            : Colors.white)
+                                        : (isDarkMode
+                                            ? Colors.white
+                                            : Colors.black),
                                     fontWeight: FontWeight.w500,
-                                    fontSize: 16,
                                   ),
                                 ),
                               ),
@@ -283,10 +298,12 @@ class _ProfileCreation2State extends State<ProfileCreation2> {
                     : padding.bottom + 20,
               ),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: isDarkMode ? Colors.black : Colors.white,
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withAlpha(10),
+                    color: isDarkMode
+                        ? Colors.white.withAlpha(5)
+                        : Colors.black.withAlpha(10),
                     blurRadius: 4,
                     offset: const Offset(0, -2),
                   ),
@@ -302,8 +319,8 @@ class _ProfileCreation2State extends State<ProfileCreation2> {
                         }
                       : null,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.black,
-                    foregroundColor: Colors.white,
+                    backgroundColor: isDarkMode ? Colors.white : Colors.black,
+                    foregroundColor: isDarkMode ? Colors.black : Colors.white,
                     padding: EdgeInsets.symmetric(
                       vertical: size.height * 0.02,
                     ),
@@ -311,15 +328,16 @@ class _ProfileCreation2State extends State<ProfileCreation2> {
                       borderRadius: BorderRadius.circular(30),
                     ),
                     elevation: 2,
-                    disabledBackgroundColor: Colors.grey[300],
+                    disabledBackgroundColor:
+                        isDarkMode ? Colors.grey[800] : Colors.grey[300],
                   ),
                   child: _isSubmitting
-                      ? const SizedBox(
+                      ? SizedBox(
                           height: 20,
                           width: 20,
                           child: CircularProgressIndicator(
-                            valueColor:
-                                AlwaysStoppedAnimation<Color>(Colors.white),
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                                isDarkMode ? Colors.black : Colors.white),
                             strokeWidth: 2,
                           ),
                         )

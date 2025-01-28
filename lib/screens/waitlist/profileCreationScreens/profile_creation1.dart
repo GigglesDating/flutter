@@ -400,9 +400,10 @@ class _ProfileCreation1State extends State<ProfileCreation1> {
     final size = MediaQuery.of(context).size;
     final padding = MediaQuery.of(context).padding;
     final isIOS = Theme.of(context).platform == TargetPlatform.iOS;
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: isDarkMode ? Colors.black : Colors.white,
       body: GestureDetector(
         onTap: () => FocusScope.of(context).unfocus(),
         child: SafeArea(
@@ -417,11 +418,12 @@ class _ProfileCreation1State extends State<ProfileCreation1> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
+                Text(
                   "Let's Personalise your Profile",
                   style: TextStyle(
                     fontSize: 22,
                     fontWeight: FontWeight.bold,
+                    color: isDarkMode ? Colors.white : Colors.black,
                   ),
                 ),
                 SizedBox(height: size.height * 0.04),
@@ -492,11 +494,13 @@ class _ProfileCreation1State extends State<ProfileCreation1> {
                 AnimatedContainer(
                   duration: const Duration(milliseconds: 200),
                   decoration: BoxDecoration(
-                    color: Colors.grey[100],
+                    color: isDarkMode ? Colors.grey[900] : Colors.grey[100],
                     borderRadius: BorderRadius.circular(20),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withAlpha(10),
+                        color: isDarkMode
+                            ? Colors.white.withAlpha(5)
+                            : Colors.black.withAlpha(10),
                         blurRadius: 4,
                         offset: const Offset(0, 2),
                       ),
@@ -506,10 +510,15 @@ class _ProfileCreation1State extends State<ProfileCreation1> {
                     controller: _bioController,
                     maxLines: 4,
                     maxLength: 350,
-                    style: const TextStyle(fontSize: 16),
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: isDarkMode ? Colors.white : Colors.black,
+                    ),
                     decoration: InputDecoration(
                       hintText: 'Write about yourself...',
-                      hintStyle: TextStyle(color: Colors.grey[500]),
+                      hintStyle: TextStyle(
+                        color: isDarkMode ? Colors.grey[400] : Colors.grey[500],
+                      ),
                       border: InputBorder.none,
                       contentPadding: const EdgeInsets.all(20),
                     ),

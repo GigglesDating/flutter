@@ -23,12 +23,17 @@ class _WaitlistScreenState extends State<WaitlistScreen>
   @override
   void initState() {
     super.initState();
+    _precacheImages();
     SystemChrome.setSystemUIOverlayStyle(
       const SystemUiOverlayStyle(
         statusBarColor: Colors.transparent,
       ),
     );
-    _precacheImages();
+    SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+    SystemChrome.setPreferredOrientations([
+      DeviceOrientation.portraitUp,
+      DeviceOrientation.portraitDown,
+    ]);
     _expandController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 800),
@@ -68,7 +73,18 @@ class _WaitlistScreenState extends State<WaitlistScreen>
       const AssetImage('assets/tempImages/waitlist_bg.jpg'),
       context,
     );
-
+    await precacheImage(
+      const AssetImage('assets/tempImages/snooker.jpg'),
+      context,
+    );
+    await precacheImage(
+      const AssetImage('assets/tempImages/paintball.jpg'),
+      context,
+    );
+    await precacheImage(
+      const AssetImage('assets/tempImages/badminton.jpg'),
+      context,
+    );
     if (!mounted) return;
 
     await Future.wait([

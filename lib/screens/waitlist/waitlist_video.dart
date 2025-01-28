@@ -56,7 +56,7 @@ class _WaitlistVideo extends State<WaitlistVideo> {
     super.initState();
     _enterFullPage();
     _videoPlayerController =
-        VideoPlayerController.asset("assets/video/placeholderv.mp4");
+        VideoPlayerController.asset("assets/video/Intro_video_downsized.mp4");
     // _videoPlayerController.setLooping(true);
     _videoPlayerController.initialize().then((_) async {
       setState(() {
@@ -76,7 +76,7 @@ class _WaitlistVideo extends State<WaitlistVideo> {
         // If the video is over, mark it as paused
         setState(() {
           if (!_isFirstTimeCompleted) {
-            // Show button only after the video completes the first time
+            // Show button only after the video completes
             setState(() {
               _isButtonVisible = true;
               _isFirstTimeCompleted = true;
@@ -142,48 +142,37 @@ class _WaitlistVideo extends State<WaitlistVideo> {
                   ),
                 ),
               ),
-          if (_isButtonVisible)
-            if (_isInitialized)
-              Positioned(
-                  bottom: 0,
-                  right: 0,
-                  child: TextButton(
-                      onPressed: () {
-                        if (widget.value ?? false) {
-                          Navigator.of(context).pop();
-                        } else {
-                          _exitFullPage();
-                          _videoPlayerController.dispose();
-                          Navigator.pushReplacement(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => WaitlistScreen(),
-                              ));
-                        }
-                      },
-                      style: ButtonStyle(
-                          padding: WidgetStatePropertyAll(EdgeInsets.all(24))),
-                      child: _replay
-                          ? Text(
-                              'Skip >',
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontFamily: 'Sukar',
-                                height: 1.0,
-                                fontWeight: FontWeight.w500,
-                                color: Colors.black,
-                              ),
-                            )
-                          : Text(
-                              'Continue >',
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontFamily: 'Sukar',
-                                height: 1.0,
-                                fontWeight: FontWeight.w500,
-                                color: Colors.black,
-                              ),
-                            )))
+          // if (_isButtonVisible)
+          if (_isInitialized)
+            Positioned(
+                bottom: 0,
+                right: 0,
+                child: TextButton(
+                    onPressed: () {
+                      if (widget.value ?? false) {
+                        Navigator.of(context).pop();
+                      } else {
+                        _exitFullPage();
+                        _videoPlayerController.dispose();
+                        Navigator.pushReplacement(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => WaitlistScreen(),
+                            ));
+                      }
+                    },
+                    style: ButtonStyle(
+                        padding: WidgetStatePropertyAll(EdgeInsets.all(24))),
+                    child: Text(
+                      'Skip >',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontFamily: 'Sukar',
+                        height: 1.0,
+                        fontWeight: FontWeight.w500,
+                        color: Colors.black,
+                      ),
+                    )))
         ],
       ),
     );

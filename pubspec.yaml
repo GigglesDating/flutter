@@ -49,7 +49,7 @@ flutter:
     - assets/tempImages/
     
     # Video assets
-    - assets/video/placeholderv.mp4
+    - assets/video/Intro_video.mp4
     
 
 

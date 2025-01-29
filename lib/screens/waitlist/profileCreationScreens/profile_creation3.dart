@@ -55,7 +55,8 @@ class _ProfileCreation3State extends State<ProfileCreation3> {
       final response = await thinkProvider.getInterests();
 
       if (response['status'] == 'success') {
-        final interestsList = (response['data'] as List).map((interest) {
+        final List<dynamic> interestsList = response['data'];
+        final formattedInterests = interestsList.map((interest) {
           return {
             'name': interest['name'],
             'id': interest['id'],
@@ -66,7 +67,7 @@ class _ProfileCreation3State extends State<ProfileCreation3> {
 
         if (mounted) {
           setState(() {
-            _defaultInterests = interestsList;
+            _defaultInterests = formattedInterests;
             _isLoading = false;
           });
         }

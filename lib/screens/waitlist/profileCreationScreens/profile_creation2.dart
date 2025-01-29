@@ -110,6 +110,14 @@ class _ProfileCreation2State extends State<ProfileCreation2> {
     final isIOS = Theme.of(context).platform == TargetPlatform.iOS;
     final keyboardPadding = MediaQuery.of(context).viewInsets.bottom;
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    final textScaler = MediaQuery.of(context).textScaler;
+
+    // Responsive calculations
+    final titleSize = (size.width * 0.07).clamp(24.0, 32.0);
+    final subtitleSize = (size.width * 0.04).clamp(14.0, 18.0);
+    final buttonWidth = (size.width * 0.5).clamp(200.0, 300.0);
+    final verticalSpacing = (size.height * 0.03).clamp(16.0, 32.0);
+    final horizontalPadding = (size.width * 0.05).clamp(16.0, 24.0);
 
     return Scaffold(
       backgroundColor: isDarkMode ? Colors.black : Colors.white,
@@ -121,10 +129,10 @@ class _ProfileCreation2State extends State<ProfileCreation2> {
                 physics: const ClampingScrollPhysics(),
                 child: Padding(
                   padding: EdgeInsets.fromLTRB(
-                    20,
-                    isIOS ? padding.top : 20,
-                    20,
-                    20,
+                    horizontalPadding,
+                    isIOS ? padding.top : verticalSpacing,
+                    horizontalPadding,
+                    verticalSpacing,
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -147,25 +155,30 @@ class _ProfileCreation2State extends State<ProfileCreation2> {
                         ),
                       ),
 
-                      SizedBox(height: size.height * 0.03),
+                      SizedBox(height: verticalSpacing),
 
-                      // Title and Subtitle
                       Text(
                         'Tell us about Your\ndating preference...',
                         style: TextStyle(
-                          fontSize: 28,
+                          fontSize: titleSize,
                           fontWeight: FontWeight.bold,
                           color: isDarkMode ? Colors.white : Colors.black,
+                        ).copyWith(
+                          fontSize: titleSize * textScaler.scale(1.0),
                         ),
                       ),
-                      SizedBox(height: size.height * 0.02),
+
+                      SizedBox(height: verticalSpacing * 0.5),
+
                       Text(
                         "By selecting 'Share Only with Friends',\nyour content will be visible exclusively to\nyour approved connections.",
                         style: TextStyle(
-                          fontSize: 14,
+                          fontSize: subtitleSize,
                           color:
                               isDarkMode ? Colors.grey[400] : Colors.grey[600],
                           height: 1.4,
+                        ).copyWith(
+                          fontSize: subtitleSize * textScaler.scale(1.0),
                         ),
                       ),
 
@@ -187,9 +200,11 @@ class _ProfileCreation2State extends State<ProfileCreation2> {
                                 HapticFeedback.lightImpact();
                               },
                               child: Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 20,
-                                  vertical: 12,
+                                padding: EdgeInsets.symmetric(
+                                  horizontal:
+                                      (size.width * 0.05).clamp(16.0, 24.0),
+                                  vertical:
+                                      (size.height * 0.015).clamp(10.0, 16.0),
                                 ),
                                 decoration: BoxDecoration(
                                   color: isSelected
@@ -297,15 +312,14 @@ class _ProfileCreation2State extends State<ProfileCreation2> {
             // Bottom section with fixed position
             Container(
               padding: EdgeInsets.fromLTRB(
-                20,
+                horizontalPadding,
                 16,
-                20,
+                horizontalPadding,
                 keyboardPadding > 0
                     ? keyboardPadding + 16
                     : padding.bottom + 20,
               ),
               decoration: BoxDecoration(
-                color: isDarkMode ? Colors.black : Colors.white,
                 boxShadow: [
                   BoxShadow(
                     color: isDarkMode
@@ -317,7 +331,7 @@ class _ProfileCreation2State extends State<ProfileCreation2> {
                 ],
               ),
               child: SizedBox(
-                width: size.width * 0.5,
+                width: buttonWidth,
                 child: ElevatedButton(
                   onPressed: _selectedPreference.isNotEmpty && !_isSubmitting
                       ? () {

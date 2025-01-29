@@ -499,8 +499,9 @@ class _ProfileCreation1State extends State<ProfileCreation1> {
                     boxShadow: [
                       BoxShadow(
                         color: isDarkMode
-                            ? Colors.white.withAlpha(5)
-                            : Colors.black.withAlpha(10),
+                            ? const Color.fromARGB(255, 0, 0, 0).withAlpha(5)
+                            : const Color.fromARGB(255, 255, 255, 255)
+                                .withAlpha(10),
                         blurRadius: 4,
                         offset: const Offset(0, 2),
                       ),
@@ -518,8 +519,8 @@ class _ProfileCreation1State extends State<ProfileCreation1> {
                       hintText: 'Write about yourself...',
                       hintStyle: TextStyle(
                         color: isDarkMode
-                            ? const Color.fromARGB(255, 0, 0, 0)
-                            : const Color.fromARGB(255, 255, 255, 255),
+                            ? const Color.fromARGB(255, 255, 255, 255)
+                            : const Color.fromARGB(255, 0, 0, 0),
                       ),
                       border: InputBorder.none,
                       contentPadding: const EdgeInsets.all(20),

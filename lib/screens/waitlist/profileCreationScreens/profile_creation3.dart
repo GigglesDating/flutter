@@ -358,12 +358,15 @@ class _ProfileCreation3State extends State<ProfileCreation3> {
                                   _customInterestFocus.requestFocus();
                                 });
                               },
-                              icon: const Icon(Icons.add,
-                                  color: Colors.black, size: 20),
+                              icon: Icon(Icons.add,
+                                  color:
+                                      isDarkMode ? Colors.white : Colors.black,
+                                  size: 20),
                               label: Text(
                                 'Add custom interest',
                                 style: TextStyle(
-                                  color: Colors.grey[800],
+                                  color:
+                                      isDarkMode ? Colors.white : Colors.black,
                                   fontSize: 16,
                                 ),
                               ),

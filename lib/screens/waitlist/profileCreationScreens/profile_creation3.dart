@@ -55,7 +55,8 @@ class _ProfileCreation3State extends State<ProfileCreation3> {
       final response = await thinkProvider.getInterests();
 
       if (response['status'] == 'success') {
-        final interestsList = (response['data'] as List).map((interest) {
+        final List<dynamic> interestsList = response['data'];
+        final formattedInterests = interestsList.map((interest) {
           return {
             'name': interest['name'],
             'id': interest['id'],
@@ -66,7 +67,7 @@ class _ProfileCreation3State extends State<ProfileCreation3> {
 
         if (mounted) {
           setState(() {
-            _defaultInterests = interestsList;
+            _defaultInterests = formattedInterests;
             _isLoading = false;
           });
         }
@@ -192,8 +193,29 @@ class _ProfileCreation3State extends State<ProfileCreation3> {
       // Navigate to waitlist screen
       Navigator.push(
         context,
-        MaterialPageRoute(
-          builder: (context) => const WaitlistScreen(),
+        PageRouteBuilder(
+          pageBuilder: (context, animation, secondaryAnimation) =>
+              const WaitlistScreen(),
+          transitionsBuilder: (context, animation, secondaryAnimation, child) {
+            const begin = Offset(1.0, 0.0); // Slide from right
+            const end = Offset.zero;
+            const curve = Curves.easeInOutCubic;
+
+            var tween = Tween(begin: begin, end: end).chain(
+              CurveTween(curve: curve),
+            );
+
+            var offsetAnimation = animation.drive(tween);
+
+            return FadeTransition(
+              opacity: animation,
+              child: SlideTransition(
+                position: offsetAnimation,
+                child: child,
+              ),
+            );
+          },
+          transitionDuration: const Duration(milliseconds: 500),
         ),
       );
     } catch (e) {
@@ -207,9 +229,10 @@ class _ProfileCreation3State extends State<ProfileCreation3> {
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: isDarkMode ? Colors.black : Colors.white,
       body: GestureDetector(
         onTap: () {
           FocusScope.of(context).unfocus();
@@ -224,7 +247,7 @@ class _ProfileCreation3State extends State<ProfileCreation3> {
         child: SafeArea(
           child: Column(
             children: [
-              // Back Button - Adjusted position to match profile_creation2
+              // Back Button
               Align(
                 alignment: Alignment.centerLeft,
                 child: GestureDetector(
@@ -232,15 +255,19 @@ class _ProfileCreation3State extends State<ProfileCreation3> {
                   child: Container(
                     margin: EdgeInsets.only(
                       left: 20,
-                      top: 10, // Reduced top margin
-                      bottom: 20, // Reduced bottom margin
+                      top: 10,
+                      bottom: 20,
                     ),
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: Colors.grey[100],
+                      color: isDarkMode ? Colors.grey[900] : Colors.grey[100],
                     ),
-                    child: const Icon(Icons.arrow_back, size: 24),
+                    child: Icon(
+                      Icons.arrow_back,
+                      size: 24,
+                      color: isDarkMode ? Colors.white : Colors.black,
+                    ),
                   ),
                 ),
               ),
@@ -248,17 +275,18 @@ class _ProfileCreation3State extends State<ProfileCreation3> {
               Expanded(
                 child: Column(
                   children: [
-                    // Header Text - Adjusted spacing
+                    // Header Text
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 20),
                       child: Align(
                         alignment: Alignment.centerLeft,
-                        child: const Text(
+                        child: Text(
                           'Choose what you are\ninterested in...',
                           style: TextStyle(
                             fontSize: 28,
                             fontWeight: FontWeight.bold,
                             height: 1.2,
+                            color: isDarkMode ? Colors.white : Colors.black,
                           ),
                         ),
                       ),
@@ -331,12 +359,15 @@ class _ProfileCreation3State extends State<ProfileCreation3> {
                                   _customInterestFocus.requestFocus();
                                 });
                               },
-                              icon: const Icon(Icons.add,
-                                  color: Colors.black, size: 20),
+                              icon: Icon(Icons.add,
+                                  color:
+                                      isDarkMode ? Colors.white : Colors.black,
+                                  size: 20),
                               label: Text(
                                 'Add custom interest',
                                 style: TextStyle(
-                                  color: Colors.grey[800],
+                                  color:
+                                      isDarkMode ? Colors.white : Colors.black,
                                   fontSize: 16,
                                 ),
                               ),

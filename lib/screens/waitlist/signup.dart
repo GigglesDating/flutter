@@ -37,12 +37,14 @@ class _SignupScreenState extends State<SignupScreen> {
     final size = MediaQuery.of(context).size;
     final bottomInset = MediaQuery.of(context).viewInsets.bottom;
     final isIOS = Theme.of(context).platform == TargetPlatform.iOS;
+    final textScaler = MediaQuery.of(context).textScaler;
 
-    // Responsive calculations
-    final logoSize = (size.width * 0.4).clamp(160.0, 240.0);
-    final horizontalPadding = size.width * 0.06;
-    final fieldSpacing = size.width * 0.03;
-    final verticalSpacing = size.height * 0.02;
+    // Responsive calculations with constraints
+    final logoSize = (size.width * 0.4).clamp(120.0, 200.0);
+    final horizontalPadding = (size.width * 0.06).clamp(16.0, 32.0);
+    final fieldSpacing = (size.width * 0.03).clamp(8.0, 16.0);
+    final verticalSpacing = (size.height * 0.02).clamp(12.0, 24.0);
+    final logoTopMargin = size.height * 0.02;
 
     final inputDecoration = InputDecoration(
       filled: true,
@@ -69,9 +71,6 @@ class _SignupScreenState extends State<SignupScreen> {
         fontWeight: FontWeight.w500,
       ),
     );
-
-    final topPadding = size.height * 0.12;
-    final logoTopMargin = size.height * 0.02;
 
     return Scaffold(
       resizeToAvoidBottomInset: true,
@@ -125,9 +124,11 @@ class _SignupScreenState extends State<SignupScreen> {
                   ),
                   padding: EdgeInsets.fromLTRB(
                     horizontalPadding,
-                    topPadding,
+                    MediaQuery.of(context).padding.top + verticalSpacing,
                     horizontalPadding,
-                    bottomInset + verticalSpacing,
+                    bottomInset +
+                        MediaQuery.of(context).padding.bottom +
+                        verticalSpacing,
                   ),
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -250,33 +251,39 @@ class _SignupScreenState extends State<SignupScreen> {
                                 SizedBox(width: fieldSpacing),
                                 Expanded(
                                   flex: 40,
-                                  child: glassContainer(
-                                    child: DropdownButtonFormField<String>(
-                                      value: _gender,
-                                      style: const TextStyle(
-                                          color: Color.fromARGB(
-                                              255, 255, 255, 255)),
-                                      icon: const SizedBox.shrink(),
-                                      dropdownColor:
-                                          Colors.black.withAlpha(204),
-                                      decoration: inputDecoration.copyWith(
-                                          hintText: 'Gender',
-                                          hintStyle: TextStyle(
-                                              color: const Color.fromARGB(
-                                                  255, 2, 2, 2))
-                                          // suffixIcon: const Icon(
-                                          //   Icons.arrow_drop_down,
-                                          //   color: Colors.white,
-                                          // ),
-                                          ),
-                                      items: ['Male', 'Female', 'Other']
-                                          .map((e) => DropdownMenuItem(
-                                                value: e,
-                                                child: Text(e),
-                                              ))
-                                          .toList(),
-                                      onChanged: (value) =>
-                                          setState(() => _gender = value),
+                                  child: ConstrainedBox(
+                                    constraints: BoxConstraints(
+                                      maxWidth: (size.width * 0.4)
+                                          .clamp(120.0, 200.0),
+                                    ),
+                                    child: glassContainer(
+                                      child: DropdownButtonFormField<String>(
+                                        value: _gender,
+                                        style: const TextStyle(
+                                            color: Color.fromARGB(
+                                                255, 255, 255, 255)),
+                                        icon: const SizedBox.shrink(),
+                                        dropdownColor:
+                                            Colors.black.withAlpha(204),
+                                        decoration: inputDecoration.copyWith(
+                                            hintText: 'Gender',
+                                            hintStyle: TextStyle(
+                                                color: const Color.fromARGB(
+                                                    255, 2, 2, 2))
+                                            // suffixIcon: const Icon(
+                                            //   Icons.arrow_drop_down,
+                                            //   color: Colors.white,
+                                            // ),
+                                            ),
+                                        items: ['Male', 'Female', 'Other']
+                                            .map((e) => DropdownMenuItem(
+                                                  value: e,
+                                                  child: Text(e),
+                                                ))
+                                            .toList(),
+                                        onChanged: (value) =>
+                                            setState(() => _gender = value),
+                                      ),
                                     ),
                                   ),
                                 ),
@@ -311,6 +318,10 @@ class _SignupScreenState extends State<SignupScreen> {
                                                           ? 230
                                                           : 255),
                                                   fontWeight: FontWeight.w500,
+                                                  fontSize: 16,
+                                                ).copyWith(
+                                                  fontSize: 16 *
+                                                      textScaler.scale(1.0),
                                                 ),
                                               ),
                                             ),
@@ -446,37 +457,40 @@ class _SignupScreenState extends State<SignupScreen> {
 
                             // Join Button
                             Center(
-                              child: SizedBox(
-                                width: size.width * 0.5,
-                                height: 48,
-                                child: ElevatedButton(
-                                  onPressed: _isLoading ? null : _handleSignup,
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: Colors.white,
-                                    foregroundColor: Colors.blue,
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(30),
+                              child: FractionallySizedBox(
+                                widthFactor: 0.8, // 80% of parent width
+                                child: SizedBox(
+                                  height: 48,
+                                  child: ElevatedButton(
+                                    onPressed:
+                                        _isLoading ? null : _handleSignup,
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: Colors.white,
+                                      foregroundColor: Colors.blue,
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(30),
+                                      ),
+                                      elevation: 0,
                                     ),
-                                    elevation: 0,
+                                    child: _isLoading
+                                        ? const SizedBox(
+                                            height: 20,
+                                            width: 20,
+                                            child: CircularProgressIndicator(
+                                              valueColor:
+                                                  AlwaysStoppedAnimation<Color>(
+                                                      Colors.white),
+                                              strokeWidth: 2,
+                                            ),
+                                          )
+                                        : const Text(
+                                            'SUBMIT',
+                                            style: TextStyle(
+                                              fontSize: 16,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
                                   ),
-                                  child: _isLoading
-                                      ? const SizedBox(
-                                          height: 20,
-                                          width: 20,
-                                          child: CircularProgressIndicator(
-                                            valueColor:
-                                                AlwaysStoppedAnimation<Color>(
-                                                    Colors.white),
-                                            strokeWidth: 2,
-                                          ),
-                                        )
-                                      : const Text(
-                                          'SUBMIT',
-                                          style: TextStyle(
-                                            fontSize: 16,
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                        ),
                                 ),
                               ),
                             ),
@@ -567,11 +581,33 @@ class _SignupScreenState extends State<SignupScreen> {
 
         if (!mounted) return;
 
-        // Navigate to KYC screen
+        // Navigate to KYC screen with animation
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(
-            builder: (context) => const KycConsentScreen(),
+          PageRouteBuilder(
+            pageBuilder: (context, animation, secondaryAnimation) =>
+                const KycConsentScreen(),
+            transitionsBuilder:
+                (context, animation, secondaryAnimation, child) {
+              const begin = Offset(1.0, 0.0);
+              const end = Offset.zero;
+              const curve = Curves.easeInOutCubic;
+
+              var tween = Tween(begin: begin, end: end).chain(
+                CurveTween(curve: curve),
+              );
+
+              var offsetAnimation = animation.drive(tween);
+
+              return FadeTransition(
+                opacity: animation,
+                child: SlideTransition(
+                  position: offsetAnimation,
+                  child: child,
+                ),
+              );
+            },
+            transitionDuration: const Duration(milliseconds: 500),
           ),
         );
       } else {

@@ -59,8 +59,29 @@ class _ProfileCreation2State extends State<ProfileCreation2> {
       // Navigate to next screen
       Navigator.push(
         context,
-        MaterialPageRoute(
-          builder: (context) => const ProfileCreation3(),
+        PageRouteBuilder(
+          pageBuilder: (context, animation, secondaryAnimation) =>
+              const ProfileCreation3(),
+          transitionsBuilder: (context, animation, secondaryAnimation, child) {
+            const begin = Offset(1.0, 0.0); // Slide from right
+            const end = Offset.zero;
+            const curve = Curves.easeInOutCubic;
+
+            var tween = Tween(begin: begin, end: end).chain(
+              CurveTween(curve: curve),
+            );
+
+            var offsetAnimation = animation.drive(tween);
+
+            return FadeTransition(
+              opacity: animation,
+              child: SlideTransition(
+                position: offsetAnimation,
+                child: child,
+              ),
+            );
+          },
+          transitionDuration: const Duration(milliseconds: 500),
           settings: RouteSettings(
             arguments: {
               'preference': _selectedPreference,
@@ -88,9 +109,18 @@ class _ProfileCreation2State extends State<ProfileCreation2> {
     final padding = MediaQuery.of(context).padding;
     final isIOS = Theme.of(context).platform == TargetPlatform.iOS;
     final keyboardPadding = MediaQuery.of(context).viewInsets.bottom;
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    final textScaler = MediaQuery.of(context).textScaler;
+
+    // Responsive calculations
+    final titleSize = (size.width * 0.07).clamp(24.0, 32.0);
+    final subtitleSize = (size.width * 0.04).clamp(14.0, 18.0);
+    final buttonWidth = (size.width * 0.5).clamp(200.0, 300.0);
+    final verticalSpacing = (size.height * 0.03).clamp(16.0, 32.0);
+    final horizontalPadding = (size.width * 0.05).clamp(16.0, 24.0);
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: isDarkMode ? Colors.black : Colors.white,
       body: SafeArea(
         child: Column(
           children: [
@@ -99,10 +129,10 @@ class _ProfileCreation2State extends State<ProfileCreation2> {
                 physics: const ClampingScrollPhysics(),
                 child: Padding(
                   padding: EdgeInsets.fromLTRB(
-                    20,
-                    isIOS ? padding.top : 20,
-                    20,
-                    20,
+                    horizontalPadding,
+                    isIOS ? padding.top : verticalSpacing,
+                    horizontalPadding,
+                    verticalSpacing,
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -114,29 +144,41 @@ class _ProfileCreation2State extends State<ProfileCreation2> {
                           padding: const EdgeInsets.all(8),
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
-                            color: Colors.grey[200],
+                            color: isDarkMode
+                                ? Colors.grey[900]
+                                : Colors.grey[200],
                           ),
-                          child: const Icon(Icons.arrow_back, size: 24),
+                          child: Icon(
+                            Icons.arrow_back,
+                            color: isDarkMode ? Colors.white : Colors.black,
+                          ),
                         ),
                       ),
 
-                      SizedBox(height: size.height * 0.03),
+                      SizedBox(height: verticalSpacing),
 
-                      // Title and Subtitle
-                      const Text(
+                      Text(
                         'Tell us about Your\ndating preference...',
                         style: TextStyle(
-                          fontSize: 28,
+                          fontSize: titleSize,
                           fontWeight: FontWeight.bold,
+                          color: isDarkMode ? Colors.white : Colors.black,
+                        ).copyWith(
+                          fontSize: titleSize * textScaler.scale(1.0),
                         ),
                       ),
-                      SizedBox(height: size.height * 0.02),
+
+                      SizedBox(height: verticalSpacing * 0.5),
+
                       Text(
                         "By selecting 'Share Only with Friends',\nyour content will be visible exclusively to\nyour approved connections.",
                         style: TextStyle(
-                          fontSize: 14,
-                          color: Colors.grey[600],
+                          fontSize: subtitleSize,
+                          color:
+                              isDarkMode ? Colors.grey[400] : Colors.grey[600],
                           height: 1.4,
+                        ).copyWith(
+                          fontSize: subtitleSize * textScaler.scale(1.0),
                         ),
                       ),
 
@@ -147,32 +189,38 @@ class _ProfileCreation2State extends State<ProfileCreation2> {
                         spacing: 10,
                         runSpacing: 10,
                         children: _preferences.map((preference) {
+                          final isSelected = _selectedPreference == preference;
                           return AnimatedScale(
-                            scale:
-                                _selectedPreference == preference ? 1.05 : 1.0,
+                            scale: isSelected ? 1.05 : 1.0,
                             duration: const Duration(milliseconds: 200),
                             child: GestureDetector(
                               onTap: () {
-                                setState(() {
-                                  _selectedPreference = preference;
-                                });
-                                // Add haptic feedback
+                                setState(
+                                    () => _selectedPreference = preference);
                                 HapticFeedback.lightImpact();
                               },
                               child: Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 20,
-                                  vertical: 12,
+                                padding: EdgeInsets.symmetric(
+                                  horizontal:
+                                      (size.width * 0.05).clamp(16.0, 24.0),
+                                  vertical:
+                                      (size.height * 0.015).clamp(10.0, 16.0),
                                 ),
                                 decoration: BoxDecoration(
-                                  color: _selectedPreference == preference
-                                      ? Colors.black
-                                      : Colors.grey[200],
+                                  color: isSelected
+                                      ? (isDarkMode
+                                          ? Colors.white
+                                          : Colors.black)
+                                      : (isDarkMode
+                                          ? Colors.grey[900]
+                                          : Colors.grey[200]),
                                   borderRadius: BorderRadius.circular(25),
-                                  boxShadow: _selectedPreference == preference
+                                  boxShadow: isSelected
                                       ? [
                                           BoxShadow(
-                                            color: Colors.black.withAlpha(26),
+                                            color: isDarkMode
+                                                ? Colors.white.withAlpha(20)
+                                                : Colors.black.withAlpha(26),
                                             blurRadius: 8,
                                             offset: const Offset(0, 4),
                                           )
@@ -182,11 +230,14 @@ class _ProfileCreation2State extends State<ProfileCreation2> {
                                 child: Text(
                                   preference,
                                   style: TextStyle(
-                                    color: _selectedPreference == preference
-                                        ? Colors.white
-                                        : Colors.black,
+                                    color: isSelected
+                                        ? (isDarkMode
+                                            ? Colors.black
+                                            : Colors.white)
+                                        : (isDarkMode
+                                            ? Colors.white
+                                            : Colors.black),
                                     fontWeight: FontWeight.w500,
-                                    fontSize: 16,
                                   ),
                                 ),
                               ),
@@ -198,11 +249,12 @@ class _ProfileCreation2State extends State<ProfileCreation2> {
                       SizedBox(height: size.height * 0.06),
 
                       // Age Preference with Custom Slider
-                      const Text(
+                      Text(
                         'Age Preference',
                         style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.w600,
+                          color: isDarkMode ? Colors.white : Colors.black,
                         ),
                       ),
                       SizedBox(height: size.height * 0.02),
@@ -213,8 +265,11 @@ class _ProfileCreation2State extends State<ProfileCreation2> {
                             min: 18,
                             max: 60,
                             divisions: 42,
-                            activeColor: Colors.black,
-                            inactiveColor: Colors.grey[300],
+                            activeColor:
+                                isDarkMode ? Colors.white : Colors.black,
+                            inactiveColor: isDarkMode
+                                ? Colors.grey[800]
+                                : Colors.grey[300],
                             labels: RangeLabels(
                               _ageRange.start.round().toString(),
                               _ageRange.end.round().toString(),
@@ -233,9 +288,12 @@ class _ProfileCreation2State extends State<ProfileCreation2> {
                               children: [
                                 Text(
                                   '${_ageRange.start.round()} - ${_ageRange.end.round()} years',
-                                  style: const TextStyle(
+                                  style: TextStyle(
                                     fontWeight: FontWeight.w500,
                                     fontSize: 16,
+                                    color: isDarkMode
+                                        ? Colors.white
+                                        : Colors.black,
                                   ),
                                 ),
                               ],
@@ -254,25 +312,26 @@ class _ProfileCreation2State extends State<ProfileCreation2> {
             // Bottom section with fixed position
             Container(
               padding: EdgeInsets.fromLTRB(
-                20,
+                horizontalPadding,
                 16,
-                20,
+                horizontalPadding,
                 keyboardPadding > 0
                     ? keyboardPadding + 16
                     : padding.bottom + 20,
               ),
               decoration: BoxDecoration(
-                color: Colors.white,
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withAlpha(10),
+                    color: isDarkMode
+                        ? Colors.white.withAlpha(5)
+                        : Colors.black.withAlpha(10),
                     blurRadius: 4,
                     offset: const Offset(0, -2),
                   ),
                 ],
               ),
               child: SizedBox(
-                width: size.width * 0.5,
+                width: buttonWidth,
                 child: ElevatedButton(
                   onPressed: _selectedPreference.isNotEmpty && !_isSubmitting
                       ? () {
@@ -281,8 +340,8 @@ class _ProfileCreation2State extends State<ProfileCreation2> {
                         }
                       : null,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.black,
-                    foregroundColor: Colors.white,
+                    backgroundColor: isDarkMode ? Colors.white : Colors.black,
+                    foregroundColor: isDarkMode ? Colors.black : Colors.white,
                     padding: EdgeInsets.symmetric(
                       vertical: size.height * 0.02,
                     ),
@@ -290,15 +349,16 @@ class _ProfileCreation2State extends State<ProfileCreation2> {
                       borderRadius: BorderRadius.circular(30),
                     ),
                     elevation: 2,
-                    disabledBackgroundColor: Colors.grey[300],
+                    disabledBackgroundColor:
+                        isDarkMode ? Colors.grey[800] : Colors.grey[300],
                   ),
                   child: _isSubmitting
-                      ? const SizedBox(
+                      ? SizedBox(
                           height: 20,
                           width: 20,
                           child: CircularProgressIndicator(
-                            valueColor:
-                                AlwaysStoppedAnimation<Color>(Colors.white),
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                                isDarkMode ? Colors.black : Colors.white),
                             strokeWidth: 2,
                           ),
                         )

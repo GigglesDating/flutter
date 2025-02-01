@@ -110,8 +110,31 @@ class _LoginScreenState extends State<LoginScreen> {
           // If reg_process is null or not in response, navigate to IntroVideo
           if (response['reg_process'] == null) {
             Navigator.of(context).pushAndRemoveUntil(
-              MaterialPageRoute(
-                builder: (context) => SignupScreen(),
+              PageRouteBuilder(
+                pageBuilder: (context, animation, secondaryAnimation) =>
+                    SignupScreen(),
+                transitionsBuilder:
+                    (context, animation, secondaryAnimation, child) {
+                  const begin = Offset(1.0, 0.0); // Slide from right
+                  const end = Offset.zero;
+                  const curve = Curves.easeInOutCubic;
+
+                  var tween = Tween(begin: begin, end: end).chain(
+                    CurveTween(curve: curve),
+                  );
+
+                  var offsetAnimation = animation.drive(tween);
+
+                  // Fade transition combined with slide
+                  return FadeTransition(
+                    opacity: animation,
+                    child: SlideTransition(
+                      position: offsetAnimation,
+                      child: child,
+                    ),
+                  );
+                },
+                transitionDuration: const Duration(milliseconds: 500),
               ),
               (route) => false,
             );
@@ -124,8 +147,31 @@ class _LoginScreenState extends State<LoginScreen> {
           switch (_regProcess) {
             case 'new_user':
               Navigator.of(context).pushAndRemoveUntil(
-                MaterialPageRoute(
-                  builder: (context) => SignupScreen(),
+                PageRouteBuilder(
+                  pageBuilder: (context, animation, secondaryAnimation) =>
+                      SignupScreen(),
+                  transitionsBuilder:
+                      (context, animation, secondaryAnimation, child) {
+                    const begin = Offset(1.0, 0.0); // Slide from right
+                    const end = Offset.zero;
+                    const curve = Curves.easeInOutCubic;
+
+                    var tween = Tween(begin: begin, end: end).chain(
+                      CurveTween(curve: curve),
+                    );
+
+                    var offsetAnimation = animation.drive(tween);
+
+                    // Fade transition combined with slide
+                    return FadeTransition(
+                      opacity: animation,
+                      child: SlideTransition(
+                        position: offsetAnimation,
+                        child: child,
+                      ),
+                    );
+                  },
+                  transitionDuration: const Duration(milliseconds: 500),
                 ),
                 (route) => false,
               );
@@ -441,8 +487,14 @@ class _LoginScreenState extends State<LoginScreen> {
                                         setState(() {
                                           if (_isOtpSent) {
                                             _otp = value;
+                                            if (value.length == 4) {
+                                              FocusScope.of(context).unfocus();
+                                            }
                                           } else {
                                             _phoneNumber = value;
+                                            if (value.length == 10) {
+                                              FocusScope.of(context).unfocus();
+                                            }
                                           }
                                           _errorMessage = null;
                                         });

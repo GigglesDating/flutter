@@ -336,8 +336,29 @@ class _ProfileCreation1State extends State<ProfileCreation1> {
 
       Navigator.push(
         context,
-        MaterialPageRoute(
-          builder: (context) => const ProfileCreation2(),
+        PageRouteBuilder(
+          pageBuilder: (context, animation, secondaryAnimation) =>
+              const ProfileCreation2(),
+          transitionsBuilder: (context, animation, secondaryAnimation, child) {
+            const begin = Offset(1.0, 0.0); // Slide from right
+            const end = Offset.zero;
+            const curve = Curves.easeInOutCubic;
+
+            var tween = Tween(begin: begin, end: end).chain(
+              CurveTween(curve: curve),
+            );
+
+            var offsetAnimation = animation.drive(tween);
+
+            return FadeTransition(
+              opacity: animation,
+              child: SlideTransition(
+                position: offsetAnimation,
+                child: child,
+              ),
+            );
+          },
+          transitionDuration: const Duration(milliseconds: 500),
           settings: RouteSettings(arguments: profileData),
         ),
       );
@@ -379,9 +400,10 @@ class _ProfileCreation1State extends State<ProfileCreation1> {
     final size = MediaQuery.of(context).size;
     final padding = MediaQuery.of(context).padding;
     final isIOS = Theme.of(context).platform == TargetPlatform.iOS;
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: isDarkMode ? Colors.black : Colors.white,
       body: GestureDetector(
         onTap: () => FocusScope.of(context).unfocus(),
         child: SafeArea(
@@ -396,11 +418,12 @@ class _ProfileCreation1State extends State<ProfileCreation1> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
+                Text(
                   "Let's Personalise your Profile",
                   style: TextStyle(
                     fontSize: 22,
                     fontWeight: FontWeight.bold,
+                    color: isDarkMode ? Colors.white : Colors.black,
                   ),
                 ),
                 SizedBox(height: size.height * 0.04),
@@ -471,11 +494,14 @@ class _ProfileCreation1State extends State<ProfileCreation1> {
                 AnimatedContainer(
                   duration: const Duration(milliseconds: 200),
                   decoration: BoxDecoration(
-                    color: Colors.grey[100],
+                    color: isDarkMode ? Colors.grey[900] : Colors.grey[100],
                     borderRadius: BorderRadius.circular(20),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withAlpha(10),
+                        color: isDarkMode
+                            ? const Color.fromARGB(255, 0, 0, 0).withAlpha(5)
+                            : const Color.fromARGB(255, 255, 255, 255)
+                                .withAlpha(10),
                         blurRadius: 4,
                         offset: const Offset(0, 2),
                       ),
@@ -485,10 +511,17 @@ class _ProfileCreation1State extends State<ProfileCreation1> {
                     controller: _bioController,
                     maxLines: 4,
                     maxLength: 350,
-                    style: const TextStyle(fontSize: 16),
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: isDarkMode ? Colors.white : Colors.black,
+                    ),
                     decoration: InputDecoration(
                       hintText: 'Write about yourself...',
-                      hintStyle: TextStyle(color: Colors.grey[500]),
+                      hintStyle: TextStyle(
+                        color: isDarkMode
+                            ? const Color.fromARGB(255, 255, 255, 255)
+                            : const Color.fromARGB(255, 0, 0, 0),
+                      ),
                       border: InputBorder.none,
                       contentPadding: const EdgeInsets.all(20),
                     ),
@@ -515,15 +548,24 @@ class _ProfileCreation1State extends State<ProfileCreation1> {
                 // Gender Orientation Dropdown
                 Container(
                   decoration: BoxDecoration(
-                    color: Colors.grey[100],
+                    color: isDarkMode ? Colors.grey[900] : Colors.grey[100],
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: DropdownButtonFormField<String>(
                     value: _orientation,
-                    decoration: const InputDecoration(
+                    decoration: InputDecoration(
                       labelText: 'Your gender orientation',
+                      labelStyle: TextStyle(
+                        color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
+                      ),
                       border: InputBorder.none,
-                      contentPadding: EdgeInsets.symmetric(horizontal: 20),
+                      contentPadding:
+                          const EdgeInsets.symmetric(horizontal: 20),
+                    ),
+                    dropdownColor:
+                        isDarkMode ? Colors.grey[900] : Colors.grey[100],
+                    style: TextStyle(
+                      color: isDarkMode ? Colors.white : Colors.black,
                     ),
                     items: _orientations.map((String value) {
                       return DropdownMenuItem<String>(
@@ -562,8 +604,10 @@ class _ProfileCreation1State extends State<ProfileCreation1> {
                         }
                       },
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.black,
-                        foregroundColor: Colors.white,
+                        backgroundColor:
+                            isDarkMode ? Colors.white : Colors.black,
+                        foregroundColor:
+                            isDarkMode ? Colors.black : Colors.white,
                         padding:
                             EdgeInsets.symmetric(vertical: size.height * 0.02),
                         shape: RoundedRectangleBorder(

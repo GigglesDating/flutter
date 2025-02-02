@@ -5,7 +5,6 @@ import 'package:url_launcher/url_launcher.dart';
 import 'dart:math' show pi;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_frontend/network/think.dart';
-//import 'package:flutter_frontend/network/auth_provider.dart';
 
 import '../barrel.dart';
 
@@ -293,9 +292,7 @@ class _WaitlistScreenState extends State<WaitlistScreen>
                           ),
                         ),
                         onTap: () async {
-                          // Store context reference before async operations
-                          final navigatorContext = context;
-                          final scaffoldContext = ScaffoldMessenger.of(context);
+                          if (!mounted) return;
 
                           try {
                             // Get UUID from SharedPreferences
@@ -304,7 +301,7 @@ class _WaitlistScreenState extends State<WaitlistScreen>
 
                             if (uuid == null) {
                               if (!mounted) return;
-                              scaffoldContext.showSnackBar(
+                              ScaffoldMessenger.of(context).showSnackBar(
                                 const SnackBar(
                                     content: Text('User ID not found')),
                               );
@@ -320,22 +317,18 @@ class _WaitlistScreenState extends State<WaitlistScreen>
 
                             if (response['status'] == 'success') {
                               // Clear stored data
-                              final prefs =
-                                  await SharedPreferences.getInstance();
                               await prefs.remove('user_uuid');
                               await prefs.remove('reg_process');
 
                               if (!mounted) return;
-
-                              // Navigate using stored context
-                              Navigator.of(navigatorContext).pushAndRemoveUntil(
+                              Navigator.of(context).pushAndRemoveUntil(
                                 MaterialPageRoute(
                                   builder: (context) => const SplashScreen(),
                                 ),
                                 (route) => false,
                               );
                             } else {
-                              scaffoldContext.showSnackBar(
+                              ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(
                                   content: Text(
                                       response['message'] ?? 'Logout failed'),
@@ -344,7 +337,7 @@ class _WaitlistScreenState extends State<WaitlistScreen>
                             }
                           } catch (e) {
                             if (!mounted) return;
-                            scaffoldContext.showSnackBar(
+                            ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
                                   content: Text('Error during logout: $e')),
                             );

@@ -3,6 +3,9 @@ import 'package:flutter/services.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'dart:math' show pi;
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter_frontend/network/think.dart';
+//import 'package:flutter_frontend/network/auth_provider.dart';
 
 import '../barrel.dart';
 
@@ -289,15 +292,63 @@ class _WaitlistScreenState extends State<WaitlistScreen>
                             color: isDarkMode ? Colors.white : Colors.black,
                           ),
                         ),
-                        onTap: () {
-                          Navigator.pop(context); // Close bottom sheet
-                          // TODO: Add logout API call here  (Hard navigate implimented to login screen)
-                          Navigator.pushReplacement(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => const LoginScreen(),
-                            ),
-                          );
+                        onTap: () async {
+                          // Store context reference before async operations
+                          final navigatorContext = context;
+                          final scaffoldContext = ScaffoldMessenger.of(context);
+
+                          try {
+                            // Get UUID from SharedPreferences
+                            final prefs = await SharedPreferences.getInstance();
+                            final uuid = prefs.getString('user_uuid');
+
+                            if (uuid == null) {
+                              if (!mounted) return;
+                              scaffoldContext.showSnackBar(
+                                const SnackBar(
+                                    content: Text('User ID not found')),
+                              );
+                              return;
+                            }
+
+                            final thinkProvider = ThinkProvider();
+                            final response = await thinkProvider.logout(
+                              uuid: uuid,
+                            );
+
+                            if (!mounted) return;
+
+                            if (response['status'] == 'success') {
+                              // Clear stored data
+                              final prefs =
+                                  await SharedPreferences.getInstance();
+                              await prefs.remove('user_uuid');
+                              await prefs.remove('reg_process');
+
+                              if (!mounted) return;
+
+                              // Navigate using stored context
+                              Navigator.of(navigatorContext).pushAndRemoveUntil(
+                                MaterialPageRoute(
+                                  builder: (context) => const SplashScreen(),
+                                ),
+                                (route) => false,
+                              );
+                            } else {
+                              scaffoldContext.showSnackBar(
+                                SnackBar(
+                                  content: Text(
+                                      response['message'] ?? 'Logout failed'),
+                                ),
+                              );
+                            }
+                          } catch (e) {
+                            if (!mounted) return;
+                            scaffoldContext.showSnackBar(
+                              SnackBar(
+                                  content: Text('Error during logout: $e')),
+                            );
+                          }
                         },
                       ),
                       ListTile(

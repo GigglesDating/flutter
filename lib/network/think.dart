@@ -146,6 +146,15 @@ class ThinkProvider {
     });
   }
 
+  // In ThinkProvider class
+  Future<Map<String, dynamic>> logout({
+    required String uuid,
+  }) async {
+    return _callFunction('logout', {
+      'uuid': uuid,
+    });
+  }
+
   // Generic function caller
   Future<Map<String, dynamic>> _callFunction(
     String function,

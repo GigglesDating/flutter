@@ -25,6 +25,7 @@ dependencies:
   hyperkyc_flutter: ^0.33.0
   flutter_svg: ^2.0.17
   logger: ^2.5.0
+  
 
 
 

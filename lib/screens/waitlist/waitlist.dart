@@ -164,16 +164,55 @@ class _WaitlistScreenState extends State<WaitlistScreen>
               ),
             ),
             TextButton(
-              onPressed: () {
-                // TODO: Add delete account API call here (need to write think function)
+              onPressed: () async {
                 Navigator.pop(context); // Close dialog
-                Navigator.pop(context); // Close bottom sheet
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const LoginScreen(),
-                  ),
-                );
+
+                try {
+                  // Get UUID from SharedPreferences
+                  final prefs = await SharedPreferences.getInstance();
+                  final uuid = prefs.getString('user_uuid');
+
+                  if (uuid == null) {
+                    if (!mounted) return;
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('User ID not found')),
+                    );
+                    return;
+                  }
+
+                  final thinkProvider = ThinkProvider();
+                  final response = await thinkProvider.deleteAccount(
+                    uuid: uuid,
+                  );
+
+                  if (!mounted) return;
+
+                  if (response['status'] == 'success') {
+                    // Clear stored data
+                    await prefs.remove('user_uuid');
+                    await prefs.remove('reg_process');
+
+                    if (!mounted) return;
+                    Navigator.of(context).pushAndRemoveUntil(
+                      MaterialPageRoute(
+                        builder: (context) => const SplashScreen(),
+                      ),
+                      (route) => false,
+                    );
+                  } else {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(
+                            response['message'] ?? 'Failed to delete account'),
+                      ),
+                    );
+                  }
+                } catch (e) {
+                  if (!mounted) return;
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Error deleting account: $e')),
+                  );
+                }
               },
               child: const Text(
                 'Delete',
@@ -492,7 +531,7 @@ class _WaitlistScreenState extends State<WaitlistScreen>
                               Icons.menu,
                               color: isDarkMode
                                   ? const Color.fromARGB(255, 255, 255, 255)
-                                  : const Color.fromARGB(255, 255, 255, 255),
+                                  : const Color.fromARGB(255, 0, 0, 0),
                               size: size.width * 0.06,
                             ),
                             onPressed: () {

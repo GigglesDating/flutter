@@ -155,6 +155,15 @@ class ThinkProvider {
     });
   }
 
+  // In ThinkProvider class
+  Future<Map<String, dynamic>> deleteAccount({
+    required String uuid,
+  }) async {
+    return _callFunction('delete_account', {
+      'uuid': uuid,
+    });
+  }
+
   // Generic function caller
   Future<Map<String, dynamic>> _callFunction(
     String function,

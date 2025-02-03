@@ -20,6 +20,7 @@ export 'waitlist/signup.dart';
 export 'waitlist/waitlist_video.dart';
 export 'waitlist/waitlist.dart';
 
+export 'waitlist/subscription_screen.dart';
 export 'waitlist/support.dart';
 
 export 'waitlist/kycScreens/aadhar_status.dart';

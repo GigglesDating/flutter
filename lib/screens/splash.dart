@@ -38,7 +38,7 @@ class _SplashScreenState extends State<SplashScreen>
       final isDarkMode =
           MediaQuery.platformBrightnessOf(context) == Brightness.dark;
       _videoController = VideoPlayerController.asset(
-        isDarkMode ? 'assets/dark/favicon.mp4' : 'assets/light/favicon.mp4',
+        isDarkMode ? 'assets/light/favicon.mp4' : 'assets/dark/favicon.mp4',
       )..initialize().then((_) {
           if (mounted) {
             setState(() {
@@ -48,6 +48,7 @@ class _SplashScreenState extends State<SplashScreen>
           }
         }).catchError((error) {
           debugPrint('Video initialization error: $error');
+          debugPrint('Video path: ${_videoController.dataSource}');
           if (mounted) {
             setState(() {
               _isVideoInitialized = false;

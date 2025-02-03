@@ -5,15 +5,15 @@ export 'banned.dart';
 export 'member/home.dart';
 export 'member/membership_purchase.dart';
 
-export 'submenus/settings/settings.dart';
-export 'submenus/settings/subpages/account_privacy_screen.dart';
-export 'submenus/settings/subpages/accounts_center_screen.dart';
-export 'submenus/settings/subpages/activity_screen.dart';
-export 'submenus/settings/subpages/blocked_users.dart';
-export 'submenus/settings/subpages/delete_account.dart';
-export 'submenus/settings/subpages/features.dart';
-export 'submenus/settings/subpages/login_info.dart';
-export 'submenus/settings/subpages/notifications.dart';
+export 'member/settings/settings.dart';
+export 'member/settings/account_privacy_screen.dart';
+export 'member/settings/accounts_center_screen.dart';
+export 'member/settings/activity_screen.dart';
+export 'member/settings/blocked_users.dart';
+export 'member/settings/delete_account.dart';
+export 'member/settings/features.dart';
+export 'member/settings/login_info.dart';
+export 'member/settings/notifications.dart';
 
 export 'waitlist/login.dart';
 export 'waitlist/signup.dart';

@@ -294,13 +294,12 @@ class _WaitlistScreenState extends State<WaitlistScreen>
                         ),
                         onTap: () {
                           Navigator.pop(context);
-                          // TODO: Navigate to FAQs screen (need to create a new design)
-                          // Navigator.push(
-                          //   context,
-                          //   MaterialPageRoute(
-                          //     builder: (context) => const FAQsScreen(),
-                          //   ),
-                          // );
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const FAQScreen(),
+                            ),
+                          );
                         },
                       ),
                       ListTile(
@@ -316,7 +315,12 @@ class _WaitlistScreenState extends State<WaitlistScreen>
                         ),
                         onTap: () {
                           Navigator.pop(context);
-                          // Handle customer support
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const SupportScreen(),
+                            ),
+                          );
                         },
                       ),
                       ListTile(

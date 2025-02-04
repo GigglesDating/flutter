@@ -40,6 +40,7 @@ class _ProfileCreation3State extends State<ProfileCreation3> {
     'local_bar': Icons.local_bar,
     'camera_alt': Icons.camera_alt,
     'travel_explore': Icons.travel_explore,
+
     // Add more mappings as needed
   };
 

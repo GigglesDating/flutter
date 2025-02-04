@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_frontend/screens/barrel.dart';
 
 class FAQScreen extends StatelessWidget {
   const FAQScreen({super.key});
@@ -104,7 +105,12 @@ class FAQScreen extends StatelessWidget {
                 child: Center(
                   child: TextButton(
                     onPressed: () {
-                      // TODO: Implement contact support
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const SupportScreen(),
+                        ),
+                      );
                     },
                     child: Text(
                       'Contact support',

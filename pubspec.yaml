@@ -16,19 +16,22 @@ dependencies:
   logging: ^1.2.0
   flutter_datetime_picker_plus: ^2.1.0
   image_picker: ^1.0.7
-  image_cropper: ^8.1.0
+  image_cropper: ^9.0.0
   video_player: ^2.9.2
   provider: ^6.1.2
   carousel_slider: ^5.0.0
   card_swiper: ^3.0.1
   url_launcher: ^6.3.1
-  hyperkyc_flutter: ^0.33.0
+  hyperkyc_flutter: ^0.38.0
   flutter_svg: ^2.0.17
   logger: ^2.5.0
-  share_plus: ^7.2.1
+  share_plus: ^10.1.4
   dotted_border: ^2.1.0
   razorpay_flutter: ^1.3.5
-  fluttertoast: ^8.2.4
+  fluttertoast: ^8.2.10
+ 
+  
+
 
 
 dev_dependencies:

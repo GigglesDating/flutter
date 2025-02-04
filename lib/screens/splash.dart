@@ -76,7 +76,7 @@ class _SplashScreenState extends State<SplashScreen>
         transitionDuration: const Duration(milliseconds: 800),
         pageBuilder: (context, animation, secondaryAnimation) => FadeTransition(
           opacity: animation,
-          child: const ProfileCreation3(),
+          child: const FAQScreen(),
         ),
       ),
     );

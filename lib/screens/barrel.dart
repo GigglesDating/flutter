@@ -20,6 +20,7 @@ export 'waitlist/signup.dart';
 export 'waitlist/waitlist_video.dart';
 export 'waitlist/waitlist.dart';
 
+export 'waitlist/faq.dart';
 export 'waitlist/subscription.dart';
 export 'waitlist/support.dart';
 

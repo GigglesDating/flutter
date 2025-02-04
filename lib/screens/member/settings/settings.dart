@@ -1,14 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_frontend/placeholders/shared_preferences_service.dart';
+import 'package:flutter_frontend/screens/barrel.dart';
 import 'package:flutter_frontend/screens/member/settings/account_privacy_screen.dart';
 import 'package:flutter_frontend/screens/member/settings/accounts_center_screen.dart';
 import 'package:flutter_frontend/screens/member/settings/activity_screen.dart';
 import 'package:flutter_frontend/screens/member/settings/blocked_users.dart';
 import 'package:flutter_frontend/screens/member/settings/features.dart';
 import 'package:flutter_frontend/screens/member/settings/notifications.dart';
+import 'package:flutter_frontend/screens/subscription_page.dart';
 import 'package:flutter_frontend/screens/waitlist/support.dart';
-import 'package:flutter_svg/flutter_svg.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:share_plus/share_plus.dart';
 
 import '../../../utilitis/appColors.dart';
 import '../../../utilitis/appFonts.dart';
@@ -335,7 +337,7 @@ class _SettingsPageState extends State<SettingsPage> {
             InkWell(
               onTap: () async {
                 await SharedPref().clearUserData();
-                Navigator.push(context, MaterialPageRoute(builder: (context) => SigninPage(),));
+                Navigator.push(context, MaterialPageRoute(builder: (context) => LoginScreen(),));
               },
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 16.0),

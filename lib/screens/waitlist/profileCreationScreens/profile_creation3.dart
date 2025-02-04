@@ -24,6 +24,25 @@ class _ProfileCreation3State extends State<ProfileCreation3> {
   List<Map<String, dynamic>> _defaultInterests = [];
   bool _isLoading = true;
 
+  final Map<String, IconData> iconMapping = {
+    'movie': Icons.movie,
+    'coffee': Icons.coffee,
+    'shopping_bag': Icons.shopping_bag,
+    'sports_basketball': Icons.sports_basketball,
+    'music_note': Icons.music_note,
+    'restaurant': Icons.restaurant,
+    'sports_esports': Icons.sports_esports,
+    'fitness_center': Icons.fitness_center,
+    'brush': Icons.brush,
+    'book': Icons.book,
+    'pets': Icons.pets,
+    'hiking': Icons.hiking,
+    'local_bar': Icons.local_bar,
+    'camera_alt': Icons.camera_alt,
+    'travel_explore': Icons.travel_explore,
+    // Add more mappings as needed
+  };
+
   @override
   void initState() {
     super.initState();
@@ -38,25 +57,13 @@ class _ProfileCreation3State extends State<ProfileCreation3> {
       if (response['status'] == 'success') {
         final List<dynamic> interestsList = response['data'];
         final formattedInterests = interestsList.map((interest) {
-          // Directly use the icon name from backend
-          IconData iconData;
-          try {
-            String iconName = interest['icon_name'].toString();
-            // Use reflection to get the icon data
-            iconData = IconData(
-              int.parse(iconName, radix: 16),
-              fontFamily: 'MaterialIcons',
-            );
-          } catch (e) {
-            debugPrint('Error parsing icon: ${interest['icon_name']}');
-            iconData = Icons.star; // Fallback icon
-          }
-
+          final iconName = interest['icon_name'].toString();
           return {
             'name': interest['name'],
             'id': interest['id'],
             'category': interest['category'],
-            'icon': iconData,
+            'icon': iconMapping[iconName] ??
+                Icons.star, // Use mapping with fallback
           };
         }).toList();
 

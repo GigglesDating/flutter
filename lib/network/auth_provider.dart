@@ -92,6 +92,7 @@ class AuthProvider extends ChangeNotifier {
           if (decodedResponse['reg_process'] != null) {
             await prefs.setString(
                 'reg_process', decodedResponse['reg_process']);
+            print(decodedResponse);
           }
         }
         decodedResponse['status'] = true;

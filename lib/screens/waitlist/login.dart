@@ -112,7 +112,7 @@ class _LoginScreenState extends State<LoginScreen> {
             Navigator.of(context).pushAndRemoveUntil(
               PageRouteBuilder(
                 pageBuilder: (context, animation, secondaryAnimation) =>
-                    SignupScreen(),
+                    SplashScreen(),
                 transitionsBuilder:
                     (context, animation, secondaryAnimation, child) {
                   const begin = Offset(1.0, 0.0); // Slide from right

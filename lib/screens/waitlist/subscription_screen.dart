@@ -36,34 +36,6 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
                   fontWeight: FontWeight.w700,
                   fontFamily: 'CustomFont'),
             ),
-            // Row(
-            //   children: [
-            //     GestureDetector(
-            //       onTap: () {
-            //         print("sub1:pressed");
-            //       },
-            //       child: Padding(
-            //         padding: const EdgeInsets.only(left: 40, right: 5),
-            //         child: SizedBox(
-            //             width: 150,
-            //             height: 200,
-            //             child: Image.asset("assets/tempImages/sub3.webp")),
-            //       ),
-            //     ),
-            //     GestureDetector(
-            //       onTap: () {
-            //         print("sub2:pressed");
-            //       },
-            //       child: Padding(
-            //         padding: const EdgeInsets.only(left: 5, right: 30),
-            //         child: SizedBox(
-            //             width: 150,
-            //             height: 200,
-            //             child: Image.asset("assets/tempImages/sub4.webp")),
-            //       ),
-            //     ),
-            //   ],
-            // ),
             GestureDetector(
               onTap: () {
                 print("sub:pressed");
@@ -124,15 +96,6 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
                           fontSize: 20,
                           fontWeight: FontWeight.w600),
                     ),
-                    
-                    // Padding(
-                    //   padding: const EdgeInsets.all(8.0),
-                    //   child: Icon(
-                    //     Icons.share,
-                    //     color: Colors.white,
-                    //     size: 30,
-                    //   ),
-                    // )
                   ],
                 ),
               ),

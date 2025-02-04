@@ -2,7 +2,7 @@ export 'splash.dart';
 
 export 'banned.dart';
 
-export 'member/home.dart';
+export 'member/home_tab/home.dart';
 export 'member/membership_purchase.dart';
 
 export 'member/settings/settings.dart';

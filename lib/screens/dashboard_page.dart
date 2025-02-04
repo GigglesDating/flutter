@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_frontend/screens/barrel.dart';
+import 'package:flutter_frontend/screens/member/explore_tab/explore_tab.dart';
+import 'package:flutter_frontend/screens/member/home_tab/home.dart';
+import 'package:flutter_frontend/screens/member/snip_tab/snip_tab.dart';
+import 'package:flutter_frontend/screens/submenus/sos_map_page.dart';
+import 'package:flutter_frontend/utilitis/appColors.dart';
 import 'package:flutter_svg/svg.dart';
-import 'package:giggles/constants/appColors.dart';
-import 'package:giggles/screens/dashboard/snip_tab/snip_tab.dart';
-import 'package:giggles/screens/maps/sos_map_page.dart';
-import '../user/user_profile_page.dart';
-import 'explore_tab/explore_tab.dart';
-import 'home_tab/home_tab.dart';
 
 
 class DashboardPage extends StatefulWidget {
@@ -215,7 +215,7 @@ class Page5 extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return UserProfilePage();
+    return ProfileCreation1();
   }
 }
 

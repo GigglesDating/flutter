@@ -2,14 +2,10 @@ import 'package:carousel_slider/carousel_slider.dart';
 import 'package:dotted_border/dotted_border.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_frontend/screens/components/buttonComponent.dart';
+import 'package:flutter_frontend/screens/dashboard_page.dart';
 import 'package:flutter_frontend/utilitis/appColors.dart';
 import 'package:flutter_frontend/utilitis/appFonts.dart';
-import 'package:giggles/constants/appColors.dart';
-import 'package:giggles/constants/appFonts.dart';
-
-import '../components/buttonComponent.dart';
-import '../dashboard/dashboard_page.dart';
-
 
 class SubscriptionPage extends StatefulWidget {
   const SubscriptionPage({

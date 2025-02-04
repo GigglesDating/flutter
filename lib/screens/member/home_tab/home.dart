@@ -1,6 +1,8 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_frontend/screens/components/userDashboardComponent.dart';
+import 'package:flutter_frontend/screens/components/userDashboardNavbar.dart';
 import 'package:flutter_frontend/screens/submenus/notifications_page.dart';
 import 'package:flutter_frontend/screens/submenus/messenger_page.dart';
 import 'package:flutter_frontend/screens/user/add_to_story_page.dart';

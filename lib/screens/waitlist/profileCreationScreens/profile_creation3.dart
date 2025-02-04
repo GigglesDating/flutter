@@ -24,25 +24,6 @@ class _ProfileCreation3State extends State<ProfileCreation3> {
   List<Map<String, dynamic>> _defaultInterests = [];
   bool _isLoading = true;
 
-  // Map backend icon names to Flutter Icons
-  static final Map<String, IconData> _iconMapping = {
-    'coffee': Icons.coffee,
-    'shopping_bag': Icons.shopping_bag,
-    'movie': Icons.movie,
-    'directions_bike': Icons.directions_bike,
-    'hiking': Icons.hiking,
-    'pool': Icons.pool,
-    'gesture': Icons.gesture,
-    'restaurant': Icons.restaurant,
-    'self_improvement': Icons.self_improvement,
-    'book': Icons.book,
-    'nightlife': Icons.nightlife,
-    'directions_car': Icons.directions_car,
-    'fitness_center': Icons.fitness_center,
-    'pets': Icons.pets,
-    'mic': Icons.mic,
-  };
-
   @override
   void initState() {
     super.initState();
@@ -57,11 +38,25 @@ class _ProfileCreation3State extends State<ProfileCreation3> {
       if (response['status'] == 'success') {
         final List<dynamic> interestsList = response['data'];
         final formattedInterests = interestsList.map((interest) {
+          // Directly use the icon name from backend
+          IconData iconData;
+          try {
+            String iconName = interest['icon_name'].toString();
+            // Use reflection to get the icon data
+            iconData = IconData(
+              int.parse(iconName, radix: 16),
+              fontFamily: 'MaterialIcons',
+            );
+          } catch (e) {
+            debugPrint('Error parsing icon: ${interest['icon_name']}');
+            iconData = Icons.star; // Fallback icon
+          }
+
           return {
             'name': interest['name'],
             'id': interest['id'],
             'category': interest['category'],
-            'icon': _iconMapping[interest['icon_name']] ?? Icons.star,
+            'icon': iconData,
           };
         }).toList();
 

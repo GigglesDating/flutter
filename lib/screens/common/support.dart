@@ -127,20 +127,27 @@ class _SupportScreenState extends State<SupportScreen> {
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
-    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    final isDarkMode =
+        MediaQuery.of(context).platformBrightness == Brightness.dark;
     final isIOS = Theme.of(context).platform == TargetPlatform.iOS;
+    final textScaler = MediaQuery.of(context).textScaler;
 
     return GestureDetector(
-      onTap: () {
-        // Dismiss keyboard when tapping outside
-        FocusScope.of(context).unfocus();
-      },
+      onTap: () => FocusScope.of(context).unfocus(),
       child: Scaffold(
         backgroundColor: isDarkMode ? Colors.black : Colors.white,
         appBar: AppBar(
-          title: const Text('Contact Support'),
+          title: Text(
+            'Contact Support',
+            style: TextStyle(
+              color: isDarkMode ? Colors.white : Colors.black,
+            ),
+          ),
           backgroundColor: Colors.transparent,
           elevation: 0,
+          iconTheme: IconThemeData(
+            color: isDarkMode ? Colors.white : Colors.black,
+          ),
         ),
         body: SafeArea(
           child: SingleChildScrollView(
@@ -152,7 +159,7 @@ class _SupportScreenState extends State<SupportScreen> {
                 Text(
                   'Describe your concern',
                   style: TextStyle(
-                    fontSize: size.width * 0.045,
+                    fontSize: textScaler.scale(16),
                     fontWeight: FontWeight.bold,
                     color: isDarkMode ? Colors.white : Colors.black,
                   ),
@@ -168,6 +175,9 @@ class _SupportScreenState extends State<SupportScreen> {
                   ),
                   decoration: InputDecoration(
                     hintText: 'What went wrong? (max 350 words)',
+                    hintStyle: TextStyle(
+                      color: isDarkMode ? Colors.white60 : Colors.black54,
+                    ),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
@@ -184,6 +194,8 @@ class _SupportScreenState extends State<SupportScreen> {
                         width: 2,
                       ),
                     ),
+                    filled: true,
+                    fillColor: isDarkMode ? Colors.grey[900] : Colors.grey[50],
                   ),
                   onChanged: (text) {
                     if (_getWordCount(text) > _maxWords) {
@@ -212,7 +224,7 @@ class _SupportScreenState extends State<SupportScreen> {
                 Text(
                   'Add Screenshots (optional)',
                   style: TextStyle(
-                    fontSize: size.width * 0.045,
+                    fontSize: textScaler.scale(16),
                     fontWeight: FontWeight.bold,
                     color: isDarkMode ? Colors.white : Colors.black,
                   ),
@@ -220,7 +232,7 @@ class _SupportScreenState extends State<SupportScreen> {
                 SizedBox(height: size.height * 0.02),
                 if (_screenshots.isNotEmpty)
                   Container(
-                    height: 100,
+                    height: size.height * 0.12,
                     margin: EdgeInsets.only(bottom: 16),
                     child: ListView.builder(
                       scrollDirection: Axis.horizontal,
@@ -242,8 +254,8 @@ class _SupportScreenState extends State<SupportScreen> {
                                 borderRadius: BorderRadius.circular(8),
                                 child: Image.file(
                                   _screenshots[index],
-                                  height: 100,
-                                  width: 100,
+                                  height: size.height * 0.12,
+                                  width: size.height * 0.12,
                                   fit: BoxFit.cover,
                                 ),
                               ),
@@ -263,13 +275,17 @@ class _SupportScreenState extends State<SupportScreen> {
                                     child: Container(
                                       padding: const EdgeInsets.all(4),
                                       decoration: BoxDecoration(
-                                        color: Colors.black54,
+                                        color: isDarkMode
+                                            ? Colors.black54
+                                            : Colors.white54,
                                         borderRadius: BorderRadius.circular(20),
                                       ),
                                       child: Icon(
                                         Icons.close,
                                         size: 16,
-                                        color: Colors.white,
+                                        color: isDarkMode
+                                            ? Colors.white
+                                            : Colors.black,
                                       ),
                                     ),
                                   ),
@@ -283,49 +299,56 @@ class _SupportScreenState extends State<SupportScreen> {
                   ),
                 TextButton.icon(
                   onPressed: _screenshots.length < 3 ? _pickImage : null,
-                  icon: Icon(Icons.add_photo_alternate),
-                  label: Text('Add Screenshot (${_screenshots.length}/3)'),
-                  style: TextButton.styleFrom(
-                    foregroundColor: _screenshots.length < 3
-                        ? Theme.of(context).primaryColor
+                  icon: Icon(
+                    Icons.add_photo_alternate,
+                    color: _screenshots.length < 3
+                        ? (isDarkMode ? Colors.white : Colors.black)
                         : Colors.grey,
+                  ),
+                  label: Text(
+                    'Add Screenshot (${_screenshots.length}/3)',
+                    style: TextStyle(
+                      color: _screenshots.length < 3
+                          ? (isDarkMode ? Colors.white : Colors.black)
+                          : Colors.grey,
+                    ),
                   ),
                 ),
                 SizedBox(height: size.height * 0.04),
                 SizedBox(
                   width: double.infinity,
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 200),
-                    child: ElevatedButton(
-                      onPressed:
-                          _isSubmitting || _concernController.text.isEmpty
-                              ? null
-                              : _submitTicket,
-                      style: ElevatedButton.styleFrom(
-                        padding:
-                            EdgeInsets.symmetric(vertical: size.height * 0.02),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(isIOS ? 30 : 25),
-                        ),
-                        elevation: 0,
+                  child: ElevatedButton(
+                    onPressed: _isSubmitting || _concernController.text.isEmpty
+                        ? null
+                        : _submitTicket,
+                    style: ElevatedButton.styleFrom(
+                      padding:
+                          EdgeInsets.symmetric(vertical: size.height * 0.02),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(isIOS ? 30 : 25),
                       ),
-                      child: _isSubmitting
-                          ? SizedBox(
-                              height: size.width * 0.05,
-                              width: size.width * 0.05,
-                              child: CircularProgressIndicator(
-                                color: Colors.white,
-                                strokeWidth: 2,
-                              ),
-                            )
-                          : Text(
-                              'Submit',
-                              style: TextStyle(
-                                fontSize: size.width * 0.045,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
+                      backgroundColor: isDarkMode ? Colors.white : Colors.black,
+                      foregroundColor: isDarkMode ? Colors.black : Colors.white,
+                      elevation: 0,
+                      disabledBackgroundColor:
+                          isDarkMode ? Colors.white24 : Colors.black12,
                     ),
+                    child: _isSubmitting
+                        ? SizedBox(
+                            height: size.width * 0.05,
+                            width: size.width * 0.05,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: isDarkMode ? Colors.black : Colors.white,
+                            ),
+                          )
+                        : Text(
+                            'Submit',
+                            style: TextStyle(
+                              fontSize: textScaler.scale(16),
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
                   ),
                 ),
               ],

@@ -164,6 +164,30 @@ class ThinkProvider {
     });
   }
 
+  // Function to fetch Faqs
+  Future<Map<String, dynamic>> getFaqs() async {
+    try {
+      final response = await _callFunction('get_faqs', {});
+
+      if (response['status'] == 'success') {
+        return {
+          'status': 'success',
+          'faqs': response['faqs'],
+        };
+      } else {
+        return {
+          'status': 'error',
+          'message': response['message'] ?? 'Failed to fetch FAQs',
+        };
+      }
+    } catch (e) {
+      return {
+        'status': 'error',
+        'message': 'Error fetching FAQs: $e',
+      };
+    }
+  }
+
   // Generic function caller
   Future<Map<String, dynamic>> _callFunction(
     String function,

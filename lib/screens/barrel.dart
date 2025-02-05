@@ -1,6 +1,6 @@
 export 'splash.dart';
 
-export 'banned.dart';
+export 'common/banned.dart';
 
 export 'member/home.dart';
 export 'member/membership_purchase.dart';
@@ -20,9 +20,9 @@ export 'waitlist/signup.dart';
 export 'waitlist/waitlist_video.dart';
 export 'waitlist/waitlist.dart';
 
-export 'waitlist/faq.dart';
+export 'common/faq.dart';
 export 'waitlist/subscription.dart';
-export 'waitlist/support.dart';
+export 'common/support.dart';
 
 export 'waitlist/kycScreens/aadhar_status.dart';
 export 'waitlist/kycScreens/kyc_consent.dart';

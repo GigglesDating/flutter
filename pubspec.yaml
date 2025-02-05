@@ -54,6 +54,10 @@ flutter:
     - assets/dark/
     - assets/dark/bgs/
     
+    # temp images
+    - assets/images/
+    - assets/icons/
+    
     # Light mode assets
     - assets/light/
     - assets/light/bgs/

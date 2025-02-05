@@ -18,8 +18,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
       "assets/$themeFolder/subscription/2.png",
       "assets/$themeFolder/subscription/3.png",
       "assets/$themeFolder/subscription/4.png",
-      "assets/$themeFolder/subscription/5.png",
-      "assets/$themeFolder/subscription/6.png",
+      "assets/$themeFolder/subscription/5.png"
     ];
   }
 

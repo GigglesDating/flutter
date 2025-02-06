@@ -122,7 +122,7 @@ class PersonalDetailsScreen extends StatelessWidget {
               const SizedBox(height: 4),
               Text(
                 value2,
-                style:  AppFonts.titleBold(fontSize: 18),
+                style: AppFonts.titleBold(fontSize: 18),
               ),
             ],
           ),

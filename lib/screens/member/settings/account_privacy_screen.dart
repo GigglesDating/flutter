@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_frontend/utilitis/appColors.dart';
 import 'package:flutter_frontend/utilitis/appFonts.dart';
 
-
 class AccountPrivacyScreen extends StatefulWidget {
   const AccountPrivacyScreen({super.key});
 
@@ -19,8 +18,11 @@ class _AccountPrivacyScreenState extends State<AccountPrivacyScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(
-          'Account Privacy',
+        title: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Text(
+            'Account Privacy',
+          ),
         ),
         titleSpacing: 0,
         // foregroundColor: Theme.of(context).scaffoldBackgroundColor,
@@ -118,7 +120,7 @@ class _AccountPrivacyScreenState extends State<AccountPrivacyScreen> {
                   const Spacer(),
                   DropdownButton<String>(
                     value: selectedGroup,
-
+                    dropdownColor: Colors.grey[100],
                     items: ['Favourites', 'Close Matches', 'Best Matches']
                         .map((String value) {
                       return DropdownMenuItem<String>(

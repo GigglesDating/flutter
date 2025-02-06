@@ -188,6 +188,29 @@ class ThinkProvider {
     }
   }
 
+  Future<Map<String, dynamic>> getEvents() async {
+    try {
+      final response = await _callFunction('get_events', {});
+
+      if (response['status'] == 'success') {
+        return {
+          'status': 'success',
+          'events': response['events'],
+        };
+      } else {
+        return {
+          'status': 'error',
+          'message': response['message'] ?? 'Failed to fetch events',
+        };
+      }
+    } catch (e) {
+      return {
+        'status': 'error',
+        'message': 'Error fetching events: $e',
+      };
+    }
+  }
+
   // Generic function caller
   Future<Map<String, dynamic>> _callFunction(
     String function,

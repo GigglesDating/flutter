@@ -15,13 +15,18 @@ class _SplashScreenState extends State<SplashScreen>
   late AnimationController _fadeController;
   late Animation<double> _fadeAnimation;
   bool _isVideoInitialized = false;
+  bool _isNavigating = false;
 
   @override
   void initState() {
     super.initState();
-    _initializeVideo();
     _setupFadeAnimation();
-    _navigateToLogin();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _initializeVideo();
   }
 
   void _setupFadeAnimation() {
@@ -34,9 +39,10 @@ class _SplashScreenState extends State<SplashScreen>
   }
 
   void _initializeVideo() {
+    if (_isNavigating) return;
+
     try {
-      final isDarkMode =
-          MediaQuery.platformBrightnessOf(context) == Brightness.dark;
+      final isDarkMode = Theme.of(context).brightness == Brightness.dark;
       _videoController = VideoPlayerController.asset(
         isDarkMode ? 'assets/light/favicon.mp4' : 'assets/dark/favicon.mp4',
       )..initialize().then((_) {
@@ -44,19 +50,39 @@ class _SplashScreenState extends State<SplashScreen>
             setState(() {
               _isVideoInitialized = true;
               _videoController.play();
+              _navigateToHome();
             });
           }
         }).catchError((error) {
           debugPrint('Video initialization error: $error');
-          debugPrint('Video path: ${_videoController.dataSource}');
           if (mounted) {
             setState(() {
               _isVideoInitialized = false;
+              _navigateToHome();
             });
           }
         });
     } catch (e) {
       debugPrint('Video controller setup error: $e');
+      _navigateToHome();
+    }
+  }
+
+  Future<void> _navigateToHome() async {
+    if (_isNavigating) return;
+    _isNavigating = true;
+
+    try {
+      await Future.delayed(const Duration(seconds: 3));
+      if (!mounted) return;
+
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(
+          builder: (context) => const HomeTab(),
+        ),
+      );
+    } catch (e) {
+      debugPrint('Navigation error: $e');
     }
   }
 
@@ -65,21 +91,6 @@ class _SplashScreenState extends State<SplashScreen>
     _videoController.dispose();
     _fadeController.dispose();
     super.dispose();
-  }
-
-  Future<void> _navigateToLogin() async {
-    await Future.delayed(const Duration(seconds: 3));
-    if (!mounted) return;
-
-    Navigator.of(context).pushReplacement(
-      PageRouteBuilder(
-        transitionDuration: const Duration(milliseconds: 800),
-        pageBuilder: (context, animation, secondaryAnimation) => FadeTransition(
-          opacity: animation,
-          child: const NavigationController(),
-        ),
-      ),
-    );
   }
 
   @override

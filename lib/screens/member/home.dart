@@ -1,404 +1,304 @@
-// import 'dart:io';
+import 'package:flutter/material.dart';
+import 'package:image_cropper/image_cropper.dart';
+import 'package:image_picker/image_picker.dart';
+import '../placeholder_template.dart';
+import 'navbar.dart';
 
-// import 'package:flutter/material.dart';
-// import 'package:flutter_svg/flutter_svg.dart';
-// import 'package:image_cropper/image_cropper.dart';
-// import 'package:image_picker/image_picker.dart';
-// import '../barrel.dart';
+class HomeTab extends StatefulWidget {
+  const HomeTab({super.key});
 
-// import '../placeholder_template.dart';
+  @override
+  State<HomeTab> createState() => HomeTabState();
+}
 
-// import '../../notifications/notifications_page.dart';
-// import 'package:giggles/screens/messenger/messenger_page.dart';
-// import 'package:giggles/screens/user/add_to_story_page.dart';
+class HomeTabState extends State<HomeTab> {
+  final ImagePicker _picker = ImagePicker();
+  bool _isLoading = true;
 
-// class HomeTab extends StatefulWidget {
-//   const HomeTab({Key? key}) : super(key: key);
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_isLoading) {
+      _initializeAssets();
+    }
+  }
 
-//   @override
-//   _HomeTabState createState() => _HomeTabState();
-// }
+  Future<void> _initializeAssets() async {
+    try {
+      await Future.wait([
+        precacheImage(
+          const AssetImage('assets/light/bgs/loginbg.png'),
+          context,
+        ),
+      ]);
+    } catch (e) {
+      debugPrint('Error loading assets: $e');
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
+  }
 
-// class _HomeTabState extends State<HomeTab> {
-//   List<String> userPRofile = [
-//     'assets/images/user2.png',
-//     'assets/images/user3.png',
-//     'assets/images/user4.png',
-//     'assets/images/user5.png',
-//   ];
-//   File? _croppedImage;
-//   var ImageUrl;
-//   final ImagePicker _picker = ImagePicker();
-//   var filePath;
+  void _navigateToScreen(String screenName) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => PlaceholderScreen(
+          screenName: screenName,
+          message: '$screenName Screen',
+        ),
+      ),
+    );
+  }
 
-//   @override
-//   @override
-//   Widget build(BuildContext context) {
-//     return Scaffold(
-//         backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-//         appBar: AppBar(
-//           leading: IconButton(
-//             onPressed: () async {
-//               showImageModalSheet();
-//             },
-//             icon: Container(
-//               width: 50,
-//               height: 50,
-//               decoration: BoxDecoration(
-//                 color: Theme.of(context).colorScheme.tertiary,
-//                 borderRadius: BorderRadius.circular(100),
-//               ),
-//               child: Icon(
-//                 Icons.add_outlined,
-//                 color: Theme.of(context).brightness == Brightness.light
-//                     ? Colors.white
-//                     : Colors.black, //black
-//               ),
-//             ),
-//           ),
-//           actions: [
-//             IconButton(
-//               onPressed: () {
-//                 Navigator.push(
-//                     context,
-//                     MaterialPageRoute(
-//                       builder: (context) => PlaceholderScreen(
-//                         screenName: 'Notifications',
-//                         message: 'This is a placeholder screen',
-//                       ),
-//                     ));
-//               },
-//               icon: const Icon(
-//                 Icons.notifications,
-//               ),
+  @override
+  Widget build(BuildContext context) {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    final size = MediaQuery.of(context).size;
+    final isSmallScreen = size.width < 375;
 
-//             ),
-//             IconButton(
-//               onPressed: () {
-//                 Navigator.push(
-//                     context,
-//                     MaterialPageRoute(
-//                       builder: (context) => PlaceholderScreen(
-//                         screenName: 'Inbox',
-//                         message: 'This is a placeholder screen',
-//                       ),
-//                     ));
-//               },
+    if (_isLoading) {
+      return Scaffold(
+        backgroundColor: isDarkMode ? const Color(0xFF121212) : Colors.white,
+        body: const Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
+    }
 
-//               icon: Image(
-//                 image: AssetImage(
-//                   Theme.of(context).brightness == Brightness.light
-//                       ? 'assets/images/inbox_png.png'
-//                       : 'assets/images/inbox_white_png.png',
-//                 ),
-//               ),
-//             ),
-//           ],
-//           centerTitle: true,
-//           title: Row(
-//             mainAxisAlignment: MainAxisAlignment.center,
-//             children: [
-//               SizedBox(
-//                 width: 28,
-//               ),
-//               Image(
-//                 height: 24,
-//                 width: 24,
-//                 image: AssetImage(
-//                   Theme.of(context).brightness == Brightness.light
-//                       ? 'assets/images/logolighttheme.png'
-//                       : 'assets/images/logodarktheme.png',
-//                 ),
-//               ),
-//               Text('iggles'),
-//             ],
-//           ),
-//         ),
-//         body: Column(
-//           crossAxisAlignment: CrossAxisAlignment.start,
-//           children: [
-//             SingleChildScrollView(
-//               scrollDirection: Axis.horizontal,
-//               child: Row(
-//                 children: [
-//                   Stack(
-//                     clipBehavior: Clip.none,
-//                     children: [
-//                       Padding(
-//                         padding: const EdgeInsets.only(left: 16.0, right: 8),
-//                         child: Container(
-//                           decoration: BoxDecoration(
-//                               shape: BoxShape.circle,
-//                               border: Border.all(
-//                                 color:
-//                                     Color.fromARGB(255, 77, 240, 101), //green
-//                                 width: 2,
-//                               )),
-//                           child: CircleAvatar(
-//                             backgroundImage:
-//                                 AssetImage('assets/images/user1.png'),
-//                             radius: 30,
-//                           ),
-//                         ),
-//                       ),
-//                       Positioned(
-//                         bottom: 3,
-//                         // left: 0,
-//                         right: 2,
-//                         child: SizedBox(
-//                           width: 24,
-//                           height: 24,
-//                           child: ElevatedButton(
-//                             onPressed: () {
-//                               // showImageModalSheet();
+    return Scaffold(
+      backgroundColor: isDarkMode ? const Color(0xFF121212) : Colors.white,
+      appBar: _buildAppBar(isDarkMode),
+      body: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildStorySection(isDarkMode, isSmallScreen),
+          const SizedBox(height: 20),
+          Expanded(
+            child: _buildFeedSection(isDarkMode, isSmallScreen),
+          ),
+        ],
+      ),
+      bottomNavigationBar: const NavigationController(),
+    );
+  }
 
-//                               Navigator.push(
-//                                   context,
-//                                   MaterialPageRoute(
-//                                     builder: (context) => PlaceholderScreen(
-//                                       screenName: 'Add to Story',
-//                                       message: 'This is a placeholder screen',
-//                                     ),
-//                                   ));
-//                             },
+  Widget _buildStorySection(bool isDarkMode, bool isSmallScreen) {
+    return Container(
+      height: 100,
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: ListView.builder(
+        scrollDirection: Axis.horizontal,
+        itemCount: 5,
+        itemBuilder: (context, index) {
+          return Padding(
+            padding: EdgeInsets.only(
+              right: 12,
+              left: index == 0 ? 0 : 0,
+            ),
+            child: Column(
+              children: [
+                Container(
+                  width: 60,
+                  height: 60,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: const Color(0xFF2196F3),
+                      width: 2,
+                    ),
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(30),
+                    child: Image.asset(
+                      'assets/light/bgs/loginbg.png',
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'Story ${index + 1}',
+                  style: TextStyle(
+                    color: isDarkMode ? Colors.white : Colors.black,
+                    fontSize: 12,
+                  ),
+                ),
+              ],
+            ),
+          );
+        },
+      ),
+    );
+  }
 
-//                             style: ElevatedButton.styleFrom(
-//                               shape: CircleBorder(),
-//                               // fixedSize: Size(16, 16),
-//                               padding: EdgeInsets.zero,
-//                               // Adjust padding as needed
-//                               backgroundColor: Theme.of(context)
-//                                   .colorScheme
-//                                   .tertiary, // Customize color
-//                             ),
-//                             child: Center(
-//                                 child: Icon(
-//                               Icons.add,
-//                               color: Theme.of(context).brightness ==
-//                                       Brightness.light
-//                                   ? Colors.white // white
-//                                   : Colors.black, //black
-//                               size: 18,
-//                             )),
-//                           ),
-//                         ),
-//                       ),
-//                     ],
-//                   ),
-//                   Container(
-//                     height: 80,
-//                     child: ListView.builder(
-//                       shrinkWrap: true,
-//                       scrollDirection: Axis.horizontal,
-//                       itemCount: 4,
-//                       itemBuilder: (context, index) {
-//                         return Padding(
-//                           padding: EdgeInsets.only(
-//                               left: index == 0 ? 8 : 16,
-//                               right: index == 0 || index == 1 || index == 2
-//                                   ? 0
-//                                   : 16),
-//                           child: UserDashboardNavbar(
-//                             imageUrl: userPRofile[index],
-//                             sizeRadius: 30,
-//                           ),
-//                         );
-//                       },
-//                     ),
-//                   ),
-//                 ],
-//               ),
-//             ),
-//             SizedBox(
-//               height: 20,
-//             ),
-//             Expanded(
-//               child: ListView.builder(
-//                 shrinkWrap: true,
-//                 scrollDirection: Axis.vertical,
-//                 itemCount: 6,
-//                 itemBuilder: (context, index) {
-//                   // PostModel post = userProvider.followingPosts[index];
-//                   // UserModel? author = userProvider.getUserById(post.authorId);
-//                   return UserDashboardComponent();
-//                 },
-//               ),
-//             ),
-//           ],
-//         ));
-//   }
+  Widget _buildFeedSection(bool isDarkMode, bool isSmallScreen) {
+    return ListView.builder(
+      itemCount: 5,
+      itemBuilder: (context, index) {
+        return Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          child: Container(
+            decoration: BoxDecoration(
+              color: isDarkMode ? const Color(0xFF1A1A1A) : Colors.white,
+              borderRadius: BorderRadius.circular(15),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withAlpha(isDarkMode ? 60 : 20),
+                  blurRadius: 10,
+                  offset: const Offset(0, 5),
+                ),
+              ],
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                ListTile(
+                  leading: CircleAvatar(
+                    backgroundImage:
+                        const AssetImage('assets/light/bgs/loginbg.png'),
+                    radius: 20,
+                  ),
+                  title: Text(
+                    'User ${index + 1}',
+                    style: TextStyle(
+                      color: isDarkMode ? Colors.white : Colors.black,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  subtitle: Text(
+                    '2 hours ago',
+                    style: TextStyle(
+                      color: isDarkMode ? Colors.white70 : Colors.black54,
+                    ),
+                  ),
+                ),
+                Image.asset(
+                  'assets/light/bgs/loginbg.png',
+                  width: double.infinity,
+                  height: 300,
+                  fit: BoxFit.cover,
+                ),
+                Padding(
+                  padding: const EdgeInsets.all(12),
+                  child: Text(
+                    'Post caption ${index + 1}',
+                    style: TextStyle(
+                      color: isDarkMode ? Colors.white : Colors.black,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
 
-//   void showImageModalSheet() {
-//     showModalBottomSheet(
-//         backgroundColor: Colors.transparent,
-//         // constraints: BoxConstraints(maxHeight: 200),
-//         context: context,
-//         builder: (builder) {
-//           return Container(
-//             decoration: const BoxDecoration(
-//                 color: Color.fromRGBO(255, 255, 255, 1),
-//                 borderRadius: BorderRadius.only(
-//                     topLeft: Radius.circular(35.0),
-//                     topRight: Radius.circular(35.0))),
-//             width: double.infinity,
-//             child: Column(
-//               mainAxisSize: MainAxisSize.min,
-//               children: [
-//                 const SizedBox(
-//                   height: 20,
-//                 ),
-//                 Padding(
-//                   padding: const EdgeInsets.symmetric(horizontal: 16.0),
-//                   child: Row(
-//                     mainAxisAlignment: MainAxisAlignment.start,
-//                     children: [
-//                       Text(
-//                         'Add Post',
-//                         style: AppFonts.titleBold(
-//                             color: Colors.black, fontSize: 24),
-//                       ),
-//                     ],
-//                   ),
-//                 ),
-//                 const SizedBox(
-//                   height: 23,
-//                 ),
-//                 Padding(
-//                   padding: const EdgeInsets.symmetric(horizontal: 16),
-//                   child: Row(
-//                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
-//                     children: [
-//                       Column(
-//                         children: [
-//                           GestureDetector(
-//                             onTap: () async {
-//                               pickImage(ImageSource.camera);
-//                               Navigator.of(context).pop();
-//                             },
-//                             child: Container(
-//                               decoration: BoxDecoration(
-//                                   borderRadius: BorderRadius.circular(15),
-//                                   border: Border.all(
-//                                       color:
-//                                           const Color.fromRGBO(0, 0, 0, 0.1))),
-//                               height: 91,
-//                               width: 91,
-//                               child: Padding(
-//                                 padding: const EdgeInsets.all(24.0),
-//                                 child: SvgPicture.asset(
-//                                   "assets/icons/camera_icon.svg", width: 40,
-//                                   height: 36,
-//                                   // fit: BoxFit.fill,
-//                                 ),
-//                               ),
-//                             ),
-//                           ),
-//                           const Padding(
-//                             padding: EdgeInsets.only(top: 10.0, bottom: 24),
-//                             child: Text('Camera',
-//                                 style: TextStyle(
-//                                     fontSize: 16,
-//                                     fontFamily: "Inter",
-//                                     color: Color(0xff575651),
-//                                     fontWeight: FontWeight.w400)),
-//                           )
-//                         ],
-//                       ),
-//                       Column(
-//                         children: [
-//                           GestureDetector(
-//                             onTap: () async {
-//                               pickImage(ImageSource.gallery);
-//                               Navigator.of(context).pop();
-//                             },
-//                             child: Container(
-//                               decoration: BoxDecoration(
-//                                   borderRadius: BorderRadius.circular(15),
-//                                   border: Border.all(
-//                                       color:
-//                                           const Color.fromRGBO(0, 0, 0, 0.1))),
-//                               height: 91,
-//                               width: 91,
-//                               child: Padding(
-//                                 padding: const EdgeInsets.all(24.0),
-//                                 child: SvgPicture.asset(
-//                                   "assets/icons/gallery_icon.svg",
-//                                   width: 40,
-//                                   height: 36,
-//                                   // fit: BoxFit.fill,
-//                                 ),
-//                               ),
-//                             ),
-//                           ),
-//                           const Padding(
-//                             padding: EdgeInsets.only(top: 10.0, bottom: 24),
-//                             child: Text('Gallery',
-//                                 style: TextStyle(
-//                                     fontSize: 16,
-//                                     fontFamily: "Inter",
-//                                     color: Color(0xff575651),
-//                                     fontWeight: FontWeight.w400)),
-//                           )
-//                         ],
-//                       ),
-//                     ],
-//                   ),
-//                 ),
-//               ],
-//             ),
-//           );
-//         });
-//   }
+  PreferredSizeWidget _buildAppBar(bool isDarkMode) {
+    return AppBar(
+      backgroundColor: isDarkMode ? const Color(0xFF121212) : Colors.white,
+      elevation: 0,
+      leading: _buildAddButton(isDarkMode),
+      actions: _buildActions(isDarkMode),
+      centerTitle: true,
+      title: _buildTitle(isDarkMode),
+    );
+  }
 
-//   pickImage(ImageSource imageType) async {
-//     try {
-//       XFile? pickedImage = await _picker.pickImage(source: imageType);
-//       if (pickedImage != null) {
-//         // Crop the picked image
-//         final croppedImage = await ImageCropper().cropImage(
-//           sourcePath: pickedImage.path,
-//           uiSettings: [
-//             AndroidUiSettings(
-//               toolbarTitle: 'Cropper',
-//               toolbarColor: AppColors.primary,
-//               toolbarWidgetColor: Colors.white,
-//               aspectRatioPresets: [
-//                 CropAspectRatioPreset.original,
-//                 CropAspectRatioPreset.square,
-//                 CropAspectRatioPresetCustom(),
-//               ],
-//             ),
-//             IOSUiSettings(
-//               title: 'Cropper',
-//               aspectRatioPresets: [
-//                 CropAspectRatioPreset.original,
-//                 CropAspectRatioPreset.square,
-//                 CropAspectRatioPresetCustom(),
-//                 // IMPORTANT: iOS supports only one custom aspect ratio in preset list
-//               ],
-//             ),
-//             WebUiSettings(
-//               context: context,
-//             ),
-//           ],
-//         );
+  Widget _buildAddButton(bool isDarkMode) {
+    return IconButton(
+      onPressed: () => _navigateToScreen('Add Story'),
+      icon: Container(
+        width: 40,
+        height: 40,
+        decoration: BoxDecoration(
+          color: const Color(0xFF2196F3),
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Icon(
+          Icons.add_outlined,
+          color: isDarkMode ? Colors.black : Colors.white,
+          size: 20,
+        ),
+      ),
+    );
+  }
 
-//         if (croppedImage != null) {
-//           setState(() {
-//             _croppedImage = File(croppedImage.path);
-//           });
-//         }
-//       }
-//     } catch (error) {
-//       debugPrint(error.toString());
-//     }
-//   }
-// }
+  List<Widget> _buildActions(bool isDarkMode) {
+    return [
+      IconButton(
+        onPressed: () => _navigateToScreen('Notifications'),
+        icon: Icon(
+          Icons.notifications_outlined,
+          color: isDarkMode ? Colors.white : Colors.black,
+        ),
+      ),
+      IconButton(
+        onPressed: () => _navigateToScreen('Messages'),
+        icon: Icon(
+          Icons.mail_outline,
+          color: isDarkMode ? Colors.white : Colors.black,
+        ),
+      ),
+    ];
+  }
 
-// class CropAspectRatioPresetCustom implements CropAspectRatioPresetData {
-//   @override
-//   (int, int)? get data => (2, 3);
+  Widget _buildTitle(bool isDarkMode) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Image.asset(
+          isDarkMode
+              ? 'assets/images/logodarktheme.png'
+              : 'assets/images/logolighttheme.png',
+          height: 24,
+          width: 24,
+        ),
+        const SizedBox(width: 8),
+        Text(
+          'iggles',
+          style: TextStyle(
+            color: isDarkMode ? Colors.white : Colors.black,
+            fontSize: 20,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ],
+    );
+  }
 
-//   @override
-//   String get name => '2x3 (customized)';
-// }
+  void showImageModalSheet() {
+    showModalBottomSheet(
+      backgroundColor: Colors.transparent,
+      context: context,
+      builder: (builder) => const PlaceholderScreen(
+        screenName: 'Image Picker',
+        message: 'Image Picker Modal',
+      ),
+    );
+  }
+
+  Future<void> pickImage(ImageSource imageType) async {
+    try {
+      final XFile? pickedImage = await _picker.pickImage(source: imageType);
+      if (pickedImage != null) {
+        _navigateToScreen('Image Editor');
+      }
+    } catch (e) {
+      debugPrint('Error picking image: $e');
+    }
+  }
+}
+
+class CropAspectRatioPresetCustom implements CropAspectRatioPresetData {
+  @override
+  (int, int)? get data => (2, 3);
+
+  @override
+  String get name => '2x3 (customized)';
+}

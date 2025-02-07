@@ -47,6 +47,28 @@ class PlaceholderScreen extends StatelessWidget {
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Add error handling for renderer
+  ErrorWidget.builder = (FlutterErrorDetails details) {
+    return Material(
+      child: Container(
+        color: Colors.white,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Image.asset(
+              'assets/light/favicon.png',
+              width: 100,
+              height: 100,
+            ),
+            const SizedBox(height: 16),
+            const Text('Loading...'),
+          ],
+        ),
+      ),
+    );
+  };
+
   // Hide status bar
   SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
     statusBarColor: Colors.transparent,
@@ -59,7 +81,7 @@ void main() {
   runApp(
     MultiProvider(providers: [
       ChangeNotifierProvider(create: (_) => AuthProvider()),
-    ], child: MyApp()),
+    ], child: const MyApp()),
   );
 }
 

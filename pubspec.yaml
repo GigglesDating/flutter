@@ -27,6 +27,8 @@ dependencies:
   logger: ^2.5.0
   share_plus: ^10.1.4
   dotted_border: ^2.1.0
+  flutter_floating_bottom_bar: ^1.2.1+1
+
 
 
 dev_dependencies:
@@ -41,12 +43,11 @@ flutter:
     # Dark mode assets
     - assets/dark/
     - assets/dark/bgs/
-    - assets/dark/icons/
-    
+ 
     # Light mode assets
     - assets/light/
     - assets/light/bgs/
-    - assets/light/icons/
+    
     # Temporary images
     - assets/tempImages/
     
@@ -57,10 +58,13 @@ flutter:
     - assets/dark/subscription/
     - assets/light/subscription/
 
-
+    # Icons assets
+    - assets/icons/nav_bar/
+    - assets/feed/
 
   fonts:
     - family: CustomFont  # Replace with your actual font family name
+
       fonts:
         - asset: assets/fonts/Sukar-Regular.ttf
         - asset: assets/fonts/Sukar-Bold.ttf

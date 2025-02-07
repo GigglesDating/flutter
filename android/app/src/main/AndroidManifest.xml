@@ -4,7 +4,9 @@
     <application
         android:label="flutter_frontend"
         android:name="${applicationName}"
-        android:icon="@mipmap/ic_launcher">
+        android:icon="@mipmap/ic_launcher"
+        android:hardwareAccelerated="true"
+        android:largeHeap="true">
         <activity
             android:name=".MainActivity"
             android:exported="true"
@@ -41,6 +43,14 @@
         <meta-data
             android:name="flutterEmbedding"
             android:value="2" />
+
+        <!-- Add hardware acceleration flags -->
+        <meta-data
+            android:name="io.flutter.embedding.android.RenderMode"
+            android:value="texture" />
+        <meta-data
+            android:name="io.flutter.embedding.android.SplashScreenDrawable"
+            android:resource="@drawable/launch_background" />
     </application>
     <!-- Required to query activities that can process text, see:
          https://developer.android.com/training/package-visibility and

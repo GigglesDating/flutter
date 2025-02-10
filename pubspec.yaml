@@ -28,7 +28,9 @@ dependencies:
   share_plus: ^10.1.4
   dotted_border: ^2.1.0
   flutter_floating_bottom_bar: ^1.2.1+1
-
+  timeago: ^3.2.2
+  fluttertoast: ^8.2.11
+  
 
 
 dev_dependencies:
@@ -50,6 +52,8 @@ flutter:
     
     # Temporary images
     - assets/tempImages/
+    - assets/tempImages/users/
+    - assets/tempImages/posts/
     
     # Video assets
     - assets/video/Intro_video.mp4
@@ -60,7 +64,7 @@ flutter:
 
     # Icons assets
     - assets/icons/nav_bar/
-    - assets/feed/
+    - assets/icons/feed/
 
   fonts:
     - family: CustomFont  # Replace with your actual font family name

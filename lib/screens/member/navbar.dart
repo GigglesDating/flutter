@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_floating_bottom_bar/flutter_floating_bottom_bar.dart';
+import 'package:flutter/services.dart';
+//import 'package:flutter_floating_bottom_bar/flutter_floating_bottom_bar.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import '../placeholder_template.dart';
 import '../barrel.dart';
@@ -23,13 +24,22 @@ class _NavigationControllerState extends State<NavigationController>
     _tabController = TabController(length: 5, vsync: this);
     _tabController.addListener(() {
       if (!_tabController.indexIsChanging) {
-        setState(() => _currentIndex = _tabController.index);
+        setState(() {
+          _currentIndex = _tabController.index > 2
+              ? _tabController.index - 1
+              : _tabController.index;
+        });
       }
     });
   }
 
   @override
   void dispose() {
+    // Restore system UI when disposing
+    SystemChrome.setEnabledSystemUIMode(
+      SystemUiMode.manual,
+      overlays: SystemUiOverlay.values,
+    );
     _tabController.dispose();
     _scrollController.dispose();
     super.dispose();
@@ -39,82 +49,106 @@ class _NavigationControllerState extends State<NavigationController>
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    final bottomPadding = MediaQuery.of(context).padding.bottom;
 
     return Scaffold(
-      backgroundColor:
-          isDarkMode ? const Color.fromARGB(255, 251, 251, 251) : Colors.white,
-      body: BottomBar(
-        clip: Clip.none,
-        fit: StackFit.expand,
-        barAlignment: Alignment.bottomCenter,
-        icon: (width, height) => Center(
-          child: Container(
-            width: width * 0.14,
-            height: width * 0.14,
-            decoration: BoxDecoration(
-              color: const Color(0xFF4A90E2),
-              shape: BoxShape.circle,
-              boxShadow: [
-                BoxShadow(
-                  color: const Color(0xFF4A90E2).withAlpha(100),
-                  blurRadius: 10,
-                  offset: const Offset(0, 5),
-                ),
-              ],
-            ),
-            child: Icon(
-              Icons.sos_outlined,
-              color: Colors.white,
-              size: width * 0.08,
+      backgroundColor: isDarkMode ? Colors.black : Colors.white,
+      body: Stack(
+        children: [
+          // Main content
+          IndexedStack(
+            index: _currentIndex,
+            children: _navigationItems.map((item) => item.screen).toList(),
+          ),
+
+          // Bottom Navigation Bar
+          Positioned(
+            bottom: bottomPadding,
+            left: 0,
+            right: 0,
+            child: Container(
+              margin: EdgeInsets.fromLTRB(
+                size.width * 0.05,
+                0,
+                size.width * 0.05,
+                size.height * 0.02,
+              ),
+              height: size.height * 0.08,
+              decoration: BoxDecoration(
+                color: isDarkMode ? const Color(0xFF2A2A2A) : Colors.white,
+                borderRadius: BorderRadius.circular(30),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withAlpha(20),
+                    blurRadius: 10,
+                    offset: const Offset(0, -5),
+                  ),
+                ],
+              ),
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  // Navigation items
+                  TabBar(
+                    controller: _tabController,
+                    indicatorColor: Colors.transparent,
+                    labelColor: Theme.of(context).primaryColor,
+                    unselectedLabelColor:
+                        isDarkMode ? Colors.white54 : Colors.black45,
+                    tabs: [
+                      _buildTabWithIcon(Icons.home_outlined, 'Home', 0),
+                      _buildTabWithSvg('swipe', 'Swipe', 1),
+                      const Tab(icon: null, text: ''),
+                      _buildTabWithSvg('snips', 'Reel', 3),
+                      _buildTabWithIcon(Icons.person_outline, 'Profile', 4),
+                    ],
+                    onTap: (index) {
+                      if (index == 2) {
+                        // Handle SOS button tap
+                        debugPrint('SOS Tapped');
+                      } else {
+                        setState(() {
+                          _currentIndex = index > 2 ? index - 1 : index;
+                        });
+                      }
+                    },
+                  ),
+
+                  // Centered SOS button
+                  Positioned(
+                    top: -20,
+                    child: GestureDetector(
+                      onTap: () {
+                        debugPrint('SOS Button pressed');
+                        // Handle SOS action
+                      },
+                      child: Container(
+                        width: size.width * 0.14,
+                        height: size.width * 0.14,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF4A90E2),
+                          shape: BoxShape.circle,
+                          boxShadow: [
+                            BoxShadow(
+                              color: const Color(0xFF4A90E2).withAlpha(100),
+                              blurRadius: 10,
+                              offset: const Offset(0, 5),
+                            ),
+                          ],
+                        ),
+                        child: Icon(
+                          Icons.sos_outlined,
+                          color: Colors.white,
+                          size: size.width * 0.08,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
-        ),
-        width: size.width * 0.9,
-        barColor: isDarkMode ? const Color(0xFF2A2A2A) : Colors.white,
-        barDecoration: BoxDecoration(
-          color: isDarkMode ? const Color(0xFF2A2A2A) : Colors.white,
-          borderRadius: BorderRadius.circular(30),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withAlpha(20),
-              blurRadius: 10,
-              offset: const Offset(0, -5),
-            ),
-          ],
-        ),
-        duration: const Duration(milliseconds: 500),
-        curve: Curves.easeInOut,
-        showIcon: true,
-        start: size.width * 0.05,
-        end: size.width * 0.05,
-        offset: size.height * 0.02,
-        borderRadius: BorderRadius.circular(30),
-        hideOnScroll: true,
-        child: Container(
-          color: isDarkMode ? Colors.black : Colors.white,
-          child: SingleChildScrollView(
-            controller: _scrollController,
-            child: _navigationItems[_currentIndex].screen,
-          ),
-        ),
-        body: (context, controller) => TabBar(
-          controller: _tabController,
-          indicatorColor: Colors.transparent,
-          labelColor: Theme.of(context).primaryColor,
-          unselectedLabelColor: isDarkMode ? Colors.white54 : Colors.black45,
-          tabs: [
-            _buildTabWithIcon(Icons.home_outlined, 'Home', 0),
-            _buildTabWithSvg('swipe', 'Swipe', 1),
-            const Tab(icon: null, text: ''),
-            _buildTabWithSvg('snips', 'Reel', 3),
-            _buildTabWithIcon(Icons.person_outline, 'Profile', 4),
-          ],
-          onTap: (index) {
-            if (index != 2) {
-              setState(() => _currentIndex = index > 2 ? index - 1 : index);
-            }
-          },
-        ),
+        ],
       ),
     );
   }

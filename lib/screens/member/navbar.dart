@@ -12,25 +12,28 @@ class NavigationController extends StatefulWidget {
   State<NavigationController> createState() => _NavigationControllerState();
 }
 
-class _NavigationControllerState extends State<NavigationController>
-    with SingleTickerProviderStateMixin {
+class _NavigationControllerState extends State<NavigationController> {
   int _currentIndex = 0;
-  late final TabController _tabController;
-  final _scrollController = ScrollController();
 
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 5, vsync: this);
-    _tabController.addListener(() {
-      if (!_tabController.indexIsChanging) {
-        setState(() {
-          _currentIndex = _tabController.index > 2
-              ? _tabController.index - 1
-              : _tabController.index;
-        });
-      }
-    });
+    _hideSystemBars();
+  }
+
+  void _hideSystemBars() {
+    SystemChrome.setEnabledSystemUIMode(
+      SystemUiMode.immersiveSticky,
+      overlays: [], // This hides both status bar and navigation bar
+    );
+
+    SystemChrome.setSystemUIOverlayStyle(
+      const SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent,
+        systemNavigationBarColor: Colors.transparent,
+        systemNavigationBarDividerColor: Colors.transparent,
+      ),
+    );
   }
 
   @override
@@ -40,8 +43,6 @@ class _NavigationControllerState extends State<NavigationController>
       SystemUiMode.manual,
       overlays: SystemUiOverlay.values,
     );
-    _tabController.dispose();
-    _scrollController.dispose();
     super.dispose();
   }
 
@@ -49,97 +50,90 @@ class _NavigationControllerState extends State<NavigationController>
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    final bottomPadding = MediaQuery.of(context).padding.bottom;
 
-    return Scaffold(
-      backgroundColor: isDarkMode ? Colors.black : Colors.white,
-      body: Stack(
-        children: [
-          // Main content
-          IndexedStack(
-            index: _currentIndex,
-            children: _navigationItems.map((item) => item.screen).toList(),
-          ),
+    // Use a small fixed padding instead of system navigation height
+    const bottomSafeArea = 8.0;
 
-          // Bottom Navigation Bar
-          Positioned(
-            bottom: bottomPadding,
-            left: 0,
-            right: 0,
-            child: Container(
-              margin: EdgeInsets.fromLTRB(
-                size.width * 0.05,
-                0,
-                size.width * 0.05,
-                size.height * 0.02,
-              ),
-              height: size.height * 0.08,
-              decoration: BoxDecoration(
-                color: isDarkMode ? const Color(0xFF2A2A2A) : Colors.white,
-                borderRadius: BorderRadius.circular(30),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withAlpha(20),
-                    blurRadius: 10,
-                    offset: const Offset(0, -5),
-                  ),
-                ],
-              ),
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: const SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent,
+        systemNavigationBarColor: Colors.transparent,
+        systemNavigationBarDividerColor: Colors.transparent,
+        statusBarIconBrightness: Brightness.light,
+        systemNavigationBarIconBrightness: Brightness.light,
+      ),
+      child: Scaffold(
+        backgroundColor: isDarkMode ? Colors.black : Colors.white,
+        body: Stack(
+          children: [
+            // Main content
+            IndexedStack(
+              index: _currentIndex,
+              children: _navigationItems.map((item) => item.screen).toList(),
+            ),
+
+            // Navigation bar with SOS button
+            Positioned(
+              bottom: bottomSafeArea,
+              left: 0,
+              right: 0,
               child: Stack(
-                alignment: Alignment.center,
+                alignment: Alignment.topCenter,
                 children: [
-                  // Navigation items
-                  TabBar(
-                    controller: _tabController,
-                    indicatorColor: Colors.transparent,
-                    labelColor: Theme.of(context).primaryColor,
-                    unselectedLabelColor:
-                        isDarkMode ? Colors.white54 : Colors.black45,
-                    tabs: [
-                      _buildTabWithIcon(Icons.home_outlined, 'Home', 0),
-                      _buildTabWithSvg('swipe', 'Swipe', 1),
-                      const Tab(icon: null, text: ''),
-                      _buildTabWithSvg('snips', 'Reel', 3),
-                      _buildTabWithIcon(Icons.person_outline, 'Profile', 4),
-                    ],
-                    onTap: (index) {
-                      if (index == 2) {
-                        // Handle SOS button tap
-                        debugPrint('SOS Tapped');
-                      } else {
-                        setState(() {
-                          _currentIndex = index > 2 ? index - 1 : index;
-                        });
-                      }
-                    },
+                  // Main navigation bar
+                  Container(
+                    margin: EdgeInsets.symmetric(
+                      horizontal: size.width * 0.05,
+                      vertical: size.height * 0.02,
+                    ),
+                    height: 60,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF2A2A2A),
+                      borderRadius: BorderRadius.circular(40),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                        _buildNavItem(Icons.home_outlined, 0),
+                        _buildNavItem(Icons.group_outlined, 1),
+                        const SizedBox(width: 48),
+                        _buildNavItem(Icons.movie_outlined, 3),
+                        _buildProfileItem(4),
+                      ],
+                    ),
                   ),
 
-                  // Centered SOS button
+                  // Floating SOS button
                   Positioned(
-                    top: -20,
-                    child: GestureDetector(
-                      onTap: () {
-                        debugPrint('SOS Button pressed');
-                        // Handle SOS action
-                      },
-                      child: Container(
-                        width: size.width * 0.14,
-                        height: size.width * 0.14,
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF4A90E2),
-                          shape: BoxShape.circle,
-                          boxShadow: [
-                            BoxShadow(
-                              color: const Color(0xFF4A90E2).withAlpha(100),
-                              blurRadius: 10,
-                              offset: const Offset(0, 5),
+                    top: -5,
+                    child: Container(
+                      width: 60,
+                      height: 60,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFA5C0E5),
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color: const Color(0xFFA5C0E5).withOpacity(0.3),
+                            blurRadius: 8,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: Material(
+                        color: Colors.transparent,
+                        child: InkWell(
+                          onTap: () {
+                            debugPrint('SOS Button pressed');
+                          },
+                          customBorder: const CircleBorder(),
+                          child: const Center(
+                            child: Icon(
+                              Icons.phone,
+                              color: Colors.white,
+                              size: 30,
                             ),
-                          ],
-                        ),
-                        child: Icon(
-                          Icons.sos_outlined,
-                          color: Colors.white,
-                          size: size.width * 0.08,
+                          ),
                         ),
                       ),
                     ),
@@ -147,69 +141,42 @@ class _NavigationControllerState extends State<NavigationController>
                 ],
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
 
-  Widget _buildTabWithIcon(IconData icon, String label, int index) {
-    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    final size = MediaQuery.of(context).size;
+  Widget _buildNavItem(IconData icon, int index) {
     final isSelected = _currentIndex == index;
-
-    return Tab(
-      height: size.height * 0.07,
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(
-            icon,
-            size: size.width * 0.06,
-            color: isSelected
-                ? Theme.of(context).primaryColor
-                : isDarkMode
-                    ? Colors.white54
-                    : Colors.black45,
-          ),
-          const SizedBox(height: 4),
-          Text(
-            label,
-            style: TextStyle(fontSize: size.width * 0.03),
-          ),
-        ],
+    return IconButton(
+      onPressed: () => setState(() => _currentIndex = index),
+      icon: Icon(
+        icon,
+        color: isSelected ? Colors.white : Colors.white.withOpacity(0.5),
+        size: 28,
       ),
     );
   }
 
-  Widget _buildTabWithSvg(String icon, String label, int index) {
-    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    final size = MediaQuery.of(context).size;
+  Widget _buildProfileItem(int index) {
     final isSelected = _currentIndex == index;
-
-    return Tab(
-      height: size.height * 0.07,
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          SvgPicture.asset(
-            'assets/icons/nav_bar/$icon.svg',
-            height: size.width * 0.06,
-            colorFilter: ColorFilter.mode(
-              isSelected
-                  ? Theme.of(context).primaryColor
-                  : isDarkMode
-                      ? Colors.white54
-                      : Colors.black45,
-              BlendMode.srcIn,
-            ),
+    return GestureDetector(
+      onTap: () => setState(() => _currentIndex = index),
+      child: Container(
+        width: 35,
+        height: 35,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          border: Border.all(
+            color: isSelected ? Colors.green : Colors.transparent,
+            width: 2,
           ),
-          const SizedBox(height: 4),
-          Text(
-            label,
-            style: TextStyle(fontSize: size.width * 0.03),
+          image: const DecorationImage(
+            image: AssetImage('assets/tempImages/users/user1.jpg'),
+            fit: BoxFit.cover,
           ),
-        ],
+        ),
       ),
     );
   }

@@ -39,9 +39,9 @@ class _ProfileCreation1State extends State<ProfileCreation1> {
               const Text(
                 'Choose Image Source',
                 style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                ),
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black),
               ),
               const SizedBox(height: 20),
               Row(
@@ -89,10 +89,17 @@ class _ProfileCreation1State extends State<ProfileCreation1> {
               color: Colors.grey[200],
               shape: BoxShape.circle,
             ),
-            child: Icon(icon, size: 30),
+            child: Icon(
+              icon,
+              size: 30,
+              color: Colors.black,
+            ),
           ),
           const SizedBox(height: 10),
-          Text(title),
+          Text(
+            title,
+            style: TextStyle(color: Colors.black),
+          ),
         ],
       ),
     );

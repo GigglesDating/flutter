@@ -322,11 +322,17 @@ class _UserDashboardComponentState extends State<UserDashboardComponent> {
                     Container(
                       width: 40,
                       height: 40,
-                      child: IconButton(
-                        onPressed: () {
-                          // handleLike();
+                      child: GestureDetector(
+                        onDoubleTap: () {
+                          print("double pressed🤗");
                         },
-                        icon: SvgPicture.asset('assets/icons/like_icon.svg'),
+                        child: IconButton(
+                          onPressed: () {
+                            // handleLike();
+                            print("pressed😌");
+                          },
+                          icon: SvgPicture.asset('assets/icons/like_icon.svg'),
+                        ),
                       ),
                     ),
                     SizedBox(
@@ -477,7 +483,6 @@ class _UserDashboardComponentState extends State<UserDashboardComponent> {
     showMenu(
       context: context,
       position: position,
-
       items: [
         PopupMenuItem<int>(
           value: 0,
@@ -503,7 +508,7 @@ class _UserDashboardComponentState extends State<UserDashboardComponent> {
             mainAxisAlignment: MainAxisAlignment.start,
             children: [
               Padding(
-                padding: const EdgeInsets.only(top: 4.0,left: 6),
+                padding: const EdgeInsets.only(top: 4.0, left: 6),
                 child: Icon(Icons.report),
               ),
               SizedBox(
@@ -524,7 +529,7 @@ class _UserDashboardComponentState extends State<UserDashboardComponent> {
       ],
     ).then((value) {
       if (value != null) {
-        if (value==1) {
+        if (value == 1) {
           Fluttertoast.showToast(
               msg: "Reported successfully",
               toastLength: Toast.LENGTH_SHORT,
@@ -532,19 +537,15 @@ class _UserDashboardComponentState extends State<UserDashboardComponent> {
               timeInSecForIosWeb: 1,
               backgroundColor: Colors.black,
               textColor: Colors.white,
-              fontSize: 16.0
-          );
+              fontSize: 16.0);
           // Navigator.pop(context);
-
-
-        }  else{
+        } else {
           Navigator.push(
               context,
               MaterialPageRoute(
                 builder: (context) => const MessengerPage(),
               ));
         }
-
       }
     });
   }

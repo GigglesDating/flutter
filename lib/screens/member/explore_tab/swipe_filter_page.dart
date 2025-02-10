@@ -13,16 +13,28 @@ class SwipeFilterPage extends StatefulWidget {
 }
 
 class _SwipeFilterPage extends State<SwipeFilterPage> {
-
   bool isDatingEveryOne = false;
   bool isMen = false;
   bool isWomen = false;
   bool isNonBinary = false;
+
+  bool interestgroups = false;
+
   RangeValues _currentRangeValues = const RangeValues(18, 60);
 
   bool isSwipeIndicator = true;
 
   List<String> _selectedOptions = [];
+
+  // Replace the individual love language booleans with a single string
+  String selectedLoveLanguage = '';
+  String selectedCommunicationStyle = '';
+  String selectedpets = '';
+  String selectedexercise = '';
+  String selectedsmoke = '';
+  String selecteddrinker = '';
+  String selectedsocialenergy = '';
+  String selectedsocialinterest = '';
 
   final List<Map<String, dynamic>> _activities = [
     {"name": "movie", "icon": Icons.movie},
@@ -128,9 +140,8 @@ class _SwipeFilterPage extends State<SwipeFilterPage> {
     {"name": "build", "icon": Icons.build},
     {"name": "subscriptions", "icon": Icons.subscriptions},
     {"name": "video_camera_front", "icon": Icons.video_camera_front},
-    
   ];
-   Set<String> _selectedActivities = Set<String>();
+  Set<String> _selectedActivities = Set<String>();
   // Method to toggle selection
   void _toggleSelection(String activity) {
     setState(() {
@@ -143,8 +154,8 @@ class _SwipeFilterPage extends State<SwipeFilterPage> {
   }
 
   final WidgetStateProperty<Color?> trackColor =
-  WidgetStateProperty.resolveWith<Color?>(
-        (Set<WidgetState> states) {
+      WidgetStateProperty.resolveWith<Color?>(
+    (Set<WidgetState> states) {
       // Track color when the switch is selected.
       if (states.contains(WidgetState.selected)) {
         return AppColors.success;
@@ -156,8 +167,8 @@ class _SwipeFilterPage extends State<SwipeFilterPage> {
     },
   );
   final WidgetStateProperty<Color?> overlayColor =
-  WidgetStateProperty.resolveWith<Color?>(
-        (Set<WidgetState> states) {
+      WidgetStateProperty.resolveWith<Color?>(
+    (Set<WidgetState> states) {
       // Material color when switch is selected.
       if (states.contains(MaterialState.selected)) {
         return Colors.amber.withOpacity(0.54);
@@ -190,7 +201,7 @@ class _SwipeFilterPage extends State<SwipeFilterPage> {
   Future<void> handleSwipeRight(
       String currentUserId, String swipedUserId) async {}
 
-  final _list = ['Coffee', ' Hiking'];
+  // final _list = ['Coffee', ' Hiking'];
   List<String> userPRofile = [
     'assets/images/user2.png'
         'assets/images/user3.png'
@@ -212,7 +223,7 @@ class _SwipeFilterPage extends State<SwipeFilterPage> {
       child: Scaffold(
         appBar: AppBar(
           title: Text('Narrow your search'),
-          titleSpacing: 0,
+          titleSpacing: 15,
           backgroundColor: Theme.of(context).scaffoldBackgroundColor,
           elevation: 0,
           titleTextStyle: AppFonts.titleBold(
@@ -223,7 +234,9 @@ class _SwipeFilterPage extends State<SwipeFilterPage> {
               // padding: EdgeInsets.zero,
               margin: EdgeInsets.symmetric(horizontal: 16.0),
               decoration: BoxDecoration(
-                color: Theme.of(context).brightness==Brightness.light?AppColors.tabBarBackround:AppColors.SwipeUserProfileTextColor,
+                color: Theme.of(context).brightness == Brightness.light
+                    ? AppColors.tabBarBackround
+                    : AppColors.SwipeUserProfileTextColor,
                 // Background color for entire tab section
                 borderRadius: BorderRadius.circular(10), // Rounded corners
               ),
@@ -239,11 +252,16 @@ class _SwipeFilterPage extends State<SwipeFilterPage> {
                 padding: EdgeInsets.zero,
                 indicatorSize: TabBarIndicatorSize.tab,
                 indicatorPadding: const EdgeInsets.symmetric(horizontal: 0),
-                labelStyle:
-                    AppFonts.titleBold(fontSize: 18,),
-                unselectedLabelStyle:
-                    AppFonts.titleBold(fontSize: 18,),
-                labelColor: Theme.of(context).colorScheme.brightness==Brightness.light?AppColors.white:AppColors.black,
+                labelStyle: AppFonts.titleBold(
+                  fontSize: 18,
+                ),
+                unselectedLabelStyle: AppFonts.titleBold(
+                  fontSize: 18,
+                ),
+                labelColor:
+                    Theme.of(context).colorScheme.brightness == Brightness.light
+                        ? AppColors.white
+                        : AppColors.black,
                 unselectedLabelColor: AppColors.black,
                 tabs: [
                   Tab(text: "Basic Filters"),
@@ -260,14 +278,19 @@ class _SwipeFilterPage extends State<SwipeFilterPage> {
                 padding: const EdgeInsets.all(16.0),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
-
                   children: [
-                    SizedBox(height: 24,),
+                    SizedBox(
+                      height: 24,
+                    ),
                     Text(
                       ' Who are you open to date ?',
-                      style: AppFonts.titleBold(fontSize: 18,color: Theme.of(context).colorScheme.tertiary),
+                      style: AppFonts.titleBold(
+                          fontSize: 18,
+                          color: Theme.of(context).colorScheme.tertiary),
                     ),
-                    SizedBox(height: 10,),
+                    SizedBox(
+                      height: 10,
+                    ),
                     Container(
                       padding: EdgeInsets.all(16),
                       decoration: BoxDecoration(
@@ -284,34 +307,36 @@ class _SwipeFilterPage extends State<SwipeFilterPage> {
                               Text(
                                 'I\u0027m open to dating everyone',
                                 style: AppFonts.titleRegular(
-                                    color: Theme.of(context).colorScheme.tertiary,fontSize: 15),
+                                    color:
+                                        Theme.of(context).colorScheme.tertiary,
+                                    fontSize: 15),
                               ),
-                              SizedBox(width: 8,),
+                              SizedBox(
+                                width: 8,
+                              ),
                               Expanded(
                                 child: Transform.scale(
                                   scale: 0.7,
                                   child: Switch(
                                     // This bool value toggles the switch.
                                     value: isDatingEveryOne,
-                                    onChanged: (value){
+                                    onChanged: (value) {
                                       setState(() {
-                                        isDatingEveryOne=value;
-                                        if(isDatingEveryOne==true){
-                                          isNonBinary=true;
-                                          isWomen=true;
-                                          isMen=true;
-                                        }else{
-                                          isNonBinary=false;
-                                          isWomen=false;
-                                          isMen=false;
+                                        isDatingEveryOne = value;
+                                        if (isDatingEveryOne == true) {
+                                          isNonBinary = true;
+                                          isWomen = true;
+                                          isMen = true;
+                                        } else {
+                                          isNonBinary = false;
+                                          isWomen = false;
+                                          isMen = false;
                                         }
-                                
                                       });
                                     },
                                     overlayColor: overlayColor,
                                     trackColor: trackColor,
                                     // thumbColor:  WidgetStatePropertyAll(Theme.of(context).brightness==Brightness.light?AppColors.black:AppColors.white),
-                                
                                   ),
                                 ),
                               )
@@ -323,23 +348,31 @@ class _SwipeFilterPage extends State<SwipeFilterPage> {
                               Text(
                                 'Men',
                                 style: AppFonts.titleRegular(
-                                    color: Theme.of(context).colorScheme.tertiary),
+                                    color:
+                                        Theme.of(context).colorScheme.tertiary),
                               ),
                               Checkbox(
-                                checkColor: Theme.of(context).brightness==Brightness.light?AppColors.white:AppColors.black,
-                                activeColor: Theme.of(context).colorScheme.tertiary,
+                                checkColor: Theme.of(context).brightness ==
+                                        Brightness.light
+                                    ? AppColors.white
+                                    : AppColors.black,
+                                activeColor:
+                                    Theme.of(context).colorScheme.tertiary,
                                 // isError: true,
                                 value: isMen,
-                                side: BorderSide(color: Theme.of(context).colorScheme.tertiary, width: 2),
-                                visualDensity: VisualDensity(horizontal: 0, vertical: -4),
+                                side: BorderSide(
+                                    color:
+                                        Theme.of(context).colorScheme.tertiary,
+                                    width: 2),
+                                visualDensity:
+                                    VisualDensity(horizontal: 0, vertical: -4),
 
                                 onChanged: (value) {
                                   setState(() {
-                                    isMen=value!;
+                                    isMen = value!;
                                   });
                                 },
                               ),
-
                             ],
                           ),
                           Row(
@@ -348,23 +381,31 @@ class _SwipeFilterPage extends State<SwipeFilterPage> {
                               Text(
                                 'Women',
                                 style: AppFonts.titleRegular(
-                                    color: Theme.of(context).colorScheme.tertiary),
+                                    color:
+                                        Theme.of(context).colorScheme.tertiary),
                               ),
                               Checkbox(
-                                checkColor: Theme.of(context).brightness==Brightness.light?AppColors.white:AppColors.black,
-                                activeColor: Theme.of(context).colorScheme.tertiary,
+                                checkColor: Theme.of(context).brightness ==
+                                        Brightness.light
+                                    ? AppColors.white
+                                    : AppColors.black,
+                                activeColor:
+                                    Theme.of(context).colorScheme.tertiary,
                                 // isError: true,
                                 value: isWomen,
-                                side: BorderSide(color: Theme.of(context).colorScheme.tertiary, width: 2),
-                                visualDensity: VisualDensity(horizontal: 0, vertical: -4),
+                                side: BorderSide(
+                                    color:
+                                        Theme.of(context).colorScheme.tertiary,
+                                    width: 2),
+                                visualDensity:
+                                    VisualDensity(horizontal: 0, vertical: -4),
 
                                 onChanged: (value) {
                                   setState(() {
-                                    isWomen=value!;
+                                    isWomen = value!;
                                   });
                                 },
                               ),
-
                             ],
                           ),
                           Row(
@@ -373,32 +414,44 @@ class _SwipeFilterPage extends State<SwipeFilterPage> {
                               Text(
                                 'Non-Binary',
                                 style: AppFonts.titleRegular(
-                                    color: Theme.of(context).colorScheme.tertiary),
+                                    color:
+                                        Theme.of(context).colorScheme.tertiary),
                               ),
                               Checkbox(
-                                checkColor: Theme.of(context).brightness==Brightness.light?AppColors.white:AppColors.black,
-                                activeColor: Theme.of(context).colorScheme.tertiary,
+                                checkColor: Theme.of(context).brightness ==
+                                        Brightness.light
+                                    ? AppColors.white
+                                    : AppColors.black,
+                                activeColor:
+                                    Theme.of(context).colorScheme.tertiary,
                                 // isError: true,
                                 value: isNonBinary,
-                                side: BorderSide(color: Theme.of(context).colorScheme.tertiary, width: 2),
-                                visualDensity: VisualDensity(horizontal: 0, vertical: -4),
+                                side: BorderSide(
+                                    color:
+                                        Theme.of(context).colorScheme.tertiary,
+                                    width: 2),
+                                visualDensity:
+                                    VisualDensity(horizontal: 0, vertical: -4),
 
                                 onChanged: (value) {
                                   setState(() {
-                                    isNonBinary=value!;
+                                    isNonBinary = value!;
                                   });
                                 },
                               ),
-
                             ],
                           ),
                         ],
                       ),
                     ),
-                    SizedBox(height: 16,),
+                    SizedBox(
+                      height: 16,
+                    ),
                     Text(
                       ' Age Preference',
-                      style: AppFonts.titleBold(fontSize: 18,color: Theme.of(context).colorScheme.tertiary),
+                      style: AppFonts.titleBold(
+                          fontSize: 18,
+                          color: Theme.of(context).colorScheme.tertiary),
                     ),
                     SizedBox(
                       height: 10,
@@ -440,10 +493,13 @@ class _SwipeFilterPage extends State<SwipeFilterPage> {
                         ],
                       ),
                     ),
-                    SizedBox(height: 16,),
+                    SizedBox(
+                      height: 16,
+                    ),
                     Text(
                       'Interests',
-                      style: AppFonts.titleBold(fontSize: 18,
+                      style: AppFonts.titleBold(
+                          fontSize: 18,
                           color: Theme.of(context).colorScheme.tertiary),
                     ),
                     SizedBox(
@@ -471,13 +527,19 @@ class _SwipeFilterPage extends State<SwipeFilterPage> {
                           String activity = _activities[index]["name"];
                           IconData icon = _activities[index]["icon"];
 
-                          bool isSelected = _selectedActivities.contains(activity);
+                          bool isSelected =
+                              _selectedActivities.contains(activity);
 
                           return GestureDetector(
                             onTap: () => _toggleSelection(activity),
                             child: Container(
                               decoration: BoxDecoration(
-                                color: isSelected ? Theme.of(context).brightness==Brightness.light?Colors.black:Colors.white : Colors.grey[300],
+                                color: isSelected
+                                    ? Theme.of(context).brightness ==
+                                            Brightness.light
+                                        ? Colors.black
+                                        : Colors.white
+                                    : Colors.grey[300],
                                 borderRadius: BorderRadius.circular(12),
                               ),
                               padding: EdgeInsets.all(8),
@@ -491,8 +553,14 @@ class _SwipeFilterPage extends State<SwipeFilterPage> {
                                       overflow: TextOverflow.ellipsis,
                                       style: AppFonts.titleBold(
                                           color: isSelected
-                                              ? Theme.of(context).brightness==Brightness.light?Colors.white:Colors.black
-                                              : Theme.of(context).brightness==Brightness.light?Colors.black:Colors.white,
+                                              ? Theme.of(context).brightness ==
+                                                      Brightness.light
+                                                  ? Colors.white
+                                                  : Colors.black
+                                              : Theme.of(context).brightness ==
+                                                      Brightness.light
+                                                  ? Colors.black
+                                                  : Colors.white,
                                           fontWeight: isSelected
                                               ? FontWeight.bold
                                               : FontWeight.normal,
@@ -503,7 +571,15 @@ class _SwipeFilterPage extends State<SwipeFilterPage> {
                                   Icon(
                                     icon,
                                     size: 12,
-                                    color: isSelected ? Theme.of(context).brightness==Brightness.light?Colors.white:Colors.black :Theme.of(context).brightness==Brightness.light?Colors.black:Colors.white,
+                                    color: isSelected
+                                        ? Theme.of(context).brightness ==
+                                                Brightness.light
+                                            ? Colors.white
+                                            : Colors.black
+                                        : Theme.of(context).brightness ==
+                                                Brightness.light
+                                            ? Colors.black
+                                            : Colors.white,
                                   ),
                                 ],
                               ),
@@ -512,7 +588,6 @@ class _SwipeFilterPage extends State<SwipeFilterPage> {
                         },
                       ),
                     ),
-
                   ],
                 ),
               ),
@@ -523,14 +598,20 @@ class _SwipeFilterPage extends State<SwipeFilterPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    SizedBox(height: 24,),
-                    Text(
-                      ' Interest Groups',
-                      style: AppFonts.titleBold(fontSize: 18,color: Theme.of(context).colorScheme.tertiary),
+                    SizedBox(
+                      height: 24,
                     ),
-                    SizedBox(height: 10,),
+                    Text(
+                      'What are you interested in?',
+                      style: AppFonts.titleBold(
+                          fontSize: 18,
+                          color: Theme.of(context).colorScheme.tertiary),
+                    ),
+                    SizedBox(
+                      height: 10,
+                    ),
                     Container(
-                      padding: EdgeInsets.all(8),
+                      padding: EdgeInsets.all(16),
                       decoration: BoxDecoration(
                           border: Border.all(
                               width: 1,
@@ -540,49 +621,1264 @@ class _SwipeFilterPage extends State<SwipeFilterPage> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               Text(
-                                'group in my interest',
+                                'Just a Homie',
                                 style: AppFonts.titleRegular(
-                                    fontSize: 12,
-                                    color: Theme.of(context).colorScheme.tertiary),
+                                    color:
+                                        Theme.of(context).colorScheme.tertiary),
                               ),
-                              SizedBox(width: 8,),
-                              Expanded(
-                                child: Transform.scale(
-                                  scale: 0.7,
-                                  child: Switch(
-                                    // This bool value toggles the switch.
-                                    value: isDatingEveryOne,
-                                
-                                    onChanged: (value){
-                                      setState(() {
-                                        isDatingEveryOne=value;
-                                      });
-                                    },
-                                    overlayColor: overlayColor,
-                                    trackColor: trackColor,
-                                    // thumbColor:  WidgetStatePropertyAll(Theme.of(context).brightness==Brightness.light?AppColors.black:AppColors.white),
-                                
-                                  ),
-                                ),
-                              ),
-                              SizedBox(width: 8,),
-                              Text(
-                                'Show all groups',
-                                style: AppFonts.titleRegular(
-                                  fontSize: 12,
-                                    color: Theme.of(context).colorScheme.tertiary),
+                              Checkbox(
+                                checkColor: Theme.of(context).brightness ==
+                                        Brightness.light
+                                    ? AppColors.white
+                                    : AppColors.black,
+                                activeColor:
+                                    Theme.of(context).colorScheme.tertiary,
+                                // isError: true,
+                                value: selectedsocialinterest == 'Just a Homie',
+                                side: BorderSide(
+                                    color:
+                                        Theme.of(context).colorScheme.tertiary,
+                                    width: 2),
+                                visualDensity:
+                                    VisualDensity(horizontal: 0, vertical: -4),
+
+                                onChanged: (value) {
+                                  setState(() {
+                                    selectedsocialinterest = value!?'Just a Homie':'';
+                                  });
+                                },
                               ),
                             ],
                           ),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                'Serious Connections',
+                                style: AppFonts.titleRegular(
+                                    color:
+                                        Theme.of(context).colorScheme.tertiary),
+                              ),
+                              Checkbox(
+                                checkColor: Theme.of(context).brightness ==
+                                        Brightness.light
+                                    ? AppColors.white
+                                    : AppColors.black,
+                                activeColor:
+                                    Theme.of(context).colorScheme.tertiary,
+                                // isError: true,
+                                value: selectedsocialinterest == 'Serious Connections',
+                                side: BorderSide(
+                                    color:
+                                        Theme.of(context).colorScheme.tertiary,
+                                    width: 2),
+                                visualDensity:
+                                    VisualDensity(horizontal: 0, vertical: -4),
 
+                                onChanged: (value) {
+                                  setState(() {
+                                    selectedsocialinterest = value!?'Serious Connections':'';
+                                  });
+                                },
+                              ),
+                            ],
+                          ),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                'Casual Connections',
+                                style: AppFonts.titleRegular(
+                                    color:
+                                        Theme.of(context).colorScheme.tertiary),
+                              ),
+                              Checkbox(
+                                checkColor: Theme.of(context).brightness ==
+                                        Brightness.light
+                                    ? AppColors.white
+                                    : AppColors.black,
+                                activeColor:
+                                    Theme.of(context).colorScheme.tertiary,
+                                // isError: true,
+                                value: selectedsocialinterest == 'Casual Connections',
+                                side: BorderSide(
+                                    color:
+                                        Theme.of(context).colorScheme.tertiary,
+                                    width: 2),
+                                visualDensity:
+                                    VisualDensity(horizontal: 0, vertical: -4),
+
+                                onChanged: (value) {
+                                  setState(() {
+                                    selectedsocialinterest = value!?'Casual Connections':'';
+                                  });
+                                },
+                              ),
+                            ],
+                          ),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                'Surprise Me',
+                                style: AppFonts.titleRegular(
+                                    color:
+                                        Theme.of(context).colorScheme.tertiary),
+                              ),
+                              Checkbox(
+                                checkColor: Theme.of(context).brightness ==
+                                        Brightness.light
+                                    ? AppColors.white
+                                    : AppColors.black,
+                                activeColor:
+                                    Theme.of(context).colorScheme.tertiary,
+                                // isError: true,
+                                value: selectedsocialinterest == 'Surprise Me',
+                                side: BorderSide(
+                                    color:
+                                        Theme.of(context).colorScheme.tertiary,
+                                    width: 2),
+                                visualDensity:
+                                    VisualDensity(horizontal: 0, vertical: -4),
+
+                                onChanged: (value) {
+                                  setState(() {
+                                    selectedsocialinterest = value!?'Surprise Me':'';
+                                  });
+                                },
+                              ),
+                            ],
+                          ),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                'Short Term Fun',
+                                style: AppFonts.titleRegular(
+                                    color:
+                                        Theme.of(context).colorScheme.tertiary),
+                              ),
+                              Checkbox(
+                                checkColor: Theme.of(context).brightness ==
+                                        Brightness.light
+                                    ? AppColors.white
+                                    : AppColors.black,
+                                activeColor:
+                                    Theme.of(context).colorScheme.tertiary,
+                                // isError: true,
+                                value: selectedsocialinterest =='Short Term Fun',
+                                side: BorderSide(
+                                    color:
+                                        Theme.of(context).colorScheme.tertiary,
+                                    width: 2),
+                                visualDensity:
+                                    VisualDensity(horizontal: 0, vertical: -4),
+
+                                onChanged: (value) {
+                                  setState(() {
+                                    selectedsocialinterest = value!?'Short Term Fun':'';
+                                  });
+                                },
+                              ),
+                            ],
+                          ),
                         ],
                       ),
                     ),
-                    SizedBox(height: 16,),
+                    SizedBox(
+                      height: 24,
+                    ),
+                    Text(
+                      'What\u0027s your social energy level?',
+                      style: AppFonts.titleBold(
+                          fontSize: 18,
+                          color: Theme.of(context).colorScheme.tertiary),
+                    ),
+                    SizedBox(
+                      height: 10,
+                    ),
+                    Container(
+                      padding: EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                          border: Border.all(
+                              width: 1,
+                              color: Theme.of(context).colorScheme.tertiary),
+                          borderRadius: BorderRadius.circular(20)),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                'Introvert',
+                                style: AppFonts.titleRegular(
+                                    color:
+                                        Theme.of(context).colorScheme.tertiary),
+                              ),
+                              Checkbox(
+                                checkColor: Theme.of(context).brightness ==
+                                        Brightness.light
+                                    ? AppColors.white
+                                    : AppColors.black,
+                                activeColor:
+                                    Theme.of(context).colorScheme.tertiary,
+                                // isError: true,
+                                value: selectedsocialenergy == 'Introvert',
+                                side: BorderSide(
+                                    color:
+                                        Theme.of(context).colorScheme.tertiary,
+                                    width: 2),
+                                visualDensity:
+                                    VisualDensity(horizontal: 0, vertical: -4),
 
+                                onChanged: (value) {
+                                  setState(() {
+                                    selectedsocialenergy = value!?'Introvert':'';
+                                  });
+                                },
+                              ),
+                            ],
+                          ),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                'Extrovert',
+                                style: AppFonts.titleRegular(
+                                    color:
+                                        Theme.of(context).colorScheme.tertiary),
+                              ),
+                              Checkbox(
+                                checkColor: Theme.of(context).brightness ==
+                                        Brightness.light
+                                    ? AppColors.white
+                                    : AppColors.black,
+                                activeColor:
+                                    Theme.of(context).colorScheme.tertiary,
+                                // isError: true,
+                                value: selectedsocialenergy == 'Extrovert',
+                                side: BorderSide(
+                                    color:
+                                        Theme.of(context).colorScheme.tertiary,
+                                    width: 2),
+                                visualDensity:
+                                    VisualDensity(horizontal: 0, vertical: -4),
+
+                                onChanged: (value) {
+                                  setState(() {
+                                    selectedsocialenergy = value!?'Extrovert':'';
+                                  });
+                                },
+                              ),
+                            ],
+                          ),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                'Ambivert',
+                                style: AppFonts.titleRegular(
+                                    color:
+                                        Theme.of(context).colorScheme.tertiary),
+                              ),
+                              Checkbox(
+                                checkColor: Theme.of(context).brightness ==
+                                        Brightness.light
+                                    ? AppColors.white
+                                    : AppColors.black,
+                                activeColor:
+                                    Theme.of(context).colorScheme.tertiary,
+                                // isError: true,
+                                value: selectedsocialenergy == 'Ambivert',
+                                side: BorderSide(
+                                    color:
+                                        Theme.of(context).colorScheme.tertiary,
+                                    width: 2),
+                                visualDensity:
+                                    VisualDensity(horizontal: 0, vertical: -4),
+
+                                onChanged: (value) {
+                                  setState(() {
+                                    selectedsocialenergy = value!?'Ambivert':'';
+                                  });
+                                },
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                    SizedBox(
+                      height: 24,
+                    ),
+                    Text(
+                      'How often do you drink?',
+                      style: AppFonts.titleBold(
+                          fontSize: 18,
+                          color: Theme.of(context).colorScheme.tertiary),
+                    ),
+                    SizedBox(
+                      height: 10,
+                    ),
+                    Container(
+                      padding: EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                          border: Border.all(
+                              width: 1,
+                              color: Theme.of(context).colorScheme.tertiary),
+                          borderRadius: BorderRadius.circular(20)),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                'Teetotaler',
+                                style: AppFonts.titleRegular(
+                                    color:
+                                        Theme.of(context).colorScheme.tertiary),
+                              ),
+                              Checkbox(
+                                checkColor: Theme.of(context).brightness ==
+                                        Brightness.light
+                                    ? AppColors.white
+                                    : AppColors.black,
+                                activeColor:
+                                    Theme.of(context).colorScheme.tertiary,
+                                // isError: true,
+                                value: selecteddrinker == 'Teetotaler',
+                                side: BorderSide(
+                                    color:
+                                        Theme.of(context).colorScheme.tertiary,
+                                    width: 2),
+                                visualDensity:
+                                    VisualDensity(horizontal: 0, vertical: -4),
+
+                                onChanged: (value) {
+                                  setState(() {
+                                    selecteddrinker =
+                                        value! ? 'Teetotaler' : '';
+                                  });
+                                },
+                              ),
+                            ],
+                          ),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                'Social drinking',
+                                style: AppFonts.titleRegular(
+                                    color:
+                                        Theme.of(context).colorScheme.tertiary),
+                              ),
+                              Checkbox(
+                                checkColor: Theme.of(context).brightness ==
+                                        Brightness.light
+                                    ? AppColors.white
+                                    : AppColors.black,
+                                activeColor:
+                                    Theme.of(context).colorScheme.tertiary,
+                                // isError: true,
+                                value: selecteddrinker == 'Social drinking',
+                                side: BorderSide(
+                                    color:
+                                        Theme.of(context).colorScheme.tertiary,
+                                    width: 2),
+                                visualDensity:
+                                    VisualDensity(horizontal: 0, vertical: -4),
+
+                                onChanged: (value) {
+                                  setState(() {
+                                    selecteddrinker =
+                                        value! ? 'Social drinking' : '';
+                                  });
+                                },
+                              ),
+                            ],
+                          ),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                'Weekends',
+                                style: AppFonts.titleRegular(
+                                    color:
+                                        Theme.of(context).colorScheme.tertiary),
+                              ),
+                              Checkbox(
+                                checkColor: Theme.of(context).brightness ==
+                                        Brightness.light
+                                    ? AppColors.white
+                                    : AppColors.black,
+                                activeColor:
+                                    Theme.of(context).colorScheme.tertiary,
+                                // isError: true,
+                                value: selecteddrinker == 'Weekends',
+                                side: BorderSide(
+                                    color:
+                                        Theme.of(context).colorScheme.tertiary,
+                                    width: 2),
+                                visualDensity:
+                                    VisualDensity(horizontal: 0, vertical: -4),
+
+                                onChanged: (value) {
+                                  setState(() {
+                                    selecteddrinker = value! ? 'Weekends' : '';
+                                  });
+                                },
+                              ),
+                            ],
+                          ),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                'Drunkard',
+                                style: AppFonts.titleRegular(
+                                    color:
+                                        Theme.of(context).colorScheme.tertiary),
+                              ),
+                              Checkbox(
+                                checkColor: Theme.of(context).brightness ==
+                                        Brightness.light
+                                    ? AppColors.white
+                                    : AppColors.black,
+                                activeColor:
+                                    Theme.of(context).colorScheme.tertiary,
+                                // isError: true,
+                                value: selecteddrinker == 'Drunkard',
+                                side: BorderSide(
+                                    color:
+                                        Theme.of(context).colorScheme.tertiary,
+                                    width: 2),
+                                visualDensity:
+                                    VisualDensity(horizontal: 0, vertical: -4),
+
+                                onChanged: (value) {
+                                  setState(() {
+                                    selecteddrinker = value! ? 'Drunkard' : '';
+                                  });
+                                },
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                    SizedBox(
+                      height: 24,
+                    ),
+                    Text(
+                      'How often do you smoke?',
+                      style: AppFonts.titleBold(
+                          fontSize: 18,
+                          color: Theme.of(context).colorScheme.tertiary),
+                    ),
+                    SizedBox(
+                      height: 10,
+                    ),
+                    Container(
+                      padding: EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                          border: Border.all(
+                              width: 1,
+                              color: Theme.of(context).colorScheme.tertiary),
+                          borderRadius: BorderRadius.circular(20)),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                'Social smoking',
+                                style: AppFonts.titleRegular(
+                                    color:
+                                        Theme.of(context).colorScheme.tertiary),
+                              ),
+                              Checkbox(
+                                checkColor: Theme.of(context).brightness ==
+                                        Brightness.light
+                                    ? AppColors.white
+                                    : AppColors.black,
+                                activeColor:
+                                    Theme.of(context).colorScheme.tertiary,
+                                // isError: true,
+                                value: selectedsmoke == 'Social smoking',
+                                side: BorderSide(
+                                    color:
+                                        Theme.of(context).colorScheme.tertiary,
+                                    width: 2),
+                                visualDensity:
+                                    VisualDensity(horizontal: 0, vertical: -4),
+
+                                onChanged: (value) {
+                                  setState(() {
+                                    selectedsmoke =
+                                        value! ? 'Social smoking' : '';
+                                  });
+                                },
+                              ),
+                            ],
+                          ),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                'Trying to quit',
+                                style: AppFonts.titleRegular(
+                                    color:
+                                        Theme.of(context).colorScheme.tertiary),
+                              ),
+                              Checkbox(
+                                checkColor: Theme.of(context).brightness ==
+                                        Brightness.light
+                                    ? AppColors.white
+                                    : AppColors.black,
+                                activeColor:
+                                    Theme.of(context).colorScheme.tertiary,
+                                // isError: true,
+                                value: selectedsmoke == 'Trying to quit',
+                                side: BorderSide(
+                                    color:
+                                        Theme.of(context).colorScheme.tertiary,
+                                    width: 2),
+                                visualDensity:
+                                    VisualDensity(horizontal: 0, vertical: -4),
+
+                                onChanged: (value) {
+                                  setState(() {
+                                    selectedsmoke =
+                                        value! ? 'Trying to quit' : '';
+                                  });
+                                },
+                              ),
+                            ],
+                          ),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                'Smoking when drinking',
+                                style: AppFonts.titleRegular(
+                                    color:
+                                        Theme.of(context).colorScheme.tertiary),
+                              ),
+                              Checkbox(
+                                checkColor: Theme.of(context).brightness ==
+                                        Brightness.light
+                                    ? AppColors.white
+                                    : AppColors.black,
+                                activeColor:
+                                    Theme.of(context).colorScheme.tertiary,
+                                // isError: true,
+                                value: selectedsmoke == 'Smoking when drinking',
+                                side: BorderSide(
+                                    color:
+                                        Theme.of(context).colorScheme.tertiary,
+                                    width: 2),
+                                visualDensity:
+                                    VisualDensity(horizontal: 0, vertical: -4),
+
+                                onChanged: (value) {
+                                  setState(() {
+                                    selectedsmoke =
+                                        value! ? 'Smoking when drinking' : '';
+                                  });
+                                },
+                              ),
+                            ],
+                          ),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                'Chain smoker',
+                                style: AppFonts.titleRegular(
+                                    color:
+                                        Theme.of(context).colorScheme.tertiary),
+                              ),
+                              Checkbox(
+                                checkColor: Theme.of(context).brightness ==
+                                        Brightness.light
+                                    ? AppColors.white
+                                    : AppColors.black,
+                                activeColor:
+                                    Theme.of(context).colorScheme.tertiary,
+                                // isError: true,
+                                value: selectedsmoke == 'Chain smoker',
+                                side: BorderSide(
+                                    color:
+                                        Theme.of(context).colorScheme.tertiary,
+                                    width: 2),
+                                visualDensity:
+                                    VisualDensity(horizontal: 0, vertical: -4),
+
+                                onChanged: (value) {
+                                  setState(() {
+                                    selectedsmoke =
+                                        value! ? 'Chain smoker' : '';
+                                  });
+                                },
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                    SizedBox(
+                      height: 24,
+                    ),
+                    Text(
+                      'Do you exercise?',
+                      style: AppFonts.titleBold(
+                          fontSize: 18,
+                          color: Theme.of(context).colorScheme.tertiary),
+                    ),
+                    SizedBox(
+                      height: 10,
+                    ),
+                    Container(
+                      padding: EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                          border: Border.all(
+                              width: 1,
+                              color: Theme.of(context).colorScheme.tertiary),
+                          borderRadius: BorderRadius.circular(20)),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                'Don\u0027t want to',
+                                style: AppFonts.titleRegular(
+                                    color:
+                                        Theme.of(context).colorScheme.tertiary),
+                              ),
+                              Checkbox(
+                                checkColor: Theme.of(context).brightness ==
+                                        Brightness.light
+                                    ? AppColors.white
+                                    : AppColors.black,
+                                activeColor:
+                                    Theme.of(context).colorScheme.tertiary,
+                                // isError: true,
+                                value: selectedexercise == 'Don\u0027t want to',
+                                side: BorderSide(
+                                    color:
+                                        Theme.of(context).colorScheme.tertiary,
+                                    width: 2),
+                                visualDensity:
+                                    VisualDensity(horizontal: 0, vertical: -4),
+
+                                onChanged: (value) {
+                                  setState(() {
+                                    selectedexercise =
+                                        value! ? 'Don\u0027t want to' : '';
+                                  });
+                                },
+                              ),
+                            ],
+                          ),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                'Every Day',
+                                style: AppFonts.titleRegular(
+                                    color:
+                                        Theme.of(context).colorScheme.tertiary),
+                              ),
+                              Checkbox(
+                                checkColor: Theme.of(context).brightness ==
+                                        Brightness.light
+                                    ? AppColors.white
+                                    : AppColors.black,
+                                activeColor:
+                                    Theme.of(context).colorScheme.tertiary,
+                                // isError: true,
+                                value: selectedexercise == 'Every Day',
+                                side: BorderSide(
+                                    color:
+                                        Theme.of(context).colorScheme.tertiary,
+                                    width: 2),
+                                visualDensity:
+                                    VisualDensity(horizontal: 0, vertical: -4),
+
+                                onChanged: (value) {
+                                  setState(() {
+                                    selectedexercise =
+                                        value! ? 'Every Day' : '';
+                                  });
+                                },
+                              ),
+                            ],
+                          ),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                'Sometimes',
+                                style: AppFonts.titleRegular(
+                                    color:
+                                        Theme.of(context).colorScheme.tertiary),
+                              ),
+                              Checkbox(
+                                checkColor: Theme.of(context).brightness ==
+                                        Brightness.light
+                                    ? AppColors.white
+                                    : AppColors.black,
+                                activeColor:
+                                    Theme.of(context).colorScheme.tertiary,
+                                // isError: true,
+                                value: selectedexercise == 'Sometimes',
+                                side: BorderSide(
+                                    color:
+                                        Theme.of(context).colorScheme.tertiary,
+                                    width: 2),
+                                visualDensity:
+                                    VisualDensity(horizontal: 0, vertical: -4),
+
+                                onChanged: (value) {
+                                  setState(() {
+                                    selectedexercise =
+                                        value! ? 'Sometimes' : '';
+                                  });
+                                },
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                    SizedBox(
+                      height: 24,
+                    ),
+                    Text(
+                      'Do you like pets?',
+                      style: AppFonts.titleBold(
+                          fontSize: 18,
+                          color: Theme.of(context).colorScheme.tertiary),
+                    ),
+                    SizedBox(
+                      height: 10,
+                    ),
+                    Container(
+                      padding: EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                          border: Border.all(
+                              width: 1,
+                              color: Theme.of(context).colorScheme.tertiary),
+                          borderRadius: BorderRadius.circular(20)),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                'Furry Pets',
+                                style: AppFonts.titleRegular(
+                                    color:
+                                        Theme.of(context).colorScheme.tertiary),
+                              ),
+                              Checkbox(
+                                checkColor: Theme.of(context).brightness ==
+                                        Brightness.light
+                                    ? AppColors.white
+                                    : AppColors.black,
+                                activeColor:
+                                    Theme.of(context).colorScheme.tertiary,
+                                // isError: true,
+                                value: selectedpets == 'Furry Pets',
+                                side: BorderSide(
+                                    color:
+                                        Theme.of(context).colorScheme.tertiary,
+                                    width: 2),
+                                visualDensity:
+                                    VisualDensity(horizontal: 0, vertical: -4),
+
+                                onChanged: (value) {
+                                  setState(() {
+                                    selectedpets = value! ? 'Furry Pets' : '';
+                                  });
+                                },
+                              ),
+                            ],
+                          ),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                'Amphibian',
+                                style: AppFonts.titleRegular(
+                                    color:
+                                        Theme.of(context).colorScheme.tertiary),
+                              ),
+                              Checkbox(
+                                checkColor: Theme.of(context).brightness ==
+                                        Brightness.light
+                                    ? AppColors.white
+                                    : AppColors.black,
+                                activeColor:
+                                    Theme.of(context).colorScheme.tertiary,
+                                // isError: true,
+                                value: selectedpets == 'Amphibian',
+                                side: BorderSide(
+                                    color:
+                                        Theme.of(context).colorScheme.tertiary,
+                                    width: 2),
+                                visualDensity:
+                                    VisualDensity(horizontal: 0, vertical: -4),
+
+                                onChanged: (value) {
+                                  setState(() {
+                                    selectedpets = value! ? 'Amphibian' : '';
+                                  });
+                                },
+                              ),
+                            ],
+                          ),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                'Allergic to pets',
+                                style: AppFonts.titleRegular(
+                                    color:
+                                        Theme.of(context).colorScheme.tertiary),
+                              ),
+                              Checkbox(
+                                checkColor: Theme.of(context).brightness ==
+                                        Brightness.light
+                                    ? AppColors.white
+                                    : AppColors.black,
+                                activeColor:
+                                    Theme.of(context).colorScheme.tertiary,
+                                // isError: true,
+                                value: selectedpets == 'Allergic to pets',
+                                side: BorderSide(
+                                    color:
+                                        Theme.of(context).colorScheme.tertiary,
+                                    width: 2),
+                                visualDensity:
+                                    VisualDensity(horizontal: 0, vertical: -4),
+
+                                onChanged: (value) {
+                                  setState(() {
+                                    selectedpets =
+                                        value! ? 'Allergic to pets' : '';
+                                  });
+                                },
+                              ),
+                            ],
+                          ),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                'Don\u0027t like pets',
+                                style: AppFonts.titleRegular(
+                                    color:
+                                        Theme.of(context).colorScheme.tertiary),
+                              ),
+                              Checkbox(
+                                checkColor: Theme.of(context).brightness ==
+                                        Brightness.light
+                                    ? AppColors.white
+                                    : AppColors.black,
+                                activeColor:
+                                    Theme.of(context).colorScheme.tertiary,
+                                // isError: true,
+                                value: selectedpets == 'Don\u0027t like pets',
+                                side: BorderSide(
+                                    color:
+                                        Theme.of(context).colorScheme.tertiary,
+                                    width: 2),
+                                visualDensity:
+                                    VisualDensity(horizontal: 0, vertical: -4),
+
+                                onChanged: (value) {
+                                  setState(() {
+                                    selectedpets =
+                                        value! ? 'Don\u0027t like pets' : '';
+                                  });
+                                },
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                    SizedBox(
+                      height: 24,
+                    ),
+                    Text(
+                      'What\u0027s your communication style?',
+                      style: AppFonts.titleBold(
+                          fontSize: 18,
+                          color: Theme.of(context).colorScheme.tertiary),
+                    ),
+                    SizedBox(
+                      height: 10,
+                    ),
+                    Container(
+                      padding: EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                          border: Border.all(
+                              width: 1,
+                              color: Theme.of(context).colorScheme.tertiary),
+                          borderRadius: BorderRadius.circular(20)),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                'Bad Texter',
+                                style: AppFonts.titleRegular(
+                                    color:
+                                        Theme.of(context).colorScheme.tertiary),
+                              ),
+                              Checkbox(
+                                checkColor: Theme.of(context).brightness ==
+                                        Brightness.light
+                                    ? AppColors.white
+                                    : AppColors.black,
+                                activeColor:
+                                    Theme.of(context).colorScheme.tertiary,
+                                // isError: true,
+                                value:
+                                    selectedCommunicationStyle == 'Bad Texter',
+                                side: BorderSide(
+                                    color:
+                                        Theme.of(context).colorScheme.tertiary,
+                                    width: 2),
+                                visualDensity:
+                                    VisualDensity(horizontal: 0, vertical: -4),
+
+                                onChanged: (value) {
+                                  setState(() {
+                                    selectedCommunicationStyle =
+                                        value! ? 'Bad Texter' : '';
+                                  });
+                                },
+                              ),
+                            ],
+                          ),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                'Big Time Texter',
+                                style: AppFonts.titleRegular(
+                                    color:
+                                        Theme.of(context).colorScheme.tertiary),
+                              ),
+                              Checkbox(
+                                checkColor: Theme.of(context).brightness ==
+                                        Brightness.light
+                                    ? AppColors.white
+                                    : AppColors.black,
+                                activeColor:
+                                    Theme.of(context).colorScheme.tertiary,
+                                // isError: true,
+                                value: selectedCommunicationStyle ==
+                                    'Big Time Texter',
+                                side: BorderSide(
+                                    color:
+                                        Theme.of(context).colorScheme.tertiary,
+                                    width: 2),
+                                visualDensity:
+                                    VisualDensity(horizontal: 0, vertical: -4),
+
+                                onChanged: (value) {
+                                  setState(() {
+                                    selectedCommunicationStyle =
+                                        value! ? 'Big Time Texter' : '';
+                                  });
+                                },
+                              ),
+                            ],
+                          ),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                'In Person',
+                                style: AppFonts.titleRegular(
+                                    color:
+                                        Theme.of(context).colorScheme.tertiary),
+                              ),
+                              Checkbox(
+                                checkColor: Theme.of(context).brightness ==
+                                        Brightness.light
+                                    ? AppColors.white
+                                    : AppColors.black,
+                                activeColor:
+                                    Theme.of(context).colorScheme.tertiary,
+                                // isError: true,
+                                value:
+                                    selectedCommunicationStyle == 'In Person',
+                                side: BorderSide(
+                                    color:
+                                        Theme.of(context).colorScheme.tertiary,
+                                    width: 2),
+                                visualDensity:
+                                    VisualDensity(horizontal: 0, vertical: -4),
+
+                                onChanged: (value) {
+                                  setState(() {
+                                    selectedCommunicationStyle =
+                                        value! ? 'In Person' : '';
+                                  });
+                                },
+                              ),
+                            ],
+                          ),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                'Phone caller',
+                                style: AppFonts.titleRegular(
+                                    color:
+                                        Theme.of(context).colorScheme.tertiary),
+                              ),
+                              Checkbox(
+                                checkColor: Theme.of(context).brightness ==
+                                        Brightness.light
+                                    ? AppColors.white
+                                    : AppColors.black,
+                                activeColor:
+                                    Theme.of(context).colorScheme.tertiary,
+                                // isError: true,
+                                value: selectedCommunicationStyle ==
+                                    'Phone caller',
+                                side: BorderSide(
+                                    color:
+                                        Theme.of(context).colorScheme.tertiary,
+                                    width: 2),
+                                visualDensity:
+                                    VisualDensity(horizontal: 0, vertical: -4),
+
+                                onChanged: (value) {
+                                  setState(() {
+                                    selectedCommunicationStyle =
+                                        value! ? 'Phone caller' : '';
+                                  });
+                                },
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                    SizedBox(
+                      height: 24,
+                    ),
+                    Text(
+                      'what\u0027s your Love language?',
+                      style: AppFonts.titleBold(
+                          fontSize: 18,
+                          color: Theme.of(context).colorScheme.tertiary),
+                    ),
+                    SizedBox(
+                      height: 10,
+                    ),
+                    Container(
+                      padding: EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                          border: Border.all(
+                              width: 1,
+                              color: Theme.of(context).colorScheme.tertiary),
+                          borderRadius: BorderRadius.circular(20)),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                'Compliments',
+                                style: AppFonts.titleRegular(
+                                    color:
+                                        Theme.of(context).colorScheme.tertiary),
+                              ),
+                              Checkbox(
+                                checkColor: Theme.of(context).brightness ==
+                                        Brightness.light
+                                    ? AppColors.white
+                                    : AppColors.black,
+                                activeColor:
+                                    Theme.of(context).colorScheme.tertiary,
+                                // isError: true,
+                                value: selectedLoveLanguage == 'compliments',
+                                side: BorderSide(
+                                    color:
+                                        Theme.of(context).colorScheme.tertiary,
+                                    width: 2),
+                                visualDensity:
+                                    VisualDensity(horizontal: 0, vertical: -4),
+
+                                onChanged: (value) {
+                                  setState(() {
+                                    selectedLoveLanguage =
+                                        value! ? 'compliments' : '';
+                                  });
+                                },
+                              ),
+                            ],
+                          ),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                'Physical touch',
+                                style: AppFonts.titleRegular(
+                                    color:
+                                        Theme.of(context).colorScheme.tertiary),
+                              ),
+                              Checkbox(
+                                checkColor: Theme.of(context).brightness ==
+                                        Brightness.light
+                                    ? AppColors.white
+                                    : AppColors.black,
+                                activeColor:
+                                    Theme.of(context).colorScheme.tertiary,
+                                // isError: true,
+                                value: selectedLoveLanguage == 'physical_touch',
+                                side: BorderSide(
+                                    color:
+                                        Theme.of(context).colorScheme.tertiary,
+                                    width: 2),
+                                visualDensity:
+                                    VisualDensity(horizontal: 0, vertical: -4),
+
+                                onChanged: (value) {
+                                  setState(() {
+                                    selectedLoveLanguage =
+                                        value! ? 'physical_touch' : '';
+                                  });
+                                },
+                              ),
+                            ],
+                          ),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                'Gifting/Receiving gifts',
+                                style: AppFonts.titleRegular(
+                                    color:
+                                        Theme.of(context).colorScheme.tertiary),
+                              ),
+                              Checkbox(
+                                checkColor: Theme.of(context).brightness ==
+                                        Brightness.light
+                                    ? AppColors.white
+                                    : AppColors.black,
+                                activeColor:
+                                    Theme.of(context).colorScheme.tertiary,
+                                // isError: true,
+                                value: selectedLoveLanguage == 'gifting',
+                                side: BorderSide(
+                                    color:
+                                        Theme.of(context).colorScheme.tertiary,
+                                    width: 2),
+                                visualDensity:
+                                    VisualDensity(horizontal: 0, vertical: -4),
+
+                                onChanged: (value) {
+                                  setState(() {
+                                    selectedLoveLanguage =
+                                        value! ? 'gifting' : '';
+                                  });
+                                },
+                              ),
+                            ],
+                          ),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                'Quality Time',
+                                style: AppFonts.titleRegular(
+                                    color:
+                                        Theme.of(context).colorScheme.tertiary),
+                              ),
+                              Checkbox(
+                                checkColor: Theme.of(context).brightness ==
+                                        Brightness.light
+                                    ? AppColors.white
+                                    : AppColors.black,
+                                activeColor:
+                                    Theme.of(context).colorScheme.tertiary,
+                                // isError: true,
+                                value: selectedLoveLanguage == 'quality_time',
+                                side: BorderSide(
+                                    color:
+                                        Theme.of(context).colorScheme.tertiary,
+                                    width: 2),
+                                visualDensity:
+                                    VisualDensity(horizontal: 0, vertical: -4),
+
+                                onChanged: (value) {
+                                  setState(() {
+                                    selectedLoveLanguage =
+                                        value! ? 'quality_time' : '';
+                                  });
+                                },
+                              ),
+                            ],
+                          ),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                'Acts of service',
+                                style: AppFonts.titleRegular(
+                                    color:
+                                        Theme.of(context).colorScheme.tertiary),
+                              ),
+                              Checkbox(
+                                checkColor: Theme.of(context).brightness ==
+                                        Brightness.light
+                                    ? AppColors.white
+                                    : AppColors.black,
+                                activeColor:
+                                    Theme.of(context).colorScheme.tertiary,
+                                // isError: true,
+                                value:
+                                    selectedLoveLanguage == 'acts_of_service',
+                                side: BorderSide(
+                                    color:
+                                        Theme.of(context).colorScheme.tertiary,
+                                    width: 2),
+                                visualDensity:
+                                    VisualDensity(horizontal: 0, vertical: -4),
+
+                                onChanged: (value) {
+                                  setState(() {
+                                    selectedLoveLanguage =
+                                        value! ? 'acts_of_service' : '';
+                                  });
+                                },
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
                   ],
                 ),
               ),

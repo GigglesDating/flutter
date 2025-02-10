@@ -23,7 +23,6 @@ class SettingsPage extends StatefulWidget {
 
 class _SettingsPageState extends State<SettingsPage> {
   final ScrollController _scrollController = ScrollController();
-  Color _appBarColor = Colors.transparent; // Start with transparent AppBar color
   bool _hasScrolledUp = false; // Track if the user has scrolled up
   // Future<void> logout(BuildContext context) async {
   //   SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -48,7 +47,7 @@ class _SettingsPageState extends State<SettingsPage> {
       if (_scrollController.offset > 100 && !_hasScrolledUp) {
         // Once scrolled past 100 pixels, set the AppBar color to fixed value
         setState(() {
-          _appBarColor = Colors.white; // Fixed color after scrolling
+// Fixed color after scrolling
           _hasScrolledUp = true; // Mark that scrolling has happened
         });
       }

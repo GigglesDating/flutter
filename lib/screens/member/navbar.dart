@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 //import 'package:flutter_floating_bottom_bar/flutter_floating_bottom_bar.dart';
-import 'package:flutter_svg/flutter_svg.dart';
+//import 'package:flutter_svg/flutter_svg.dart';
 import '../placeholder_template.dart';
 import '../barrel.dart';
 
@@ -50,9 +50,7 @@ class _NavigationControllerState extends State<NavigationController> {
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-
-    // Use a small fixed padding instead of system navigation height
-    const bottomSafeArea = 8.0;
+    final bottomPadding = MediaQuery.of(context).padding.bottom;
 
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: const SystemUiOverlayStyle(
@@ -74,10 +72,11 @@ class _NavigationControllerState extends State<NavigationController> {
 
             // Navigation bar with SOS button
             Positioned(
-              bottom: bottomSafeArea,
+              bottom: bottomPadding,
               left: 0,
               right: 0,
               child: Stack(
+                clipBehavior: Clip.none,
                 alignment: Alignment.topCenter,
                 children: [
                   // Main navigation bar
@@ -86,36 +85,50 @@ class _NavigationControllerState extends State<NavigationController> {
                       horizontal: size.width * 0.05,
                       vertical: size.height * 0.02,
                     ),
-                    height: 60,
+                    height: size.height * 0.08,
                     decoration: BoxDecoration(
-                      color: const Color(0xFF2A2A2A),
+                      color: isDarkMode
+                          ? Colors.white
+                              .withAlpha(230) // Slightly transparent white
+                          : Colors.black
+                              .withAlpha(230), // Slightly transparent black
                       borderRadius: BorderRadius.circular(40),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withAlpha(26),
+                          blurRadius: 10,
+                          offset: const Offset(0, 5),
+                        ),
+                      ],
                     ),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                       children: [
                         _buildNavItem(Icons.home_outlined, 0),
                         _buildNavItem(Icons.group_outlined, 1),
-                        const SizedBox(width: 48),
+                        SizedBox(
+                            width: size.width * 0.15), // Space for SOS button
                         _buildNavItem(Icons.movie_outlined, 3),
                         _buildProfileItem(4),
                       ],
                     ),
                   ),
 
-                  // Floating SOS button
+                  // Floating SOS button with final positioning
                   Positioned(
-                    top: -5,
+                    top: -(size.height *
+                        0.005), // Updated to the optimal position
                     child: Container(
-                      width: 60,
-                      height: 60,
+                      width: size.width * 0.15,
+                      height: size.width * 0.15,
                       decoration: BoxDecoration(
                         color: const Color(0xFFA5C0E5),
                         shape: BoxShape.circle,
                         boxShadow: [
                           BoxShadow(
-                            color: const Color(0xFFA5C0E5).withOpacity(0.3),
+                            color: const Color(0xFFA5C0E5).withAlpha(77),
                             blurRadius: 8,
+                            spreadRadius: 1,
                             offset: const Offset(0, 4),
                           ),
                         ],
@@ -123,16 +136,12 @@ class _NavigationControllerState extends State<NavigationController> {
                       child: Material(
                         color: Colors.transparent,
                         child: InkWell(
-                          onTap: () {
-                            debugPrint('SOS Button pressed');
-                          },
+                          onTap: () => debugPrint('SOS Button pressed'),
                           customBorder: const CircleBorder(),
-                          child: const Center(
-                            child: Icon(
-                              Icons.phone,
-                              color: Colors.white,
-                              size: 30,
-                            ),
+                          child: Icon(
+                            Icons.phone,
+                            color: Colors.white,
+                            size: size.width * 0.06,
                           ),
                         ),
                       ),
@@ -149,11 +158,14 @@ class _NavigationControllerState extends State<NavigationController> {
 
   Widget _buildNavItem(IconData icon, int index) {
     final isSelected = _currentIndex == index;
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
     return IconButton(
       onPressed: () => setState(() => _currentIndex = index),
       icon: Icon(
         icon,
-        color: isSelected ? Colors.white : Colors.white.withOpacity(0.5),
+        color: isDarkMode
+            ? (isSelected ? Colors.black : Colors.black.withAlpha(128))
+            : (isSelected ? Colors.white : Colors.white.withAlpha(128)),
         size: 28,
       ),
     );

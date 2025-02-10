@@ -27,11 +27,9 @@ dependencies:
   logger: ^2.5.0
   share_plus: ^10.1.4
   dotted_border: ^2.1.0
-  flutter_floating_bottom_bar: ^1.2.1+1
   timeago: ^3.2.2
   fluttertoast: ^8.2.11
   
-
 
 dev_dependencies:
   flutter_test:

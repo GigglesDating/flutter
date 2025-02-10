@@ -1,6 +1,5 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart';
 
@@ -28,12 +27,46 @@ class _HomeTabState extends State<HomeTab> {
       'comments': 45,
       'timeAgo': '3h ago',
       'userImage': 'assets/tempImages/users/user2.jpg',
+      'userName': 'Sarah Parker',
+      'location': 'New York, USA',
     },
-    // Add more temp posts as needed
+    {
+      'image': 'assets/tempImages/posts/post3.png',
+      'isVideo': true,
+      'caption': 'Amazing sunset at the beach! 🌅 #sunset #beach #vibes',
+      'likes': 456,
+      'comments': 89,
+      'timeAgo': '5h ago',
+      'userImage': 'assets/tempImages/users/user3.jpg',
+      'userName': 'Mike Johnson',
+      'location': 'Miami Beach, FL',
+    },
   ];
 
+  final ScrollController _scrollController = ScrollController();
+  bool _showStories = true;
   File? _croppedImage;
   final ImagePicker _picker = ImagePicker();
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollController.addListener(_onScroll);
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _onScroll() {
+    if (_scrollController.offset > 20 && _showStories) {
+      setState(() => _showStories = false);
+    } else if (_scrollController.offset <= 20 && !_showStories) {
+      setState(() => _showStories = true);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -93,9 +126,14 @@ class _HomeTabState extends State<HomeTab> {
       ),
       body: Column(
         children: [
-          _buildStorySection(isDarkMode),
-          const SizedBox(height: 20),
-          Expanded(child: _buildFeedSection(isDarkMode)),
+          AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            height: _showStories ? 85 : 0,
+            child: _buildStorySection(isDarkMode),
+          ),
+          Expanded(
+            child: _buildFeedSection(isDarkMode),
+          ),
         ],
       ),
     );
@@ -180,6 +218,7 @@ class _HomeTabState extends State<HomeTab> {
 
   Widget _buildFeedSection(bool isDarkMode) {
     return ListView.builder(
+      controller: _scrollController,
       itemCount: _tempPosts.length,
       itemBuilder: (context, index) {
         final post = _tempPosts[index];
@@ -204,14 +243,14 @@ class _HomeTabState extends State<HomeTab> {
                   backgroundImage: AssetImage(post['userImage']),
                 ),
                 title: Text(
-                  'User Name',
+                  post['userName'],
                   style: TextStyle(
                     color: isDarkMode ? Colors.white : Colors.black,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
                 subtitle: Text(
-                  post['timeAgo'],
+                  post['location'],
                   style: TextStyle(
                     color: isDarkMode ? Colors.white70 : Colors.black54,
                   ),
@@ -224,7 +263,6 @@ class _HomeTabState extends State<HomeTab> {
               Image.asset(
                 post['image'],
                 width: double.infinity,
-                height: 400,
                 fit: BoxFit.cover,
               ),
               Padding(
@@ -239,31 +277,50 @@ class _HomeTabState extends State<HomeTab> {
                           color: isDarkMode ? Colors.white : Colors.black,
                         ),
                         const SizedBox(width: 8),
-                        Text(
-                          '${post['likes']} likes',
-                          style: TextStyle(
-                            color: isDarkMode ? Colors.white : Colors.black,
-                          ),
-                        ),
-                        const SizedBox(width: 16),
                         Icon(
-                          Icons.comment_outlined,
+                          Icons.chat_bubble_outline,
                           color: isDarkMode ? Colors.white : Colors.black,
                         ),
                         const SizedBox(width: 8),
-                        Text(
-                          '${post['comments']} comments',
-                          style: TextStyle(
-                            color: isDarkMode ? Colors.white : Colors.black,
-                          ),
+                        Icon(
+                          Icons.send,
+                          color: isDarkMode ? Colors.white : Colors.black,
+                        ),
+                        const Spacer(),
+                        Icon(
+                          Icons.bookmark_border,
+                          color: isDarkMode ? Colors.white : Colors.black,
                         ),
                       ],
                     ),
                     const SizedBox(height: 8),
                     Text(
+                      '${post['likes']} likes',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: isDarkMode ? Colors.white : Colors.black,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
                       post['caption'],
                       style: TextStyle(
                         color: isDarkMode ? Colors.white : Colors.black,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'View all ${post['comments']} comments',
+                      style: TextStyle(
+                        color: isDarkMode ? Colors.white60 : Colors.black54,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      post['timeAgo'],
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: isDarkMode ? Colors.white60 : Colors.black54,
                       ),
                     ),
                   ],
@@ -276,127 +333,43 @@ class _HomeTabState extends State<HomeTab> {
     );
   }
 
-  void showImageModalSheet() {
-    showModalBottomSheet(
-      backgroundColor: Colors.transparent,
-      context: context,
-      builder: (builder) {
-        return Container(
-          decoration: const BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.only(
-              topLeft: Radius.circular(35.0),
-              topRight: Radius.circular(35.0),
-            ),
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const SizedBox(height: 20),
-              const Padding(
-                padding: EdgeInsets.symmetric(horizontal: 16.0),
-                child: Text(
-                  'Add Post',
-                  style: TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 23),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
-                    _buildModalOption(
-                      'Camera',
-                      'assets/icons/camera_icon.svg',
-                      () => pickImage(ImageSource.camera),
-                    ),
-                    _buildModalOption(
-                      'Gallery',
-                      'assets/icons/gallery_icon.svg',
-                      () => pickImage(ImageSource.gallery),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 20),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _buildModalOption(String label, String icon, VoidCallback onTap) {
-    return Column(
-      children: [
-        GestureDetector(
-          onTap: () {
-            onTap();
-            Navigator.pop(context);
-          },
-          child: Container(
-            height: 91,
-            width: 91,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(15),
-              border: Border.all(color: Colors.black.withAlpha(100)),
-            ),
-            child: Padding(
-              padding: const EdgeInsets.all(24.0),
-              child: SvgPicture.asset(
-                icon,
-                width: 40,
-                height: 36,
-              ),
-            ),
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.only(top: 10.0),
-          child: Text(
-            label,
-            style: const TextStyle(
-              fontSize: 16,
-              color: Color(0xff575651),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Future<void> pickImage(ImageSource imageType) async {
+  Future<void> showImageModalSheet() async {
     try {
-      final XFile? pickedImage = await _picker.pickImage(source: imageType);
-      if (pickedImage != null) {
-        final croppedImage = await ImageCropper().cropImage(
-          sourcePath: pickedImage.path,
+      final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
+      if (image != null) {
+        final croppedFile = await ImageCropper().cropImage(
+          sourcePath: image.path,
+          maxWidth: 1080,
+          maxHeight: 1080,
+          compressQuality: 90,
           uiSettings: [
             AndroidUiSettings(
-              toolbarTitle: 'Cropper',
+              toolbarTitle: 'Crop Story',
               toolbarColor: Colors.black,
               toolbarWidgetColor: Colors.white,
-              initAspectRatio: CropAspectRatioPreset.original,
-              lockAspectRatio: false,
+              initAspectRatio: CropAspectRatioPreset.square,
+              lockAspectRatio: true,
+              hideBottomControls: true,
             ),
             IOSUiSettings(
-              title: 'Cropper',
+              title: 'Crop Story',
+              aspectRatioLockEnabled: true,
+              resetAspectRatioEnabled: false,
+              minimumAspectRatio: 1.0,
             ),
           ],
         );
 
-        if (croppedImage != null) {
+        if (croppedFile != null) {
           setState(() {
-            _croppedImage = File(croppedImage.path);
+            _croppedImage = File(croppedFile.path);
+            // Add the cropped image to stories
+            _tempUserProfiles.insert(1, _croppedImage!.path);
           });
         }
       }
     } catch (error) {
-      debugPrint(error.toString());
+      debugPrint('Error picking/cropping image: $error');
     }
   }
 }

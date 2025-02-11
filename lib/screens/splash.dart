@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_frontend/screens/barrel.dart';
 import 'package:flutter_frontend/screens/member/explore_tab/swipe_filter_page.dart';
+import 'package:flutter_frontend/screens/user/add_to_story_page.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -40,7 +42,7 @@ class _SplashScreenState extends State<SplashScreen>
         transitionDuration: const Duration(milliseconds: 800),
         pageBuilder: (context, animation, secondaryAnimation) => FadeTransition(
           opacity: animation,
-          child: SwipeFilterPage(),
+          child: AddToStoryScreen(),
         ),
       ),
     );

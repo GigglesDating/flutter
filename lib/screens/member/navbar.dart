@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 //import 'package:flutter_floating_bottom_bar/flutter_floating_bottom_bar.dart';
 //import 'package:flutter_svg/flutter_svg.dart';
 import '../placeholder_template.dart';
@@ -104,11 +105,11 @@ class _NavigationControllerState extends State<NavigationController> {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                       children: [
-                        _buildNavItem(Icons.home_outlined, 0),
-                        _buildNavItem(Icons.group_outlined, 1),
+                        _buildNavItem(0),
+                        _buildNavItem(1),
                         SizedBox(
                             width: size.width * 0.15), // Space for SOS button
-                        _buildNavItem(Icons.movie_outlined, 3),
+                        _buildNavItem(3),
                         _buildProfileItem(4),
                       ],
                     ),
@@ -156,17 +157,46 @@ class _NavigationControllerState extends State<NavigationController> {
     );
   }
 
-  Widget _buildNavItem(IconData icon, int index) {
+  Widget _buildNavItem(int index) {
     final isSelected = _currentIndex == index;
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    return IconButton(
-      onPressed: () => setState(() => _currentIndex = index),
-      icon: Icon(
-        icon,
-        color: isDarkMode
-            ? (isSelected ? Colors.black : Colors.black.withAlpha(128))
-            : (isSelected ? Colors.white : Colors.white.withAlpha(128)),
-        size: 28,
+
+    // Define icon paths based on index
+    String getIconPath(int index) {
+      switch (index) {
+        case 0:
+          return 'assets/icons/nav_bar/home.svg';
+        case 1:
+          return 'assets/icons/nav_bar/swipe.svg';
+        case 2:
+          return 'assets/icons/nav_bar/snips.svg';
+        default:
+          return 'assets/icons/nav_bar/home.svg'; // fallback
+      }
+    }
+
+    // For SOS button specifically
+    if (index == 3) {
+      return Image.asset(
+        'assets/icons/nav_bar/sos.gif',
+        width: 35,
+        height: 35,
+        color: isDarkMode ? Colors.white : Colors.black,
+      );
+    }
+
+    return GestureDetector(
+      onTap: () => setState(() => _currentIndex = index),
+      child: SvgPicture.asset(
+        getIconPath(index),
+        width: 24,
+        height: 24,
+        colorFilter: ColorFilter.mode(
+          isSelected
+              ? Colors.green
+              : (isDarkMode ? Colors.white : Colors.black),
+          BlendMode.srcIn,
+        ),
       ),
     );
   }

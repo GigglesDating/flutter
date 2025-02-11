@@ -73,7 +73,7 @@ class _PostCardState extends State<PostCard>
           Positioned(
             top: -(screenHeight *
                 0.04), // 4% of screen height for overlay position
-            left: screenWidth * 0.05, // 5% of screen width from left
+            left: screenWidth * 0.1, // 5% of screen width from left
             child: Container(
               padding: EdgeInsets.all(screenWidth *
                   0.008), // 0.8% of screen width for border padding
@@ -103,7 +103,7 @@ class _PostCardState extends State<PostCard>
 
           // Vertical Action Bar
           Positioned(
-            right: screenWidth * 0.035, // 3% of screen width from right
+            right: screenWidth * 0.05, // 3% of screen width from right
             bottom: screenWidth * 0.15, // 30% of screen width from bottom
             child: Container(
               padding: EdgeInsets.symmetric(

@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_frontend/screens/barrel.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:flutter_frontend/network/think.dart';
 
 class ProfileCreation3 extends StatefulWidget {
   const ProfileCreation3({super.key});

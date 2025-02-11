@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart';
+import '../utilities/post_card.dart';
 
 class HomeTab extends StatefulWidget {
   const HomeTab({super.key});
@@ -221,113 +222,9 @@ class _HomeTabState extends State<HomeTab> {
       controller: _scrollController,
       itemCount: _tempPosts.length,
       itemBuilder: (context, index) {
-        final post = _tempPosts[index];
-        return Container(
-          margin: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
-          decoration: BoxDecoration(
-            color: isDarkMode ? Colors.grey[900] : Colors.white,
-            borderRadius: BorderRadius.circular(15),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withAlpha(100),
-                blurRadius: 10,
-                offset: const Offset(0, 5),
-              ),
-            ],
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              ListTile(
-                leading: CircleAvatar(
-                  backgroundImage: AssetImage(post['userImage']),
-                ),
-                title: Text(
-                  post['userName'],
-                  style: TextStyle(
-                    color: isDarkMode ? Colors.white : Colors.black,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                subtitle: Text(
-                  post['location'],
-                  style: TextStyle(
-                    color: isDarkMode ? Colors.white70 : Colors.black54,
-                  ),
-                ),
-                trailing: Icon(
-                  Icons.more_vert,
-                  color: isDarkMode ? Colors.white70 : Colors.black54,
-                ),
-              ),
-              Image.asset(
-                post['image'],
-                width: double.infinity,
-                fit: BoxFit.cover,
-              ),
-              Padding(
-                padding: const EdgeInsets.all(12),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Icon(
-                          Icons.favorite_border,
-                          color: isDarkMode ? Colors.white : Colors.black,
-                        ),
-                        const SizedBox(width: 8),
-                        Icon(
-                          Icons.chat_bubble_outline,
-                          color: isDarkMode ? Colors.white : Colors.black,
-                        ),
-                        const SizedBox(width: 8),
-                        Icon(
-                          Icons.send,
-                          color: isDarkMode ? Colors.white : Colors.black,
-                        ),
-                        const Spacer(),
-                        Icon(
-                          Icons.bookmark_border,
-                          color: isDarkMode ? Colors.white : Colors.black,
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      '${post['likes']} likes',
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        color: isDarkMode ? Colors.white : Colors.black,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      post['caption'],
-                      style: TextStyle(
-                        color: isDarkMode ? Colors.white : Colors.black,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      'View all ${post['comments']} comments',
-                      style: TextStyle(
-                        color: isDarkMode ? Colors.white60 : Colors.black54,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      post['timeAgo'],
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: isDarkMode ? Colors.white60 : Colors.black54,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
+        return PostCard(
+          post: _tempPosts[index],
+          isDarkMode: isDarkMode,
         );
       },
     );

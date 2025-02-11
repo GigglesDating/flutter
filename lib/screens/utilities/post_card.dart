@@ -42,7 +42,7 @@ class _PostCardState extends State<PostCard>
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 24),
+      margin: const EdgeInsets.only(bottom: 32),
       height: MediaQuery.of(context).size.width * 1.2,
       child: Stack(
         fit: StackFit.expand,
@@ -66,15 +66,16 @@ class _PostCardState extends State<PostCard>
             ),
           ),
 
-          // Profile Picture Overlay (Rounded Rectangle)
+          // Profile Picture Overlay (More Rectangular and Half-Visible)
           Positioned(
-            top: -15,
+            top: -25, // More elevation above the post
             left: 20,
             child: Container(
               padding: const EdgeInsets.all(3),
               decoration: BoxDecoration(
                 color: Colors.white,
-                borderRadius: BorderRadius.circular(16),
+                borderRadius:
+                    BorderRadius.circular(20), // More rounded rectangle
                 boxShadow: [
                   BoxShadow(
                     color: Colors.black.withAlpha(50),
@@ -83,18 +84,18 @@ class _PostCardState extends State<PostCard>
                 ],
               ),
               child: ClipRRect(
-                borderRadius: BorderRadius.circular(14),
+                borderRadius: BorderRadius.circular(18),
                 child: Image.asset(
                   widget.post['userImage'],
-                  width: 60,
-                  height: 50,
+                  width: 65,
+                  height: 80, // More vertical rectangle
                   fit: BoxFit.cover,
                 ),
               ),
             ),
           ),
 
-          // Vertical Interaction Bar
+          // Vertical Interaction Bar (Longer with icon backgrounds)
           Positioned(
             right: 20,
             top: 0,
@@ -102,9 +103,9 @@ class _PostCardState extends State<PostCard>
             child: Center(
               child: Container(
                 padding:
-                    const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+                    const EdgeInsets.symmetric(vertical: 16, horizontal: 8),
                 decoration: BoxDecoration(
-                  color: Colors.black.withAlpha(100),
+                  color: Colors.black.withAlpha(120),
                   borderRadius: BorderRadius.circular(30),
                 ),
                 child: Column(
@@ -115,12 +116,12 @@ class _PostCardState extends State<PostCard>
                       color: isLiked ? Colors.red : Colors.white,
                       onTap: () => setState(() => isLiked = !isLiked),
                     ),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 20),
                     _buildActionButton(
                       icon: Icons.chat_bubble_outline,
                       onTap: () {},
                     ),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 20),
                     _buildActionButton(
                       icon: Icons.more_horiz,
                       onTap: () {},
@@ -173,7 +174,18 @@ class _PostCardState extends State<PostCard>
   }) {
     return GestureDetector(
       onTap: onTap,
-      child: Icon(icon, color: color, size: 24),
+      child: Container(
+        padding: const EdgeInsets.all(10),
+        decoration: BoxDecoration(
+          color: Colors.black.withAlpha(100),
+          shape: BoxShape.circle,
+        ),
+        child: Icon(
+          icon,
+          color: color,
+          size: 28,
+        ),
+      ),
     );
   }
 }

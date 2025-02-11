@@ -42,7 +42,7 @@ class _PostCardState extends State<PostCard>
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 16),
+      margin: const EdgeInsets.only(bottom: 24),
       height: MediaQuery.of(context).size.width * 1.2,
       child: Stack(
         fit: StackFit.expand,
@@ -66,27 +66,15 @@ class _PostCardState extends State<PostCard>
             ),
           ),
 
-          // Like Animation Overlay
-          Center(
-            child: ScaleTransition(
-              scale: _animation,
-              child: Icon(
-                Icons.favorite,
-                color: Colors.white.withAlpha(128),
-                size: 100,
-              ),
-            ),
-          ),
-
-          // Profile Picture Overlay
+          // Profile Picture Overlay (Rounded Rectangle)
           Positioned(
-            top: -20,
+            top: -15,
             left: 20,
             child: Container(
               padding: const EdgeInsets.all(3),
               decoration: BoxDecoration(
                 color: Colors.white,
-                shape: BoxShape.circle,
+                borderRadius: BorderRadius.circular(16),
                 boxShadow: [
                   BoxShadow(
                     color: Colors.black.withAlpha(50),
@@ -94,39 +82,60 @@ class _PostCardState extends State<PostCard>
                   ),
                 ],
               ),
-              child: CircleAvatar(
-                radius: 30,
-                backgroundImage: AssetImage(widget.post['userImage']),
-              ),
-            ),
-          ),
-
-          // Top Info Overlay
-          Positioned(
-            top: 20,
-            right: 20,
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-              decoration: BoxDecoration(
-                color: Colors.black.withAlpha(128),
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: Text(
-                '${widget.post['likes']} • ${widget.post['timeAgo']}',
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 12,
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(14),
+                child: Image.asset(
+                  widget.post['userImage'],
+                  width: 60,
+                  height: 50,
+                  fit: BoxFit.cover,
                 ),
               ),
             ),
           ),
 
-          // Bottom Controls and Caption Overlay
+          // Vertical Interaction Bar
+          Positioned(
+            right: 20,
+            top: 0,
+            bottom: 0,
+            child: Center(
+              child: Container(
+                padding:
+                    const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+                decoration: BoxDecoration(
+                  color: Colors.black.withAlpha(100),
+                  borderRadius: BorderRadius.circular(30),
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    _buildActionButton(
+                      icon: isLiked ? Icons.favorite : Icons.favorite_border,
+                      color: isLiked ? Colors.red : Colors.white,
+                      onTap: () => setState(() => isLiked = !isLiked),
+                    ),
+                    const SizedBox(height: 16),
+                    _buildActionButton(
+                      icon: Icons.chat_bubble_outline,
+                      onTap: () {},
+                    ),
+                    const SizedBox(height: 16),
+                    _buildActionButton(
+                      icon: Icons.more_horiz,
+                      onTap: () {},
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+
+          // Caption Overlay at Bottom
           Positioned(
             bottom: 0,
             left: 0,
-            right: 0,
+            right: 70,
             child: Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
@@ -134,45 +143,21 @@ class _PostCardState extends State<PostCard>
                   begin: Alignment.bottomCenter,
                   end: Alignment.topCenter,
                   colors: [
-                    Colors.black.withAlpha(128),
+                    Colors.black.withAlpha(180),
                     Colors.transparent,
                   ],
                 ),
                 borderRadius:
                     const BorderRadius.vertical(bottom: Radius.circular(15)),
               ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Row(
-                    children: [
-                      _buildActionButton(
-                        icon: isLiked ? Icons.favorite : Icons.favorite_border,
-                        color: isLiked ? Colors.red : Colors.white,
-                        onTap: () => setState(() => isLiked = !isLiked),
-                      ),
-                      _buildActionButton(
-                        icon: Icons.chat_bubble_outline,
-                        onTap: () {},
-                      ),
-                      _buildActionButton(
-                        icon: Icons.more_horiz,
-                        onTap: () {},
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    widget.post['caption'],
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 13,
-                    ),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ],
+              child: Text(
+                widget.post['caption'],
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 13,
+                ),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
               ),
             ),
           ),
@@ -186,12 +171,9 @@ class _PostCardState extends State<PostCard>
     required VoidCallback onTap,
     Color color = Colors.white,
   }) {
-    return Padding(
-      padding: const EdgeInsets.only(right: 16),
-      child: GestureDetector(
-        onTap: onTap,
-        child: Icon(icon, color: color, size: 28),
-      ),
+    return GestureDetector(
+      onTap: onTap,
+      child: Icon(icon, color: color, size: 24),
     );
   }
 }

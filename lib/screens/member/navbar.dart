@@ -105,8 +105,7 @@ class _NavigationControllerState extends State<NavigationController> {
                       children: [
                         _buildNavItem(0),
                         _buildNavItem(1),
-                        SizedBox(
-                            width: size.width * 0.15), // Space for SOS button
+                        _buildNavItem(2),
                         _buildNavItem(3),
                         _buildProfileItem(4),
                       ],
@@ -166,20 +165,20 @@ class _NavigationControllerState extends State<NavigationController> {
           return 'assets/icons/nav_bar/home.svg';
         case 1:
           return 'assets/icons/nav_bar/swipe.svg';
-        case 2:
+        case 3:
           return 'assets/icons/nav_bar/snips.svg';
         default:
-          return 'assets/icons/nav_bar/home.svg'; // fallback
+          return 'assets/icons/nav_bar/home.svg';
       }
     }
 
     // For SOS button specifically
-    if (index == 3) {
+    if (index == 2) {
       return Image.asset(
         'assets/icons/nav_bar/sos.gif',
         width: 40,
         height: 40,
-        color: isDarkMode ? Colors.white : const Color.fromARGB(255, 255, 0, 0),
+        color: isDarkMode ? Colors.white : Colors.black,
       );
     }
 

@@ -89,10 +89,8 @@ class _NavigationControllerState extends State<NavigationController> {
                     height: size.height * 0.08,
                     decoration: BoxDecoration(
                       color: isDarkMode
-                          ? Colors.white
-                              .withAlpha(230) // Slightly transparent white
-                          : Colors.black
-                              .withAlpha(230), // Slightly transparent black
+                          ? Colors.black.withAlpha(230)
+                          : Colors.white.withAlpha(230),
                       borderRadius: BorderRadius.circular(40),
                       boxShadow: [
                         BoxShadow(
@@ -179,9 +177,9 @@ class _NavigationControllerState extends State<NavigationController> {
     if (index == 3) {
       return Image.asset(
         'assets/icons/nav_bar/sos.gif',
-        width: 35,
-        height: 35,
-        color: isDarkMode ? Colors.white : Colors.black,
+        width: 40,
+        height: 40,
+        color: isDarkMode ? Colors.white : const Color.fromARGB(255, 255, 0, 0),
       );
     }
 
@@ -189,8 +187,8 @@ class _NavigationControllerState extends State<NavigationController> {
       onTap: () => setState(() => _currentIndex = index),
       child: SvgPicture.asset(
         getIconPath(index),
-        width: 24,
-        height: 24,
+        width: 30,
+        height: 30,
         colorFilter: ColorFilter.mode(
           isSelected
               ? Colors.green

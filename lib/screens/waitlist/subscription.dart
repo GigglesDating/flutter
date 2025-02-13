@@ -136,7 +136,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
                         ),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.orange.withOpacity(0.2),
+                            color: Colors.orange.withAlpha(20),
                             blurRadius: 15,
                             offset: const Offset(0, 5),
                           ),

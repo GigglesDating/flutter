@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 class PostCard extends StatefulWidget {
   final Map<String, dynamic> post;
@@ -56,14 +58,23 @@ class _PostCardState extends State<PostCard>
         children: [
           // Center the main post container
           Center(
-            child: Container(
-              width: screenWidth * 0.95,
-              height: screenWidth * 1.3,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(15),
-                image: DecorationImage(
-                  image: AssetImage(widget.post['image']),
-                  fit: BoxFit.cover,
+            child: GestureDetector(
+              onDoubleTap: () {
+                HapticFeedback.lightImpact();
+                setState(() => isLiked = true);
+                _animationController
+                    .forward()
+                    .then((_) => _animationController.reverse());
+              },
+              child: Container(
+                width: screenWidth * 0.95,
+                height: screenWidth * 1.3,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(15),
+                  image: DecorationImage(
+                    image: AssetImage(widget.post['image']),
+                    fit: BoxFit.cover,
+                  ),
                 ),
               ),
             ),
@@ -78,13 +89,15 @@ class _PostCardState extends State<PostCard>
               padding: EdgeInsets.all(screenWidth *
                   0.008), // 0.8% of screen width for border padding
               decoration: BoxDecoration(
-                color: widget.isDarkMode ? Colors.black : Colors.white,
+                color: widget.isDarkMode
+                    ? Colors.black.withAlpha(230)
+                    : Colors.white.withAlpha(230),
                 borderRadius: BorderRadius.circular(
                     screenWidth * 0.09), // 7% of screen width for corner radius
                 border: Border.all(
                   color: widget.isDarkMode
-                      ? Colors.white.withOpacity(0.15)
-                      : Colors.black.withOpacity(0.1),
+                      ? Colors.white.withAlpha(38)
+                      : Colors.black.withAlpha(26),
                   width: 1.5,
                 ),
               ),
@@ -111,17 +124,14 @@ class _PostCardState extends State<PostCard>
                 horizontal: screenWidth * 0.01, // 2% of screen width
               ),
               decoration: BoxDecoration(
-                // Action bar background opacity (adjust these values)
                 color: widget.isDarkMode
-                    ? Colors.black
-                        .withOpacity(0.65) // 65% opacity for dark mode
-                    : Colors.white
-                        .withOpacity(0.75), // 75% opacity for light mode
+                    ? Colors.black.withAlpha(230)
+                    : Colors.white.withAlpha(230),
                 borderRadius: BorderRadius.circular(screenWidth * 0.08),
                 border: Border.all(
                   color: widget.isDarkMode
-                      ? Colors.white.withOpacity(0.1)
-                      : Colors.black.withOpacity(0.1),
+                      ? Colors.white.withAlpha(38)
+                      : Colors.black.withAlpha(26),
                   width: 1,
                 ),
               ),
@@ -129,27 +139,32 @@ class _PostCardState extends State<PostCard>
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   _buildActionButton(
-                    icon: isLiked ? Icons.favorite : Icons.favorite_border,
+                    iconPath: 'assets/icons/feed/like.svg',
                     color: isLiked
                         ? Colors.red
-                        : widget.isDarkMode
-                            ? Colors.white
-                            : Colors.black,
-                    onTap: () => setState(() => isLiked = !isLiked),
-                  ),
-                  SizedBox(
-                      height: screenHeight *
-                          0.02), // 2% of screen height between buttons
-                  _buildActionButton(
-                    icon: Icons.chat_bubble_outline,
-                    onTap: () {},
-                    color: widget.isDarkMode ? Colors.white : Colors.black,
+                        : (widget.isDarkMode
+                            ? Colors.white.withAlpha(204)
+                            : Colors.black.withAlpha(204)),
+                    onTap: () {
+                      HapticFeedback.lightImpact();
+                      setState(() => isLiked = !isLiked);
+                    },
                   ),
                   SizedBox(height: screenHeight * 0.02),
                   _buildActionButton(
-                    icon: Icons.more_horiz,
+                    iconPath: 'assets/icons/feed/comment.svg',
                     onTap: () {},
-                    color: widget.isDarkMode ? Colors.white : Colors.black,
+                    color: widget.isDarkMode
+                        ? Colors.white.withAlpha(204)
+                        : Colors.black.withAlpha(204),
+                  ),
+                  SizedBox(height: screenHeight * 0.02),
+                  _buildActionButton(
+                    iconPath: 'assets/icons/feed/share.svg',
+                    onTap: () {},
+                    color: widget.isDarkMode
+                        ? Colors.white.withAlpha(204)
+                        : Colors.black.withAlpha(204),
                   ),
                 ],
               ),
@@ -162,7 +177,7 @@ class _PostCardState extends State<PostCard>
 
   // Action Button Builder with responsive sizes
   Widget _buildActionButton({
-    required IconData icon,
+    required String iconPath,
     required VoidCallback onTap,
     Color color = Colors.white,
   }) {
@@ -171,18 +186,21 @@ class _PostCardState extends State<PostCard>
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: EdgeInsets.all(
-            screenWidth * 0.03), // 3% of screen width for button padding
+        padding: EdgeInsets.all(screenWidth * 0.03),
         decoration: BoxDecoration(
           color: widget.isDarkMode
-              ? Colors.white.withOpacity(0.15)
-              : Colors.black.withOpacity(0.1),
+              ? Colors.white.withAlpha(38)
+              : Colors.black.withAlpha(26),
           shape: BoxShape.circle,
         ),
-        child: Icon(
-          icon,
-          color: color,
-          size: screenWidth * 0.065, // 6.5% of screen width for icon size
+        child: SvgPicture.asset(
+          iconPath,
+          width: screenWidth * 0.065,
+          height: screenWidth * 0.065,
+          colorFilter: ColorFilter.mode(
+            color,
+            BlendMode.srcIn,
+          ),
         ),
       ),
     );

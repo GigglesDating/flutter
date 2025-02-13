@@ -89,8 +89,8 @@ class _NavigationControllerState extends State<NavigationController> {
                     height: size.height * 0.08,
                     decoration: BoxDecoration(
                       color: isDarkMode
-                          ? Colors.black.withAlpha(230)
-                          : Colors.white.withAlpha(230),
+                          ? Colors.white.withAlpha(230)
+                          : Colors.black.withAlpha(230),
                       borderRadius: BorderRadius.circular(40),
                       boxShadow: [
                         BoxShadow(
@@ -114,33 +114,27 @@ class _NavigationControllerState extends State<NavigationController> {
 
                   // Floating SOS button with final positioning
                   Positioned(
-                    top: -(size.height *
-                        0.005), // Updated to the optimal position
-                    child: Container(
-                      width: size.width * 0.15,
-                      height: size.width * 0.15,
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFA5C0E5),
-                        shape: BoxShape.circle,
-                        boxShadow: [
-                          BoxShadow(
-                            color: const Color(0xFFA5C0E5).withAlpha(77),
-                            blurRadius: 8,
-                            spreadRadius: 1,
-                            offset: const Offset(0, 4),
-                          ),
-                        ],
-                      ),
-                      child: Material(
-                        color: Colors.transparent,
-                        child: InkWell(
-                          onTap: () => debugPrint('SOS Button pressed'),
-                          customBorder: const CircleBorder(),
-                          child: Icon(
-                            Icons.phone,
-                            color: Colors.white,
-                            size: size.width * 0.06,
-                          ),
+                    top: -(size.height * 0.005),
+                    child: GestureDetector(
+                      onTap: () => debugPrint('SOS Button pressed'),
+                      child: Container(
+                        width: size.width * 0.15,
+                        height: size.width * 0.15,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFA5C0E5),
+                          shape: BoxShape.circle,
+                          boxShadow: [
+                            BoxShadow(
+                              color: const Color(0xFFA5C0E5).withAlpha(77),
+                              blurRadius: 8,
+                              spreadRadius: 1,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
+                        ),
+                        child: Image.asset(
+                          'assets/icons/nav_bar/sos.gif',
+                          fit: BoxFit.cover,
                         ),
                       ),
                     ),
@@ -172,14 +166,9 @@ class _NavigationControllerState extends State<NavigationController> {
       }
     }
 
-    // For SOS button specifically
+    // Skip rendering for index 2 as it's handled by the floating SOS button
     if (index == 2) {
-      return Image.asset(
-        'assets/icons/nav_bar/sos.gif',
-        width: 40,
-        height: 40,
-        color: isDarkMode ? Colors.white : Colors.black,
-      );
+      return const SizedBox(width: 60);
     }
 
     return GestureDetector(
@@ -191,7 +180,7 @@ class _NavigationControllerState extends State<NavigationController> {
         colorFilter: ColorFilter.mode(
           isSelected
               ? Colors.green
-              : (isDarkMode ? Colors.white : Colors.black),
+              : (isDarkMode ? Colors.black : Colors.white),
           BlendMode.srcIn,
         ),
       ),

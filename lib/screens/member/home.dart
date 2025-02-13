@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart';
 import '../utilities/post_card.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 class HomeTab extends StatefulWidget {
   const HomeTab({super.key});
@@ -84,12 +85,19 @@ class _HomeTabState extends State<HomeTab> {
             width: 50,
             height: 50,
             decoration: BoxDecoration(
-              color: isDarkMode ? Colors.white24 : Colors.black12,
+              color: isDarkMode
+                  ? Colors.white.withAlpha(38) // More visible in dark mode
+                  : Colors.black.withAlpha(26), // More visible in light mode
               borderRadius: BorderRadius.circular(100),
             ),
-            child: Icon(
-              Icons.add_outlined,
-              color: isDarkMode ? Colors.white : Colors.black,
+            child: SvgPicture.asset(
+              'assets/icons/feed/plus.svg',
+              width: 24,
+              height: 24,
+              colorFilter: ColorFilter.mode(
+                isDarkMode ? Colors.white : Colors.black,
+                BlendMode.srcIn,
+              ),
             ),
           ),
         ),
@@ -111,16 +119,26 @@ class _HomeTabState extends State<HomeTab> {
         actions: [
           IconButton(
             onPressed: () {},
-            icon: Icon(
-              Icons.notifications_none_rounded,
-              color: isDarkMode ? Colors.white : Colors.black,
+            icon: SvgPicture.asset(
+              'assets/icons/feed/notifications.svg',
+              width: 24,
+              height: 24,
+              colorFilter: ColorFilter.mode(
+                isDarkMode ? Colors.white : Colors.black,
+                BlendMode.srcIn,
+              ),
             ),
           ),
           IconButton(
             onPressed: () {},
-            icon: Icon(
-              Icons.messenger_outline_rounded,
-              color: isDarkMode ? Colors.white : Colors.black,
+            icon: SvgPicture.asset(
+              'assets/icons/feed/messenger.svg',
+              width: 24,
+              height: 24,
+              colorFilter: ColorFilter.mode(
+                isDarkMode ? Colors.white : Colors.black,
+                BlendMode.srcIn,
+              ),
             ),
           ),
         ],
@@ -175,21 +193,25 @@ class _HomeTabState extends State<HomeTab> {
           Positioned(
             bottom: 3,
             right: 2,
-            child: SizedBox(
+            child: Container(
               width: 24,
               height: 24,
-              child: ElevatedButton(
-                onPressed: () => showImageModalSheet(),
-                style: ElevatedButton.styleFrom(
-                  shape: const CircleBorder(),
-                  padding: EdgeInsets.zero,
-                  backgroundColor: isDarkMode ? Colors.white24 : Colors.black12,
-                ),
-                child: Icon(
-                  Icons.add,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: isDarkMode
+                    ? Colors.white
+                        .withAlpha(51) // 0.2 opacity for better visibility
+                    : Colors.black
+                        .withAlpha(38), // 0.15 opacity for better visibility
+                border: Border.all(
                   color: isDarkMode ? Colors.white : Colors.black,
-                  size: 18,
+                  width: 1,
                 ),
+              ),
+              child: Icon(
+                Icons.add,
+                color: isDarkMode ? Colors.white : Colors.black,
+                size: 18,
               ),
             ),
           ),

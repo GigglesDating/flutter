@@ -4,7 +4,6 @@ import 'package:carousel_slider/carousel_slider.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'dart:math' show pi;
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:flutter_frontend/network/think.dart';
 
 import '../barrel.dart';
 

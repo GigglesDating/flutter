@@ -82,32 +82,28 @@ class _PostCardState extends State<PostCard>
 
           // Profile Picture Overlay
           Positioned(
-            top: -(screenHeight *
-                0.04), // 4% of screen height for overlay position
-            left: screenWidth * 0.1, // 5% of screen width from left
+            top: screenWidth * 0.03, // 3% from top
+            left: screenWidth * 0.05, // 3% from left
             child: Container(
-              padding: EdgeInsets.all(screenWidth *
-                  0.008), // 0.8% of screen width for border padding
+              padding: EdgeInsets.all(2), // Thin border padding
               decoration: BoxDecoration(
+                shape: BoxShape.circle,
                 color: widget.isDarkMode
                     ? Colors.black.withAlpha(230)
                     : Colors.white.withAlpha(230),
-                borderRadius: BorderRadius.circular(
-                    screenWidth * 0.09), // 7% of screen width for corner radius
                 border: Border.all(
                   color: widget.isDarkMode
                       ? Colors.white.withAlpha(38)
                       : Colors.black.withAlpha(26),
-                  width: 1.5,
+                  width: 1,
                 ),
               ),
               child: ClipRRect(
-                borderRadius: BorderRadius.circular(screenWidth * 0.065),
+                borderRadius: BorderRadius.circular(50),
                 child: Image.asset(
                   widget.post['userImage'],
-                  width: screenWidth * 0.20, // 19% of screen width
-                  height: screenWidth *
-                      0.20, // 23% of screen width for vertical rectangle
+                  width: screenWidth * 0.12, // Smaller size
+                  height: screenWidth * 0.12,
                   fit: BoxFit.cover,
                 ),
               ),

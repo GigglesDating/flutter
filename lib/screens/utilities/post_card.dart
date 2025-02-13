@@ -21,6 +21,7 @@ class _PostCardState extends State<PostCard>
   bool isLiked = false;
   late AnimationController _animationController;
   late Animation<double> _animation;
+  bool _showHeart = false;
 
   @override
   void initState() {
@@ -47,10 +48,24 @@ class _PostCardState extends State<PostCard>
     final screenWidth = MediaQuery.of(context).size.width;
     final screenHeight = MediaQuery.of(context).size.height;
 
-    return Container(
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 300),
       margin: EdgeInsets.only(
         bottom: screenHeight * 0.06,
-        top: screenHeight * 0.060,
+        top: screenHeight * 0.040,
+      ),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(15),
+        boxShadow: [
+          BoxShadow(
+            color: widget.isDarkMode
+                ? Colors.white.withAlpha(10)
+                : Colors.black.withAlpha(20),
+            blurRadius: 20,
+            spreadRadius: 2,
+            offset: const Offset(0, 8),
+          ),
+        ],
       ),
       alignment: Alignment.center,
       child: Stack(
@@ -58,22 +73,30 @@ class _PostCardState extends State<PostCard>
         children: [
           // Center the main post container
           Center(
-            child: GestureDetector(
-              onDoubleTap: () {
-                HapticFeedback.lightImpact();
-                setState(() => isLiked = true);
-                _animationController
-                    .forward()
-                    .then((_) => _animationController.reverse());
-              },
-              child: Container(
-                width: screenWidth * 0.95,
-                height: screenWidth * 1.3,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(15),
-                  image: DecorationImage(
-                    image: AssetImage(widget.post['image']),
-                    fit: BoxFit.cover,
+            child: Hero(
+              tag: 'post_${widget.post['image']}',
+              child: GestureDetector(
+                onDoubleTap: () {
+                  HapticFeedback.lightImpact();
+                  setState(() {
+                    isLiked = !isLiked;
+                    _showHeart = true;
+                  });
+                  _animationController.forward().then((_) {
+                    _animationController.reverse().then((_) {
+                      setState(() => _showHeart = false);
+                    });
+                  });
+                },
+                child: Container(
+                  width: screenWidth * 0.95,
+                  height: screenWidth * 1.4,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(15),
+                    image: DecorationImage(
+                      image: AssetImage(widget.post['image']),
+                      fit: BoxFit.cover,
+                    ),
                   ),
                 ),
               ),
@@ -82,8 +105,8 @@ class _PostCardState extends State<PostCard>
 
           // Profile Picture Overlay
           Positioned(
-            top: screenWidth * 0.03, // 3% from top
-            left: screenWidth * 0.05, // 3% from left
+            top: screenWidth * 0.04, // 3% from top
+            left: screenWidth * 0.06, // 3% from left
             child: Container(
               padding: EdgeInsets.all(2), // Thin border padding
               decoration: BoxDecoration(
@@ -163,6 +186,22 @@ class _PostCardState extends State<PostCard>
                         : Colors.black.withAlpha(204),
                   ),
                 ],
+              ),
+            ),
+          ),
+
+          // Heart Animation
+          Center(
+            child: AnimatedOpacity(
+              duration: const Duration(milliseconds: 200),
+              opacity: _showHeart ? 1.0 : 0.0,
+              child: ScaleTransition(
+                scale: _animation,
+                child: Icon(
+                  Icons.favorite,
+                  color: Colors.white,
+                  size: screenWidth * 0.3,
+                ),
               ),
             ),
           ),

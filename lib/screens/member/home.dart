@@ -187,7 +187,7 @@ class _HomeTabState extends State<HomeTab> {
             ),
             child: const CircleAvatar(
               backgroundImage: AssetImage('assets/tempImages/users/user1.jpg'),
-              radius: 30,
+              radius: 35,
             ),
           ),
           Positioned(
@@ -228,12 +228,12 @@ class _HomeTabState extends State<HomeTab> {
           shape: BoxShape.circle,
           border: Border.all(
             color: Colors.grey.withAlpha(100),
-            width: 2,
+            width: 1.5,
           ),
         ),
         child: CircleAvatar(
           backgroundImage: AssetImage(profile),
-          radius: 30,
+          radius: 35,
         ),
       ),
     );

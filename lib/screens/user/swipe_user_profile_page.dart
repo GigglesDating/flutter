@@ -7,7 +7,6 @@ import 'package:flutter_frontend/screens/prompt_screen.dart';
 import 'package:flutter_frontend/screens/user/shedule_date_page.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
-import '../../utilitis/appColors.dart';
 import '../../utilitis/appFonts.dart';
 
 class SwipeUserProfilePage extends StatefulWidget {
@@ -47,7 +46,7 @@ class _SwipeUserProfilePage extends State<SwipeUserProfilePage> {
         borderRadius: BorderRadius.circular(22),
         child: Container(
           decoration: BoxDecoration(
-            color: AppColors.primaryLight,
+            color: const Color.fromARGB(255, 102, 179, 230),
             borderRadius: BorderRadius.circular(22),
           ),
           child: Image.asset(
@@ -121,7 +120,7 @@ class _SwipeUserProfilePage extends State<SwipeUserProfilePage> {
                     children: [
                       IconButton(onPressed: (){
                         showReported(context);
-                      }, icon: Icon(Icons.report_outlined,size: 40,color: AppColors.primary,)),
+                      }, icon: Icon(Icons.report_outlined,size: 40,color: const Color.fromARGB(255, 82, 113, 255),)),
                       InkWell(
                         onTap: () {
                           Navigator.pop(context);
@@ -160,7 +159,7 @@ class _SwipeUserProfilePage extends State<SwipeUserProfilePage> {
                   Text(
                     'Anna Joseph',
                     style: AppFonts.titleBold(
-                        fontSize: 24, color: AppColors.white),
+                        fontSize: 24, color: Colors.white),
                   ),
                   SizedBox(
                     height: 8,
@@ -170,14 +169,14 @@ class _SwipeUserProfilePage extends State<SwipeUserProfilePage> {
                     children: [
                       Icon(
                         Icons.location_on,
-                        color: AppColors.SwipeUserProfileTextColor,
+                        color: const Color.fromARGB(255, 188, 188, 188),
                         size: 18,
                       ),
                       Text(
                         'Banglore',
                         style: AppFonts.titleBold(
                             fontSize: 16,
-                            color: AppColors.SwipeUserProfileTextColor),
+                            color: const Color.fromARGB(255, 188, 188, 188)),
                       ),
                     ],
                   ),
@@ -198,7 +197,7 @@ class _SwipeUserProfilePage extends State<SwipeUserProfilePage> {
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                               style: AppFonts.titleBold(
-                                  color: AppColors.white, fontSize: 14),
+                                  color: Colors.white, fontSize: 14),
                             ),
                             Spacer(),
                             Text(
@@ -207,7 +206,7 @@ class _SwipeUserProfilePage extends State<SwipeUserProfilePage> {
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                               style: AppFonts.titleRegular(
-                                  color: AppColors.SwipeUserProfileTextColor,
+                                  color: const Color.fromARGB(255, 188, 188, 188),
                                   fontSize: 14),
                             ),
                           ],
@@ -236,7 +235,7 @@ class _SwipeUserProfilePage extends State<SwipeUserProfilePage> {
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                               style: AppFonts.titleBold(
-                                  color: AppColors.white, fontSize: 14),
+                                  color: Colors.white, fontSize: 14),
                             ),
                             Spacer(),
                             Text(
@@ -245,7 +244,7 @@ class _SwipeUserProfilePage extends State<SwipeUserProfilePage> {
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                               style: AppFonts.titleRegular(
-                                  color: AppColors.SwipeUserProfileTextColor,
+                                  color: const Color.fromARGB(255, 188, 188, 188),
                                   fontSize: 14),
                             ),
                           ],
@@ -274,7 +273,7 @@ class _SwipeUserProfilePage extends State<SwipeUserProfilePage> {
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                               style: AppFonts.titleBold(
-                                  color: AppColors.white, fontSize: 14),
+                                  color: Colors.white, fontSize: 14),
                             ),
                             Spacer(),
                             Text(
@@ -283,7 +282,7 @@ class _SwipeUserProfilePage extends State<SwipeUserProfilePage> {
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                               style: AppFonts.titleRegular(
-                                  color: AppColors.SwipeUserProfileTextColor,
+                                  color: const Color.fromARGB(255, 188, 188, 188),
                                   fontSize: 14),
                             ),
                           ],
@@ -299,8 +298,8 @@ class _SwipeUserProfilePage extends State<SwipeUserProfilePage> {
                       decoration: BoxDecoration(
                         gradient: const LinearGradient(
                           colors: [
-                            AppColors.gradientButtonLight,
-                            AppColors.gradientButtonDark
+                            Color.fromARGB(255, 72, 183, 239),
+                            Color.fromARGB(255, 12, 83, 168)
                           ],
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
@@ -331,7 +330,7 @@ class _SwipeUserProfilePage extends State<SwipeUserProfilePage> {
                         },
                         child: Text(
                           'Befriend',
-                          style: AppFonts.titleBold(color: AppColors.white),
+                          style: AppFonts.titleBold(color: Colors.white),
                         ),
                       ),
                     ),
@@ -352,14 +351,14 @@ class _SwipeUserProfilePage extends State<SwipeUserProfilePage> {
                                 left: 12, right: 20, top: 12, bottom: 12),
                             decoration: BoxDecoration(
                                 shape: BoxShape.rectangle,
-                                color: AppColors.DateBackgroundColor,
+                                color: const Color.fromARGB(255, 194, 39, 75),
                                 borderRadius: BorderRadius.only(
                                     topRight: Radius.circular(12),
                                     bottomRight: Radius.circular(12))),
                             child: Text(
                               'Date',
                               style: AppFonts.titleBold(
-                                  fontSize: 20, color: AppColors.white),
+                                  fontSize: 20, color: Colors.white),
                             ),
                           ),
                         ),
@@ -407,7 +406,7 @@ class _SwipeUserProfilePage extends State<SwipeUserProfilePage> {
                                           icon: Icon(
                                             Icons.favorite,
                                             color:
-                                                AppColors.DateBackgroundColor,
+                                                const Color.fromARGB(255, 194, 39, 75),
                                             size: 36,
                                           ),
                                         ),
@@ -416,7 +415,7 @@ class _SwipeUserProfilePage extends State<SwipeUserProfilePage> {
                                         ),
                                         Text('20',
                                             style: AppFonts.titleBold(
-                                                color: AppColors.white,
+                                                color: Colors.white,
                                                 fontSize: 12)),
                                       ],
                                     ))
@@ -462,51 +461,51 @@ class _SwipeUserProfilePage extends State<SwipeUserProfilePage> {
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                               children: [
-                                waveformBar(30, AppColors.spotifyWaveColor),
+                                waveformBar(30, const Color.fromARGB(255, 16, 137, 3)),
                                 // Bar 1
-                                waveformBar(60, AppColors.spotifyWaveColor),
+                                waveformBar(60, const Color.fromARGB(255, 16, 137, 3)),
                                 // Bar 2
-                                waveformBar(20, AppColors.spotifyWaveColor),
+                                waveformBar(20, const Color.fromARGB(255, 16, 137, 3)),
                                 // Bar 3
-                                waveformBar(40, AppColors.spotifyWaveColor),
+                                waveformBar(40, const Color.fromARGB(255, 16, 137, 3)),
                                 // Bar 4
-                                waveformBar(10, AppColors.spotifyWaveColor),
+                                waveformBar(10, const Color.fromARGB(255, 16, 137, 3)),
                                 // Bar 5
-                                waveformBar(50, AppColors.spotifyWaveColor),
+                                waveformBar(50, const Color.fromARGB(255, 16, 137, 3)),
                                 // Bar 6
-                                waveformBar(40, AppColors.spotifyWaveColor),
-                                // Bar 7 waveformBar(40, AppColors.spotifyWaveColor), // Bar 1
-                                waveformBar(60, AppColors.spotifyWaveColor),
+                                waveformBar(40, const Color.fromARGB(255, 16, 137, 3)),
+                                // Bar 7 waveformBar(40, const Color.fromARGB(255, 16, 137, 3)), // Bar 1
+                                waveformBar(60, const Color.fromARGB(255, 16, 137, 3)),
                                 // Bar 2
-                                waveformBar(20, AppColors.spotifyWaveColor),
+                                waveformBar(20, const Color.fromARGB(255, 16, 137, 3)),
                                 // Bar 3
-                                waveformBar(40, AppColors.spotifyWaveColor),
+                                waveformBar(40, const Color.fromARGB(255, 16, 137, 3)),
                                 // Bar 4
-                                waveformBar(10, AppColors.spotifyWaveColor),
+                                waveformBar(10, const Color.fromARGB(255, 16, 137, 3)),
                                 // Bar 5
-                                waveformBar(50, AppColors.spotifyWaveColor),
+                                waveformBar(50, const Color.fromARGB(255, 16, 137, 3)),
                                 // Bar 6
-                                waveformBar(40, AppColors.spotifyWaveColor),
+                                waveformBar(40, const Color.fromARGB(255, 16, 137, 3)),
                                 // Bar 7
                                 waveformBar(
-                                    70, AppColors.defaultspotifyWaveColor),
+                                    70, const Color.fromARGB(255, 24, 20, 19)),
                                 // Bar 8
                                 waveformBar(
-                                    25, AppColors.defaultspotifyWaveColor),
+                                    25, const Color.fromARGB(255, 24, 20, 19)),
                                 // Bar 9
                                 waveformBar(
-                                    45, AppColors.defaultspotifyWaveColor),
+                                    45, const Color.fromARGB(255, 24, 20, 19)),
                                 // Bar 10
                                 waveformBar(
-                                    15, AppColors.defaultspotifyWaveColor),
+                                    15, const Color.fromARGB(255, 24, 20, 19)),
                                 // Bar 11
                                 waveformBar(
-                                    35, AppColors.defaultspotifyWaveColor),
+                                    35, const Color.fromARGB(255, 24, 20, 19)),
                                 // Bar 12
                                 waveformBar(
-                                    35, AppColors.defaultspotifyWaveColor),
+                                    35, const Color.fromARGB(255, 24, 20, 19)),
                                 waveformBar(
-                                    15, AppColors.defaultspotifyWaveColor),
+                                    15, const Color.fromARGB(255, 24, 20, 19)),
                                 // Bar 12
                               ],
                             ),
@@ -603,7 +602,7 @@ class _SwipeUserProfilePage extends State<SwipeUserProfilePage> {
                 ),
               );
             },
-            child:  Text('Confirm',style: AppFonts.titleBold(color: AppColors.primary),),
+            child:  Text('Confirm',style: AppFonts.titleBold(color: const Color.fromARGB(255, 82, 113, 255)),),
           ),
         ],
       ),

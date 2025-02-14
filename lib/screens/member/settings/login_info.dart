@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_frontend/utilitis/appColors.dart';
 import 'package:flutter_frontend/utilitis/appFonts.dart';
 
 class LoginInfoScreen extends StatelessWidget {
@@ -27,7 +26,7 @@ class LoginInfoScreen extends StatelessWidget {
             padding: const EdgeInsets.all(16.0),
             child: Container(
               decoration: BoxDecoration(
-                color: AppColors.primary.withAlpha(25),
+                color: const Color.fromARGB(255, 82, 113, 255).withAlpha(25),
                 borderRadius: BorderRadius.circular(12),
               ),
               padding: const EdgeInsets.all(16),
@@ -40,7 +39,7 @@ class LoginInfoScreen extends StatelessWidget {
                       Text(
                         'Phone Number',
                         style: AppFonts.titleMedium(
-                          color: AppColors.grey,
+                          color: const Color.fromARGB(255, 158, 158, 158),
                           fontSize: 14,
                         ),
                       ),
@@ -64,7 +63,7 @@ class LoginInfoScreen extends StatelessWidget {
                         Text(
                           'Edit',
                           style: AppFonts.titleBold(
-                              color: AppColors.primary, fontSize: 15),
+                              color: const Color.fromARGB(255, 82, 113, 255), fontSize: 15),
                         ),
                         SizedBox(width: 4),
                         Icon(Icons.edit, size: 14),
@@ -116,7 +115,7 @@ class _EditPhoneBottomSheetState extends State<EditPhoneBottomSheet> {
         barrierDismissible: false,
         builder: (context) => Center(
           child: CircularProgressIndicator(
-            color: AppColors.primary,
+            color: const Color.fromARGB(255, 82, 113, 255),
           ),
         ),
       );
@@ -128,7 +127,7 @@ class _EditPhoneBottomSheetState extends State<EditPhoneBottomSheet> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: const Text('Phone number updated successfully'),
-            backgroundColor: AppColors.primary,
+            backgroundColor: const Color.fromARGB(255, 82, 113, 255),
           ),
         );
       });
@@ -136,7 +135,7 @@ class _EditPhoneBottomSheetState extends State<EditPhoneBottomSheet> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: const Text('Please enter a valid 6-digit OTP'),
-          backgroundColor: AppColors.error,
+          backgroundColor: const Color.fromARGB(255, 176, 0, 32),
         ),
       );
     }
@@ -164,7 +163,7 @@ class _EditPhoneBottomSheetState extends State<EditPhoneBottomSheet> {
             'Edit Phone Number',
             style: AppFonts.titleBold(
               fontSize: 18,
-              color: AppColors.primary,
+              color: const Color.fromARGB(255, 82, 113, 255),
             ),
           ),
           TextField(
@@ -185,18 +184,18 @@ class _EditPhoneBottomSheetState extends State<EditPhoneBottomSheet> {
               counterText: '',
               border: OutlineInputBorder(
                   borderRadius: BorderRadius.all(Radius.circular(12)),
-                  borderSide: BorderSide(color: AppColors.primary)),
+                  borderSide: BorderSide(color: const Color.fromARGB(255, 82, 113, 255))),
               focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.all(Radius.circular(12)),
-                  borderSide: BorderSide(color: AppColors.primary)),
+                  borderSide: BorderSide(color: const Color.fromARGB(255, 82, 113, 255))),
               enabledBorder: const OutlineInputBorder(
                 // Border when enabled
-                borderSide: BorderSide(color: AppColors.primary),
+                borderSide: BorderSide(color: Color.fromARGB(255, 82, 113, 255)),
                 borderRadius: BorderRadius.all(Radius.circular(12)),
               ),
               errorBorder: const OutlineInputBorder(
                 borderRadius: BorderRadius.all(Radius.circular(12)),
-                borderSide: BorderSide(color: AppColors.error),
+                borderSide: BorderSide(color: Color.fromARGB(255, 176, 0, 32)),
               ),
             ),
           ),
@@ -215,18 +214,18 @@ class _EditPhoneBottomSheetState extends State<EditPhoneBottomSheet> {
                         color: Theme.of(context).colorScheme.tertiary),
                     border: OutlineInputBorder(
                         borderRadius: BorderRadius.all(Radius.circular(12)),
-                        borderSide: BorderSide(color: AppColors.primary)),
+                        borderSide: BorderSide(color: const Color.fromARGB(255, 82, 113, 255))),
                     focusedBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.all(Radius.circular(12)),
-                        borderSide: BorderSide(color: AppColors.primary)),
+                        borderSide: BorderSide(color: const Color.fromARGB(255, 82, 113, 255))),
                     enabledBorder: const OutlineInputBorder(
                       // Border when enabled
-                      borderSide: BorderSide(color: AppColors.primary),
+                      borderSide: BorderSide(color: Color.fromARGB(255, 82, 113, 255)),
                       borderRadius: BorderRadius.all(Radius.circular(12)),
                     ),
                     errorBorder: const OutlineInputBorder(
                       borderRadius: BorderRadius.all(Radius.circular(12)),
-                      borderSide: BorderSide(color: AppColors.error),
+                      borderSide: BorderSide(color: Color.fromARGB(255, 176, 0, 32)),
                     ),
                   ),
                 ),
@@ -239,7 +238,7 @@ class _EditPhoneBottomSheetState extends State<EditPhoneBottomSheet> {
                     child: Text(
                       'Resend',
                       style: AppFonts.titleBold(
-                          color: AppColors.primary, fontSize: 15),
+                          color: const Color.fromARGB(255, 82, 113, 255), fontSize: 15),
                     ),
                   ),
                 ),
@@ -257,8 +256,8 @@ class _EditPhoneBottomSheetState extends State<EditPhoneBottomSheet> {
               }
             },
             style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.primary,
-              foregroundColor: AppColors.white,
+              backgroundColor: const Color.fromARGB(255, 82, 113, 255),
+              foregroundColor: Colors.white,
               padding: const EdgeInsets.symmetric(vertical: 16),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
@@ -266,7 +265,7 @@ class _EditPhoneBottomSheetState extends State<EditPhoneBottomSheet> {
             ),
             child: Text(
               _showOtpField ? 'Verify' : 'Send OTP',
-              style: AppFonts.titleBold(color: AppColors.white),
+              style: AppFonts.titleBold(color: Colors.white),
             ),
           ),
           const SizedBox(height: 16),

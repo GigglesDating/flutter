@@ -5,8 +5,6 @@ import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:location/location.dart';
 
-import '../../utilitis/appColors.dart';
-
 class SosMapPage extends StatefulWidget {
   @override
   _SosMapPage createState() => _SosMapPage();
@@ -138,13 +136,13 @@ class _SosMapPage extends State<SosMapPage> {
                   style: ButtonStyle(
                       shape: WidgetStatePropertyAll(RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(24))),
-                      backgroundColor: WidgetStatePropertyAll(AppColors.black),
+                      backgroundColor: WidgetStatePropertyAll(Colors.black),
                       padding: WidgetStatePropertyAll(EdgeInsets.only(
                         left: Platform.isIOS ? 8 : 0,
                       ))),
                   icon: Icon(
                     Platform.isIOS ? Icons.arrow_back_ios : Icons.arrow_back,
-                    color: AppColors.white,
+                    color: Colors.white,
                   )))
           // Overlay the concentric circles
           // Positioned(

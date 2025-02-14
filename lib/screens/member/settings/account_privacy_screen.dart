@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_frontend/utilitis/appColors.dart';
 import 'package:flutter_frontend/utilitis/appFonts.dart';
 
 class AccountPrivacyScreen extends StatefulWidget {
@@ -41,7 +40,7 @@ class _AccountPrivacyScreenState extends State<AccountPrivacyScreen> {
               'Content sharing settings',
               style: AppFonts.titleMedium(
                 fontSize: 16,
-                color: AppColors.grey,
+                color: Colors.grey,
                 // fontWeight: FontWeight.w500,
               ),
             ),
@@ -92,7 +91,7 @@ class _AccountPrivacyScreenState extends State<AccountPrivacyScreen> {
             padding: const EdgeInsets.symmetric(horizontal: 16.0),
             child: Container(
               decoration: BoxDecoration(
-                color: AppColors.white,
+                color: Colors.white,
                 borderRadius: BorderRadius.circular(16),
               ),
               padding: const EdgeInsets.all(16),
@@ -101,12 +100,12 @@ class _AccountPrivacyScreenState extends State<AccountPrivacyScreen> {
                   Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      color: AppColors.primary.withAlpha(40),
+                      color: const Color.fromARGB(255, 82, 113, 255).withAlpha(40),
                       shape: BoxShape.circle,
                     ),
                     child: Icon(
                       Icons.star_border,
-                      color: AppColors.primary,
+                      color: const Color.fromARGB(255, 82, 113, 255),
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -134,7 +133,7 @@ class _AccountPrivacyScreenState extends State<AccountPrivacyScreen> {
                                       ? Icons.favorite
                                       : Icons.thumb_up,
                               size: 14,
-                              color: AppColors.primary,
+                              color: const Color.fromARGB(255, 82, 113, 255),
                             ),
                             const SizedBox(width: 4),
                             Text(value,style: AppFonts.titleBold(fontSize: 14),),
@@ -188,15 +187,15 @@ class _AccountPrivacyScreenState extends State<AccountPrivacyScreen> {
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
                     color: value
-                        ? AppColors.primary.withAlpha(40)
-                        : AppColors.grey.withAlpha(40),
+                        ? const Color.fromARGB(255, 82, 113, 255).withAlpha(40)
+                        : const Color.fromARGB(255, 158, 158, 158).withAlpha(40),
                     shape: BoxShape.circle,
                   ),
                   child: Icon(
                     icon,
                     color: value
-                        ? AppColors.primary
-                        : AppColors.primary.withAlpha(40),
+                        ? const Color.fromARGB(255, 82, 113, 255)
+                        : const Color.fromARGB(255, 82, 113, 255).withAlpha(40),
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -212,7 +211,7 @@ class _AccountPrivacyScreenState extends State<AccountPrivacyScreen> {
                 Switch.adaptive(
                   value: value,
                   onChanged: onChanged,
-                  activeColor: AppColors.primary,
+                  activeColor: const Color.fromARGB(255, 82, 113, 255),
                 ),
               ],
             ),
@@ -222,7 +221,7 @@ class _AccountPrivacyScreenState extends State<AccountPrivacyScreen> {
               child: Text(
                 description,
                 style: AppFonts.titleMedium(
-                  color: AppColors.grey,
+                  color: const Color.fromARGB(255, 158, 158, 158),
                   fontSize: 12,
                 ),
               ),

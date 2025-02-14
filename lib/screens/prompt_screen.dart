@@ -1,6 +1,5 @@
 
 import 'package:flutter/material.dart';
-import 'package:flutter_frontend/utilitis/appColors.dart';
 import 'package:flutter_frontend/utilitis/appFonts.dart';
 
 class PromptScreen extends StatefulWidget{
@@ -89,7 +88,7 @@ class _PromptScreen extends  State<PromptScreen>{
                   hintTextDirection: TextDirection.ltr,
                   // hintMaxLines: 4,
                   suffixIcon: IconButton(
-                    icon: Icon(Icons.send,color: AppColors.black,),
+                    icon: Icon(Icons.send,color: Colors.black,),
                     onPressed: () {
                       String message = commentController.text;
                       if (message.isNotEmpty) {
@@ -115,7 +114,7 @@ class _PromptScreen extends  State<PromptScreen>{
                           color: Theme.of(context).colorScheme.tertiary)),
                   focusedErrorBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.all(Radius.circular(28)),
-                      borderSide: BorderSide(color: AppColors.error)),
+                      borderSide: BorderSide(color: const Color.fromARGB(255, 176, 0, 32))),
                   labelText: 'Type your own prompt',
                   labelStyle: AppFonts.hintTitle(),
                 ),

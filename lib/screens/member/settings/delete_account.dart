@@ -30,7 +30,7 @@ class DeleteAccountScreen extends StatelessWidget {
               'Not using our service? Cancel subscription or deactivate account. If you\'re sure you want to delete, note that all data will be permanently deleted. Click one of the options below to confirm.',
               style: AppFonts.titleMedium(
                 fontSize: 16,
-                color: AppColors.grey,
+                color: Colors.grey,
               ),
             ),
           ),
@@ -89,8 +89,8 @@ class DeleteAccountScreen extends StatelessWidget {
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(12),
         color: isDestructive
-            ? AppColors.error.withAlpha(30)
-            : AppColors.primary.withAlpha(30),
+            ? const Color.fromARGB(255, 176, 0, 32).withAlpha(30)
+            : const Color.fromARGB(255, 82, 113, 255).withAlpha(30),
       ),
       child: Material(
         color: Colors.transparent,
@@ -103,7 +103,7 @@ class DeleteAccountScreen extends StatelessWidget {
               children: [
                 Icon(
                   icon,
-                  color: isDestructive ?AppColors.error :AppColors.black,
+                  color: isDestructive ?const Color.fromARGB(255, 176, 0, 32) :const Color.fromARGB(255, 0, 0, 0),
                   size: 24,
                 ),
                 const SizedBox(width: 12),
@@ -112,13 +112,13 @@ class DeleteAccountScreen extends StatelessWidget {
                     title,
                     style: AppFonts.titleBold(
                       fontSize: 16,
-                      color: isDestructive ? AppColors.error: AppColors.black,
+                      color: isDestructive ? const Color.fromARGB(255, 176, 0, 32): const Color.fromARGB(255, 0, 0, 0),
                     ),
                   ),
                 ),
                 Icon(
                   Icons.chevron_right,
-                  color: isDestructive ? AppColors.error :AppColors.black,
+                  color: isDestructive ? const Color.fromARGB(255, 176, 0, 32) :const Color.fromARGB(255, 0, 0, 0),
                 ),
               ],
             ),
@@ -137,7 +137,7 @@ class DeleteAccountScreen extends StatelessWidget {
       context: context,
       builder: (context) => AlertDialog(
         title: Text(title,style: AppFonts.titleBold(fontSize: 20),),
-        content: Text(message,style: AppFonts.titleMedium(fontSize: 15,color: AppColors.black),),
+        content: Text(message,style: AppFonts.titleMedium(fontSize: 15,color: Colors.black),),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
@@ -148,7 +148,7 @@ class DeleteAccountScreen extends StatelessWidget {
               // Handle the action
               Navigator.pop(context);
             },
-            child:  Text('Confirm',style: AppFonts.titleBold(fontSize: 14,color: AppColors.primary),),
+            child:  Text('Confirm',style: AppFonts.titleBold(fontSize: 14,color: const Color.fromARGB(255, 82, 113, 255)),),
           ),
         ],
       ),
@@ -174,8 +174,8 @@ class DeleteAccountScreen extends StatelessWidget {
               Navigator.pop(context);
               _showOtpVerification(context);
             },
-            style: TextButton.styleFrom(foregroundColor: AppColors.error),
-            child:  Text('Send OTP',style: AppFonts.titleBold(fontSize: 15,color: AppColors.primary),),
+            style: TextButton.styleFrom(foregroundColor: const Color.fromARGB(255, 176, 0, 32)),
+            child:  Text('Send OTP',style: AppFonts.titleBold(fontSize: 15,color: const Color.fromARGB(255, 82, 113, 255)),),
           ),
         ],
       ),
@@ -248,18 +248,18 @@ class _DeleteAccountOtpSheetState extends State<DeleteAccountOtpSheet> {
                   counterText: '',
                   border: OutlineInputBorder(
                       borderRadius: BorderRadius.all(Radius.circular(12)),
-                      borderSide: BorderSide(color: AppColors.primary)),
+                      borderSide: BorderSide(color: const Color.fromARGB(255, 82, 113, 255))),
                   focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.all(Radius.circular(12)),
-                      borderSide: BorderSide(color: AppColors.primary)),
+                      borderSide: BorderSide(color: const Color.fromARGB(255, 82, 113, 255))),
                   enabledBorder: const OutlineInputBorder(
                     // Border when enabled
-                    borderSide: BorderSide(color: AppColors.primary),
+                    borderSide: BorderSide(color: Color.fromARGB(255, 82, 113, 255)),
                     borderRadius: BorderRadius.all(Radius.circular(12)),
                   ),
                   errorBorder: const OutlineInputBorder(
                     borderRadius: BorderRadius.all(Radius.circular(12)),
-                    borderSide: BorderSide(color: AppColors.error),
+                    borderSide: BorderSide(color: Color.fromARGB(255, 176, 0, 32)),
                   ),
                 ),
               ),
@@ -269,7 +269,7 @@ class _DeleteAccountOtpSheetState extends State<DeleteAccountOtpSheet> {
                   onPressed: () {
                     // Handle resend OTP
                   },
-                  child:  Text('Resend',style: AppFonts.titleBold(fontSize: 15,color: AppColors.primary),),
+                  child:  Text('Resend',style: AppFonts.titleBold(fontSize: 15,color: const Color.fromARGB(255, 82, 113, 255)),),
                 ),
               ),
             ],
@@ -280,14 +280,14 @@ class _DeleteAccountOtpSheetState extends State<DeleteAccountOtpSheet> {
               Navigator.pop(context);
             },
             style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.error,
-              foregroundColor: AppColors.white,
+              backgroundColor: const Color.fromARGB(255, 176, 0, 32),
+              foregroundColor: Colors.white,
               padding: const EdgeInsets.symmetric(vertical: 16),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
               ),
             ),
-            child:  Text('Delete Account',style: AppFonts.titleBold(color: AppColors.white),),
+            child:  Text('Delete Account',style: AppFonts.titleBold(color: Colors.white),),
           ),
           SizedBox(height: 12,),
         ],

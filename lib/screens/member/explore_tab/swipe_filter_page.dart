@@ -2,7 +2,6 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_frontend/utilitis/appColors.dart';
 import 'package:flutter_frontend/utilitis/appFonts.dart';
 
 class SwipeFilterPage extends StatefulWidget {
@@ -158,7 +157,7 @@ class _SwipeFilterPage extends State<SwipeFilterPage> {
     (Set<WidgetState> states) {
       // Track color when the switch is selected.
       if (states.contains(WidgetState.selected)) {
-        return AppColors.success;
+        return const Color.fromARGB(255, 76, 175, 80);
       }
       // Otherwise return null to set default track color
       // for remaining states such as when the switch is
@@ -175,7 +174,7 @@ class _SwipeFilterPage extends State<SwipeFilterPage> {
       }
       // Material color when switch is disabled.
       if (states.contains(WidgetState.disabled)) {
-        return AppColors.black;
+        return Colors.black;
       }
       // Otherwise return null to set default material color
       // for remaining states such as when the switch is
@@ -235,8 +234,8 @@ class _SwipeFilterPage extends State<SwipeFilterPage> {
               margin: EdgeInsets.symmetric(horizontal: 16.0),
               decoration: BoxDecoration(
                 color: Theme.of(context).brightness == Brightness.light
-                    ? AppColors.tabBarBackround
-                    : AppColors.SwipeUserProfileTextColor,
+                    ? const Color.fromARGB(255, 241, 242, 242)
+                    : const Color.fromARGB(255, 188, 188, 188),
                 // Background color for entire tab section
                 borderRadius: BorderRadius.circular(10), // Rounded corners
               ),
@@ -260,9 +259,9 @@ class _SwipeFilterPage extends State<SwipeFilterPage> {
                 ),
                 labelColor:
                     Theme.of(context).colorScheme.brightness == Brightness.light
-                        ? AppColors.white
-                        : AppColors.black,
-                unselectedLabelColor: AppColors.black,
+                        ? Colors.white
+                        : Colors.black,
+                unselectedLabelColor: Colors.black,
                 tabs: [
                   Tab(text: "Basic Filters"),
                   Tab(text: "Advance Filters"),
@@ -336,7 +335,7 @@ class _SwipeFilterPage extends State<SwipeFilterPage> {
                                     },
                                     overlayColor: overlayColor,
                                     trackColor: trackColor,
-                                    // thumbColor:  WidgetStatePropertyAll(Theme.of(context).brightness==Brightness.light?AppColors.black:AppColors.white),
+                                    // thumbColor:  WidgetStatePropertyAll(Theme.of(context).brightness==Brightness.light?Colors.black:Colors.white),
                                   ),
                                 ),
                               )
@@ -354,8 +353,8 @@ class _SwipeFilterPage extends State<SwipeFilterPage> {
                               Checkbox(
                                 checkColor: Theme.of(context).brightness ==
                                         Brightness.light
-                                    ? AppColors.white
-                                    : AppColors.black,
+                                    ? Colors.white
+                                    : Colors.black,
                                 activeColor:
                                     Theme.of(context).colorScheme.tertiary,
                                 // isError: true,
@@ -387,8 +386,8 @@ class _SwipeFilterPage extends State<SwipeFilterPage> {
                               Checkbox(
                                 checkColor: Theme.of(context).brightness ==
                                         Brightness.light
-                                    ? AppColors.white
-                                    : AppColors.black,
+                                    ? Colors.white
+                                    : Colors.black,
                                 activeColor:
                                     Theme.of(context).colorScheme.tertiary,
                                 // isError: true,
@@ -420,8 +419,8 @@ class _SwipeFilterPage extends State<SwipeFilterPage> {
                               Checkbox(
                                 checkColor: Theme.of(context).brightness ==
                                         Brightness.light
-                                    ? AppColors.white
-                                    : AppColors.black,
+                                    ? Colors.white
+                                    : Colors.black,
                                 activeColor:
                                     Theme.of(context).colorScheme.tertiary,
                                 // isError: true,
@@ -477,7 +476,7 @@ class _SwipeFilterPage extends State<SwipeFilterPage> {
                             max: 60,
                             divisions: 100,
                             activeColor: Theme.of(context).colorScheme.tertiary,
-                            inactiveColor: AppColors.profileCreateOutlineBorder,
+                            inactiveColor: const Color.fromARGB(255, 168, 168, 168),
                             overlayColor: WidgetStatePropertyAll(
                                 Theme.of(context).colorScheme.tertiary),
                             labels: RangeLabels(
@@ -632,8 +631,8 @@ class _SwipeFilterPage extends State<SwipeFilterPage> {
                               Checkbox(
                                 checkColor: Theme.of(context).brightness ==
                                         Brightness.light
-                                    ? AppColors.white
-                                    : AppColors.black,
+                                    ? Colors.white
+                                    : Colors.black,
                                 activeColor:
                                     Theme.of(context).colorScheme.tertiary,
                                 // isError: true,
@@ -665,8 +664,8 @@ class _SwipeFilterPage extends State<SwipeFilterPage> {
                               Checkbox(
                                 checkColor: Theme.of(context).brightness ==
                                         Brightness.light
-                                    ? AppColors.white
-                                    : AppColors.black,
+                                    ? Colors.white
+                                    : Colors.black,
                                 activeColor:
                                     Theme.of(context).colorScheme.tertiary,
                                 // isError: true,
@@ -698,8 +697,8 @@ class _SwipeFilterPage extends State<SwipeFilterPage> {
                               Checkbox(
                                 checkColor: Theme.of(context).brightness ==
                                         Brightness.light
-                                    ? AppColors.white
-                                    : AppColors.black,
+                                    ? Colors.white
+                                    : Colors.black,
                                 activeColor:
                                     Theme.of(context).colorScheme.tertiary,
                                 // isError: true,
@@ -731,8 +730,8 @@ class _SwipeFilterPage extends State<SwipeFilterPage> {
                               Checkbox(
                                 checkColor: Theme.of(context).brightness ==
                                         Brightness.light
-                                    ? AppColors.white
-                                    : AppColors.black,
+                                    ? Colors.white
+                                    : Colors.black,
                                 activeColor:
                                     Theme.of(context).colorScheme.tertiary,
                                 // isError: true,
@@ -764,8 +763,8 @@ class _SwipeFilterPage extends State<SwipeFilterPage> {
                               Checkbox(
                                 checkColor: Theme.of(context).brightness ==
                                         Brightness.light
-                                    ? AppColors.white
-                                    : AppColors.black,
+                                    ? Colors.white
+                                    : Colors.black,
                                 activeColor:
                                     Theme.of(context).colorScheme.tertiary,
                                 // isError: true,
@@ -822,8 +821,8 @@ class _SwipeFilterPage extends State<SwipeFilterPage> {
                               Checkbox(
                                 checkColor: Theme.of(context).brightness ==
                                         Brightness.light
-                                    ? AppColors.white
-                                    : AppColors.black,
+                                    ? Colors.white
+                                    : Colors.black,
                                 activeColor:
                                     Theme.of(context).colorScheme.tertiary,
                                 // isError: true,
@@ -855,8 +854,8 @@ class _SwipeFilterPage extends State<SwipeFilterPage> {
                               Checkbox(
                                 checkColor: Theme.of(context).brightness ==
                                         Brightness.light
-                                    ? AppColors.white
-                                    : AppColors.black,
+                                    ? Colors.white
+                                    : Colors.black,
                                 activeColor:
                                     Theme.of(context).colorScheme.tertiary,
                                 // isError: true,
@@ -888,8 +887,8 @@ class _SwipeFilterPage extends State<SwipeFilterPage> {
                               Checkbox(
                                 checkColor: Theme.of(context).brightness ==
                                         Brightness.light
-                                    ? AppColors.white
-                                    : AppColors.black,
+                                    ? Colors.white
+                                    : Colors.black,
                                 activeColor:
                                     Theme.of(context).colorScheme.tertiary,
                                 // isError: true,
@@ -946,8 +945,8 @@ class _SwipeFilterPage extends State<SwipeFilterPage> {
                               Checkbox(
                                 checkColor: Theme.of(context).brightness ==
                                         Brightness.light
-                                    ? AppColors.white
-                                    : AppColors.black,
+                                    ? Colors.white
+                                    : Colors.black,
                                 activeColor:
                                     Theme.of(context).colorScheme.tertiary,
                                 // isError: true,
@@ -980,8 +979,8 @@ class _SwipeFilterPage extends State<SwipeFilterPage> {
                               Checkbox(
                                 checkColor: Theme.of(context).brightness ==
                                         Brightness.light
-                                    ? AppColors.white
-                                    : AppColors.black,
+                                    ? Colors.white
+                                    : Colors.black,
                                 activeColor:
                                     Theme.of(context).colorScheme.tertiary,
                                 // isError: true,
@@ -1014,8 +1013,8 @@ class _SwipeFilterPage extends State<SwipeFilterPage> {
                               Checkbox(
                                 checkColor: Theme.of(context).brightness ==
                                         Brightness.light
-                                    ? AppColors.white
-                                    : AppColors.black,
+                                    ? Colors.white
+                                    : Colors.black,
                                 activeColor:
                                     Theme.of(context).colorScheme.tertiary,
                                 // isError: true,
@@ -1047,8 +1046,8 @@ class _SwipeFilterPage extends State<SwipeFilterPage> {
                               Checkbox(
                                 checkColor: Theme.of(context).brightness ==
                                         Brightness.light
-                                    ? AppColors.white
-                                    : AppColors.black,
+                                    ? Colors.white
+                                    : Colors.black,
                                 activeColor:
                                     Theme.of(context).colorScheme.tertiary,
                                 // isError: true,
@@ -1105,8 +1104,8 @@ class _SwipeFilterPage extends State<SwipeFilterPage> {
                               Checkbox(
                                 checkColor: Theme.of(context).brightness ==
                                         Brightness.light
-                                    ? AppColors.white
-                                    : AppColors.black,
+                                    ? Colors.white
+                                    : Colors.black,
                                 activeColor:
                                     Theme.of(context).colorScheme.tertiary,
                                 // isError: true,
@@ -1139,8 +1138,8 @@ class _SwipeFilterPage extends State<SwipeFilterPage> {
                               Checkbox(
                                 checkColor: Theme.of(context).brightness ==
                                         Brightness.light
-                                    ? AppColors.white
-                                    : AppColors.black,
+                                    ? Colors.white
+                                    : Colors.black,
                                 activeColor:
                                     Theme.of(context).colorScheme.tertiary,
                                 // isError: true,
@@ -1173,8 +1172,8 @@ class _SwipeFilterPage extends State<SwipeFilterPage> {
                               Checkbox(
                                 checkColor: Theme.of(context).brightness ==
                                         Brightness.light
-                                    ? AppColors.white
-                                    : AppColors.black,
+                                    ? Colors.white
+                                    : Colors.black,
                                 activeColor:
                                     Theme.of(context).colorScheme.tertiary,
                                 // isError: true,
@@ -1207,8 +1206,8 @@ class _SwipeFilterPage extends State<SwipeFilterPage> {
                               Checkbox(
                                 checkColor: Theme.of(context).brightness ==
                                         Brightness.light
-                                    ? AppColors.white
-                                    : AppColors.black,
+                                    ? Colors.white
+                                    : Colors.black,
                                 activeColor:
                                     Theme.of(context).colorScheme.tertiary,
                                 // isError: true,
@@ -1266,8 +1265,8 @@ class _SwipeFilterPage extends State<SwipeFilterPage> {
                               Checkbox(
                                 checkColor: Theme.of(context).brightness ==
                                         Brightness.light
-                                    ? AppColors.white
-                                    : AppColors.black,
+                                    ? Colors.white
+                                    : Colors.black,
                                 activeColor:
                                     Theme.of(context).colorScheme.tertiary,
                                 // isError: true,
@@ -1300,8 +1299,8 @@ class _SwipeFilterPage extends State<SwipeFilterPage> {
                               Checkbox(
                                 checkColor: Theme.of(context).brightness ==
                                         Brightness.light
-                                    ? AppColors.white
-                                    : AppColors.black,
+                                    ? Colors.white
+                                    : Colors.black,
                                 activeColor:
                                     Theme.of(context).colorScheme.tertiary,
                                 // isError: true,
@@ -1334,8 +1333,8 @@ class _SwipeFilterPage extends State<SwipeFilterPage> {
                               Checkbox(
                                 checkColor: Theme.of(context).brightness ==
                                         Brightness.light
-                                    ? AppColors.white
-                                    : AppColors.black,
+                                    ? Colors.white
+                                    : Colors.black,
                                 activeColor:
                                     Theme.of(context).colorScheme.tertiary,
                                 // isError: true,
@@ -1393,8 +1392,8 @@ class _SwipeFilterPage extends State<SwipeFilterPage> {
                               Checkbox(
                                 checkColor: Theme.of(context).brightness ==
                                         Brightness.light
-                                    ? AppColors.white
-                                    : AppColors.black,
+                                    ? Colors.white
+                                    : Colors.black,
                                 activeColor:
                                     Theme.of(context).colorScheme.tertiary,
                                 // isError: true,
@@ -1426,8 +1425,8 @@ class _SwipeFilterPage extends State<SwipeFilterPage> {
                               Checkbox(
                                 checkColor: Theme.of(context).brightness ==
                                         Brightness.light
-                                    ? AppColors.white
-                                    : AppColors.black,
+                                    ? Colors.white
+                                    : Colors.black,
                                 activeColor:
                                     Theme.of(context).colorScheme.tertiary,
                                 // isError: true,
@@ -1459,8 +1458,8 @@ class _SwipeFilterPage extends State<SwipeFilterPage> {
                               Checkbox(
                                 checkColor: Theme.of(context).brightness ==
                                         Brightness.light
-                                    ? AppColors.white
-                                    : AppColors.black,
+                                    ? Colors.white
+                                    : Colors.black,
                                 activeColor:
                                     Theme.of(context).colorScheme.tertiary,
                                 // isError: true,
@@ -1493,8 +1492,8 @@ class _SwipeFilterPage extends State<SwipeFilterPage> {
                               Checkbox(
                                 checkColor: Theme.of(context).brightness ==
                                         Brightness.light
-                                    ? AppColors.white
-                                    : AppColors.black,
+                                    ? Colors.white
+                                    : Colors.black,
                                 activeColor:
                                     Theme.of(context).colorScheme.tertiary,
                                 // isError: true,
@@ -1552,8 +1551,8 @@ class _SwipeFilterPage extends State<SwipeFilterPage> {
                               Checkbox(
                                 checkColor: Theme.of(context).brightness ==
                                         Brightness.light
-                                    ? AppColors.white
-                                    : AppColors.black,
+                                    ? Colors.white
+                                    : Colors.black,
                                 activeColor:
                                     Theme.of(context).colorScheme.tertiary,
                                 // isError: true,
@@ -1587,8 +1586,8 @@ class _SwipeFilterPage extends State<SwipeFilterPage> {
                               Checkbox(
                                 checkColor: Theme.of(context).brightness ==
                                         Brightness.light
-                                    ? AppColors.white
-                                    : AppColors.black,
+                                    ? Colors.white
+                                    : Colors.black,
                                 activeColor:
                                     Theme.of(context).colorScheme.tertiary,
                                 // isError: true,
@@ -1622,8 +1621,8 @@ class _SwipeFilterPage extends State<SwipeFilterPage> {
                               Checkbox(
                                 checkColor: Theme.of(context).brightness ==
                                         Brightness.light
-                                    ? AppColors.white
-                                    : AppColors.black,
+                                    ? Colors.white
+                                    : Colors.black,
                                 activeColor:
                                     Theme.of(context).colorScheme.tertiary,
                                 // isError: true,
@@ -1657,8 +1656,8 @@ class _SwipeFilterPage extends State<SwipeFilterPage> {
                               Checkbox(
                                 checkColor: Theme.of(context).brightness ==
                                         Brightness.light
-                                    ? AppColors.white
-                                    : AppColors.black,
+                                    ? Colors.white
+                                    : Colors.black,
                                 activeColor:
                                     Theme.of(context).colorScheme.tertiary,
                                 // isError: true,
@@ -1717,8 +1716,8 @@ class _SwipeFilterPage extends State<SwipeFilterPage> {
                               Checkbox(
                                 checkColor: Theme.of(context).brightness ==
                                         Brightness.light
-                                    ? AppColors.white
-                                    : AppColors.black,
+                                    ? Colors.white
+                                    : Colors.black,
                                 activeColor:
                                     Theme.of(context).colorScheme.tertiary,
                                 // isError: true,
@@ -1751,8 +1750,8 @@ class _SwipeFilterPage extends State<SwipeFilterPage> {
                               Checkbox(
                                 checkColor: Theme.of(context).brightness ==
                                         Brightness.light
-                                    ? AppColors.white
-                                    : AppColors.black,
+                                    ? Colors.white
+                                    : Colors.black,
                                 activeColor:
                                     Theme.of(context).colorScheme.tertiary,
                                 // isError: true,
@@ -1785,8 +1784,8 @@ class _SwipeFilterPage extends State<SwipeFilterPage> {
                               Checkbox(
                                 checkColor: Theme.of(context).brightness ==
                                         Brightness.light
-                                    ? AppColors.white
-                                    : AppColors.black,
+                                    ? Colors.white
+                                    : Colors.black,
                                 activeColor:
                                     Theme.of(context).colorScheme.tertiary,
                                 // isError: true,
@@ -1819,8 +1818,8 @@ class _SwipeFilterPage extends State<SwipeFilterPage> {
                               Checkbox(
                                 checkColor: Theme.of(context).brightness ==
                                         Brightness.light
-                                    ? AppColors.white
-                                    : AppColors.black,
+                                    ? Colors.white
+                                    : Colors.black,
                                 activeColor:
                                     Theme.of(context).colorScheme.tertiary,
                                 // isError: true,
@@ -1853,8 +1852,8 @@ class _SwipeFilterPage extends State<SwipeFilterPage> {
                               Checkbox(
                                 checkColor: Theme.of(context).brightness ==
                                         Brightness.light
-                                    ? AppColors.white
-                                    : AppColors.black,
+                                    ? Colors.white
+                                    : Colors.black,
                                 activeColor:
                                     Theme.of(context).colorScheme.tertiary,
                                 // isError: true,

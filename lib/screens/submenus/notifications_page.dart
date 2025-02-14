@@ -1,7 +1,5 @@
-import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_frontend/utilitis/appColors.dart';
 import 'package:flutter_frontend/utilitis/appFonts.dart';
 
 
@@ -83,7 +81,7 @@ class _NotificationsPage extends State<NotificationsPage> {
                         Container(
                           decoration: BoxDecoration(
                               shape: BoxShape.circle,
-                              border: Border.all(color: AppColors.userProfileBorderColor,width: 2,)
+                              border: Border.all(color: const Color.fromARGB(255, 148, 177, 67),width: 2,)
                           ),
                           child: CircleAvatar(
                             backgroundImage:
@@ -137,7 +135,7 @@ class _NotificationsPage extends State<NotificationsPage> {
                         Container(
                           decoration: BoxDecoration(
                               shape: BoxShape.circle,
-                              border: Border.all(color: AppColors.userProfileBorderColor,width: 2,)
+                              border: Border.all(color: const Color.fromARGB(255, 148, 177, 67),width: 2,)
                           ),
                           child: CircleAvatar(
                             backgroundImage:
@@ -192,7 +190,7 @@ class _NotificationsPage extends State<NotificationsPage> {
                         Container(
                           decoration: BoxDecoration(
                               shape: BoxShape.circle,
-                              border: Border.all(color: AppColors.userProfileBorderColor,width: 2,)
+                              border: Border.all(color: const Color.fromARGB(255, 148, 177, 67),width: 2,)
                           ),
                           child: CircleAvatar(
                             backgroundImage:

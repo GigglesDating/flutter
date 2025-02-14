@@ -1,7 +1,6 @@
 // ignore_for_file: library_private_types_in_public_api
 import 'package:flutter/material.dart';
 import 'package:swipe_cards/swipe_cards.dart';
-import '../../utilitis/appColors.dart';
 import '../../utilitis/appFonts.dart';
 
 class Userlikeyouswipeablecomponent extends StatefulWidget {
@@ -128,7 +127,7 @@ class _SwipeableCardState extends State<UserlikeSwipeableCard> {
                       child: Text(
                     'Aditi Rao',
                     style: AppFonts.titleBold(
-                        color: AppColors.white, fontSize: 18),
+                        color: Colors.white, fontSize: 18),
                   )),
                 ),
               ],

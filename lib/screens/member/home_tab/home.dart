@@ -6,7 +6,6 @@ import 'package:flutter_frontend/screens/components/userDashboardNavbar.dart';
 import 'package:flutter_frontend/screens/submenus/notifications_page.dart';
 import 'package:flutter_frontend/screens/submenus/messenger_page.dart';
 import 'package:flutter_frontend/screens/user/add_to_story_page.dart';
-import 'package:flutter_frontend/utilitis/appColors.dart';
 import 'package:flutter_frontend/utilitis/appFonts.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:image_cropper/image_cropper.dart';
@@ -40,14 +39,6 @@ class _HomeTabState extends State<HomeTab> {
         appBar: AppBar(
           leading: IconButton(
             onPressed: () async {
-              // Add Posts
-              // Navigator.push(
-              //   context,
-              //   MaterialPageRoute(
-              //     builder: (context) =>
-              //         CreatePostPage(currentUser: userProvider.user),
-              //   ),
-              // );
               showImageModalSheet();
             },
             icon: Container(
@@ -61,19 +52,13 @@ class _HomeTabState extends State<HomeTab> {
                 Icons.add_outlined,
                 color: Theme.of(context).brightness == Brightness.light
                     ? Colors.white
-                    : AppColors.black,
+                    : Colors.black,
               ),
             ),
           ),
           actions: [
             IconButton(
               onPressed: () {
-                // Navigator.push(
-                //   context,
-                //   MaterialPageRoute(
-                //     builder: (context) => userNotificationPage(),
-                //   ),
-                // );
                 Navigator.push(
                     context,
                     MaterialPageRoute(
@@ -91,12 +76,6 @@ class _HomeTabState extends State<HomeTab> {
                     MaterialPageRoute(
                       builder: (context) => MessengerPage(),
                     ));
-                // Navigator.push(
-                //   context,
-                //   MaterialPageRoute(
-                //     builder: (context) => UserInboxPage(),
-                //   ),
-                // );
               },
               icon: Image(
                 image: AssetImage(
@@ -143,7 +122,7 @@ class _HomeTabState extends State<HomeTab> {
                           decoration: BoxDecoration(
                               shape: BoxShape.circle,
                               border: Border.all(
-                                color: AppColors.userProfileBorderColor,
+                                color: const Color.fromARGB(255, 148, 177, 67),
                                 width: 2,
                               )),
                           child: CircleAvatar(
@@ -179,8 +158,8 @@ class _HomeTabState extends State<HomeTab> {
                                 child: Icon(Icons.add,
                                     color: Theme.of(context).brightness ==
                                             Brightness.light
-                                        ? AppColors.white
-                                        : AppColors.black,size: 18,)),
+                                        ? Colors.white
+                                        : Colors.black,size: 18,)),
                           ),
                         ),
                       ),
@@ -256,7 +235,7 @@ class _HomeTabState extends State<HomeTab> {
                       Text(
                         'Add Post',
                         style: AppFonts.titleBold(
-                            color: AppColors.black, fontSize: 24),
+                            color: Colors.black, fontSize: 24),
                       ),
                     ],
                   ),
@@ -361,7 +340,7 @@ class _HomeTabState extends State<HomeTab> {
           uiSettings: [
             AndroidUiSettings(
               toolbarTitle: 'Cropper',
-              toolbarColor: AppColors.primary,
+              toolbarColor: const Color.fromARGB(255, 82, 113, 255),
               toolbarWidgetColor: Colors.white,
               aspectRatioPresets: [
                 CropAspectRatioPreset.original,
@@ -390,26 +369,6 @@ class _HomeTabState extends State<HomeTab> {
           });
         }
       }
-      // if (pickedImage == null) {
-      //   return ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-      //     behavior: SnackBarBehavior.floating,
-      //     margin: EdgeInsets.only(
-      //         bottom: MediaQuery.of(context).size.height - 120,
-      //         left: 20.0, // Add left margin for spacing
-      //         right: 20.0 // Add right margin for spacing
-      //     ),
-      //     content: const Text('Please Select Image'),
-      //   ));
-      // } else {
-      //   final tempImage = File(pickedImage.path);
-      //   setState(() {
-      //     ImageUrl = tempImage;
-      //   });
-      //   setState(() {
-      //     filePath = pickedImage.path;
-      //   });
-      //
-      // }
     } catch (error) {
       debugPrint(error.toString());
     }

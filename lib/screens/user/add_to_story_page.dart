@@ -1,7 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_frontend/utilitis/appColors.dart';
 import 'package:flutter_frontend/utilitis/appFonts.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:video_player/video_player.dart';
@@ -104,7 +103,7 @@ class _AddToStoryScreenState extends State<AddToStoryScreen> {
       floatingActionButton: FloatingActionButton(
         backgroundColor: Theme.of(context).colorScheme.tertiary,
         onPressed: () => _showMediaPickerOptions(),
-        child: Icon(Icons.camera_alt, color: Theme.of(context).brightness==Brightness.light?AppColors.white:AppColors.black),
+        child: Icon(Icons.camera_alt, color: Theme.of(context).brightness==Brightness.light?Colors.white:Colors.black),
       ),
     );
   }

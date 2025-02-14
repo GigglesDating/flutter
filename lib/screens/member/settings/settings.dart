@@ -12,7 +12,6 @@ import 'package:flutter_frontend/screens/subscription_page.dart';
 import 'package:flutter_frontend/screens/waitlist/support.dart';
 import 'package:share_plus/share_plus.dart';
 
-import '../../../utilitis/appColors.dart';
 import '../../../utilitis/appFonts.dart';
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
@@ -344,14 +343,14 @@ class _SettingsPageState extends State<SettingsPage> {
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    Icon(Icons.logout, size: 28, color: AppColors.error),
+                    Icon(Icons.logout, size: 28, color: const Color.fromARGB(255, 176, 0, 32)),
                     SizedBox(width: 8,),
                     Text(
                       'Logout',
-                      style: AppFonts.titleBold(fontSize: 16,color: AppColors.error),
+                      style: AppFonts.titleBold(fontSize: 16,color: const Color.fromARGB(255, 176, 0, 32)),
                     ),
                     Spacer(),
-                    Icon(Icons.arrow_forward_ios, color: AppColors.error,size: 18),
+                    Icon(Icons.arrow_forward_ios, color: const Color.fromARGB(255, 176, 0, 32),size: 18),
                   ],
                 ),
               ),),
@@ -396,7 +395,7 @@ class _SettingsPageState extends State<SettingsPage> {
               showRenewSubscription(context);
 
             },
-            child:  Text('Renew',style: AppFonts.titleBold(color: AppColors.primary),),
+            child:  Text('Renew',style: AppFonts.titleBold(color: const Color.fromARGB(255, 82, 113, 255)),),
           ),
         ],
       ),
@@ -423,7 +422,7 @@ class _SettingsPageState extends State<SettingsPage> {
               // Handle unblock action
               Navigator.pop(context);
             },
-            child:  Text('Confirm',style: AppFonts.titleBold(color: AppColors.primary),),
+            child:  Text('Confirm',style: AppFonts.titleBold(color: const Color.fromARGB(255, 82, 113, 255)),),
           ),
         ],
       ),
@@ -451,7 +450,7 @@ class _SettingsPageState extends State<SettingsPage> {
               Navigator.pop(context);
               Navigator.push(context, MaterialPageRoute(builder: (context) => SubscriptionPage(),));
             },
-            child:  Text('Confirm',style: AppFonts.titleBold(color: AppColors.primary),),
+            child:  Text('Confirm',style: AppFonts.titleBold(color: const Color.fromARGB(255, 82, 113, 255)),),
           ),
         ],
       ),

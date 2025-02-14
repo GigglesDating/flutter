@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_frontend/screens/components/buttonComponent.dart';
 import 'package:flutter_frontend/screens/dashboard_page.dart';
-import 'package:flutter_frontend/utilitis/appColors.dart';
 import 'package:flutter_frontend/utilitis/appFonts.dart';
 
 class SubscriptionPage extends StatefulWidget {
@@ -101,7 +100,7 @@ class _SubscriptionPage extends State<SubscriptionPage> {
                 child: Text(
                   'Claim your membership',
                   style: AppFonts.titleBold(
-                      color: AppColors.subscriptionplanCardColor, fontSize: 16),
+                      color: const Color.fromARGB(255, 255, 149, 80), fontSize: 16),
                 )),
             SizedBox(
               height: 8,
@@ -136,7 +135,7 @@ class _SubscriptionPage extends State<SubscriptionPage> {
                           borderType: BorderType.RRect,
                           strokeWidth: 2,
                           radius: Radius.circular(16),
-                          color: AppColors.subscriptionplanCardColor,
+                          color: const Color.fromARGB(255, 255, 149, 80),
                           borderPadding: EdgeInsets.zero,
                           padding: EdgeInsets.zero,
                           child: Container(
@@ -146,15 +145,14 @@ class _SubscriptionPage extends State<SubscriptionPage> {
                                     radius: Radius.circular(16),
                                     borderType: BorderType.RRect,
                                     strokeWidth: 2,
-                                    color: AppColors.subscriptionplanCardColor,
+                                    color: const Color.fromARGB(255, 255, 149, 80),
                                     borderPadding: EdgeInsets.zero,
                                     child: Padding(
                                       padding: const EdgeInsets.all(8.0),
                                       child: Text(
                                         'Save 40%',
                                         style: AppFonts.titleBold(
-                                            color: AppColors
-                                                .subscriptionplanCardColor,
+                                            color: const Color.fromARGB(255, 255, 149, 80),
                                             fontSize: 18),
                                       ),
                                     )),
@@ -165,7 +163,7 @@ class _SubscriptionPage extends State<SubscriptionPage> {
                                   '1',
                                   style: AppFonts.titleBold(
                                       fontSize: 40,
-                                      color: AppColors.subscriptionplanCardColor),
+                                      color: const Color.fromARGB(255, 255, 149, 80)),
                                 ),
                                 SizedBox(
                                   height: 8,
@@ -174,7 +172,7 @@ class _SubscriptionPage extends State<SubscriptionPage> {
                                   'Month',
                                   style: AppFonts.titleBold(
                                       fontSize: 16,
-                                      color: AppColors.subscriptionplanCardColor),
+                                      color: const Color.fromARGB(255, 255, 149, 80)),
                                 ),
                                 SizedBox(
                                   height: 4,
@@ -183,7 +181,7 @@ class _SubscriptionPage extends State<SubscriptionPage> {
                                   '\u0027100/day',
                                   style: AppFonts.titleBold(
                                       fontSize: 12,
-                                      color: AppColors.subscriptionplanCardColor),
+                                      color: const Color.fromARGB(255, 255, 149, 80)),
                                 ),
                                 SizedBox(
                                   height: 10,
@@ -236,14 +234,14 @@ class _SubscriptionPage extends State<SubscriptionPage> {
                                 style: AppFonts.titleBold(
                                     fontSize: 16,
                                     color:
-                                        AppColors.subscriptionplanTrialCardColor),
+                                        const Color.fromARGB(255, 238, 241, 241)),
                               ),
                               Text(
                                 '7',
                                 style: AppFonts.titleBold(
                                     fontSize: 40,
                                     color:
-                                        AppColors.subscriptionplanTrialCardColor),
+                                        const Color.fromARGB(255, 238, 241, 241)),
                               ),
                               SizedBox(
                                 height: 4,
@@ -253,7 +251,7 @@ class _SubscriptionPage extends State<SubscriptionPage> {
                                 style: AppFonts.titleBold(
                                     fontSize: 16,
                                     color:
-                                        AppColors.subscriptionplanTrialCardColor),
+                                        const Color.fromARGB(255, 238, 241, 241)),
                               ),
                               SizedBox(
                                 height: 4,
@@ -263,7 +261,7 @@ class _SubscriptionPage extends State<SubscriptionPage> {
                                 style: AppFonts.titleBold(
                                     fontSize: 12,
                                     color:
-                                        AppColors.subscriptionplanTrialCardColor),
+                                        const Color.fromARGB(255, 238, 241, 241)),
                               ),
                               SizedBox(
                                 height: 8,
@@ -285,7 +283,7 @@ class _SubscriptionPage extends State<SubscriptionPage> {
                           borderType: BorderType.RRect,
                           strokeWidth: 2,
                           radius: Radius.circular(16),
-                          color: AppColors.subscriptionplanCardColor,
+                          color: const Color.fromARGB(255, 255, 149, 80),
                           borderPadding: EdgeInsets.zero,
                           padding: EdgeInsets.zero,
                           child: Container(
@@ -295,15 +293,14 @@ class _SubscriptionPage extends State<SubscriptionPage> {
                                     radius: Radius.circular(16),
                                     borderType: BorderType.RRect,
                                     strokeWidth: 2,
-                                    color: AppColors.subscriptionplanCardColor,
+                                    color:  const Color.fromARGB(255, 255, 149, 80),
                                     borderPadding: EdgeInsets.zero,
                                     child: Padding(
                                       padding: const EdgeInsets.all(8.0),
                                       child: Text(
                                         'Save 40%',
                                         style: AppFonts.titleBold(
-                                            color: AppColors
-                                                .subscriptionplanCardColor,
+                                            color:  const Color.fromARGB(255, 255, 149, 80),
                                             fontSize: 18),
                                       ),
                                     )),
@@ -314,7 +311,7 @@ class _SubscriptionPage extends State<SubscriptionPage> {
                                   '1',
                                   style: AppFonts.titleBold(
                                       fontSize: 40,
-                                      color: AppColors.subscriptionplanCardColor),
+                                      color:  const Color.fromARGB(255, 255, 149, 80)),
                                 ),
                                 SizedBox(
                                   height: 8,
@@ -323,7 +320,7 @@ class _SubscriptionPage extends State<SubscriptionPage> {
                                   'Month',
                                   style: AppFonts.titleBold(
                                       fontSize: 16,
-                                      color: AppColors.subscriptionplanCardColor),
+                                      color:  const Color.fromARGB(255, 255, 149, 80)),
                                 ),
                                 SizedBox(
                                   height: 4,
@@ -332,7 +329,7 @@ class _SubscriptionPage extends State<SubscriptionPage> {
                                   '\u0027100/day',
                                   style: AppFonts.titleBold(
                                       fontSize: 12,
-                                      color: AppColors.subscriptionplanCardColor),
+                                      color:  const Color.fromARGB(255, 255, 149, 80)),
                                 ),
                                 SizedBox(
                                   height: 10,
@@ -362,27 +359,11 @@ class _SubscriptionPage extends State<SubscriptionPage> {
                               )),
                           child: Column(
                             children: [
-                              // DottedBorder(
-                              //     radius: Radius.circular(16),
-                              //     borderType: BorderType.RRect,
-                              //     strokeWidth: 2,
-                              //     color: AppColors.subscriptionplanTextColor,
-                              //     borderPadding: EdgeInsets.zero,
-                              //     child: Padding(
-                              //       padding: const EdgeInsets.all(8.0),
-                              //       child: Text(
-                              //         'Save 40%',
-                              //         style: AppFonts.titleBold(
-                              //             color: AppColors.subscriptionplanTextColor,
-                              //             fontSize: 18),
-                              //       ),
-                              //     )),
                               Text(
                                 'Trial',
                                 style: AppFonts.titleBold(
                                     fontSize: 16,
-                                    color: AppColors
-                                        .subscriptionplanPremiumCardColor),
+                                    color: const Color.fromARGB(255, 127, 145, 170)),
                               ),
                               SizedBox(
                                 height: 4,
@@ -391,8 +372,7 @@ class _SubscriptionPage extends State<SubscriptionPage> {
                                 '3',
                                 style: AppFonts.titleBold(
                                     fontSize: 40,
-                                    color: AppColors
-                                        .subscriptionplanPremiumCardColor),
+                                    color:  const Color.fromARGB(255, 127, 145, 170)),
                               ),
                               SizedBox(
                                 height: 4,
@@ -401,8 +381,7 @@ class _SubscriptionPage extends State<SubscriptionPage> {
                                 'Month',
                                 style: AppFonts.titleBold(
                                     fontSize: 16,
-                                    color: AppColors
-                                        .subscriptionplanPremiumCardColor),
+                                    color:  const Color.fromARGB(255, 127, 145, 170)),
                               ),
                               SizedBox(
                                 height: 4,
@@ -411,8 +390,7 @@ class _SubscriptionPage extends State<SubscriptionPage> {
                                 '\u002783.3/day',
                                 style: AppFonts.titleBold(
                                     fontSize: 12,
-                                    color: AppColors
-                                        .subscriptionplanPremiumCardColor),
+                                    color:  const Color.fromARGB(255, 127, 145, 170)),
                               ),
                               SizedBox(
                                 height: 8,
@@ -434,7 +412,7 @@ class _SubscriptionPage extends State<SubscriptionPage> {
                           borderType: BorderType.RRect,
                           strokeWidth: 2,
                           radius: Radius.circular(16),
-                          color: AppColors.subscriptionplanCardColor,
+                          color:  const Color.fromARGB(255, 255, 149, 80),
                           borderPadding: EdgeInsets.zero,
                           padding: EdgeInsets.zero,
                           child: Container(
@@ -444,15 +422,14 @@ class _SubscriptionPage extends State<SubscriptionPage> {
                                     radius: Radius.circular(16),
                                     borderType: BorderType.RRect,
                                     strokeWidth: 2,
-                                    color: AppColors.subscriptionplanCardColor,
+                                    color:  const Color.fromARGB(255, 255, 149, 80),
                                     borderPadding: EdgeInsets.zero,
                                     child: Padding(
                                       padding: const EdgeInsets.all(8.0),
                                       child: Text(
                                         'Save 40%',
                                         style: AppFonts.titleBold(
-                                            color: AppColors
-                                                .subscriptionplanCardColor,
+                                            color: const Color.fromARGB(255, 255, 149, 80),
                                             fontSize: 18),
                                       ),
                                     )),
@@ -463,7 +440,7 @@ class _SubscriptionPage extends State<SubscriptionPage> {
                                   '1',
                                   style: AppFonts.titleBold(
                                       fontSize: 40,
-                                      color: AppColors.subscriptionplanCardColor),
+                                      color:  const Color.fromARGB(255, 255, 149, 80)),
                                 ),
                                 SizedBox(
                                   height: 8,
@@ -472,7 +449,7 @@ class _SubscriptionPage extends State<SubscriptionPage> {
                                   'Month',
                                   style: AppFonts.titleBold(
                                       fontSize: 16,
-                                      color: AppColors.subscriptionplanCardColor),
+                                      color:  const Color.fromARGB(255, 255, 149, 80)),
                                 ),
                                 SizedBox(
                                   height: 4,
@@ -481,7 +458,7 @@ class _SubscriptionPage extends State<SubscriptionPage> {
                                   '\u0027100/day',
                                   style: AppFonts.titleBold(
                                       fontSize: 12,
-                                      color: AppColors.subscriptionplanCardColor),
+                                      color:  const Color.fromARGB(255, 255, 149, 80)),
                                 ),
                                 SizedBox(
                                   height: 10,
@@ -511,27 +488,11 @@ class _SubscriptionPage extends State<SubscriptionPage> {
                               )),
                           child: Column(
                             children: [
-                              // DottedBorder(
-                              //     radius: Radius.circular(16),
-                              //     borderType: BorderType.RRect,
-                              //     strokeWidth: 2,
-                              //     color: AppColors.subscriptionplanTextColor,
-                              //     borderPadding: EdgeInsets.zero,
-                              //     child: Padding(
-                              //       padding: const EdgeInsets.all(8.0),
-                              //       child: Text(
-                              //         'Save 40%',
-                              //         style: AppFonts.titleBold(
-                              //             color: AppColors.subscriptionplanTextColor,
-                              //             fontSize: 18),
-                              //       ),
-                              //     )),
                               Text(
                                 'Premium+',
                                 style: AppFonts.titleBold(
                                     fontSize: 16,
-                                    color: AppColors
-                                        .subscriptionplanPremiumCardColor),
+                                    color:  const Color.fromARGB(255, 127, 145, 170)),
                               ),
                               SizedBox(
                                 height: 4,
@@ -540,8 +501,7 @@ class _SubscriptionPage extends State<SubscriptionPage> {
                                 '3',
                                 style: AppFonts.titleBold(
                                     fontSize: 40,
-                                    color: AppColors
-                                        .subscriptionplanPremiumCardColor),
+                                    color:  const Color.fromARGB(255, 127, 145, 170)),
                               ),
                               SizedBox(
                                 height: 4,
@@ -550,8 +510,7 @@ class _SubscriptionPage extends State<SubscriptionPage> {
                                 'Month',
                                 style: AppFonts.titleBold(
                                     fontSize: 16,
-                                    color: AppColors
-                                        .subscriptionplanPremiumCardColor),
+                                    color:  const Color.fromARGB(255, 127, 145, 170)),
                               ),
                               const SizedBox(
                                 height: 4,
@@ -560,8 +519,7 @@ class _SubscriptionPage extends State<SubscriptionPage> {
                                 '\u002783.3/day',
                                 style: AppFonts.titleBold(
                                     fontSize: 12,
-                                    color: AppColors
-                                        .subscriptionplanPremiumCardColor),
+                                    color:  const Color.fromARGB(255, 127, 145, 170)),
                               ),
                               const SizedBox(
                                 height: 8,
@@ -578,14 +536,14 @@ class _SubscriptionPage extends State<SubscriptionPage> {
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16.0),
               child: Center(
-                  child: AppButton.button(AppColors.subscriptionplanCardColor,
+                  child: AppButton.button( const Color.fromARGB(255, 255, 149, 80),
                       'Get exclusive membership', 18, () {
                 Navigator.push(
                     context,
                     MaterialPageRoute(
                       builder: (context) => DashboardPage(),
                     ));
-              }, AppColors.white, context)),
+              }, Colors.white, context)),
             ),
             SizedBox(
               height: 16,
@@ -594,7 +552,7 @@ class _SubscriptionPage extends State<SubscriptionPage> {
               padding: const EdgeInsets.symmetric(horizontal: 16.0),
               child: Center(
                   child: AppButton.buttonwithIcon(
-                      AppColors.subscriptionplanGiveToFrienButtonBgColor,
+                      const Color.fromARGB(255, 200, 208, 216),
                       'Give it to a friend',
                       18, () {
                 Navigator.push(
@@ -602,7 +560,7 @@ class _SubscriptionPage extends State<SubscriptionPage> {
                     MaterialPageRoute(
                       builder: (context) => DashboardPage(),
                     ));
-              }, AppColors.white, context)),
+              }, Colors.white, context)),
             ),
             SizedBox(
               height: 24,

@@ -51,8 +51,8 @@ class _PostCardState extends State<PostCard>
     return AnimatedContainer(
       duration: const Duration(milliseconds: 300),
       margin: EdgeInsets.only(
-        bottom: screenHeight * 0.06,
-        top: screenHeight * 0.040,
+        bottom: screenHeight * 0.02,
+        top: screenHeight * 0.02,
       ),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(15),
@@ -133,14 +133,40 @@ class _PostCardState extends State<PostCard>
             ),
           ),
 
+          // Post Description Overlay
+          Positioned(
+            left: screenWidth * 0.05,
+            right: screenWidth * 0.2,
+            bottom: screenWidth * 0.05,
+            child: Container(
+              padding: EdgeInsets.symmetric(
+                horizontal: screenWidth * 0.03,
+                vertical: screenWidth * 0.02,
+              ),
+              decoration: BoxDecoration(
+                color: Colors.black.withAlpha(100),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Text(
+                widget.post['caption'] ?? '',
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: screenWidth * 0.035,
+                ),
+              ),
+            ),
+          ),
+
           // Vertical Action Bar
           Positioned(
             right: screenWidth * 0.05, // 3% of screen width from right
             bottom: screenWidth * 0.15, // 30% of screen width from bottom
             child: Container(
               padding: EdgeInsets.symmetric(
-                vertical: screenHeight * 0.015, // 1.5% of screen height
-                horizontal: screenWidth * 0.01, // 2% of screen width
+                vertical: screenHeight * 0.012, // Reduced from 0.015
+                horizontal: screenWidth * 0.008, // Reduced from 0.01
               ),
               decoration: BoxDecoration(
                 color: widget.isDarkMode
@@ -172,7 +198,7 @@ class _PostCardState extends State<PostCard>
                   SizedBox(height: screenHeight * 0.02),
                   _buildActionButton(
                     iconPath: 'assets/icons/feed/comment.svg',
-                    onTap: () {},
+                    onTap: _showCommentsSheet,
                     color: widget.isDarkMode
                         ? Colors.white.withAlpha(204)
                         : Colors.black.withAlpha(204),
@@ -191,16 +217,22 @@ class _PostCardState extends State<PostCard>
           ),
 
           // Heart Animation
-          Center(
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
             child: AnimatedOpacity(
               duration: const Duration(milliseconds: 200),
               opacity: _showHeart ? 1.0 : 0.0,
-              child: ScaleTransition(
-                scale: _animation,
-                child: Icon(
-                  Icons.favorite,
-                  color: Colors.white,
-                  size: screenWidth * 0.3,
+              child: Center(
+                child: ScaleTransition(
+                  scale: _animation,
+                  child: Icon(
+                    Icons.favorite,
+                    color: Colors.white,
+                    size: screenWidth * 0.3,
+                  ),
                 ),
               ),
             ),
@@ -221,7 +253,7 @@ class _PostCardState extends State<PostCard>
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: EdgeInsets.all(screenWidth * 0.03),
+        padding: EdgeInsets.all(screenWidth * 0.025),
         decoration: BoxDecoration(
           color: widget.isDarkMode
               ? Colors.white.withAlpha(38)
@@ -230,12 +262,42 @@ class _PostCardState extends State<PostCard>
         ),
         child: SvgPicture.asset(
           iconPath,
-          width: screenWidth * 0.065,
-          height: screenWidth * 0.065,
+          width: screenWidth * 0.055,
+          height: screenWidth * 0.055,
           colorFilter: ColorFilter.mode(
             color,
             BlendMode.srcIn,
           ),
+        ),
+      ),
+    );
+  }
+
+  void _showCommentsSheet() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        height: MediaQuery.of(context).size.height * 0.7,
+        decoration: BoxDecoration(
+          color: widget.isDarkMode ? Colors.black : Colors.white,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+        child: Column(
+          children: [
+            Container(
+              margin: const EdgeInsets.symmetric(vertical: 10),
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Colors.grey.withAlpha(100),
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            const Text('Comments'),
+            // Add your comments list here
+          ],
         ),
       ),
     );

@@ -1,5 +1,9 @@
+// import 'package:camera/camera.dart';
 // import 'package:flutter/material.dart';
 // import 'package:flutter/services.dart';
+// import 'barrel.dart';
+
+// import 'package:flutter_frontend/screens/components/video_camera_open.dart';
 // import 'package:flutter_svg/svg.dart';
 // import 'package:fluttertoast/fluttertoast.dart';
 // import 'package:video_player/video_player.dart';

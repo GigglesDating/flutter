@@ -1,10 +1,8 @@
-import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:super_tooltip/super_tooltip.dart';
 
-import '../../utilitis/appColors.dart';
 import '../../utilitis/appFonts.dart';
 
 class MessengerPage extends StatefulWidget {
@@ -31,7 +29,7 @@ class _MessengerPage extends State<MessengerPage> {
         (Set<WidgetState> states) {
       // Track color when the switch is selected.
       if (states.contains(WidgetState.selected)) {
-        return AppColors.success;
+        return const Color.fromARGB(255, 76, 175, 80);
       }
       // Otherwise return null to set default track color
       // for remaining states such as when the switch is
@@ -48,7 +46,7 @@ class _MessengerPage extends State<MessengerPage> {
       }
       // Material color when switch is disabled.
       if (states.contains(WidgetState.disabled)) {
-        return AppColors.black;
+        return Colors.black;
       }
       // Otherwise return null to set default material color
       // for remaining states such as when the switch is
@@ -91,7 +89,7 @@ class _MessengerPage extends State<MessengerPage> {
             padding: EdgeInsets.all(12),
             decoration: BoxDecoration(
               
-             color: AppColors.messageCalenderBg,
+             color: const Color.fromARGB(255, 34, 97, 96),
               shape: BoxShape.rectangle,
               borderRadius: BorderRadius.circular(24)
 
@@ -106,7 +104,7 @@ class _MessengerPage extends State<MessengerPage> {
                   child: SuperTooltip(
                     controller: _controller,
                     popupDirection: TooltipDirection.down,
-                    backgroundColor: AppColors.white,
+                    backgroundColor: Colors.white,
                     showCloseButton: false,
                     // left: 30,
                     // right: 30,
@@ -162,7 +160,7 @@ class _MessengerPage extends State<MessengerPage> {
                                     SizedBox(width: 8),
                                     Text(
                                         'Cinepolis, Koramangala',
-                                        style: AppFonts.titleBold(fontSize: 18,color: AppColors.white)
+                                        style: AppFonts.titleBold(fontSize: 18,color: Colors.white)
                                     ),
                                   ],
                                 ),
@@ -174,7 +172,7 @@ class _MessengerPage extends State<MessengerPage> {
                                     SizedBox(width: 8),
                                     Text(
                                         '6.30 PM',
-                                        style: AppFonts.titleMedium(fontSize: 16,color: AppColors.white)
+                                        style: AppFonts.titleMedium(fontSize: 16,color: Colors.white)
                                     ),
                                   ],
                                 ),
@@ -337,7 +335,7 @@ class _MessengerPage extends State<MessengerPage> {
               Container(
               padding: EdgeInsets.all(12.0),
               decoration: const BoxDecoration(
-                color: AppColors.white,
+                color: Colors.white,
                 borderRadius: BorderRadius.vertical(
                   top: Radius.circular(30),
                 ),
@@ -370,7 +368,7 @@ class _MessengerPage extends State<MessengerPage> {
                       SizedBox(width: 8),
                       Text(
                         'Cinepolis, Koramangala',
-                        style: AppFonts.titleBold(fontSize: 18,color: AppColors.black)
+                        style: AppFonts.titleBold(fontSize: 18,color: Colors.black)
                       ),
                     ],
                   ),
@@ -382,7 +380,7 @@ class _MessengerPage extends State<MessengerPage> {
                       SizedBox(width: 8),
                       Text(
                         '6.30 PM',
-                        style: AppFonts.titleMedium(fontSize: 16,color: AppColors.black)
+                        style: AppFonts.titleMedium(fontSize: 16,color: Colors.black)
                       ),
                     ],
                   ),
@@ -407,7 +405,7 @@ class _MessengerPage extends State<MessengerPage> {
             decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 border: Border.all(
-                  color: AppColors.userProfileBorderColor,
+                  color: const Color.fromARGB(255, 148, 177, 67),
                   width: 2,
                 )),
             child: CircleAvatar(
@@ -491,7 +489,7 @@ class CalendarWidget extends StatelessWidget {
         const SizedBox(height: 8,),
         Text(
             '20',
-            style: AppFonts.titleBold(color: AppColors.black,fontSize: 15)
+            style: AppFonts.titleBold(color: Colors.black,fontSize: 15)
         ),
         if(hasProfile)
           Positioned(
@@ -501,7 +499,7 @@ class CalendarWidget extends StatelessWidget {
               decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   border: Border.all(
-                    color: AppColors.userProfileBorderColor,
+                    color: const Color.fromARGB(255, 148, 177, 67),
                     width: 1,
                   )),
               child: const CircleAvatar(

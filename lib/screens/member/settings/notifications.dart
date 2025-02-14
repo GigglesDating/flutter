@@ -132,15 +132,15 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
           padding: const EdgeInsets.all(8),
           decoration: BoxDecoration(
             color: isDestructive
-                ?  Colors.red.withAlpha(40)
-                : AppColors.primary.withAlpha(40),
+                ?  const Color.fromARGB(255, 244, 67, 54).withAlpha(40)
+                : const Color.fromARGB(255, 82, 113, 255).withAlpha(40),
             shape: BoxShape.circle,
           ),
           child: Icon(
             icon,
             color: isDestructive
-                ?  Colors.red
-                : AppColors.primary,
+                ?  const Color.fromARGB(255, 244, 67, 54)
+                : const Color.fromARGB(255, 82, 113, 255),
           ),
         ),
         title: Text(
@@ -153,7 +153,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
         subtitle: Text(
           subtitle,
           style:  AppFonts.titleBold(
-            color: AppColors.grey,
+            color: Colors.grey,
             fontSize: 12,
           ),
         ),

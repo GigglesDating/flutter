@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_frontend/utilitis/appColors.dart';
 
 
 
@@ -34,7 +33,7 @@ class _UserDashboardNavbar extends State<UserDashboardNavbar> {
       child:  Container(
         decoration: BoxDecoration(
             shape: BoxShape.circle,
-            border: Border.all(color: AppColors.userProfileBorderColor,width: 2,)
+            border: Border.all(color: const Color.fromARGB(255, 148, 177, 67),width: 2,)
         ),
         child: CircleAvatar(
           backgroundImage:

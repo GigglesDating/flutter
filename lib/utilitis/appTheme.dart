@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_frontend/utilitis/appColors.dart';
 
 final ThemeData lightTheme = ThemeData(
-    primaryColor: AppColors.primary,
+    primaryColor: const Color.fromARGB(255, 82, 113, 255),
 
     colorScheme: ColorScheme.light(
-      primary: AppColors.primary,
+      primary: const Color.fromARGB(255, 82, 113, 255),
       onPrimary: Colors.white,
 
       secondary: Colors.white,
@@ -13,32 +12,32 @@ final ThemeData lightTheme = ThemeData(
     ),
     inputDecorationTheme: InputDecorationTheme(
       hintStyle: TextStyle(
-        color: AppColors.textFormFieldHintColor, // Light mode hint text color
+        color: const Color.fromARGB(255, 84, 81, 74), // Light mode hint text color
       ),
       // Additional input decoration settings
     ),
-    hintColor: AppColors.textFormFieldHintColor,
-    scaffoldBackgroundColor: AppColors.white,
+    hintColor: const Color.fromARGB(255, 84, 81, 74),
+    scaffoldBackgroundColor: Colors.white,
     useMaterial3: true
     // Add other theme properties as needed
     );
 
 final ThemeData darkTheme = ThemeData(
-  primaryColor: AppColors.primary,
+  primaryColor: const Color.fromARGB(255, 82, 113, 255),
   colorScheme: ColorScheme.dark(
-    primary: AppColors.primary,
+    primary: const Color.fromARGB(255, 82, 113, 255),
     onPrimary: Colors.white,
     secondary: Colors.black,
     tertiary: Colors.white,
   ),
   inputDecorationTheme: InputDecorationTheme(
     hintStyle: TextStyle(
-      color: AppColors.textFormFieldHintColor, // Light mode hint text color
+      color: const Color.fromARGB(255, 84, 81, 74), // Light mode hint text color
     ),
     // Additional input decoration settings
   ),
-  hintColor: AppColors.textFormFieldHintColor,
+  hintColor: const Color.fromARGB(255, 84, 81, 74),
   useMaterial3: true,
-  scaffoldBackgroundColor: AppColors.black,
+  scaffoldBackgroundColor: Colors.black,
   // Add other theme properties as needed
 );

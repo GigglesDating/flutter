@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_frontend/utilitis/appColors.dart';
 import 'package:flutter_frontend/utilitis/appFonts.dart';
 import 'package:flutter_svg/svg.dart';
 
@@ -14,24 +13,10 @@ class _DateBookingPage extends State<DateBookingPage> {
   @override
   void initState() {
     super.initState();
-    // SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle.light.copyWith(
-    //   statusBarColor: Colors.transparent,
-    //   // Make it transparent or choose any color
-    //   statusBarIconBrightness: Brightness.light,
-    //   // Set icons to white
-    //   statusBarBrightness: Brightness.light, // For iOS
-    // ));
   }
 
   @override
   Widget build(BuildContext context) {
-    // SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle.light.copyWith(
-    //   statusBarColor: Colors.transparent,
-    //   // Make it transparent or choose any color
-    //   statusBarIconBrightness: Brightness.light,
-    //   // Set icons to white
-    //   statusBarBrightness: Brightness.light, // For iOS
-    // ));
     return DefaultTabController(
       length: 2,
       child: Scaffold(
@@ -49,7 +34,7 @@ class _DateBookingPage extends State<DateBookingPage> {
             Center(
               child: CircleAvatar(
                 radius: 56,
-                backgroundColor: AppColors.black,
+                backgroundColor: Colors.black,
               ),
             ),
             Text('Schedule  a date'),
@@ -61,8 +46,8 @@ class _DateBookingPage extends State<DateBookingPage> {
               margin: EdgeInsets.symmetric(horizontal: 16.0),
               decoration: BoxDecoration(
                 color: Theme.of(context).brightness == Brightness.light
-                    ? AppColors.tabBarBackround
-                    : AppColors.SwipeUserProfileTextColor,
+                    ? const Color.fromARGB(255, 241, 242, 242)
+                    : const Color.fromARGB(255, 188, 188, 188),
                 // Background color for entire tab section
                 borderRadius: BorderRadius.circular(10), // Rounded corners
               ),
@@ -86,9 +71,9 @@ class _DateBookingPage extends State<DateBookingPage> {
                 ),
                 labelColor:
                     Theme.of(context).colorScheme.brightness == Brightness.light
-                        ? AppColors.white
-                        : AppColors.black,
-                unselectedLabelColor: AppColors.black,
+                        ? Colors.white
+                        : Colors.black,
+                unselectedLabelColor: Colors.black,
                 tabs: [
                   Tab(text: "Upcoming Dates"),
                   Tab(text: "Date History"),
@@ -140,7 +125,7 @@ class _DateBookingPage extends State<DateBookingPage> {
                                         child: Text(
                                       'Sanskriti',
                                       style: AppFonts.titleBold(
-                                          color: AppColors.black, fontSize: 16),
+                                          color: Colors.black, fontSize: 16),
                                     )),
                                     SizedBox(width: 4,),
                                     const Icon(Icons.info_outline,size: 24,)
@@ -191,7 +176,7 @@ class _DateBookingPage extends State<DateBookingPage> {
                                     child: Text(
                                   'Aditi Rao',
                                   style: AppFonts.titleBold(
-                                      color: AppColors.white, fontSize: 18),
+                                      color: Colors.white, fontSize: 18),
                                 )),
                               ),
                             ],
@@ -235,7 +220,7 @@ class ProfileCard extends StatelessWidget {
             child: Container(
               width: MediaQuery.of(context).size.width / 2,
               height: MediaQuery.of(context).size.width / 2,
-              color: AppColors.userProfileBorderColor, // Border color
+              color: const Color.fromARGB(255, 148, 177, 67), // Border color
               child: Padding(
                 padding: const EdgeInsets.all(2.0),
                 child: ClipPath(
@@ -275,7 +260,7 @@ class ProfileCard extends StatelessWidget {
             right: 8,
             top: kToolbarHeight + kToolbarHeight,
             child: Image.asset(
-              color: AppColors.white,
+              color: Colors.white,
               'assets/images/right_swipe_image.png',
               width: 36,
               height: 18,
@@ -285,7 +270,7 @@ class ProfileCard extends StatelessWidget {
             left: 8,
             top: kToolbarHeight + kToolbarHeight,
             child: Image.asset(
-              color: AppColors.white,
+              color: Colors.white,
               'assets/images/left_swipe_image.png',
               width: 36,
               height: 18,
@@ -296,7 +281,7 @@ class ProfileCard extends StatelessWidget {
             top: 36,
             child: Icon(
               Icons.info_outline,
-              color: AppColors.primaryLight,
+              color: const Color.fromARGB(255, 102, 179, 230),
               size: 18,
             ),
           ),
@@ -313,7 +298,7 @@ class ProfileCard extends StatelessWidget {
                 child: Text(
                   label,
                   style: AppFonts.titleMedium(
-                      fontSize: 14, color: AppColors.white),
+                      fontSize: 14, color: Colors.white),
                 ),
               ),
             ),

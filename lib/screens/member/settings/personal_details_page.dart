@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-import '../../../utilitis/appColors.dart';
 import '../../../utilitis/appFonts.dart';
 
 class PersonalDetailsScreen extends StatelessWidget {
@@ -47,7 +46,7 @@ class PersonalDetailsScreen extends StatelessWidget {
                       vertical: 12,
                     ),
                     decoration: BoxDecoration(
-                      color: AppColors.primary.withAlpha(30),
+                      color: const Color.fromARGB(255, 82, 113, 255).withAlpha(30),
                       borderRadius: BorderRadius.circular(30),
                     ),
                     child: Row(
@@ -57,14 +56,14 @@ class PersonalDetailsScreen extends StatelessWidget {
                       children: [
                         Icon(
                           Icons.timer_outlined,
-                          color: AppColors.primary,
+                          color: const Color.fromARGB(255, 82, 113, 255),
                           size: 18,
                         ),
                         SizedBox(width: 4),
                         Expanded(
                           child: Text('Premium Membership: 12 days remaining',
                               style: AppFonts.titleBold(
-                                  color: AppColors.black, fontSize: 14)),
+                                  color: Colors.black, fontSize: 14)),
                         ),
                       ],
                     ),
@@ -99,7 +98,7 @@ class PersonalDetailsScreen extends StatelessWidget {
             children: [
               Text(
                 '$label1:',
-                style: AppFonts.titleRegular(color: AppColors.grey),
+                style: AppFonts.titleRegular(color: Colors.grey),
               ),
               const SizedBox(height: 4),
               Text(
@@ -117,7 +116,7 @@ class PersonalDetailsScreen extends StatelessWidget {
             children: [
               Text(
                 '$label2:',
-                style: AppFonts.titleRegular(color: AppColors.grey),
+                style: AppFonts.titleRegular(color: Colors.grey),
               ),
               const SizedBox(height: 4),
               Text(

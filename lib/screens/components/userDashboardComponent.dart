@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_frontend/screens/submenus/messenger_page.dart';
-import 'package:flutter_frontend/utilitis/appColors.dart';
 import 'package:flutter_frontend/utilitis/appFonts.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:fluttertoast/fluttertoast.dart';
@@ -53,7 +52,7 @@ class _UserDashboardComponentState extends State<UserDashboardComponent> {
           ),
         ),
         isScrollControlled: true,
-        backgroundColor: AppColors.white.withOpacity(0.9),
+        backgroundColor: Colors.white.withOpacity(0.9),
         builder: (context) {
           return Padding(
             padding: MediaQuery.of(context).viewInsets,
@@ -80,7 +79,7 @@ class _UserDashboardComponentState extends State<UserDashboardComponent> {
                         Center(
                           child: Text(
                             'Comments',
-                            style: AppFonts.titleBold(color: AppColors.black),
+                            style: AppFonts.titleBold(color: Colors.black),
                           ),
                         ),
                         SizedBox(height: 10),
@@ -101,13 +100,13 @@ class _UserDashboardComponentState extends State<UserDashboardComponent> {
                               ),
                               title: Text('Nitanshu'),
                               titleTextStyle: AppFonts.titleBold(
-                                  fontSize: 14, color: AppColors.black),
+                                  fontSize: 14, color: Colors.black),
                               subtitle: Text('i want to be there next time'),
                               subtitleTextStyle: AppFonts.titleMedium(
-                                  fontSize: 12, color: AppColors.black),
+                                  fontSize: 12, color: Colors.black),
                               trailing: Icon(
                                 Icons.replay,
-                                color: AppColors.black,
+                                color: Colors.black,
                               ),
                             );
                           },
@@ -125,10 +124,10 @@ class _UserDashboardComponentState extends State<UserDashboardComponent> {
                           ),
                           title: Text('sree'),
                           titleTextStyle: AppFonts.titleBold(
-                              fontSize: 14, color: AppColors.black),
+                              fontSize: 14, color: Colors.black),
                           subtitle: Text('see you soon'),
                           subtitleTextStyle: AppFonts.titleMedium(
-                              fontSize: 12, color: AppColors.black),
+                              fontSize: 12, color: Colors.black),
                         ),
                       ],
                     ),
@@ -140,10 +139,10 @@ class _UserDashboardComponentState extends State<UserDashboardComponent> {
                         controller: commentController,
                         focusNode: commentFocusNode,
 
-                        style: AppFonts.titleMedium(color: AppColors.black),
+                        style: AppFonts.titleMedium(color: Colors.black),
 
                         cursorHeight: 20,
-                        cursorColor: AppColors.black,
+                        cursorColor: Colors.black,
                         // maxLength: 10,
                         maxLines: 1,
                         minLines: 1,
@@ -158,7 +157,7 @@ class _UserDashboardComponentState extends State<UserDashboardComponent> {
                           floatingLabelBehavior: FloatingLabelBehavior.never,
                           contentPadding: EdgeInsets.symmetric(horizontal: 12),
                           hintText: 'Post your comment',
-                          hintStyle: AppFonts.hintTitle(color: AppColors.black),
+                          hintStyle: AppFonts.hintTitle(color: Colors.black),
                           // suffix: Container(
                           //   width: 40,
                           //   height: 40,
@@ -187,7 +186,7 @@ class _UserDashboardComponentState extends State<UserDashboardComponent> {
                           suffixIcon: IconButton(
                             icon: Icon(
                               Icons.send,
-                              color: AppColors.black,
+                              color: Colors.black,
                             ),
                             onPressed: () {
                               // Handle send button press here
@@ -203,19 +202,19 @@ class _UserDashboardComponentState extends State<UserDashboardComponent> {
                           enabledBorder: OutlineInputBorder(
                               borderRadius:
                                   BorderRadius.all(Radius.circular(12)),
-                              borderSide: BorderSide(color: AppColors.black)),
+                              borderSide: BorderSide(color: Colors.black)),
                           errorBorder: OutlineInputBorder(
                               borderRadius:
                                   BorderRadius.all(Radius.circular(12)),
-                              borderSide: BorderSide(color: AppColors.black)),
+                              borderSide: BorderSide(color: Colors.black)),
                           border: OutlineInputBorder(
                               borderRadius:
                                   BorderRadius.all(Radius.circular(12)),
-                              borderSide: BorderSide(color: AppColors.black)),
+                              borderSide: BorderSide(color: Colors.black)),
                           focusedBorder: OutlineInputBorder(
                               borderRadius:
                                   BorderRadius.all(Radius.circular(12)),
-                              borderSide: BorderSide(color: AppColors.black)),
+                              borderSide: BorderSide(color: Colors.black)),
                         ),
                       ),
                     ),
@@ -302,7 +301,7 @@ class _UserDashboardComponentState extends State<UserDashboardComponent> {
                 width: 52,
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(22),
-                  color: AppColors.white,
+                  color: Colors.white,
                   boxShadow: [
                     BoxShadow(
                       color: Colors.grey.withOpacity(0.3),
@@ -390,7 +389,7 @@ class _UserDashboardComponentState extends State<UserDashboardComponent> {
                               SizedBox(
                                   width: 40,
                                   child: Divider(
-                                      color: AppColors.white,
+                                      color: Colors.white,
                                       thickness: 1,
                                       height: 0))
                             ],
@@ -421,7 +420,7 @@ class _UserDashboardComponentState extends State<UserDashboardComponent> {
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                                 style: AppFonts.titleRegular(
-                                    color: AppColors.white, fontSize: 10),
+                                    color: Colors.white, fontSize: 10),
                               ),
                             ],
                           ),

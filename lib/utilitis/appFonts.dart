@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_frontend/utilitis/appColors.dart';
 
 class AppFonts {
   static TextStyle titleBold({
     double fontSize = 16,
     FontWeight fontWeight = FontWeight.w700,
-    Color color = AppColors.black,
+    Color color = Colors.black,
   }) {
     return TextStyle(
       fontSize: fontSize,
@@ -18,7 +17,7 @@ class AppFonts {
   static TextStyle fullBold({
     double fontSize = 16,
     FontWeight fontWeight = FontWeight.w900,
-    Color color = AppColors.black,
+    Color color = Colors.black,
   }) {
     return TextStyle(
       fontSize: fontSize,
@@ -32,7 +31,7 @@ class AppFonts {
   static TextStyle titleBoldOverline({
     double fontSize = 16,
     FontWeight fontWeight = FontWeight.w700,
-    Color color = AppColors.black,
+    Color color = Colors.black,
   }) {
     return TextStyle(
       fontSize: fontSize,
@@ -49,7 +48,7 @@ class AppFonts {
   static TextStyle titleRegular({
     double fontSize = 16,
     FontWeight fontWeight = FontWeight.normal,
-    Color color = AppColors.black,
+    Color color = Colors.black,
   }) {
     return TextStyle(
       fontSize: fontSize,
@@ -63,7 +62,7 @@ class AppFonts {
   static TextStyle titleMedium({
     double fontSize = 16,
     FontWeight fontWeight = FontWeight.w500,
-    Color color = AppColors.black,
+    Color color = Colors.black,
   }) {
     return TextStyle(
       fontSize: fontSize,
@@ -77,7 +76,7 @@ class AppFonts {
   static TextStyle titleMediumUnderLine({
     double fontSize = 16,
     FontWeight fontWeight = FontWeight.w500,
-    Color color = AppColors.black,
+    Color color = Colors.black,
   }) {
     return TextStyle(
       fontSize: fontSize,
@@ -93,7 +92,7 @@ class AppFonts {
   static TextStyle hintTitle({
     double fontSize = 16,
     FontWeight fontWeight = FontWeight.w700,
-    Color color = AppColors.textFormFieldHintColor,
+    Color color = const Color.fromARGB(255, 84, 81, 74),
   }) {
     return TextStyle(
       fontSize: fontSize,
@@ -106,7 +105,7 @@ class AppFonts {
   static TextStyle appBarTitle({
     double fontSize = 16,
     FontWeight fontWeight = FontWeight.w700,
-    Color color = AppColors.black,
+    Color color = Colors.black,
   }) {
     return TextStyle(
       fontSize: fontSize,

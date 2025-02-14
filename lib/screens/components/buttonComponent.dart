@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-import '../../utilitis/appColors.dart';
 import '../../utilitis/appFonts.dart';
 
 class AppButton {
@@ -35,7 +34,7 @@ class AppButton {
           children: [
             Text(text,style: AppFonts.titleBold(color: textColor, fontSize: 18),),
             SizedBox(width: 8), // Spacing between icon and text
-            Icon(Icons.info,color: AppColors.white,), // Your desired icon
+            Icon(Icons.info,color: Colors.white,), // Your desired icon
 
 
           ],

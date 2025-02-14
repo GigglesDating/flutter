@@ -6,7 +6,6 @@ import 'package:flutter/services.dart';
 import 'package:flutter_card_swiper/flutter_card_swiper.dart';
 import 'package:flutter_frontend/screens/member/explore_tab/swipe_filter_page.dart';
 import 'package:flutter_frontend/screens/prompt_screen.dart';
-import 'package:flutter_frontend/utilitis/appColors.dart';
 import 'package:flutter_frontend/utilitis/appFonts.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import '../../user/swipe_user_profile_page.dart';
@@ -59,7 +58,7 @@ class _ExploreTabState extends State<ExploreTab> with WidgetsBindingObserver {
         borderRadius: BorderRadius.circular(22),
         child: Container(
           decoration: BoxDecoration(
-            color: AppColors.primaryLight,
+            color: const Color.fromARGB(255, 102, 179, 230),
             borderRadius: BorderRadius.circular(22),
           ),
           child: Image.asset(
@@ -197,7 +196,7 @@ class _ExploreTabState extends State<ExploreTab> with WidgetsBindingObserver {
                                 child: Text(
                                   'Dhawani Tripati,26',
                                   style: AppFonts.titleBold(
-                                      fontSize: 24, color: AppColors.white),
+                                      fontSize: 24, color: Colors.white),
                                 ),
                               ),
                               SizedBox(
@@ -219,8 +218,7 @@ class _ExploreTabState extends State<ExploreTab> with WidgetsBindingObserver {
                                     'Banglore',
                                     style: AppFonts.titleBold(
                                         fontSize: 16,
-                                        color: AppColors
-                                            .subscriptionplanGiveToFrienButtonBgColor),
+                                        color: const Color.fromARGB(255, 200, 208, 216)),
                                   ),
                                 ],
                               ),
@@ -242,7 +240,7 @@ class _ExploreTabState extends State<ExploreTab> with WidgetsBindingObserver {
                                     child: Text(
                                       'Lorem Ipsum is simply dummy text of the printing and typesetting industry..',
                                       style: AppFonts.titleBold(
-                                          fontSize: 14, color: AppColors.white),
+                                          fontSize: 14, color: Colors.white),
                                     ),
                                   ),
                                 ],
@@ -353,7 +351,7 @@ class _ExploreTabState extends State<ExploreTab> with WidgetsBindingObserver {
                               Text(
                                 'Next Image',
                                 style: AppFonts.titleBold(
-                                    fontSize: 10, color: AppColors.white),
+                                    fontSize: 10, color: Colors.white),
                               ),
                             ],
                           ),

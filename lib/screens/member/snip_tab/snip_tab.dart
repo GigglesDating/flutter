@@ -143,14 +143,6 @@ class _SnipTab extends State<SnipTab> with SingleTickerProviderStateMixin {
                           decoration: BoxDecoration(
                             borderRadius: BorderRadius.circular(17),
                             color: Colors.transparent.withAlpha(80),
-                            // boxShadow: [
-                            //   BoxShadow(
-                            //     color: Colors.grey.withOpacity(0.3),
-                            //     offset: const Offset(0, 2),
-                            //     blurRadius: 4,
-                            //     spreadRadius: 1,
-                            //   ),
-                            // ],
                           ),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.center,
@@ -328,14 +320,6 @@ class _SnipTab extends State<SnipTab> with SingleTickerProviderStateMixin {
                     width: 40,
                     height: 40,
                   ),
-                  // Positioned(
-                  //     top: 20,
-                  //     left: 18,
-                  //     child: SvgPicture.asset(
-                  //       'assets/icons/snip_upload_icon.svg',
-                  //       width: 24,
-                  //       height: 24,
-                  //     )),
                 ],
               ),
             ),

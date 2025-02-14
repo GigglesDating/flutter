@@ -3,7 +3,6 @@ import 'package:flutter/services.dart';
 import 'package:flutter_frontend/screens/member/settings/delete_account.dart';
 import 'package:flutter_frontend/screens/member/settings/login_info.dart';
 import 'package:flutter_frontend/screens/member/settings/personal_details_page.dart';
-import 'package:flutter_frontend/utilitis/appColors.dart';
 import 'package:flutter_frontend/utilitis/appFonts.dart';
 
 class AccountCenterScreen extends StatelessWidget {
@@ -119,18 +118,18 @@ class AccountCenterScreen extends StatelessWidget {
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  Icon(Icons.delete, size: 24, color: AppColors.error),
+                  Icon(Icons.delete, size: 24, color: const Color.fromARGB(255, 176, 0, 32)),
                   SizedBox(
                     width: 8,
                   ),
                   Text(
                     'Delete Account',
                     style: AppFonts.titleBold(
-                        fontSize: 16, color: AppColors.error),
+                        fontSize: 16, color: const Color.fromARGB(255, 176, 0, 32)),
                   ),
                   Spacer(),
                   Icon(Icons.arrow_forward_ios,
-                      color: AppColors.error, size: 15),
+                      color: const Color.fromARGB(255, 176, 0, 32), size: 15),
                 ],
               ),
             ),

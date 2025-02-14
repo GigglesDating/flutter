@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_frontend/utilitis/appColors.dart';
 import 'package:flutter_frontend/utilitis/appFonts.dart';
 
 class SheduleDatePage extends StatefulWidget {
@@ -32,16 +31,16 @@ class _SheduleDatePage extends State<SheduleDatePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.black,
+      backgroundColor: Colors.black,
       appBar: AppBar(
         title: const Text('Schedule Date'),
-        backgroundColor: AppColors.black,
+        backgroundColor: Colors.black,
         elevation: 0,
         iconTheme: IconThemeData(
-          color: AppColors.white, // Change the back button color here
+          color: Colors.white, // Change the back button color here
         ),
         titleTextStyle:
-            AppFonts.titleBold(fontSize: 20, color: AppColors.white),
+            AppFonts.titleBold(fontSize: 20, color: Colors.white),
       ),
       extendBodyBehindAppBar: false,
       body: SingleChildScrollView(
@@ -56,7 +55,7 @@ class _SheduleDatePage extends State<SheduleDatePage> {
                 width: MediaQuery.of(context).size.width / 1.8,
                 height: MediaQuery.of(context).size.width / 1.8,
                 decoration: BoxDecoration(
-                    shape: BoxShape.circle, color: AppColors.white),
+                    shape: BoxShape.circle, color: Colors.white),
                 child: Icon(
                   Icons.person,
                   size: MediaQuery.of(context).size.width * .5,
@@ -70,7 +69,7 @@ class _SheduleDatePage extends State<SheduleDatePage> {
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: AppFonts.hintTitle(
-                    color: AppColors.white, fontSize: 16),
+                    color: Colors.white, fontSize: 16),
               ),
             ),
             SizedBox(
@@ -84,24 +83,24 @@ class _SheduleDatePage extends State<SheduleDatePage> {
                 width: MediaQuery.of(context).size.width,
                 decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(28),
-                    color: AppColors.white),
+                    color: Colors.white),
                 padding: EdgeInsets.symmetric(horizontal: 12),
                 child: DropdownButton<String>(
                   underline: Text(''),
-                  // dropdownColor: AppColors.black,
-                  style: AppFonts.hintTitle(color: AppColors.black),
+                  // dropdownColor: Colors.black,
+                  style: AppFonts.hintTitle(color: Colors.black),
                   itemHeight: 56,
                   icon: Icon(
                     Icons.keyboard_arrow_down_outlined,
-                    color: AppColors.black,
+                    color: Colors.black,
                     size: 32,
                   ),
                   value: selectActivity,
                   hint: Text('Please Select',
                       style: AppFonts.hintTitle(
-                          color: AppColors.black, fontSize: 15)),
-                  iconDisabledColor: AppColors.profileCreateOutlineBorder,
-                  iconEnabledColor: AppColors.profileCreateOutlineBorder,
+                          color: Colors.black, fontSize: 15)),
+                  iconDisabledColor: const Color.fromARGB(255, 168, 168, 168),
+                  iconEnabledColor: const Color.fromARGB(255, 168, 168, 168),
                   isExpanded: true,
                   items: selectActivityList.map((String gender) {
                     return DropdownMenuItem<String>(
@@ -135,13 +134,13 @@ class _SheduleDatePage extends State<SheduleDatePage> {
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(28),
                 ),
-                tileColor: AppColors.white,
+                tileColor: Colors.white,
                 title: Text(
                   'Search Venue',
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style:
-                      AppFonts.hintTitle(color: AppColors.black, fontSize: 15),
+                      AppFonts.hintTitle(color: Colors.black, fontSize: 15),
                 ),
 
                 trailing: Icon(
@@ -167,7 +166,7 @@ class _SheduleDatePage extends State<SheduleDatePage> {
                 children: [
                   Icon(
                     Icons.calendar_month_sharp,
-                    color: AppColors.white,
+                    color: Colors.white,
                     size: 80,
                   ),
                   Row(
@@ -177,7 +176,7 @@ class _SheduleDatePage extends State<SheduleDatePage> {
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: AppFonts.hintTitle(
-                            color: AppColors.white, fontSize: 20),
+                            color: Colors.white, fontSize: 20),
                       ),
                       SizedBox(width: 12,),
                       Image.asset(

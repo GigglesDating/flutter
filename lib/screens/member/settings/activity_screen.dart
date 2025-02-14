@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_frontend/utilitis/appColors.dart';
 import 'package:flutter_frontend/utilitis/appFonts.dart';
 
 class ActivityScreen extends StatelessWidget {
@@ -64,7 +63,7 @@ class ActivityScreen extends StatelessWidget {
                     color: Colors.white,
                     boxShadow: [
                       BoxShadow(
-                        color: AppColors.bottomAppBarBg,
+                        color: const Color.fromARGB(255, 51, 51, 51),
                         blurRadius: 4,
                         offset: const Offset(0, 2),
                       ),

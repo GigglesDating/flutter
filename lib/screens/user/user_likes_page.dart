@@ -7,8 +7,6 @@ import 'package:flutter_frontend/utilitis/appFonts.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:swipe_cards/swipe_cards.dart';
 
-import '../../utilitis/appColors.dart';
-
 
 class UserLikesPage extends StatefulWidget {
   const UserLikesPage({Key? key}) : super(key: key);
@@ -80,7 +78,7 @@ class _SwipeFilterPage extends State<UserLikesPage> {
     (Set<WidgetState> states) {
       // Track color when the switch is selected.
       if (states.contains(WidgetState.selected)) {
-        return AppColors.success;
+        return const Color.fromARGB(255, 76, 175, 80);
       }
       // Otherwise return null to set default track color
       // for remaining states such as when the switch is
@@ -97,7 +95,7 @@ class _SwipeFilterPage extends State<UserLikesPage> {
       }
       // Material color when switch is disabled.
       if (states.contains(WidgetState.disabled)) {
-        return AppColors.black;
+        return Colors.black;
       }
       // Otherwise return null to set default material color
       // for remaining states such as when the switch is
@@ -153,8 +151,8 @@ class _SwipeFilterPage extends State<UserLikesPage> {
               margin: EdgeInsets.symmetric(horizontal: 16.0),
               decoration: BoxDecoration(
                 color: Theme.of(context).brightness == Brightness.light
-                    ? AppColors.tabBarBackround
-                    : AppColors.SwipeUserProfileTextColor,
+                    ? const Color.fromARGB(255, 241, 242, 242)
+                    : const Color.fromARGB(255, 188, 188, 188),
                 // Background color for entire tab section
                 borderRadius: BorderRadius.circular(10), // Rounded corners
               ),
@@ -178,9 +176,9 @@ class _SwipeFilterPage extends State<UserLikesPage> {
                 ),
                 labelColor:
                     Theme.of(context).colorScheme.brightness == Brightness.light
-                        ? AppColors.white
-                        : AppColors.black,
-                unselectedLabelColor: AppColors.black,
+                        ? Colors.white
+                        : Colors.black,
+                unselectedLabelColor: Colors.black,
                 tabs: [
                   Tab(text: "Liked you"),
                   Tab(text: "Liked by you"),
@@ -325,7 +323,7 @@ class _SwipeFilterPage extends State<UserLikesPage> {
                       return Container(
                         margin: const EdgeInsets.only(top: 10.0),
                         decoration: BoxDecoration(
-                          color: AppColors.tabBarBackround,  // Background color
+                          color: const Color.fromARGB(255, 241, 242, 242),  // Background color
                           borderRadius: BorderRadius.circular(15),  // Circular radius
                         ),
                         child: ListTile(
@@ -334,7 +332,7 @@ class _SwipeFilterPage extends State<UserLikesPage> {
                           ),
                           titleTextStyle: AppFonts.titleBold(
                               fontSize: 16,
-                              color:AppColors.black),
+                              color:Colors.black),
                           title: Text(
                             'Nithiya Ka',
                           ),
@@ -343,7 +341,7 @@ class _SwipeFilterPage extends State<UserLikesPage> {
                           ),
                           subtitleTextStyle: AppFonts.titleBold(
                               fontSize: 12,
-                              color: AppColors.black),
+                              color: Colors.black),
                           trailing: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
@@ -351,7 +349,7 @@ class _SwipeFilterPage extends State<UserLikesPage> {
                               SizedBox(height: 4,),
                               Text(
                                 'Withdraw',
-                                style: AppFonts.titleBold(fontSize: 12,color: AppColors.black),
+                                style: AppFonts.titleBold(fontSize: 12,color: Colors.black),
                               ),
                             ],),
                         ),

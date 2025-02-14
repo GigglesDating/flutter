@@ -1,8 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_frontend/screens/barrel.dart';
-import 'package:flutter_frontend/screens/member/explore_tab/swipe_filter_page.dart';
 import 'package:flutter_frontend/screens/member/snip_tab/snip_tab.dart';
-import 'package:flutter_frontend/screens/user/add_to_story_page.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});

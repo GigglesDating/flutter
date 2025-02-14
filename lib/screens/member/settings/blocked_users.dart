@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_frontend/utilitis/appColors.dart';
 import 'package:flutter_frontend/utilitis/appFonts.dart';
 
 class BlockedUsersScreen extends StatelessWidget {
@@ -65,7 +64,7 @@ class BlockedUsersScreen extends StatelessWidget {
                             Text(
                               'Blocked on 23/09/24',
                               style: AppFonts.titleMedium(
-                                color: AppColors.grey,
+                                color: Colors.grey,
                                 fontSize: 12,
                               ),
                             ),
@@ -91,7 +90,7 @@ class BlockedUsersScreen extends StatelessWidget {
                         ),
                         child:  Text(
                           'Unblock',
-                          style: AppFonts.titleBold(fontSize: 12,color: AppColors.white),
+                          style: AppFonts.titleBold(fontSize: 12,color: Colors.white),
                         ),
                       ),
                     ],

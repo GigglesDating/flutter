@@ -4,7 +4,6 @@ import 'package:flutter_frontend/screens/member/explore_tab/explore_tab.dart';
 import 'package:flutter_frontend/screens/member/home_tab/home.dart';
 import 'package:flutter_frontend/screens/member/snip_tab/snip_tab.dart';
 import 'package:flutter_frontend/screens/submenus/sos_map_page.dart';
-import 'package:flutter_frontend/utilitis/appColors.dart';
 import 'package:flutter_svg/svg.dart';
 
 
@@ -55,7 +54,7 @@ class _DashboardPage extends State<DashboardPage> {
           child: Align(
             alignment: Alignment.bottomCenter,
             child: FloatingActionButton(
-              backgroundColor: AppColors.sosbuttonBgColor,
+              backgroundColor: const Color.fromARGB(255, 157, 178, 184),
               shape: const CircleBorder(),
               onPressed: () {
                 // _pageController.jumpToPage(2);
@@ -74,7 +73,7 @@ class _DashboardPage extends State<DashboardPage> {
             padding: const EdgeInsets.symmetric(horizontal: 8.0,vertical: 8),
             child: BottomAppBar(
               height: 60,
-              color: AppColors.bottomAppBarBg,
+              color: const Color.fromARGB(255, 51, 51, 51),
               clipBehavior: Clip.antiAliasWithSaveLayer,
               shape:const AutomaticNotchedShape(
                 RoundedRectangleBorder(
@@ -90,8 +89,8 @@ class _DashboardPage extends State<DashboardPage> {
                       onTap: () {
                         _pageController.jumpToPage(0);
                       },
-                      hoverColor: AppColors.transparent,
-                      splashColor: AppColors.transparent,
+                      hoverColor: Colors.transparent,
+                      splashColor: Colors.transparent,
                       child: SvgPicture.asset(
                         'assets/icons/home_icon.svg',
                         width: 40,
@@ -99,11 +98,6 @@ class _DashboardPage extends State<DashboardPage> {
                       )),
                   InkWell(
                     onTap: () {
-                      // if (user!.role == 'user') {
-                      // _pageController.jumpToPage(1);
-                      // } else if (user!.role == 'user_2') {
-                      //   _pageController.jumpToPage(5);
-                      // }
                       Navigator.push(context, MaterialPageRoute(builder: (context) => const ExploreTab(),));
 
                     },
@@ -136,7 +130,7 @@ class _DashboardPage extends State<DashboardPage> {
                         decoration: BoxDecoration(
                             shape: BoxShape.circle,
                             border: Border.all(
-                              color: AppColors.userProfileBorderColor,
+                              color: const Color.fromARGB(255, 148, 177, 67),
                               width: 1,
                             )),
                         child: const CircleAvatar(

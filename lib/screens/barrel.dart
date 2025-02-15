@@ -3,6 +3,7 @@ export 'splash.dart';
 export 'common/banned.dart';
 export 'member/home.dart';
 export 'member/navbar.dart';
+export 'member/swipe.dart';
 
 export 'submenus/settings/settings.dart';
 export 'submenus/settings/subpages/account_privacy_screen.dart';

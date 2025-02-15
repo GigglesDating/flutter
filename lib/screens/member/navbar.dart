@@ -10,11 +10,12 @@ class NavigationController extends StatefulWidget {
   const NavigationController({super.key});
 
   @override
-  State<NavigationController> createState() => _NavigationControllerState();
+  State<NavigationController> createState() => NavigationControllerState();
 }
 
-class _NavigationControllerState extends State<NavigationController> {
+class NavigationControllerState extends State<NavigationController> {
   int _currentIndex = 0;
+  bool _showNavBar = true;
 
   @override
   void initState() {
@@ -72,76 +73,77 @@ class _NavigationControllerState extends State<NavigationController> {
             ),
 
             // Navigation bar with SOS button
-            Positioned(
-              bottom: bottomPadding,
-              left: 0,
-              right: 0,
-              child: Stack(
-                clipBehavior: Clip.none,
-                alignment: Alignment.topCenter,
-                children: [
-                  // Main navigation bar
-                  Container(
-                    margin: EdgeInsets.symmetric(
-                      horizontal: size.width * 0.05,
-                      vertical: size.height * 0.02,
+            if (_showNavBar)
+              Positioned(
+                bottom: bottomPadding,
+                left: 0,
+                right: 0,
+                child: Stack(
+                  clipBehavior: Clip.none,
+                  alignment: Alignment.topCenter,
+                  children: [
+                    // Main navigation bar
+                    Container(
+                      margin: EdgeInsets.symmetric(
+                        horizontal: size.width * 0.05,
+                        vertical: size.height * 0.02,
+                      ),
+                      height: size.height * 0.08,
+                      decoration: BoxDecoration(
+                        color: isDarkMode
+                            ? Colors.white.withAlpha(230)
+                            : Colors.black.withAlpha(230),
+                        borderRadius: BorderRadius.circular(40),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withAlpha(26),
+                            blurRadius: 10,
+                            offset: const Offset(0, 5),
+                          ),
+                        ],
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        children: [
+                          _buildNavItem(0),
+                          _buildNavItem(1),
+                          _buildNavItem(2),
+                          _buildNavItem(3),
+                          _buildProfileItem(4),
+                        ],
+                      ),
                     ),
-                    height: size.height * 0.08,
-                    decoration: BoxDecoration(
-                      color: isDarkMode
-                          ? Colors.white.withAlpha(230)
-                          : Colors.black.withAlpha(230),
-                      borderRadius: BorderRadius.circular(40),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withAlpha(26),
-                          blurRadius: 10,
-                          offset: const Offset(0, 5),
-                        ),
-                      ],
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      children: [
-                        _buildNavItem(0),
-                        _buildNavItem(1),
-                        _buildNavItem(2),
-                        _buildNavItem(3),
-                        _buildProfileItem(4),
-                      ],
-                    ),
-                  ),
 
-                  // Floating SOS button with final positioning
-                  Positioned(
-                    top: -(size.height * 0.005),
-                    child: GestureDetector(
-                      onTap: () => debugPrint('SOS Button pressed'),
-                      child: Container(
-                        width: size.width * 0.15,
-                        height: size.width * 0.15,
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFA5C0E5),
-                          shape: BoxShape.circle,
-                          boxShadow: [
-                            BoxShadow(
-                              color: const Color(0xFFA5C0E5).withAlpha(77),
-                              blurRadius: 8,
-                              spreadRadius: 1,
-                              offset: const Offset(0, 4),
-                            ),
-                          ],
-                        ),
-                        child: Image.asset(
-                          'assets/icons/nav_bar/sos.gif',
-                          fit: BoxFit.cover,
+                    // Floating SOS button with final positioning
+                    Positioned(
+                      top: -(size.height * 0.005),
+                      child: GestureDetector(
+                        onTap: () => debugPrint('SOS Button pressed'),
+                        child: Container(
+                          width: size.width * 0.15,
+                          height: size.width * 0.15,
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFA5C0E5),
+                            shape: BoxShape.circle,
+                            boxShadow: [
+                              BoxShadow(
+                                color: const Color(0xFFA5C0E5).withAlpha(77),
+                                blurRadius: 8,
+                                spreadRadius: 1,
+                                offset: const Offset(0, 4),
+                              ),
+                            ],
+                          ),
+                          child: Image.asset(
+                            'assets/icons/nav_bar/sos.gif',
+                            fit: BoxFit.cover,
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
           ],
         ),
       ),
@@ -216,10 +218,7 @@ class _NavigationControllerState extends State<NavigationController> {
     ),
     (
       label: 'Swipe',
-      screen: const PlaceholderScreen(
-        screenName: 'Swipe',
-        message: 'Swipe Screen',
-      ),
+      screen: const SwipeScreen(),
     ),
     (
       label: 'SOS',
@@ -243,4 +242,18 @@ class _NavigationControllerState extends State<NavigationController> {
       ),
     ),
   ];
+
+  void setCurrentIndex(int index) {
+    setState(() {
+      _currentIndex = index;
+    });
+  }
+
+  void hideNavBar() {
+    setState(() => _showNavBar = false);
+  }
+
+  void showNavBar() {
+    setState(() => _showNavBar = true);
+  }
 }

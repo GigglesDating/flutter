@@ -1,9 +1,8 @@
 // import 'package:camera/camera.dart';
 // import 'package:flutter/material.dart';
 // import 'package:flutter/services.dart';
-// import 'barrel.dart';
-
 // import 'package:flutter_frontend/screens/components/video_camera_open.dart';
+// import 'package:flutter_frontend/screens/submenus/messenger_page.dart';
 // import 'package:flutter_svg/svg.dart';
 // import 'package:fluttertoast/fluttertoast.dart';
 // import 'package:video_player/video_player.dart';
@@ -144,14 +143,6 @@
 //                           decoration: BoxDecoration(
 //                             borderRadius: BorderRadius.circular(17),
 //                             color: Colors.transparent.withAlpha(80),
-//                             // boxShadow: [
-//                             //   BoxShadow(
-//                             //     color: Colors.grey.withOpacity(0.3),
-//                             //     offset: const Offset(0, 2),
-//                             //     blurRadius: 4,
-//                             //     spreadRadius: 1,
-//                             //   ),
-//                             // ],
 //                           ),
 //                           child: Column(
 //                             crossAxisAlignment: CrossAxisAlignment.center,
@@ -226,12 +217,13 @@
 //                               decoration: BoxDecoration(
 //                                   shape: BoxShape.circle,
 //                                   border: Border.all(
-//                                     color: AppColors.userProfileBorderColor,
+//                                     color:
+//                                         const Color.fromARGB(255, 148, 177, 67),
 //                                     width: 1,
 //                                   )),
 //                               child: const CircleAvatar(
 //                                 radius: 33,
-//                                 backgroundColor: AppColors.white,
+//                                 backgroundColor: Colors.white,
 //                                 child: CircleAvatar(
 //                                   backgroundImage:
 //                                       AssetImage('assets/images/user2.png'),
@@ -245,11 +237,12 @@
 //                             Column(
 //                               crossAxisAlignment: CrossAxisAlignment.start,
 //                               children: [
-//                                 Text(
-//                                   'Shalini Reddy',
-//                                   style: AppFonts.titleBold(
-//                                       color: AppColors.black, fontSize: 18),
-//                                 ),
+//                                 Text('Shalini Reddy',
+//                                     style: TextStyle(
+//                                       fontSize: 16,
+//                                       fontWeight: FontWeight.w700,
+//                                       color: Colors.black,
+//                                     )),
 //                                 SizedBox(
 //                                   height: 4,
 //                                 ),
@@ -257,8 +250,8 @@
 //                                   'Had a wonderful day near the brigade road\nvintage joke of the day',
 //                                   maxLines: 2,
 //                                   overflow: TextOverflow.ellipsis,
-//                                   style: AppFonts.titleMedium(
-//                                       color: AppColors.black, fontSize: 12),
+//                                   style: TextStyle(
+//                                       fontSize: 12, color: Colors.black),
 //                                 ),
 //                               ],
 //                             ),
@@ -298,11 +291,9 @@
 //                           )),
 //                       Text(
 //                         'Snip',
-//                         style: AppFonts.titleBold(
-//                           color: AppColors.black,
+//                         style: TextStyle(color: Colors.black,
 //                           fontSize: 28,
-//                           fontWeight: FontWeight.w700,
-//                         ),
+//                           fontWeight: FontWeight.w700)
 //                       ),
 //                     ],
 //                   ),
@@ -329,14 +320,6 @@
 //                     width: 40,
 //                     height: 40,
 //                   ),
-//                   // Positioned(
-//                   //     top: 20,
-//                   //     left: 18,
-//                   //     child: SvgPicture.asset(
-//                   //       'assets/icons/snip_upload_icon.svg',
-//                   //       width: 24,
-//                   //       height: 24,
-//                   //     )),
 //                 ],
 //               ),
 //             ),
@@ -355,7 +338,7 @@
 //         ),
 //       ),
 //       isScrollControlled: true,
-//       backgroundColor: AppColors.white.withOpacity(0.9),
+//       backgroundColor: Colors.white.withOpacity(0.9),
 //       builder: (context) {
 //         return Padding(
 //           padding: MediaQuery.of(context).viewInsets,
@@ -372,7 +355,6 @@
 //                           height: 16,
 //                           child: SvgPicture.asset(
 //                             'assets/icons/bottomsheet_top_icon.svg',
-//                             // color: AppColors.black,
 //                           ))),
 //                   Column(
 //                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -382,7 +364,7 @@
 //                       Center(
 //                         child: Text(
 //                           'Comments',
-//                           style: AppFonts.titleBold(color: AppColors.black),
+//                           style: TextStyle(color: Colors.black),
 //                         ),
 //                       ),
 //                       SizedBox(height: 10),
@@ -392,7 +374,6 @@
 //                         padding: EdgeInsets.zero,
 //                         itemCount: 3,
 //                         itemBuilder: (context, index) {
-//                           // CommentModel comment = comments[index];
 //                           return ListTile(
 //                             visualDensity:
 //                                 const VisualDensity(horizontal: 0, vertical: 0),
@@ -402,14 +383,13 @@
 //                                   'assets/images/nitanshu_profile_image.png'),
 //                             ),
 //                             title: Text('Nitanshu'),
-//                             titleTextStyle: AppFonts.titleBold(
-//                                 fontSize: 14, color: AppColors.black),
+//                             titleTextStyle: TextStyle(fontSize: 14, color: Colors.black),
 //                             subtitle: Text('i want to be there next time'),
-//                             subtitleTextStyle: AppFonts.titleMedium(
-//                                 fontSize: 12, color: AppColors.black),
+//                             subtitleTextStyle: TextStyle(
+//                                 fontSize: 12, color: Colors.black),
 //                             trailing: Icon(
 //                               Icons.replay,
-//                               color: AppColors.black,
+//                               color: Colors.black,
 //                             ),
 //                           );
 //                         },
@@ -426,15 +406,14 @@
 //                           ),
 //                         ),
 //                         title: Text('sree'),
-//                         titleTextStyle: AppFonts.titleBold(
-//                             fontSize: 14, color: AppColors.black),
+//                         titleTextStyle: TextStyle(
+//                             fontSize: 14, color: Colors.black),
 //                         subtitle: Text('see you soon'),
-//                         subtitleTextStyle: AppFonts.titleMedium(
-//                             fontSize: 12, color: AppColors.black),
+//                         subtitleTextStyle: TextStyle(
+//                             fontSize: 12, color: Colors.black),
 //                       ),
 //                     ],
 //                   ),
-
 //                   SizedBox(height: 20),
 //                   SizedBox(
 //                     height: 48,
@@ -442,10 +421,10 @@
 //                       controller: commentController,
 //                       focusNode: commentFocusNode,
 
-//                       style: AppFonts.titleMedium(color: AppColors.black),
+//                       style: TextStyle(color: Colors.black),
 
 //                       cursorHeight: 20,
-//                       cursorColor: AppColors.black,
+//                       cursorColor: Colors.black,
 //                       // maxLength: 10,
 //                       maxLines: 1,
 //                       minLines: 1,
@@ -460,36 +439,11 @@
 //                         floatingLabelBehavior: FloatingLabelBehavior.never,
 //                         contentPadding: EdgeInsets.symmetric(horizontal: 12),
 //                         hintText: 'Post your comment',
-//                         hintStyle: AppFonts.hintTitle(color: AppColors.black),
-//                         // suffix: Container(
-//                         //   width: 40,
-//                         //   height: 40,
-//                         //   child: ElevatedButton(
-//                         //     onPressed: () async {
-//                         //       // await userProvider.addComment(
-//                         //       //     widget.postId, _commentController.text);
-//                         //
-//                         //       ScaffoldMessenger.of(context).showSnackBar(
-//                         //         SnackBar(
-//                         //           content:
-//                         //           Text('Comment added successfully!'),
-//                         //           duration: Duration(seconds: 2),
-//                         //         ),
-//                         //       );
-//                         //
-//                         //       commentController.clear();
-//                         //       Navigator.pop(context);
-//                         //     },
-//                         //     style: ButtonStyle(
-//                         //         backgroundColor: WidgetStatePropertyAll(Theme.of(context).colorScheme.primary),
-//                         //       // fixedSize: WidgetStatePropertyAll(Size(36,24))
-//                         //     ),
-//                         //     child:  Icon(Icons.send,color: AppColors.white,),),
-//                         // ),
+//                         hintStyle: TextStyle(color: Colors.black),
 //                         suffixIcon: IconButton(
 //                           icon: Icon(
 //                             Icons.send,
-//                             color: AppColors.black,
+//                             color: Colors.black,
 //                           ),
 //                           onPressed: () {
 //                             // Handle send button press here
@@ -501,52 +455,22 @@
 //                             }
 //                           },
 //                         ),
-
 //                         enabledBorder: OutlineInputBorder(
 //                             borderRadius: BorderRadius.all(Radius.circular(12)),
-//                             borderSide: BorderSide(color: AppColors.black)),
+//                             borderSide: BorderSide(color: Colors.black)),
 //                         errorBorder: OutlineInputBorder(
 //                             borderRadius: BorderRadius.all(Radius.circular(12)),
-//                             borderSide: BorderSide(color: AppColors.black)),
+//                             borderSide: BorderSide(color: Colors.black)),
 //                         border: OutlineInputBorder(
 //                             borderRadius: BorderRadius.all(Radius.circular(12)),
-//                             borderSide: BorderSide(color: AppColors.black)),
+//                             borderSide: BorderSide(color: Colors.black)),
 //                         focusedBorder: OutlineInputBorder(
 //                             borderRadius: BorderRadius.all(Radius.circular(12)),
-//                             borderSide: BorderSide(color: AppColors.black)),
+//                             borderSide: BorderSide(color: Colors.black)),
 //                       ),
 //                     ),
 //                   ),
 //                   SizedBox(height: 10),
-//                   // isFlag
-//                   //     ? Row(
-//                   //         mainAxisSize: MainAxisSize.max,
-//                   //         mainAxisAlignment: MainAxisAlignment.end,
-//                   //         children: [
-//                   //           ElevatedButton(
-//                   //             onPressed: () async {
-//                   //               // await userProvider.addComment(
-//                   //               //     widget.postId, _commentController.text);
-//                   //
-//                   //               ScaffoldMessenger.of(context).showSnackBar(
-//                   //                 SnackBar(
-//                   //                   content:
-//                   //                       Text('Comment added successfully!'),
-//                   //                   duration: Duration(seconds: 2),
-//                   //                 ),
-//                   //               );
-//                   //
-//                   //               commentController.clear();
-//                   //               Navigator.pop(context);
-//                   //             },
-//                   //             style: ButtonStyle(
-//                   //               backgroundColor: WidgetStatePropertyAll(Theme.of(context).colorScheme.primary)
-//                   //             ),
-//                   //             child:  Icon(Icons.send,color: AppColors.white,),),
-//                   //
-//                   //         ],
-//                   //       )
-//                   //     : SizedBox(),
 //                 ],
 //               ),
 //             ),
@@ -609,23 +533,10 @@
 //             ],
 //           ),
 //         ),
-//         // PopupMenuItem<int>(
-//         //   value: 1,
-//         //   child: Text("Option 2"),
-//         // ),
-//         // PopupMenuItem<int>(
-//         //   value: 2,
-//         //   child: Text("Option 3"),
-//         // ),
 //       ],
 //     ).then((value) {
 //       if (value != null) {
 //         if (value == 1) {
-//           // ScaffoldMessenger.of(context).showSnackBar(
-//           //   SnackBar(
-//           //     content: Text('Reported successfully'),
-//           //   ),
-//           // );
 //           Fluttertoast.showToast(
 //               msg: "Reported successfully",
 //               toastLength: Toast.LENGTH_SHORT,
@@ -634,8 +545,6 @@
 //               backgroundColor: Colors.black,
 //               textColor: Colors.white,
 //               fontSize: 16.0);
-
-//           // Navigator.pop(context);
 //         } else {
 //           Navigator.push(
 //               context,

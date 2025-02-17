@@ -238,13 +238,19 @@ class _SwipeScreenState extends State<SwipeScreen>
                       // Back Button
                       IconButton(
                         onPressed: () {
+                          // First, ensure system UI is hidden
+                          SystemChrome.setEnabledSystemUIMode(
+                            SystemUiMode.edgeToEdge,
+                            overlays: [SystemUiOverlay.top],
+                          );
+
+                          // Then navigate
                           if (context.mounted) {
                             final navigationState =
                                 context.findAncestorStateOfType<
                                     NavigationControllerState>();
                             if (navigationState != null) {
-                              navigationState.setCurrentIndex(
-                                  0); // This will handle both nav bar and system UI
+                              navigationState.setCurrentIndex(0);
                             }
                           }
                         },

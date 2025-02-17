@@ -16,6 +16,7 @@ class NavigationController extends StatefulWidget {
 class NavigationControllerState extends State<NavigationController> {
   int _currentIndex = 0;
   bool _showNavBar = true;
+  late Size size;
 
   @override
   void initState() {
@@ -52,7 +53,7 @@ class NavigationControllerState extends State<NavigationController> {
 
   @override
   Widget build(BuildContext context) {
-    final size = MediaQuery.of(context).size;
+    size = MediaQuery.of(context).size;
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
     final bottomPadding = MediaQuery.of(context).padding.bottom;
 
@@ -91,46 +92,42 @@ class NavigationControllerState extends State<NavigationController> {
                     Container(
                       margin: EdgeInsets.symmetric(
                         horizontal: size.width * 0.05,
-                        vertical: size.height * 0.02,
+                        vertical: size.height * 0.015,
                       ),
-                      height: size.height * 0.08,
+                      height: size.height * 0.075,
                       child: Stack(
                         children: [
-                          ClipPath(
-                            clipper: NavBarClipper(),
-                            child: Container(
-                              decoration: BoxDecoration(
-                                color: isDarkMode
-                                    ? Colors.white.withAlpha(230)
-                                    : Colors.black.withAlpha(230),
-                                borderRadius: BorderRadius.circular(40),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black.withAlpha(26),
-                                    blurRadius: 10,
-                                    offset: const Offset(0, 5),
-                                  ),
-                                ],
+                          // SVG Background
+                          Positioned.fill(
+                            child: SvgPicture.asset(
+                              'assets/app/nav.svg',
+                              fit: BoxFit.fill,
+                              colorFilter: ColorFilter.mode(
+                                isDarkMode ? Colors.black : Colors.white,
+                                BlendMode.srcIn,
                               ),
                             ),
                           ),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                            children: [
-                              _buildNavItem(0),
-                              _buildNavItem(1),
-                              _buildNavItem(2),
-                              _buildNavItem(3),
-                              _buildProfileItem(4),
-                            ],
+                          // Icons Row
+                          Center(
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                              children: [
+                                _buildNavItem(0),
+                                _buildNavItem(1),
+                                _buildNavItem(2),
+                                _buildNavItem(3),
+                                _buildProfileItem(4),
+                              ],
+                            ),
                           ),
                         ],
                       ),
                     ),
 
-                    // Floating SOS button with final positioning
+                    // Floating SOS button
                     Positioned(
-                      top: -(size.height * 0.005),
+                      top: -(size.height * 0.01),
                       child: GestureDetector(
                         onTap: () => debugPrint('SOS Button pressed'),
                         child: Container(
@@ -143,9 +140,9 @@ class NavigationControllerState extends State<NavigationController> {
                               BoxShadow(
                                 color: const Color.fromARGB(239, 20, 20, 20)
                                     .withAlpha(77),
-                                blurRadius: 8,
-                                spreadRadius: 1,
-                                offset: const Offset(0, 4),
+                                blurRadius: size.width * 0.02,
+                                spreadRadius: size.width * 0.002,
+                                offset: Offset(0, size.width * 0.01),
                               ),
                             ],
                           ),
@@ -165,43 +162,44 @@ class NavigationControllerState extends State<NavigationController> {
     );
   }
 
+  String getIconPath(int index) {
+    switch (index) {
+      case 0:
+        return 'assets/icons/nav_bar/home.svg';
+      case 1:
+        return 'assets/icons/nav_bar/swipe.svg';
+      case 3:
+        return 'assets/icons/nav_bar/snips.svg';
+      default:
+        return 'assets/icons/nav_bar/home.svg';
+    }
+  }
+
   Widget _buildNavItem(int index) {
     final isSelected = _currentIndex == index;
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    final iconSize = size.width * 0.1;
 
-    // Define icon paths based on index
-    String getIconPath(int index) {
-      switch (index) {
-        case 0:
-          return 'assets/icons/nav_bar/home.svg';
-        case 1:
-          return 'assets/icons/nav_bar/swipe.svg';
-        case 3:
-          return 'assets/icons/nav_bar/snips.svg';
-        default:
-          return 'assets/icons/nav_bar/home.svg';
-      }
-    }
-
-    // Skip rendering for index 2 as it's handled by the floating SOS button
     if (index == 2) {
-      return const SizedBox(width: 60);
+      return SizedBox(width: iconSize * 1.5);
     }
 
     return GestureDetector(
       onTap: () => setState(() => _currentIndex = index),
       child: Container(
-        width: 40,
-        height: 40,
+        width: iconSize,
+        height: iconSize,
         decoration: BoxDecoration(
           shape: BoxShape.circle,
-          color: isDarkMode ? Colors.black : Colors.white,
+          color: isDarkMode
+              ? Colors.white.withAlpha(38) // Same as PostCard dark mode
+              : Colors.black.withAlpha(26), // Same as PostCard light mode
         ),
         child: Center(
           child: SvgPicture.asset(
             getIconPath(index),
-            width: 22,
-            height: 22,
+            width: iconSize * 0.55,
+            height: iconSize * 0.55,
             colorFilter: ColorFilter.mode(
               isSelected
                   ? Colors.green
@@ -216,11 +214,13 @@ class NavigationControllerState extends State<NavigationController> {
 
   Widget _buildProfileItem(int index) {
     final isSelected = _currentIndex == index;
+    final iconSize = size.width * 0.1; // Match nav item size
+
     return GestureDetector(
       onTap: () => setState(() => _currentIndex = index),
       child: Container(
-        width: 40,
-        height: 40,
+        width: iconSize,
+        height: iconSize,
         decoration: BoxDecoration(
           shape: BoxShape.circle,
           border: Border.all(
@@ -237,20 +237,11 @@ class NavigationControllerState extends State<NavigationController> {
   }
 
   final List<({String label, Widget screen})> _navigationItems = [
-    (
-      label: 'Home',
-      screen: const HomeTab(),
-    ),
-    (
-      label: 'Swipe',
-      screen: const SwipeScreen(),
-    ),
+    (label: 'Home', screen: const HomeTab()),
+    (label: 'Swipe', screen: const SwipeScreen()),
     (
       label: 'SOS',
-      screen: const PlaceholderScreen(
-        screenName: 'SOS',
-        message: 'SOS Screen',
-      ),
+      screen: const PlaceholderScreen(screenName: 'SOS', message: 'SOS Screen'),
     ),
     (
       label: 'Reel',
@@ -273,13 +264,15 @@ class NavigationControllerState extends State<NavigationController> {
       SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
     } else {
       SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
-      SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
-        statusBarColor: Colors.transparent,
-        systemNavigationBarColor: Colors.transparent,
-        systemNavigationBarDividerColor: Colors.transparent,
-        statusBarIconBrightness: Brightness.light,
-        systemNavigationBarIconBrightness: Brightness.light,
-      ));
+      SystemChrome.setSystemUIOverlayStyle(
+        const SystemUiOverlayStyle(
+          statusBarColor: Colors.transparent,
+          systemNavigationBarColor: Colors.transparent,
+          systemNavigationBarDividerColor: Colors.transparent,
+          statusBarIconBrightness: Brightness.light,
+          systemNavigationBarIconBrightness: Brightness.light,
+        ),
+      );
     }
   }
 
@@ -302,59 +295,4 @@ class NavigationControllerState extends State<NavigationController> {
       _showNavBar = true;
     });
   }
-}
-
-class NavBarClipper extends CustomClipper<Path> {
-  @override
-  Path getClip(Size size) {
-    final path = Path();
-
-    // Calculate dimensions
-    final width = size.width;
-    final height = size.height;
-    final center = width / 2;
-    final cutoutRadius = 35.0;
-
-    // Start from top-left
-    path.moveTo(0, 0);
-
-    // Line to start of left curve
-    path.lineTo(center - cutoutRadius, 0);
-
-    // Create the curved cutout using quadratic bezier curves
-    // Left curve
-    path.quadraticBezierTo(
-        center - cutoutRadius / 2,
-        height / 3, // control point
-        center - cutoutRadius / 2,
-        height // end point
-        );
-
-    // Bottom curve
-    path.quadraticBezierTo(
-        center,
-        height - 5, // control point
-        center + cutoutRadius / 2,
-        height // end point
-        );
-
-    // Right curve
-    path.quadraticBezierTo(
-        center + cutoutRadius / 2,
-        height / 3, // control point
-        center + cutoutRadius,
-        0 // end point
-        );
-
-    // Complete the shape
-    path.lineTo(width, 0);
-    path.lineTo(width, height);
-    path.lineTo(0, height);
-    path.close();
-
-    return path;
-  }
-
-  @override
-  bool shouldReclip(CustomClipper<Path> oldClipper) => false;
 }

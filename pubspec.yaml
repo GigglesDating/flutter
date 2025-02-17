@@ -63,6 +63,7 @@ flutter:
     # Icons assets
     - assets/icons/nav_bar/
     - assets/icons/feed/
+    - assets/app/
 
   fonts:
     - family: CustomFont  # Replace with your actual font family name

@@ -21,6 +21,8 @@ class NavigationControllerState extends State<NavigationController> {
   void initState() {
     super.initState();
     _hideSystemBars();
+    // Show nav bar by default
+    _showNavBar = true;
   }
 
   void _hideSystemBars() {
@@ -53,6 +55,9 @@ class NavigationControllerState extends State<NavigationController> {
     final size = MediaQuery.of(context).size;
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
     final bottomPadding = MediaQuery.of(context).padding.bottom;
+
+    // Only show nav bar if not on SwipeScreen
+    _showNavBar = _currentIndex != 1; // 1 is the index for SwipeScreen
 
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: const SystemUiOverlayStyle(
@@ -243,17 +248,38 @@ class NavigationControllerState extends State<NavigationController> {
     ),
   ];
 
+  void _updateSystemUI(int index) {
+    if (index == 1) {
+      SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
+    } else {
+      SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+      SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent,
+        systemNavigationBarColor: Colors.transparent,
+        systemNavigationBarDividerColor: Colors.transparent,
+        statusBarIconBrightness: Brightness.light,
+        systemNavigationBarIconBrightness: Brightness.light,
+      ));
+    }
+  }
+
   void setCurrentIndex(int index) {
     setState(() {
       _currentIndex = index;
+      _showNavBar = index != 1;
+      _updateSystemUI(index);
     });
   }
 
   void hideNavBar() {
-    setState(() => _showNavBar = false);
+    setState(() {
+      _showNavBar = false;
+    });
   }
 
   void showNavBar() {
-    setState(() => _showNavBar = true);
+    setState(() {
+      _showNavBar = true;
+    });
   }
 }

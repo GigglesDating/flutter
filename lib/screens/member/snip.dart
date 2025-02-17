@@ -289,12 +289,11 @@
 //                             width: 30,
 //                             height: 30,
 //                           )),
-//                       Text(
-//                         'Snip',
-//                         style: TextStyle(color: Colors.black,
-//                           fontSize: 28,
-//                           fontWeight: FontWeight.w700)
-//                       ),
+//                       Text('Snip',
+//                           style: TextStyle(
+//                               color: Colors.black,
+//                               fontSize: 28,
+//                               fontWeight: FontWeight.w700)),
 //                     ],
 //                   ),
 //                 ),
@@ -383,10 +382,11 @@
 //                                   'assets/images/nitanshu_profile_image.png'),
 //                             ),
 //                             title: Text('Nitanshu'),
-//                             titleTextStyle: TextStyle(fontSize: 14, color: Colors.black),
+//                             titleTextStyle:
+//                                 TextStyle(fontSize: 14, color: Colors.black),
 //                             subtitle: Text('i want to be there next time'),
-//                             subtitleTextStyle: TextStyle(
-//                                 fontSize: 12, color: Colors.black),
+//                             subtitleTextStyle:
+//                                 TextStyle(fontSize: 12, color: Colors.black),
 //                             trailing: Icon(
 //                               Icons.replay,
 //                               color: Colors.black,
@@ -406,11 +406,11 @@
 //                           ),
 //                         ),
 //                         title: Text('sree'),
-//                         titleTextStyle: TextStyle(
-//                             fontSize: 14, color: Colors.black),
+//                         titleTextStyle:
+//                             TextStyle(fontSize: 14, color: Colors.black),
 //                         subtitle: Text('see you soon'),
-//                         subtitleTextStyle: TextStyle(
-//                             fontSize: 12, color: Colors.black),
+//                         subtitleTextStyle:
+//                             TextStyle(fontSize: 12, color: Colors.black),
 //                       ),
 //                     ],
 //                   ),

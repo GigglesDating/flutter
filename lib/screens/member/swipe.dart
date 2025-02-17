@@ -29,14 +29,13 @@ class SwipeScreen extends StatefulWidget {
 class _SwipeScreenState extends State<SwipeScreen>
     with SingleTickerProviderStateMixin {
   final List<String> _dummyImages = [
-    'assets/tempImages/users/user1.jpg',
-    'assets/tempImages/users/user2.jpg',
-    'assets/tempImages/users/user3.jpg',
     'assets/tempImages/users/user4.jpg',
+    'assets/tempImages/users/user2.jpg',
+    'assets/tempImages/users/user1.jpg',
+    'assets/tempImages/users/user3.jpg',
   ];
 
-  int _currentImageIndex = 0;
-  bool _showImageTiles = false;
+  final int _currentImageIndex = 0;
   bool _showSwipeIndicator = false;
   String _swipeDirection = '';
   late AnimationController _guideController;
@@ -48,6 +47,9 @@ class _SwipeScreenState extends State<SwipeScreen>
   @override
   void initState() {
     super.initState();
+    // Only force fullscreen
+    SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
+
     _guideController = AnimationController(
       duration: const Duration(seconds: 2),
       vsync: this,
@@ -63,15 +65,8 @@ class _SwipeScreenState extends State<SwipeScreen>
 
   @override
   void dispose() {
-    // Restore system UI and nav bar when disposing
+    // Restore system UI when disposing
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
-    if (context.mounted) {
-      final navigationState =
-          context.findAncestorStateOfType<NavigationControllerState>();
-      if (navigationState != null) {
-        navigationState.showNavBar();
-      }
-    }
     super.dispose();
   }
 
@@ -119,192 +114,196 @@ class _SwipeScreenState extends State<SwipeScreen>
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
 
-    return Scaffold(
-      body: GestureDetector(
-        onTap: () {
-          if (!_showTiles) _generateImageTiles();
-          setState(() => _showTiles = !_showTiles);
-        },
-        child: Stack(
-          fit: StackFit.expand,
-          children: [
-            // Background Image
-            Image.asset(
-              _dummyImages[_currentImageIndex],
-              fit: BoxFit.cover,
-            ),
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (bool didPop) => Future<bool>.value(false),
+      child: Scaffold(
+        body: GestureDetector(
+          onPanUpdate: _handleSwipe,
+          onTap: () {
+            if (!_showTiles) _generateImageTiles();
+            setState(() => _showTiles = !_showTiles);
+          },
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              // Background Image
+              Image.asset(
+                _dummyImages[_currentImageIndex],
+                fit: BoxFit.cover,
+              ),
 
-            // Image Tiles
-            if (_showTiles)
-              ...List.generate(_imageTiles.length, (index) {
-                final tile = _imageTiles[index];
-                return Positioned(
-                  left: size.width * (0.5 + tile.x) - (size.width * 0.25),
-                  top: size.height * (0.5 + tile.y) - (size.width * 0.25),
-                  child: GestureDetector(
-                    onTap: () {
-                      setState(() {
-                        final tempImage = _dummyImages[_currentImageIndex];
-                        _dummyImages[_currentImageIndex] = tile.imagePath;
-                        _dummyImages[_dummyImages.indexOf(tile.imagePath)] =
-                            tempImage;
-                        _showTiles = false;
-                      });
-                      HapticFeedback.mediumImpact();
-                    },
-                    child: Transform.rotate(
-                      angle: tile.rotation,
-                      child: Container(
-                        width: size.width * 0.5,
-                        height: size.width * 0.5,
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(20),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withAlpha(77),
-                              blurRadius: 10,
-                              spreadRadius: 2,
+              // Image Tiles
+              if (_showTiles)
+                ...List.generate(_imageTiles.length, (index) {
+                  final tile = _imageTiles[index];
+                  return Positioned(
+                    left: size.width * (0.5 + tile.x) - (size.width * 0.25),
+                    top: size.height * (0.5 + tile.y) - (size.width * 0.25),
+                    child: GestureDetector(
+                      onTap: () {
+                        setState(() {
+                          final tempImage = _dummyImages[_currentImageIndex];
+                          _dummyImages[_currentImageIndex] = tile.imagePath;
+                          _dummyImages[_dummyImages.indexOf(tile.imagePath)] =
+                              tempImage;
+                          _showTiles = false;
+                        });
+                        HapticFeedback.mediumImpact();
+                      },
+                      child: Transform.rotate(
+                        angle: tile.rotation,
+                        child: Container(
+                          width: size.width * 0.5,
+                          height: size.width * 0.5,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(20),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withAlpha(77),
+                                blurRadius: 10,
+                                spreadRadius: 2,
+                              ),
+                            ],
+                            image: DecorationImage(
+                              image: AssetImage(tile.imagePath),
+                              fit: BoxFit.cover,
                             ),
-                          ],
-                          image: DecorationImage(
-                            image: AssetImage(tile.imagePath),
-                            fit: BoxFit.cover,
                           ),
                         ),
                       ),
                     ),
-                  ),
-                );
-              }),
+                  );
+                }),
 
-            // User Name Overlay
-            Positioned(
-              bottom: size.height * 0.1,
-              left: 0,
-              right: 0,
-              child: Center(
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 20,
-                    vertical: 10,
-                  ),
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter,
-                      colors: [
-                        Colors.transparent,
-                        Colors.black.withAlpha(179),
-                      ],
-                    ),
-                  ),
-                  child: Text(
-                    'Dhwani Tripati, 26',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: size.width * 0.06,
-                      fontWeight: FontWeight.bold,
-                      shadows: [
-                        Shadow(
-                          color: Colors.black.withAlpha(128),
-                          blurRadius: 10,
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            ),
-
-            // Top Navigation Bar
-            SafeArea(
-              child: Padding(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    // Back Button
-                    IconButton(
-                      onPressed: () {
-                        // Restore system UI
-                        SystemChrome.setEnabledSystemUIMode(
-                            SystemUiMode.edgeToEdge);
-                        // Navigate back to home
-                        if (context.mounted) {
-                          final navigationState =
-                              context.findAncestorStateOfType<
-                                  NavigationControllerState>();
-                          if (navigationState != null) {
-                            navigationState.setState(() {
-                              navigationState.setCurrentIndex(0);
-                            });
-                          }
-                        }
-                      },
-                      icon: Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: Colors.black.withAlpha(100),
-                          shape: BoxShape.circle,
-                        ),
-                        child: const Icon(
-                          Icons.arrow_back,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ),
-                    // Filter Button
-                    IconButton(
-                      onPressed: null, // Disabled for now
-                      icon: Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: Colors.black.withAlpha(100),
-                          shape: BoxShape.circle,
-                        ),
-                        child: const Icon(
-                          Icons.filter_alt_outlined,
-                          color: Colors.white,
-                          size: 24,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-
-            // Swipe Indicators
-            if (_showSwipeIndicator)
-              AnimatedOpacity(
-                duration: const Duration(milliseconds: 300),
-                opacity: _showSwipeIndicator ? 1.0 : 0.0,
+              // User Name Overlay
+              Positioned(
+                bottom: size.height * 0.1,
+                left: 0,
+                right: 0,
                 child: Center(
                   child: Container(
                     padding: const EdgeInsets.symmetric(
-                      horizontal: 32,
-                      vertical: 16,
+                      horizontal: 20,
+                      vertical: 10,
                     ),
                     decoration: BoxDecoration(
-                      color: Colors.black.withAlpha(150),
-                      borderRadius: BorderRadius.circular(25),
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [
+                          Colors.transparent,
+                          Colors.black.withAlpha(179),
+                        ],
+                      ),
                     ),
                     child: Text(
-                      _swipeDirection.toUpperCase(),
-                      style: const TextStyle(
+                      'Dhwani Tripati, 26',
+                      style: TextStyle(
                         color: Colors.white,
-                        fontSize: 24,
+                        fontSize: size.width * 0.06,
                         fontWeight: FontWeight.bold,
+                        shadows: [
+                          Shadow(
+                            color: Colors.black.withAlpha(128),
+                            blurRadius: 10,
+                          ),
+                        ],
                       ),
                     ),
                   ),
                 ),
               ),
 
-            // Gesture Guide
-            if (_showGuide) _buildGestureGuide(),
-          ],
+              // Top Navigation Bar
+              SafeArea(
+                child: Padding(
+                  padding: EdgeInsets.only(
+                    top: 8,
+                    left: 16,
+                    right: 16,
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Back Button
+                      IconButton(
+                        onPressed: () {
+                          if (context.mounted) {
+                            final navigationState =
+                                context.findAncestorStateOfType<
+                                    NavigationControllerState>();
+                            if (navigationState != null) {
+                              navigationState.setCurrentIndex(
+                                  0); // This will handle both nav bar and system UI
+                            }
+                          }
+                        },
+                        icon: Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: Colors.black.withAlpha(100),
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(
+                            Icons.arrow_back,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                      // Filter Button
+                      IconButton(
+                        onPressed: null,
+                        icon: Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: Colors.black.withAlpha(100),
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(
+                            Icons.filter_alt_outlined,
+                            color: Colors.white,
+                            size: 24,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+
+              // Swipe Indicators
+              if (_showSwipeIndicator)
+                AnimatedOpacity(
+                  duration: const Duration(milliseconds: 300),
+                  opacity: _showSwipeIndicator ? 1.0 : 0.0,
+                  child: Center(
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 32,
+                        vertical: 16,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.black.withAlpha(150),
+                        borderRadius: BorderRadius.circular(25),
+                      ),
+                      child: Text(
+                        _swipeDirection.toUpperCase(),
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+
+              // Gesture Guide
+              if (_showGuide) _buildGestureGuide(),
+            ],
+          ),
         ),
       ),
     );

@@ -309,27 +309,47 @@ class NavBarClipper extends CustomClipper<Path> {
   Path getClip(Size size) {
     final path = Path();
 
-    // Calculate center point and radius for the cutout
-    final center = size.width / 2;
-    final circleRadius = 35.0; // Fixed size for the cutout
+    // Calculate dimensions
+    final width = size.width;
+    final height = size.height;
+    final center = width / 2;
+    final cutoutRadius = 35.0;
 
-    // Start from top-left corner
+    // Start from top-left
     path.moveTo(0, 0);
 
-    // Draw line to the start of the cutout
-    path.lineTo(center - circleRadius, 0);
+    // Line to start of left curve
+    path.lineTo(center - cutoutRadius, 0);
 
-    // Create the circular cutout
-    path.arcToPoint(
-      Offset(center + circleRadius, 0),
-      radius: Radius.circular(circleRadius),
-      clockwise: false,
-    );
+    // Create the curved cutout using quadratic bezier curves
+    // Left curve
+    path.quadraticBezierTo(
+        center - cutoutRadius / 2,
+        height / 3, // control point
+        center - cutoutRadius / 2,
+        height // end point
+        );
+
+    // Bottom curve
+    path.quadraticBezierTo(
+        center,
+        height - 5, // control point
+        center + cutoutRadius / 2,
+        height // end point
+        );
+
+    // Right curve
+    path.quadraticBezierTo(
+        center + cutoutRadius / 2,
+        height / 3, // control point
+        center + cutoutRadius,
+        0 // end point
+        );
 
     // Complete the shape
-    path.lineTo(size.width, 0);
-    path.lineTo(size.width, size.height);
-    path.lineTo(0, size.height);
+    path.lineTo(width, 0);
+    path.lineTo(width, height);
+    path.lineTo(0, height);
     path.close();
 
     return path;

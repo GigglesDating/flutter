@@ -5,6 +5,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 //import 'package:flutter_svg/flutter_svg.dart';
 import '../placeholder_template.dart';
 import '../barrel.dart';
+import 'package:vibration/vibration.dart';
 
 class NavigationController extends StatefulWidget {
   const NavigationController({super.key});
@@ -16,6 +17,7 @@ class NavigationController extends StatefulWidget {
 class NavigationControllerState extends State<NavigationController> {
   int _currentIndex = 0;
   bool _showNavBar = true;
+  bool _isSOSActive = false;
   late Size size;
 
   @override
@@ -127,31 +129,9 @@ class NavigationControllerState extends State<NavigationController> {
 
                     // Floating SOS button
                     Positioned(
-                      top: -(size.height * 0.01),
-                      child: GestureDetector(
-                        onTap: () => debugPrint('SOS Button pressed'),
-                        child: Container(
-                          width: size.width * 0.15,
-                          height: size.width * 0.15,
-                          decoration: BoxDecoration(
-                            color: const Color.fromARGB(240, 113, 234, 242),
-                            shape: BoxShape.circle,
-                            boxShadow: [
-                              BoxShadow(
-                                color: const Color.fromARGB(239, 20, 20, 20)
-                                    .withAlpha(77),
-                                blurRadius: size.width * 0.02,
-                                spreadRadius: size.width * 0.002,
-                                offset: Offset(0, size.width * 0.01),
-                              ),
-                            ],
-                          ),
-                          child: Image.asset(
-                            'assets/icons/nav_bar/sos.gif',
-                            fit: BoxFit.cover,
-                          ),
-                        ),
-                      ),
+                      top: -(size.height *
+                          0.018), // Adjust this value to move the button up/down
+                      child: _buildSOSButton(),
                     ),
                   ],
                 ),
@@ -236,6 +216,57 @@ class NavigationControllerState extends State<NavigationController> {
     );
   }
 
+  Widget _buildSOSButton() {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+
+    return GestureDetector(
+      onTap: _handleSOSPress,
+      child: Container(
+        width: size.width * 0.17, // Reduced from 0.17
+        height: size.width * 0.17, // Reduced from 0.17
+        decoration: BoxDecoration(
+          color: isDarkMode
+              ? const Color(0xFF121212)
+              : const Color.fromARGB(239, 239, 241, 241),
+          shape: BoxShape.circle,
+          boxShadow: [
+            BoxShadow(
+              color: const Color.fromARGB(239, 20, 20, 20).withAlpha(77),
+              blurRadius: size.width * 0.02,
+              spreadRadius: size.width * 0.002,
+              offset: Offset(0, size.width * 0.01),
+            ),
+          ],
+        ),
+        child: _isSOSActive
+            ? ClipRRect(
+                borderRadius: BorderRadius.circular(size.width * 0.17),
+                child: OverflowBox(
+                  maxWidth: size.width * 0.25,
+                  maxHeight: size.width * 0.25,
+                  child: Image.asset(
+                    'assets/icons/nav_bar/sos.gif',
+                    fit: BoxFit.cover,
+                    width: size.width * 0.25,
+                    height: size.width * 0.25,
+                  ),
+                ),
+              )
+            : Center(
+                child: SvgPicture.asset(
+                  'assets/icons/nav_bar/sos.svg',
+                  width: size.width * 0.08,
+                  height: size.width * 0.08,
+                  colorFilter: ColorFilter.mode(
+                    isDarkMode ? Colors.white : Colors.black,
+                    BlendMode.srcIn,
+                  ),
+                ),
+              ),
+      ),
+    );
+  }
+
   final List<({String label, Widget screen})> _navigationItems = [
     (label: 'Home', screen: const HomeTab()),
     (label: 'Swipe', screen: const SwipeScreen()),
@@ -294,5 +325,48 @@ class NavigationControllerState extends State<NavigationController> {
     setState(() {
       _showNavBar = true;
     });
+  }
+
+  void _handleSOSPress() {
+    if (_isSOSActive) {
+      // If SOS is currently active, stop everything immediately
+      Vibration.cancel();
+      setState(() => _isSOSActive = false);
+    } else {
+      // Start new SOS sequence
+      setState(() => _isSOSActive = true);
+
+      Future.delayed(const Duration(milliseconds: 500), () async {
+        while (_isSOSActive) {
+          // S (... = 3 short vibrations)
+          for (var i = 0; i < 3; i++) {
+            if (!_isSOSActive) return; // Check before each vibration
+            await Vibration.vibrate(duration: 200, amplitude: 255);
+            await Future.delayed(const Duration(milliseconds: 200));
+          }
+          if (!_isSOSActive) return;
+          await Future.delayed(const Duration(milliseconds: 400));
+
+          // O (--- = 3 long vibrations)
+          for (var i = 0; i < 3; i++) {
+            if (!_isSOSActive) return; // Check before each vibration
+            await Vibration.vibrate(duration: 500, amplitude: 255);
+            await Future.delayed(const Duration(milliseconds: 200));
+          }
+          if (!_isSOSActive) return;
+          await Future.delayed(const Duration(milliseconds: 400));
+
+          // S (... = 3 short vibrations)
+          for (var i = 0; i < 3; i++) {
+            if (!_isSOSActive) return; // Check before each vibration
+            await Vibration.vibrate(duration: 200, amplitude: 255);
+            await Future.delayed(const Duration(milliseconds: 200));
+          }
+
+          if (!_isSOSActive) return;
+          await Future.delayed(const Duration(seconds: 1));
+        }
+      });
+    }
   }
 }

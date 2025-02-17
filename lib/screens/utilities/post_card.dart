@@ -19,6 +19,7 @@ class PostCard extends StatefulWidget {
 class _PostCardState extends State<PostCard>
     with SingleTickerProviderStateMixin {
   bool isLiked = false;
+  bool _showTextOverlay = false;
   late AnimationController _animationController;
   late Animation<double> _animation;
   bool _showHeart = false;
@@ -67,7 +68,8 @@ class _PostCardState extends State<PostCard>
           ),
         ],
       ),
-      alignment: Alignment.center,
+      width: screenWidth * 0.95,
+      height: screenWidth * 1.4,
       child: Stack(
         clipBehavior: Clip.none,
         children: [
@@ -76,6 +78,9 @@ class _PostCardState extends State<PostCard>
             child: Hero(
               tag: 'post_${widget.post['image']}',
               child: GestureDetector(
+                onTap: () {
+                  setState(() => _showTextOverlay = !_showTextOverlay);
+                },
                 onDoubleTap: () {
                   HapticFeedback.lightImpact();
                   setState(() {
@@ -103,76 +108,220 @@ class _PostCardState extends State<PostCard>
             ),
           ),
 
-          // Profile Picture Overlay
-          Positioned(
-            top: screenWidth * 0.04, // 3% from top
-            left: screenWidth * 0.06, // 3% from left
-            child: Container(
-              padding: EdgeInsets.all(2), // Thin border padding
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: widget.isDarkMode
-                    ? Colors.black.withAlpha(230)
-                    : Colors.white.withAlpha(230),
-                border: Border.all(
-                  color: widget.isDarkMode
-                      ? Colors.white.withAlpha(38)
-                      : Colors.black.withAlpha(26),
-                  width: 1,
+          // Overlays with IgnorePointer
+          IgnorePointer(
+            ignoring: true, // Make sure overlays don't intercept touches
+            child: Stack(
+              children: [
+                // Profile Picture and Stats Overlay
+                Positioned(
+                  top: screenWidth * 0.04,
+                  left: screenWidth * 0.06,
+                  child: Row(
+                    children: [
+                      // Profile Picture
+                      Container(
+                        padding: EdgeInsets.all(2),
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: widget.isDarkMode
+                              ? Colors.black.withAlpha(230)
+                              : Colors.white.withAlpha(230),
+                          border: Border.all(
+                            color: widget.isDarkMode
+                                ? Colors.white.withAlpha(38)
+                                : Colors.black.withAlpha(26),
+                            width: 1,
+                          ),
+                        ),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(50),
+                          child: Image.asset(
+                            widget.post['userImage'],
+                            width: screenWidth * 0.12,
+                            height: screenWidth * 0.12,
+                            fit: BoxFit.cover,
+                          ),
+                        ),
+                      ),
+                      // Stats with animation
+                      AnimatedOpacity(
+                        duration: const Duration(milliseconds: 200),
+                        opacity: _showTextOverlay ? 1.0 : 0.0,
+                        child: Container(
+                          margin: EdgeInsets.only(left: screenWidth * 0.02),
+                          padding: EdgeInsets.symmetric(
+                            horizontal: screenWidth * 0.03,
+                            vertical: screenWidth * 0.015,
+                          ),
+                          decoration: BoxDecoration(
+                            color: widget.isDarkMode
+                                ? Colors.black.withAlpha(230)
+                                : Colors.white.withAlpha(230),
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(
+                              color: widget.isDarkMode
+                                  ? Colors.white.withAlpha(38)
+                                  : Colors.black.withAlpha(26),
+                              width: 1,
+                            ),
+                          ),
+                          child: Row(
+                            children: [
+                              Icon(
+                                Icons.favorite,
+                                size: screenWidth * 0.04,
+                                color: widget.isDarkMode
+                                    ? Colors.white
+                                    : Colors.black,
+                              ),
+                              SizedBox(width: screenWidth * 0.01),
+                              Text(
+                                '${widget.post['likes']}',
+                                style: TextStyle(
+                                  color: widget.isDarkMode
+                                      ? Colors.white
+                                      : Colors.black,
+                                  fontSize: screenWidth * 0.035,
+                                ),
+                              ),
+                              Text(
+                                ' | ',
+                                style: TextStyle(
+                                  color: widget.isDarkMode
+                                      ? Colors.white
+                                      : Colors.black,
+                                  fontSize: screenWidth * 0.035,
+                                ),
+                              ),
+                              Text(
+                                widget.post['timeAgo'],
+                                style: TextStyle(
+                                  color: widget.isDarkMode
+                                      ? Colors.white
+                                      : Colors.black,
+                                  fontSize: screenWidth * 0.035,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(50),
-                child: Image.asset(
-                  widget.post['userImage'],
-                  width: screenWidth * 0.12, // Smaller size
-                  height: screenWidth * 0.12,
-                  fit: BoxFit.cover,
+
+                // Post Description Overlay with fade animation only
+                Positioned(
+                  left: screenWidth * 0.05,
+                  right: screenWidth * 0.05,
+                  bottom: screenWidth * 0.05,
+                  child: AnimatedOpacity(
+                    duration: const Duration(milliseconds: 200),
+                    opacity: _showTextOverlay ? 1.0 : 0.0,
+                    child: LayoutBuilder(
+                      builder: (context, constraints) {
+                        final textSpan = TextSpan(
+                          text: widget.post['caption'] ?? '',
+                          style: TextStyle(
+                            color: Colors.white.withOpacity(0.9),
+                            fontSize: screenWidth * 0.035,
+                            height: 1.3,
+                          ),
+                        );
+                        final textPainter = TextPainter(
+                          text: textSpan,
+                          textDirection: TextDirection.ltr,
+                          maxLines: 2,
+                        );
+                        textPainter.layout(maxWidth: constraints.maxWidth);
+
+                        final isMultiLine = textPainter.didExceedMaxLines;
+
+                        return Container(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: screenWidth * 0.04,
+                            vertical: screenWidth * 0.03,
+                          ),
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              begin: Alignment.topCenter,
+                              end: Alignment.bottomCenter,
+                              colors: [
+                                Colors.transparent,
+                                Colors.black.withOpacity(0.3),
+                                Colors.black.withOpacity(0.7),
+                              ],
+                            ),
+                            borderRadius: BorderRadius.circular(15),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                widget.post['username'] ?? '',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: screenWidth * 0.04,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              SizedBox(height: screenWidth * 0.01),
+                              if (isMultiLine)
+                                ConstrainedBox(
+                                  constraints: BoxConstraints(
+                                    maxHeight: screenWidth * 0.3,
+                                  ),
+                                  child: SingleChildScrollView(
+                                    child: Text(
+                                      widget.post['caption'] ?? '',
+                                      style: TextStyle(
+                                        color: Colors.white.withOpacity(0.9),
+                                        fontSize: screenWidth * 0.035,
+                                        height: 1.3,
+                                      ),
+                                    ),
+                                  ),
+                                )
+                              else
+                                Padding(
+                                  padding: EdgeInsets.only(
+                                      bottom: screenWidth * 0.02),
+                                  child: Text(
+                                    widget.post['caption'] ?? '',
+                                    style: TextStyle(
+                                      color: Colors.white.withOpacity(0.9),
+                                      fontSize: screenWidth * 0.035,
+                                      height: 1.3,
+                                    ),
+                                  ),
+                                ),
+                            ],
+                          ),
+                        );
+                      },
+                    ),
+                  ),
                 ),
-              ),
+              ],
             ),
           ),
 
-          // Post Description Overlay
+          // Action buttons (outside IgnorePointer)
           Positioned(
-            left: screenWidth * 0.05,
-            right: screenWidth * 0.2,
-            bottom: screenWidth * 0.05,
+            right: screenWidth * 0.04,
+            bottom: screenWidth * 0.15,
             child: Container(
               padding: EdgeInsets.symmetric(
-                horizontal: screenWidth * 0.03,
-                vertical: screenWidth * 0.02,
-              ),
-              decoration: BoxDecoration(
-                color: Colors.black.withAlpha(100),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Text(
-                widget.post['caption'] ?? '',
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: screenWidth * 0.035,
-                ),
-              ),
-            ),
-          ),
-
-          // Vertical Action Bar
-          Positioned(
-            right: screenWidth * 0.05, // 3% of screen width from right
-            bottom: screenWidth * 0.15, // 30% of screen width from bottom
-            child: Container(
-              padding: EdgeInsets.symmetric(
-                vertical: screenHeight * 0.012, // Reduced from 0.015
-                horizontal: screenWidth * 0.008, // Reduced from 0.01
+                horizontal: screenWidth * 0.018,
+                vertical: screenWidth * 0.025,
               ),
               decoration: BoxDecoration(
                 color: widget.isDarkMode
                     ? Colors.black.withAlpha(230)
                     : Colors.white.withAlpha(230),
-                borderRadius: BorderRadius.circular(screenWidth * 0.08),
+                borderRadius: BorderRadius.circular(25),
                 border: Border.all(
                   color: widget.isDarkMode
                       ? Colors.white.withAlpha(38)
@@ -181,7 +330,6 @@ class _PostCardState extends State<PostCard>
                 ),
               ),
               child: Column(
-                mainAxisSize: MainAxisSize.min,
                 children: [
                   _buildActionButton(
                     iconPath: 'assets/icons/feed/like.svg',
@@ -195,7 +343,7 @@ class _PostCardState extends State<PostCard>
                       setState(() => isLiked = !isLiked);
                     },
                   ),
-                  SizedBox(height: screenHeight * 0.02),
+                  SizedBox(height: screenHeight * 0.015),
                   _buildActionButton(
                     iconPath: 'assets/icons/feed/comment.svg',
                     onTap: _showCommentsSheet,
@@ -203,7 +351,7 @@ class _PostCardState extends State<PostCard>
                         ? Colors.white.withAlpha(204)
                         : Colors.black.withAlpha(204),
                   ),
-                  SizedBox(height: screenHeight * 0.02),
+                  SizedBox(height: screenHeight * 0.015),
                   _buildActionButton(
                     iconPath: 'assets/icons/feed/share.svg',
                     onTap: () {},
@@ -217,26 +365,23 @@ class _PostCardState extends State<PostCard>
           ),
 
           // Heart Animation
-          Positioned(
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            child: AnimatedOpacity(
-              duration: const Duration(milliseconds: 200),
-              opacity: _showHeart ? 1.0 : 0.0,
-              child: Center(
-                child: ScaleTransition(
-                  scale: _animation,
-                  child: Icon(
-                    Icons.favorite,
-                    color: Colors.white,
-                    size: screenWidth * 0.3,
+          if (_showHeart)
+            Positioned.fill(
+              child: AnimatedOpacity(
+                duration: const Duration(milliseconds: 200),
+                opacity: _showHeart ? 1.0 : 0.0,
+                child: Center(
+                  child: ScaleTransition(
+                    scale: _animation,
+                    child: Icon(
+                      Icons.favorite,
+                      color: Colors.white,
+                      size: screenWidth * 0.3,
+                    ),
                   ),
                 ),
               ),
             ),
-          ),
         ],
       ),
     );

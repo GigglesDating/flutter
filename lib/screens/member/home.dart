@@ -54,6 +54,7 @@ class _HomeTabState extends State<HomeTab> {
   void initState() {
     super.initState();
     _scrollController.addListener(_onScroll);
+    print("InitState: _tempPosts length: ${_tempPosts.length}"); // Debug print
   }
 
   @override
@@ -82,21 +83,23 @@ class _HomeTabState extends State<HomeTab> {
         leading: IconButton(
           onPressed: () => showImageModalSheet(),
           icon: Container(
-            width: 50,
-            height: 50,
+            width: 40,
+            height: 40,
             decoration: BoxDecoration(
+              shape: BoxShape.circle,
               color: isDarkMode
-                  ? Colors.white.withAlpha(38) // More visible in dark mode
-                  : Colors.black.withAlpha(26), // More visible in light mode
-              borderRadius: BorderRadius.circular(100),
+                  ? Colors.white.withAlpha(38)
+                  : Colors.black.withAlpha(26),
             ),
-            child: SvgPicture.asset(
-              'assets/icons/feed/plus.svg',
-              width: 24,
-              height: 24,
-              colorFilter: ColorFilter.mode(
-                isDarkMode ? Colors.white : Colors.black,
-                BlendMode.srcIn,
+            child: Center(
+              child: SvgPicture.asset(
+                'assets/icons/feed/plus.svg',
+                width: 22,
+                height: 22,
+                colorFilter: ColorFilter.mode(
+                  isDarkMode ? Colors.white : Colors.black,
+                  BlendMode.srcIn,
+                ),
               ),
             ),
           ),
@@ -119,25 +122,49 @@ class _HomeTabState extends State<HomeTab> {
         actions: [
           IconButton(
             onPressed: () {},
-            icon: SvgPicture.asset(
-              'assets/icons/feed/notifications.svg',
-              width: 24,
-              height: 24,
-              colorFilter: ColorFilter.mode(
-                isDarkMode ? Colors.white : Colors.black,
-                BlendMode.srcIn,
+            icon: Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: isDarkMode
+                    ? Colors.white.withAlpha(38)
+                    : Colors.black.withAlpha(26),
+              ),
+              child: Center(
+                child: SvgPicture.asset(
+                  'assets/icons/feed/notifications.svg',
+                  width: 22,
+                  height: 22,
+                  colorFilter: ColorFilter.mode(
+                    isDarkMode ? Colors.white : Colors.black,
+                    BlendMode.srcIn,
+                  ),
+                ),
               ),
             ),
           ),
           IconButton(
             onPressed: () {},
-            icon: SvgPicture.asset(
-              'assets/icons/feed/messenger.svg',
-              width: 24,
-              height: 24,
-              colorFilter: ColorFilter.mode(
-                isDarkMode ? Colors.white : Colors.black,
-                BlendMode.srcIn,
+            icon: Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: isDarkMode
+                    ? Colors.white.withAlpha(38)
+                    : Colors.black.withAlpha(26),
+              ),
+              child: Center(
+                child: SvgPicture.asset(
+                  'assets/icons/feed/messenger.svg',
+                  width: 22,
+                  height: 22,
+                  colorFilter: ColorFilter.mode(
+                    isDarkMode ? Colors.white : Colors.black,
+                    BlendMode.srcIn,
+                  ),
+                ),
               ),
             ),
           ),
@@ -240,10 +267,13 @@ class _HomeTabState extends State<HomeTab> {
   }
 
   Widget _buildFeedSection(bool isDarkMode) {
+    print(
+        "Building feed section with ${_tempPosts.length} posts"); // Debug print
     return ListView.builder(
       controller: _scrollController,
       itemCount: _tempPosts.length,
       itemBuilder: (context, index) {
+        print("Building post card at index $index"); // Debug print
         return PostCard(
           post: _tempPosts[index],
           isDarkMode: isDarkMode,

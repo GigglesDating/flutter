@@ -116,7 +116,15 @@ class _SwipeScreenState extends State<SwipeScreen>
 
     return PopScope(
       canPop: false,
-      onPopInvokedWithResult: (bool didPop) => Future<bool>.value(false),
+      onPopInvoked: (didPop) {
+        if (!didPop) {
+          final navigationState =
+              context.findAncestorStateOfType<NavigationControllerState>();
+          if (navigationState != null) {
+            navigationState.setCurrentIndex(0);
+          }
+        }
+      },
       child: Scaffold(
         body: GestureDetector(
           onPanUpdate: _handleSwipe,

@@ -94,27 +94,36 @@ class NavigationControllerState extends State<NavigationController> {
                         vertical: size.height * 0.02,
                       ),
                       height: size.height * 0.08,
-                      decoration: BoxDecoration(
-                        color: isDarkMode
-                            ? Colors.white.withAlpha(230)
-                            : Colors.black.withAlpha(230),
-                        borderRadius: BorderRadius.circular(40),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withAlpha(26),
-                            blurRadius: 10,
-                            offset: const Offset(0, 5),
-                          ),
-                        ],
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      child: Stack(
                         children: [
-                          _buildNavItem(0),
-                          _buildNavItem(1),
-                          _buildNavItem(2),
-                          _buildNavItem(3),
-                          _buildProfileItem(4),
+                          ClipPath(
+                            clipper: NavBarClipper(),
+                            child: Container(
+                              decoration: BoxDecoration(
+                                color: isDarkMode
+                                    ? Colors.white.withAlpha(230)
+                                    : Colors.black.withAlpha(230),
+                                borderRadius: BorderRadius.circular(40),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withAlpha(26),
+                                    blurRadius: 10,
+                                    offset: const Offset(0, 5),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                            children: [
+                              _buildNavItem(0),
+                              _buildNavItem(1),
+                              _buildNavItem(2),
+                              _buildNavItem(3),
+                              _buildProfileItem(4),
+                            ],
+                          ),
                         ],
                       ),
                     ),
@@ -128,11 +137,12 @@ class NavigationControllerState extends State<NavigationController> {
                           width: size.width * 0.15,
                           height: size.width * 0.15,
                           decoration: BoxDecoration(
-                            color: const Color(0xFFA5C0E5),
+                            color: const Color.fromARGB(240, 113, 234, 242),
                             shape: BoxShape.circle,
                             boxShadow: [
                               BoxShadow(
-                                color: const Color(0xFFA5C0E5).withAlpha(77),
+                                color: const Color.fromARGB(239, 20, 20, 20)
+                                    .withAlpha(77),
                                 blurRadius: 8,
                                 spreadRadius: 1,
                                 offset: const Offset(0, 4),
@@ -180,15 +190,25 @@ class NavigationControllerState extends State<NavigationController> {
 
     return GestureDetector(
       onTap: () => setState(() => _currentIndex = index),
-      child: SvgPicture.asset(
-        getIconPath(index),
-        width: 30,
-        height: 30,
-        colorFilter: ColorFilter.mode(
-          isSelected
-              ? Colors.green
-              : (isDarkMode ? Colors.black : Colors.white),
-          BlendMode.srcIn,
+      child: Container(
+        width: 40,
+        height: 40,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: isDarkMode ? Colors.black : Colors.white,
+        ),
+        child: Center(
+          child: SvgPicture.asset(
+            getIconPath(index),
+            width: 22,
+            height: 22,
+            colorFilter: ColorFilter.mode(
+              isSelected
+                  ? Colors.green
+                  : (isDarkMode ? Colors.white : Colors.black),
+              BlendMode.srcIn,
+            ),
+          ),
         ),
       ),
     );
@@ -199,8 +219,8 @@ class NavigationControllerState extends State<NavigationController> {
     return GestureDetector(
       onTap: () => setState(() => _currentIndex = index),
       child: Container(
-        width: 35,
-        height: 35,
+        width: 40,
+        height: 40,
         decoration: BoxDecoration(
           shape: BoxShape.circle,
           border: Border.all(
@@ -282,4 +302,39 @@ class NavigationControllerState extends State<NavigationController> {
       _showNavBar = true;
     });
   }
+}
+
+class NavBarClipper extends CustomClipper<Path> {
+  @override
+  Path getClip(Size size) {
+    final path = Path();
+
+    // Calculate center point and radius for the cutout
+    final center = size.width / 2;
+    final circleRadius = 35.0; // Fixed size for the cutout
+
+    // Start from top-left corner
+    path.moveTo(0, 0);
+
+    // Draw line to the start of the cutout
+    path.lineTo(center - circleRadius, 0);
+
+    // Create the circular cutout
+    path.arcToPoint(
+      Offset(center + circleRadius, 0),
+      radius: Radius.circular(circleRadius),
+      clockwise: false,
+    );
+
+    // Complete the shape
+    path.lineTo(size.width, 0);
+    path.lineTo(size.width, size.height);
+    path.lineTo(0, size.height);
+    path.close();
+
+    return path;
+  }
+
+  @override
+  bool shouldReclip(CustomClipper<Path> oldClipper) => false;
 }

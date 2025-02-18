@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'dart:ui';
+import 'package:flutter/services.dart';
 
 class CommentsSheet extends StatefulWidget {
   final bool isDarkMode;
@@ -73,7 +74,7 @@ class _CommentsSheetState extends State<CommentsSheet> {
     // Calculate available space
     final availableHeight = screenSize.height - bottomPadding - topPadding;
     final maxSheetHeight = availableHeight * 0.8;
-    final minSheetHeight = availableHeight * 0.5;
+    final minSheetHeight = availableHeight * 0.45;
 
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
@@ -274,6 +275,7 @@ class _CommentsSheetState extends State<CommentsSheet> {
                 SizedBox(width: widget.screenWidth * 0.02),
                 GestureDetector(
                   onTap: () {
+                    HapticFeedback.lightImpact();
                     if (_commentController.text.isNotEmpty) {
                       // Add comment/reply logic here
                       setState(() {
@@ -363,6 +365,7 @@ class _CommentItemState extends State<_CommentItem> {
         }
       },
       onDoubleTap: () {
+        HapticFeedback.lightImpact();
         setState(() => isLiked = !isLiked);
       },
       child: Container(
@@ -414,7 +417,10 @@ class _CommentItemState extends State<_CommentItem> {
                               ),
                               SizedBox(width: widget.screenWidth * 0.02),
                               GestureDetector(
-                                onTap: () => setState(() => isLiked = !isLiked),
+                                onTap: () {
+                                  HapticFeedback.lightImpact();
+                                  setState(() => isLiked = !isLiked);
+                                },
                                 child: Row(
                                   children: [
                                     Icon(
@@ -504,6 +510,7 @@ class _ReplyItemState extends State<_ReplyItem> {
         }
       },
       onDoubleTap: () {
+        HapticFeedback.lightImpact();
         setState(() => isLiked = !isLiked);
       },
       child: Container(
@@ -555,7 +562,10 @@ class _ReplyItemState extends State<_ReplyItem> {
                               ),
                               SizedBox(width: widget.screenWidth * 0.02),
                               GestureDetector(
-                                onTap: () => setState(() => isLiked = !isLiked),
+                                onTap: () {
+                                  HapticFeedback.lightImpact();
+                                  setState(() => isLiked = !isLiked);
+                                },
                                 child: Row(
                                   children: [
                                     Icon(

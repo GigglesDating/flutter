@@ -35,3 +35,4 @@ export '../network/think.dart';
 
 export 'utilities/comments_sheet.dart';
 export 'utilities/post_card.dart';
+export 'utilities/share_sheet.dart';

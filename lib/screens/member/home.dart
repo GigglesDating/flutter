@@ -332,3 +332,23 @@ class CropAspectRatioPresetCustom implements CropAspectRatioPresetData {
   @override
   String get name => '2x3 (customized)';
 }
+
+class AppBarClipper extends CustomClipper<Path> {
+  @override
+  Path getClip(Size size) {
+    final path = Path();
+    path.moveTo(0, 0);
+    path.lineTo(0, size.height);
+    path.quadraticBezierTo(
+      size.width / 2,
+      size.height - 20,
+      size.width,
+      size.height,
+    );
+    path.lineTo(size.width, 0);
+    return path;
+  }
+
+  @override
+  bool shouldReclip(CustomClipper<Path> oldClipper) => false;
+}

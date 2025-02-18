@@ -185,7 +185,22 @@ class NavigationControllerState extends State<NavigationController>
       width: isSelected ? iconSize * 1.2 : iconSize,
       height: isSelected ? iconSize * 1.2 : iconSize,
       child: GestureDetector(
-        onTap: () => setState(() => _currentIndex = index),
+        onTap: () {
+          if (_currentIndex != index) {
+            // Only animate if we're switching to this tab
+            setState(() {
+              _rotationValue = _rotationValue + 1; // One full rotation
+              _currentIndex = index;
+            });
+
+            // Reset rotation after animation
+            Future.delayed(const Duration(milliseconds: 500), () {
+              if (mounted && _currentIndex == index) {
+                setState(() => _rotationValue = 0);
+              }
+            });
+          }
+        },
         child: Container(
           decoration: BoxDecoration(
             shape: BoxShape.circle,
@@ -196,7 +211,7 @@ class NavigationControllerState extends State<NavigationController>
           child: Center(
             child: AnimatedRotation(
               duration: const Duration(milliseconds: 500),
-              turns: isSelected ? _rotationValue : 0,
+              turns: isSelected && _currentIndex == index ? _rotationValue : 0,
               child: SvgPicture.asset(
                 getIconPath(index),
                 width: iconSize * 0.55,

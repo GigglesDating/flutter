@@ -361,7 +361,7 @@ class _PostCardState extends State<PostCard>
                   SizedBox(height: screenHeight * 0.015),
                   _buildActionButton(
                     iconPath: 'assets/icons/feed/share.svg',
-                    onTap: () {},
+                    onTap: _showShareSheet,
                     color: widget.isDarkMode
                         ? Colors.white.withAlpha(204)
                         : Colors.black.withAlpha(204),
@@ -448,6 +448,20 @@ class _PostCardState extends State<PostCard>
           screenHeight: screenHeight,
           screenWidth: screenWidth,
         ),
+      ),
+    );
+  }
+
+  void _showShareSheet() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      barrierColor: Colors.black.withAlpha(128),
+      builder: (context) => ShareSheet(
+        isDarkMode: widget.isDarkMode,
+        post: widget.post,
+        screenWidth: MediaQuery.of(context).size.width,
       ),
     );
   }

@@ -224,7 +224,7 @@ class _PostCardState extends State<PostCard>
                         final textSpan = TextSpan(
                           text: widget.post['caption'] ?? '',
                           style: TextStyle(
-                            color: Colors.white.withOpacity(0.9),
+                            color: Colors.white.withAlpha(255),
                             fontSize: screenWidth * 0.035,
                             height: 1.3,
                           ),
@@ -249,8 +249,8 @@ class _PostCardState extends State<PostCard>
                               end: Alignment.bottomCenter,
                               colors: [
                                 Colors.transparent,
-                                Colors.black.withOpacity(0.3),
-                                Colors.black.withOpacity(0.7),
+                                Colors.black.withAlpha(77),
+                                Colors.black.withAlpha(179),
                               ],
                             ),
                             borderRadius: BorderRadius.circular(15),
@@ -262,7 +262,7 @@ class _PostCardState extends State<PostCard>
                               Text(
                                 widget.post['username'] ?? '',
                                 style: TextStyle(
-                                  color: Colors.white,
+                                  color: Colors.white.withAlpha(255),
                                   fontSize: screenWidth * 0.04,
                                   fontWeight: FontWeight.bold,
                                 ),
@@ -277,7 +277,7 @@ class _PostCardState extends State<PostCard>
                                     child: Text(
                                       widget.post['caption'] ?? '',
                                       style: TextStyle(
-                                        color: Colors.white.withOpacity(0.9),
+                                        color: Colors.white.withAlpha(255),
                                         fontSize: screenWidth * 0.035,
                                         height: 1.3,
                                       ),
@@ -291,7 +291,7 @@ class _PostCardState extends State<PostCard>
                                   child: Text(
                                     widget.post['caption'] ?? '',
                                     style: TextStyle(
-                                      color: Colors.white.withOpacity(0.9),
+                                      color: Colors.white.withAlpha(255),
                                       fontSize: screenWidth * 0.035,
                                       height: 1.3,
                                     ),
@@ -375,7 +375,7 @@ class _PostCardState extends State<PostCard>
                     scale: _animation,
                     child: Icon(
                       Icons.favorite,
-                      color: Colors.white,
+                      color: Colors.white.withAlpha(255),
                       size: screenWidth * 0.3,
                     ),
                   ),

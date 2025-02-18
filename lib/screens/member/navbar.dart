@@ -325,23 +325,6 @@ class NavigationControllerState extends State<NavigationController>
     ),
   ];
 
-  void _updateSystemUI(int index) {
-    if (index == 1) {
-      SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
-    } else {
-      SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
-      SystemChrome.setSystemUIOverlayStyle(
-        const SystemUiOverlayStyle(
-          statusBarColor: Colors.transparent,
-          systemNavigationBarColor: Colors.transparent,
-          systemNavigationBarDividerColor: Colors.transparent,
-          statusBarIconBrightness: Brightness.light,
-          systemNavigationBarIconBrightness: Brightness.light,
-        ),
-      );
-    }
-  }
-
   void setCurrentIndex(int index) {
     setState(() {
       _currentIndex = index;

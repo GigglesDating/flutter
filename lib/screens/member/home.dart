@@ -4,6 +4,7 @@ import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart';
 import '../utilities/post_card.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:flutter/foundation.dart' show kDebugMode;
 
 class HomeTab extends StatefulWidget {
   const HomeTab({super.key});
@@ -54,7 +55,9 @@ class _HomeTabState extends State<HomeTab> {
   void initState() {
     super.initState();
     _scrollController.addListener(_onScroll);
-    print("InitState: _tempPosts length: ${_tempPosts.length}"); // Debug print
+    if (kDebugMode) {
+      print("InitState: _tempPosts length: ${_tempPosts.length}");
+    }
   }
 
   @override
@@ -263,13 +266,16 @@ class _HomeTabState extends State<HomeTab> {
   }
 
   Widget _buildFeedSection(bool isDarkMode) {
-    print(
-        "Building feed section with ${_tempPosts.length} posts"); // Debug print
+    if (kDebugMode) {
+      print("Building feed section with ${_tempPosts.length} posts");
+    }
     return ListView.builder(
       controller: _scrollController,
       itemCount: _tempPosts.length,
       itemBuilder: (context, index) {
-        print("Building post card at index $index"); // Debug print
+        if (kDebugMode) {
+          print("Building post card at index $index");
+        }
         return PostCard(
           post: _tempPosts[index],
           isDarkMode: isDarkMode,

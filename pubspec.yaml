@@ -53,8 +53,13 @@ flutter:
     # Temporary images
     - assets/tempImages/
     - assets/tempImages/users/
+    - assets/tempImages/users/usera/
+    - assets/tempImages/users/userb/
+    - assets/tempImages/users/userc/
+
+    # Posts images
     - assets/tempImages/posts/
-    
+
     # Video assets
     - assets/video/Intro_video.mp4
     
@@ -65,6 +70,7 @@ flutter:
     # Icons assets
     - assets/icons/nav_bar/
     - assets/icons/feed/
+    - assets/icons/swipe/
     - assets/app/
 
   fonts:

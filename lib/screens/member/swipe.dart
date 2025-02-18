@@ -1,23 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-//import 'package:flutter_svg/flutter_svg.dart';
-import '../utilities/navbar.dart';
-import 'dart:math';
-
-// Move ImageTile class outside
-class ImageTile {
-  final String imagePath;
-  final double x;
-  final double y;
-  final double rotation;
-
-  ImageTile({
-    required this.imagePath,
-    required this.x,
-    required this.y,
-    required this.rotation,
-  });
-}
+import 'package:flutter_svg/flutter_svg.dart';
 
 class SwipeScreen extends StatefulWidget {
   const SwipeScreen({super.key});
@@ -28,356 +11,206 @@ class SwipeScreen extends StatefulWidget {
 
 class _SwipeScreenState extends State<SwipeScreen>
     with SingleTickerProviderStateMixin {
-  final List<String> _dummyImages = [
-    'assets/tempImages/users/user4.jpg',
-    'assets/tempImages/users/user2.jpg',
-    'assets/tempImages/users/user1.jpg',
-    'assets/tempImages/users/user3.jpg',
+  final List<Map<String, dynamic>> _profiles = [
+    {
+      'name': 'Sarah',
+      'age': 24,
+      'location': 'Bangalore',
+      'bio':
+          'Adventure seeker & coffee lover. Always up for trying new things and meeting new people.',
+      'images': [
+        'assets/tempImages/users/usera/1.png',
+        'assets/tempImages/users/usera/2.png',
+        'assets/tempImages/users/usera/3.png',
+      ],
+    },
+    // Add more profiles as needed
   ];
 
-  final int _currentImageIndex = 0;
-  bool _showSwipeIndicator = false;
-  String _swipeDirection = '';
-  late AnimationController _guideController;
-  bool _showGuide = true;
-
-  final List<ImageTile> _imageTiles = [];
-  bool _showTiles = false;
+  int _currentIndex = 0;
+  late AnimationController _cardController;
+  Offset _cardOffset = Offset.zero;
 
   @override
   void initState() {
     super.initState();
-    // Only force fullscreen
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
-
-    _guideController = AnimationController(
-      duration: const Duration(seconds: 2),
+    _cardController = AnimationController(
+      duration: const Duration(milliseconds: 300),
       vsync: this,
-    )..repeat();
-
-    // Hide guide after 5 seconds
-    Future.delayed(const Duration(seconds: 5), () {
-      if (mounted) {
-        setState(() => _showGuide = false);
-      }
-    });
+    );
   }
 
   @override
   void dispose() {
-    // Restore system UI when disposing
-    SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+    _cardController.dispose();
+    SystemChrome.setEnabledSystemUIMode(
+      SystemUiMode.manual,
+      overlays: SystemUiOverlay.values,
+    );
     super.dispose();
-  }
-
-  void _handleSwipe(DragUpdateDetails details) {
-    if (details.delta.dx > 10) {
-      _showSwipeIndicator = true;
-      _swipeDirection = 'right';
-    } else if (details.delta.dx < -10) {
-      _showSwipeIndicator = true;
-      _swipeDirection = 'left';
-    } else if (details.delta.dy < -10) {
-      _showSwipeIndicator = true;
-      _swipeDirection = 'up';
-    }
-    setState(() {});
-
-    // Hide indicator after 3 seconds
-    Future.delayed(const Duration(seconds: 3), () {
-      if (mounted) {
-        setState(() {
-          _showSwipeIndicator = false;
-          _swipeDirection = '';
-        });
-      }
-    });
-  }
-
-  void _generateImageTiles() {
-    _imageTiles.clear();
-    final random = Random();
-
-    for (int i = 1; i < _dummyImages.length; i++) {
-      _imageTiles.add(
-        ImageTile(
-          imagePath: _dummyImages[i],
-          x: random.nextDouble() * 0.6 - 0.3,
-          y: random.nextDouble() * 0.45 - 0.225,
-          rotation: (random.nextDouble() - 0.5) * 0.5,
-        ),
-      );
-    }
   }
 
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
 
-    return PopScope(
-      canPop: false,
-      onPopInvoked: (didPop) {
-        if (!didPop) {
-          final navigationState =
-              context.findAncestorStateOfType<NavigationControllerState>();
-          if (navigationState != null) {
-            navigationState.setCurrentIndex(0);
-          }
-        }
-      },
-      child: Scaffold(
-        body: GestureDetector(
-          onPanUpdate: _handleSwipe,
-          onTap: () {
-            if (!_showTiles) _generateImageTiles();
-            setState(() => _showTiles = !_showTiles);
-          },
-          child: Stack(
-            fit: StackFit.expand,
-            children: [
-              // Background Image
-              Image.asset(
-                _dummyImages[_currentImageIndex],
-                fit: BoxFit.cover,
-              ),
-
-              // Image Tiles
-              if (_showTiles)
-                ...List.generate(_imageTiles.length, (index) {
-                  final tile = _imageTiles[index];
-                  return Positioned(
-                    left: size.width * (0.5 + tile.x) - (size.width * 0.25),
-                    top: size.height * (0.5 + tile.y) - (size.width * 0.25),
-                    child: GestureDetector(
-                      onTap: () {
-                        setState(() {
-                          final tempImage = _dummyImages[_currentImageIndex];
-                          _dummyImages[_currentImageIndex] = tile.imagePath;
-                          _dummyImages[_dummyImages.indexOf(tile.imagePath)] =
-                              tempImage;
-                          _showTiles = false;
-                        });
-                        HapticFeedback.mediumImpact();
-                      },
-                      child: Transform.rotate(
-                        angle: tile.rotation,
-                        child: Container(
-                          width: size.width * 0.5,
-                          height: size.width * 0.5,
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(20),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withAlpha(77),
-                                blurRadius: 10,
-                                spreadRadius: 2,
-                              ),
-                            ],
-                            image: DecorationImage(
-                              image: AssetImage(tile.imagePath),
-                              fit: BoxFit.cover,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  );
-                }),
-
-              // User Name Overlay
-              Positioned(
-                bottom: size.height * 0.1,
-                left: 0,
-                right: 0,
-                child: Center(
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 20,
-                      vertical: 10,
-                    ),
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
-                        colors: [
-                          Colors.transparent,
-                          Colors.black.withAlpha(179),
-                        ],
-                      ),
-                    ),
-                    child: Text(
-                      'Dhwani Tripati, 26',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: size.width * 0.06,
-                        fontWeight: FontWeight.bold,
-                        shadows: [
-                          Shadow(
-                            color: Colors.black.withAlpha(128),
-                            blurRadius: 10,
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-
-              // Top Navigation Bar
-              SafeArea(
-                child: Padding(
-                  padding: EdgeInsets.only(
-                    top: 8,
-                    left: 16,
-                    right: 16,
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Back Button
-                      IconButton(
-                        onPressed: () {
-                          if (context.mounted) {
-                            final navigationState =
-                                context.findAncestorStateOfType<
-                                    NavigationControllerState>();
-                            if (navigationState != null) {
-                              // First hide the system UI
-                              SystemChrome.setEnabledSystemUIMode(
-                                SystemUiMode.immersiveSticky,
-                                overlays: [], // Hide both status and navigation bars
-                              );
-
-                              // Then navigate
-                              navigationState.setCurrentIndex(0);
-                            }
-                          }
-                        },
-                        icon: Container(
-                          padding: const EdgeInsets.all(8),
-                          decoration: BoxDecoration(
-                            color: Colors.black.withAlpha(100),
-                            shape: BoxShape.circle,
-                          ),
-                          child: const Icon(
-                            Icons.arrow_back,
-                            color: Colors.white,
-                          ),
-                        ),
-                      ),
-                      // Filter Button
-                      IconButton(
-                        onPressed: null,
-                        icon: Container(
-                          padding: const EdgeInsets.all(8),
-                          decoration: BoxDecoration(
-                            color: Colors.black.withAlpha(100),
-                            shape: BoxShape.circle,
-                          ),
-                          child: const Icon(
-                            Icons.filter_alt_outlined,
-                            color: Colors.white,
-                            size: 24,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-
-              // Swipe Indicators
-              if (_showSwipeIndicator)
-                AnimatedOpacity(
-                  duration: const Duration(milliseconds: 300),
-                  opacity: _showSwipeIndicator ? 1.0 : 0.0,
-                  child: Center(
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 32,
-                        vertical: 16,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Colors.black.withAlpha(150),
-                        borderRadius: BorderRadius.circular(25),
-                      ),
-                      child: Text(
-                        _swipeDirection.toUpperCase(),
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-
-              // Gesture Guide
-              if (_showGuide) _buildGestureGuide(),
-            ],
-          ),
-        ),
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: const SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent,
+        systemNavigationBarColor: Colors.transparent,
+        systemNavigationBarDividerColor: Colors.transparent,
+        statusBarIconBrightness: Brightness.light,
+        systemNavigationBarIconBrightness: Brightness.light,
       ),
-    );
-  }
+      child: Scaffold(
+        backgroundColor: isDarkMode ? Colors.black : Colors.white,
+        body: Stack(
+          children: [
+            // Main Card
+            GestureDetector(
+              onPanUpdate: (details) {
+                setState(() {
+                  _cardOffset += details.delta;
+                });
+              },
+              onPanEnd: (details) {
+                if (_cardOffset.dx.abs() > 100) {
+                  setState(() {
+                    _currentIndex = (_currentIndex + 1) % _profiles.length;
+                    _cardOffset = Offset.zero;
+                  });
+                } else {
+                  setState(() {
+                    _cardOffset = Offset.zero;
+                  });
+                }
+              },
+              child: Transform.translate(
+                offset: _cardOffset,
+                child: Container(
+                  width: size.width,
+                  height: size.height,
+                  decoration: BoxDecoration(
+                    image: DecorationImage(
+                      image: AssetImage(_profiles[_currentIndex]['images'][0]),
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                ),
+              ),
+            ),
 
-  Widget _buildGestureGuide() {
-    return AnimatedOpacity(
-      duration: const Duration(milliseconds: 500),
-      opacity: _showGuide ? 1.0 : 0.0,
-      child: Stack(
-        children: [
-          // Right swipe guide
-          Positioned(
-            left: 20,
-            top: MediaQuery.of(context).size.height * 0.5,
-            child: SlideTransition(
-              position: Tween<Offset>(
-                begin: const Offset(0, 0),
-                end: const Offset(1, 0),
-              ).animate(_guideController),
-              child: const Icon(
-                Icons.arrow_forward,
-                color: Colors.white,
-                size: 40,
+            // Top Action Buttons
+            Positioned(
+              top: 40,
+              left: 16,
+              child: Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Colors.black.withAlpha(26),
+                ),
+                child: const Center(
+                  child: Icon(
+                    Icons.arrow_back_ios_new, // Flutter's native back icon
+                    color: Colors.white,
+                    size: 22,
+                  ),
+                ),
               ),
             ),
-          ),
-          // Left swipe guide
-          Positioned(
-            right: 20,
-            top: MediaQuery.of(context).size.height * 0.5,
-            child: SlideTransition(
-              position: Tween<Offset>(
-                begin: const Offset(0, 0),
-                end: const Offset(-1, 0),
-              ).animate(_guideController),
-              child: const Icon(
-                Icons.arrow_back,
-                color: Colors.white,
-                size: 40,
+            Positioned(
+              top: 40,
+              right: 16,
+              child: Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Colors.black.withAlpha(26),
+                ),
+                child: Center(
+                  child: SvgPicture.asset(
+                    'assets/icons/swipe/filters.svg',
+                    width: 22,
+                    height: 22,
+                    colorFilter: const ColorFilter.mode(
+                      Colors.white,
+                      BlendMode.srcIn,
+                    ),
+                  ),
+                ),
               ),
             ),
-          ),
-          // Up swipe guide
-          Positioned(
-            bottom: 100,
-            left: MediaQuery.of(context).size.width * 0.5 - 20,
-            child: SlideTransition(
-              position: Tween<Offset>(
-                begin: const Offset(0, 0),
-                end: const Offset(0, -1),
-              ).animate(_guideController),
-              child: const Icon(
-                Icons.arrow_upward,
-                color: Colors.white,
-                size: 40,
+
+            // User Info Section
+            Positioned(
+              bottom: 60,
+              left: 0,
+              right: 0,
+              child: Container(
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Text(
+                      '${_profiles[_currentIndex]['name']}, ${_profiles[_currentIndex]['age']}',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 24,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(
+                          Icons.location_on, // Flutter's native location icon
+                          size: 18,
+                          color: Colors.white,
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          _profiles[_currentIndex]['location'],
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 16,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 20),
+                    Row(
+                      children: [
+                        const Icon(
+                          Icons
+                              .info_outline, // Flutter's native info icon for bio
+                          size: 18,
+                          color: Colors.white,
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            _profiles[_currentIndex]['bio'],
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 14,
+                            ),
+                            textAlign: TextAlign.justify,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

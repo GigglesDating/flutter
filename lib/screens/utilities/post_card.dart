@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import '../barrel.dart';
 
 class PostCard extends StatefulWidget {
   final Map<String, dynamic> post;
@@ -57,6 +58,12 @@ class _PostCardState extends State<PostCard>
       ),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(15),
+        border: Border.all(
+          color: widget.isDarkMode
+              ? Colors.white.withAlpha(25)
+              : Colors.black.withAlpha(25),
+          width: 0.25, // Post border thickness
+        ),
         boxShadow: [
           BoxShadow(
             color: widget.isDarkMode
@@ -419,30 +426,27 @@ class _PostCardState extends State<PostCard>
   }
 
   void _showCommentsSheet() {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    final screenHeight = MediaQuery.of(context).size.height;
+    final screenWidth = MediaQuery.of(context).size.width;
+
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (context) => Container(
-        height: MediaQuery.of(context).size.height * 0.7,
-        decoration: BoxDecoration(
-          color: widget.isDarkMode ? Colors.black : Colors.white,
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+      barrierColor: Colors.black.withAlpha(128),
+      enableDrag: true,
+      isDismissible: true,
+      useSafeArea: true,
+      builder: (context) => Padding(
+        padding: EdgeInsets.only(
+          bottom: MediaQuery.of(context).viewInsets.bottom,
         ),
-        child: Column(
-          children: [
-            Container(
-              margin: const EdgeInsets.symmetric(vertical: 10),
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: Colors.grey.withAlpha(100),
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-            const Text('Comments'),
-            // Add your comments list here
-          ],
+        child: CommentsSheet(
+          isDarkMode: isDarkMode,
+          post: widget.post,
+          screenHeight: screenHeight,
+          screenWidth: screenWidth,
         ),
       ),
     );

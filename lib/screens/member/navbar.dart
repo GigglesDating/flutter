@@ -113,17 +113,6 @@ class NavigationControllerState extends State<NavigationController>
                         vertical: size.height * 0.015,
                       ),
                       height: size.height * 0.075,
-                      decoration: BoxDecoration(
-                        boxShadow: [
-                          BoxShadow(
-                            color: isDarkMode
-                                ? Colors.white.withAlpha(15)
-                                : Colors.black.withAlpha(15),
-                            blurRadius: 1,
-                            spreadRadius: 0.5,
-                          ),
-                        ],
-                      ),
                       child: Stack(
                         children: [
                           // SVG Background
@@ -157,7 +146,7 @@ class NavigationControllerState extends State<NavigationController>
                     // Floating SOS button
                     Positioned(
                       top: -(size.height *
-                          0.018), // Adjust this value to move the button up/down
+                          0.02), // Adjust this value to move the button up/down
                       child: _buildSOSButton(),
                     ),
                   ],

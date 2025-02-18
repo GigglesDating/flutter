@@ -32,3 +32,6 @@ export 'waitlist/profileCreationScreens/profile_creation2.dart';
 export 'waitlist/profileCreationScreens/profile_creation3.dart';
 
 export '../network/think.dart';
+
+export 'utilities/comments_sheet.dart';
+export 'utilities/post_card.dart';

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-import '../../utilitis/appFonts.dart';
 
 class AppButton {
   static ElevatedButton button(Color color, String text, double,
@@ -15,7 +14,7 @@ class AppButton {
         onPressed: onTap,
         child: Text(
           text,
-          style: AppFonts.titleBold(color: textColor, fontSize: 18),
+          style: TextStyle(color: textColor, fontSize: 18),
         ));
   }
 
@@ -32,7 +31,7 @@ class AppButton {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text(text,style: AppFonts.titleBold(color: textColor, fontSize: 18),),
+            Text(text,style: TextStyle(color: textColor, fontSize: 18),),
             SizedBox(width: 8), // Spacing between icon and text
             Icon(Icons.info,color: Colors.white,), // Your desired icon
 

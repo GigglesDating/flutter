@@ -3,6 +3,7 @@ export 'splash.dart';
 export 'common/banned.dart';
 export 'member/home.dart';
 export 'member/navbar.dart';
+export 'member/swipe.dart';
 
 export 'submenus/settings/settings.dart';
 export 'submenus/settings/subpages/account_privacy_screen.dart';
@@ -31,3 +32,7 @@ export 'waitlist/profileCreationScreens/profile_creation2.dart';
 export 'waitlist/profileCreationScreens/profile_creation3.dart';
 
 export '../network/think.dart';
+
+export 'utilities/comments_sheet.dart';
+export 'utilities/post_card.dart';
+export 'utilities/share_sheet.dart';

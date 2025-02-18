@@ -69,14 +69,21 @@ void main() {
     );
   };
 
-  // Hide status bar
-  SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
-    statusBarColor: Colors.transparent,
-    statusBarIconBrightness: Brightness.light,
-    systemNavigationBarColor: Colors.black,
-  ));
-  // Force full screen
-  SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+  // Set permanent system UI settings
+  SystemChrome.setSystemUIOverlayStyle(
+    const SystemUiOverlayStyle(
+      statusBarColor: Colors.transparent,
+      systemNavigationBarColor: Colors.transparent,
+      systemNavigationBarDividerColor: Colors.transparent,
+      systemNavigationBarContrastEnforced: false,
+    ),
+  );
+
+  // Set initial system UI mode
+  SystemChrome.setEnabledSystemUIMode(
+    SystemUiMode.immersiveSticky,
+    overlays: [], // Hide both status and navigation bars
+  );
 
   runApp(
     MultiProvider(providers: [

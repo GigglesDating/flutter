@@ -6,7 +6,6 @@ import 'package:hyperkyc_flutter/hyperkyc_config.dart';
 import 'package:hyperkyc_flutter/hyperkyc_flutter.dart';
 import 'package:hyperkyc_flutter/hyperkyc_result.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:flutter_frontend/network/think.dart';
 import 'package:logger/logger.dart';
 
 class KycConsentScreen extends StatefulWidget {

@@ -126,7 +126,7 @@ class _SwipeableCardState extends State<UserlikeSwipeableCard> {
                   child: Center(
                       child: Text(
                     'Aditi Rao',
-                    style: AppFonts.titleBold(
+                    style: TextStyle(
                         color: Colors.white, fontSize: 18),
                   )),
                 ),

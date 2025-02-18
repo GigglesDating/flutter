@@ -2,7 +2,6 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_frontend/utilitis/appFonts.dart';
 
 class SwipeFilterPage extends StatefulWidget {
   const SwipeFilterPage({Key? key}) : super(key: key);
@@ -25,7 +24,6 @@ class _SwipeFilterPage extends State<SwipeFilterPage> {
 
   List<String> _selectedOptions = [];
 
-  // Replace the individual love language booleans with a single string
   String selectedLoveLanguage = '';
   String selectedCommunicationStyle = '';
   String selectedpets = '';
@@ -44,7 +42,6 @@ class _SwipeFilterPage extends State<SwipeFilterPage> {
     {"name": "restaurant", "icon": Icons.restaurant},
     {"name": "sports_esports", "icon": Icons.sports_esports},
     {"name": "fitness_center", "icon": Icons.fitness_center},
-    {"name": "brush", "icon": Icons.brush},
     {"name": "book", "icon": Icons.book},
     {"name": "bedroom_baby", "icon": Icons.bedroom_baby},
     {"name": "hiking", "icon": Icons.hiking},
@@ -62,20 +59,16 @@ class _SwipeFilterPage extends State<SwipeFilterPage> {
     {"name": "house_siding", "icon": Icons.house_siding},
     {"name": "beach_access", "icon": Icons.beach_access},
     {"name": "kayaking", "icon": Icons.kayaking},
-    {"name": "phishing", "icon": Icons.phishing},
     {"name": "directions_bike", "icon": Icons.directions_bike},
     {"name": "terrain", "icon": Icons.terrain},
     {"name": "paragliding", "icon": Icons.paragliding},
     {"name": "settings_accessibility", "icon": Icons.settings_accessibility},
     {"name": "sports_handball_sharp", "icon": Icons.sports_handball_sharp},
     {"name": "sports_tennis", "icon": Icons.sports_tennis},
-    {"name": "golf_course", "icon": Icons.golf_course},
     {"name": "circle_rounded", "icon": Icons.circle_rounded},
     {"name": "self_improvement", "icon": Icons.self_improvement},
     {"name": "pool", "icon": Icons.pool},
     {"name": "directions_run", "icon": Icons.directions_run},
-    {"name": "downhill_skiing", "icon": Icons.downhill_skiing},
-    {"name": "sailing", "icon": Icons.sailing},
     {"name": "museum", "icon": Icons.museum},
     {"name": "account_balance", "icon": Icons.account_balance},
     {"name": "theater_comedy", "icon": Icons.theater_comedy},
@@ -98,15 +91,10 @@ class _SwipeFilterPage extends State<SwipeFilterPage> {
     {"name": "spa", "icon": Icons.spa},
     {"name": "hot_tub", "icon": Icons.hot_tub},
     {"name": "directions_car", "icon": Icons.directions_car},
-    {"name": "sunny_snowing", "icon": Icons.sunny_snowing},
     {"name": "menu_book", "icon": Icons.menu_book},
-    {"name": "headphones", "icon": Icons.headphones},
-    {"name": "psychology", "icon": Icons.psychology},
     {"name": "translate", "icon": Icons.translate},
-    {"name": "psychology_alt", "icon": Icons.psychology_alt},
     {"name": "smart_toy", "icon": Icons.smart_toy},
     {"name": "grid_on", "icon": Icons.grid_on},
-    {"name": "outdoor_grill", "icon": Icons.outdoor_grill},
     {"name": "edit_note", "icon": Icons.edit_note},
     {"name": "science", "icon": Icons.science},
     {"name": "record_voice_over", "icon": Icons.record_voice_over},
@@ -114,9 +102,6 @@ class _SwipeFilterPage extends State<SwipeFilterPage> {
     {"name": "holiday_village", "icon": Icons.holiday_village},
     {"name": "location_city", "icon": Icons.location_city},
     {"name": "backpack", "icon": Icons.backpack},
-    {"name": "directions_boat", "icon": Icons.directions_boat},
-    {"name": "diversity_3", "icon": Icons.diversity_3},
-    {"name": "cabin", "icon": Icons.cabin},
     {"name": "landscape", "icon": Icons.landscape},
     {"name": "tour", "icon": Icons.tour},
     {"name": "temple_hindu", "icon": Icons.temple_hindu},
@@ -124,21 +109,32 @@ class _SwipeFilterPage extends State<SwipeFilterPage> {
     {"name": "diamond", "icon": Icons.diamond},
     {"name": "tag_rounded", "icon": Icons.tag_rounded},
     {"name": "photo_album", "icon": Icons.photo_album},
-    {"name": "album", "icon": Icons.album},
-    {"name": "monetization_on", "icon": Icons.monetization_on},
-    {"name": "precision_manufacturing", "icon": Icons.precision_manufacturing},
     {"name": "vignette_sharp", "icon": Icons.vignette_sharp},
-    {"name": "blind_outlined", "icon": Icons.blind_outlined},
     {"name": "auto_awesome", "icon": Icons.auto_awesome},
     {"name": "code", "icon": Icons.code},
     {"name": "view_in_ar", "icon": Icons.view_in_ar},
-    {"name": "print", "icon": Icons.print},
     {"name": "currency_bitcoin", "icon": Icons.currency_bitcoin},
     {"name": "draw", "icon": Icons.draw},
     {"name": "connecting_airports", "icon": Icons.connecting_airports},
     {"name": "build", "icon": Icons.build},
-    {"name": "subscriptions", "icon": Icons.subscriptions},
     {"name": "video_camera_front", "icon": Icons.video_camera_front},
+    {"name": "local_movies", "icon": Icons.local_movies},
+    {"name": "pedal_bike", "icon": Icons.pedal_bike},
+    {"name": "sports_cricket", "icon": Icons.sports_cricket},
+    {"name": "sports_football", "icon": Icons.sports_football},
+    {"name": "sports_martial_arts", "icon": Icons.sports_martial_arts},
+    {"name": "track_changes_outlined", "icon": Icons.track_changes_outlined},
+    {"name": "sports_volleyball", "icon": Icons.sports_volleyball},
+    {"name": "track_changes", "icon": Icons.track_changes},
+    {"name": "skateboarding", "icon": Icons.skateboarding},
+    {"name": "videocam_sharp", "icon": Icons.videocam_sharp},
+    {"name": "ondemand_video", "icon": Icons.ondemand_video},
+    {"name": "design_services", "icon": Icons.design_services},
+    {"name": "piano", "icon": Icons.piano},
+    {"name": "spoke", "icon": Icons.spoke},
+    {"name": "crisis_alert", "icon": Icons.crisis_alert},
+    {"name": "menu_book_rounded", "icon": Icons.menu_book_rounded},
+    {"name": "volunteer_activism", "icon": Icons.volunteer_activism},
   ];
   Set<String> _selectedActivities = Set<String>();
   // Method to toggle selection
@@ -210,6 +206,8 @@ class _SwipeFilterPage extends State<SwipeFilterPage> {
 
   @override
   Widget build(BuildContext context) {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+
     SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle.light.copyWith(
       statusBarColor: Colors.transparent,
       // Make it transparent or choose any color
@@ -225,8 +223,9 @@ class _SwipeFilterPage extends State<SwipeFilterPage> {
           titleSpacing: 15,
           backgroundColor: Theme.of(context).scaffoldBackgroundColor,
           elevation: 0,
-          titleTextStyle: AppFonts.titleBold(
-              fontSize: 20, color: Theme.of(context).colorScheme.tertiary),
+          titleTextStyle: TextStyle(
+              fontSize: 20,
+              color: isDarkMode ? Colors.grey[100] : Colors.grey[900]),
           bottom: PreferredSize(
             preferredSize: Size(MediaQuery.of(context).size.width, 48),
             child: Container(
@@ -246,17 +245,18 @@ class _SwipeFilterPage extends State<SwipeFilterPage> {
                 isScrollable: false,
                 // textScaler: TextScaler.noScaling,
                 indicator: BoxDecoration(
-                    color: Theme.of(context).colorScheme.tertiary,
+                    color: isDarkMode ? Colors.grey[100] : Colors.grey[900],
                     borderRadius: BorderRadius.circular(10)),
                 padding: EdgeInsets.zero,
                 indicatorSize: TabBarIndicatorSize.tab,
                 indicatorPadding: const EdgeInsets.symmetric(horizontal: 0),
-                labelStyle: AppFonts.titleBold(
+                labelStyle: TextStyle(
                   fontSize: 18,
                 ),
-                unselectedLabelStyle: AppFonts.titleBold(
-                  fontSize: 18,
-                ),
+                unselectedLabelStyle: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w700,
+                    color: Colors.black),
                 labelColor:
                     Theme.of(context).colorScheme.brightness == Brightness.light
                         ? Colors.white
@@ -283,9 +283,11 @@ class _SwipeFilterPage extends State<SwipeFilterPage> {
                     ),
                     Text(
                       ' Who are you open to date ?',
-                      style: AppFonts.titleBold(
+                      style: TextStyle(
+                          fontWeight: FontWeight.w700,
                           fontSize: 18,
-                          color: Theme.of(context).colorScheme.tertiary),
+                          color:
+                              isDarkMode ? Colors.grey[100] : Colors.grey[900]),
                     ),
                     SizedBox(
                       height: 10,
@@ -293,9 +295,7 @@ class _SwipeFilterPage extends State<SwipeFilterPage> {
                     Container(
                       padding: EdgeInsets.all(16),
                       decoration: BoxDecoration(
-                          border: Border.all(
-                              width: 1,
-                              color: Theme.of(context).colorScheme.tertiary),
+                          border: Border.all(width: 1, color: Colors.grey),
                           borderRadius: BorderRadius.circular(20)),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -305,9 +305,10 @@ class _SwipeFilterPage extends State<SwipeFilterPage> {
                             children: [
                               Text(
                                 'I\u0027m open to dating everyone',
-                                style: AppFonts.titleRegular(
-                                    color:
-                                        Theme.of(context).colorScheme.tertiary,
+                                style: TextStyle(
+                                    color: isDarkMode
+                                        ? Colors.grey[100]
+                                        : Colors.grey[900],
                                     fontSize: 15),
                               ),
                               SizedBox(
@@ -346,23 +347,22 @@ class _SwipeFilterPage extends State<SwipeFilterPage> {
                             children: [
                               Text(
                                 'Men',
-                                style: AppFonts.titleRegular(
-                                    color:
-                                        Theme.of(context).colorScheme.tertiary),
+                                style: TextStyle(
+                                    color: isDarkMode
+                                        ? Colors.grey[100]
+                                        : Colors.grey[900]),
                               ),
                               Checkbox(
                                 checkColor: Theme.of(context).brightness ==
                                         Brightness.light
                                     ? Colors.white
                                     : Colors.black,
-                                activeColor:
-                                    Theme.of(context).colorScheme.tertiary,
+                                activeColor: isDarkMode
+                                    ? Colors.grey[100]
+                                    : Colors.grey[900],
                                 // isError: true,
                                 value: isMen,
-                                side: BorderSide(
-                                    color:
-                                        Theme.of(context).colorScheme.tertiary,
-                                    width: 2),
+                                side: BorderSide(color: Colors.grey, width: 2),
                                 visualDensity:
                                     VisualDensity(horizontal: 0, vertical: -4),
 
@@ -379,23 +379,22 @@ class _SwipeFilterPage extends State<SwipeFilterPage> {
                             children: [
                               Text(
                                 'Women',
-                                style: AppFonts.titleRegular(
-                                    color:
-                                        Theme.of(context).colorScheme.tertiary),
+                                style: TextStyle(
+                                    color: isDarkMode
+                                        ? Colors.grey[100]
+                                        : Colors.grey[900]),
                               ),
                               Checkbox(
                                 checkColor: Theme.of(context).brightness ==
                                         Brightness.light
                                     ? Colors.white
                                     : Colors.black,
-                                activeColor:
-                                    Theme.of(context).colorScheme.tertiary,
+                                activeColor: isDarkMode
+                                    ? Colors.grey[100]
+                                    : Colors.grey[900],
                                 // isError: true,
                                 value: isWomen,
-                                side: BorderSide(
-                                    color:
-                                        Theme.of(context).colorScheme.tertiary,
-                                    width: 2),
+                                side: BorderSide(color: Colors.grey, width: 2),
                                 visualDensity:
                                     VisualDensity(horizontal: 0, vertical: -4),
 
@@ -412,23 +411,22 @@ class _SwipeFilterPage extends State<SwipeFilterPage> {
                             children: [
                               Text(
                                 'Non-Binary',
-                                style: AppFonts.titleRegular(
-                                    color:
-                                        Theme.of(context).colorScheme.tertiary),
+                                style: TextStyle(
+                                    color: isDarkMode
+                                        ? Colors.grey[100]
+                                        : Colors.grey[900]),
                               ),
                               Checkbox(
                                 checkColor: Theme.of(context).brightness ==
                                         Brightness.light
                                     ? Colors.white
                                     : Colors.black,
-                                activeColor:
-                                    Theme.of(context).colorScheme.tertiary,
+                                activeColor: isDarkMode
+                                    ? Colors.grey[100]
+                                    : Colors.grey[900],
                                 // isError: true,
                                 value: isNonBinary,
-                                side: BorderSide(
-                                    color:
-                                        Theme.of(context).colorScheme.tertiary,
-                                    width: 2),
+                                side: BorderSide(color: Colors.grey, width: 2),
                                 visualDensity:
                                     VisualDensity(horizontal: 0, vertical: -4),
 
@@ -448,9 +446,11 @@ class _SwipeFilterPage extends State<SwipeFilterPage> {
                     ),
                     Text(
                       ' Age Preference',
-                      style: AppFonts.titleBold(
-                          fontSize: 18,
-                          color: Theme.of(context).colorScheme.tertiary),
+                      style: TextStyle(
+                        fontWeight: FontWeight.w700,
+                        fontSize: 18,
+                        color: isDarkMode ? Colors.grey[100] : Colors.grey[900],
+                      ),
                     ),
                     SizedBox(
                       height: 10,
@@ -459,26 +459,35 @@ class _SwipeFilterPage extends State<SwipeFilterPage> {
                       padding: EdgeInsets.all(16),
                       decoration: BoxDecoration(
                           border: Border.all(
-                              width: 1,
-                              color: Theme.of(context).colorScheme.tertiary),
+                            width: 1,
+                            color: Colors.grey,
+                          ),
                           borderRadius: BorderRadius.circular(20)),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
                             'Between ${_currentRangeValues.start.round().toString()} and ${_currentRangeValues.end.round().toString()}',
-                            style: AppFonts.titleRegular(
-                                color: Theme.of(context).colorScheme.tertiary),
+                            style: TextStyle(
+                                color: isDarkMode
+                                    ? Colors.grey[100]
+                                    : Colors.grey[900],
+                                fontSize: 16,
+                                fontWeight: FontWeight.normal),
                           ),
                           RangeSlider(
                             values: _currentRangeValues,
                             min: 0,
                             max: 60,
                             divisions: 100,
-                            activeColor: Theme.of(context).colorScheme.tertiary,
-                            inactiveColor: const Color.fromARGB(255, 168, 168, 168),
-                            overlayColor: WidgetStatePropertyAll(
-                                Theme.of(context).colorScheme.tertiary),
+                            activeColor: isDarkMode
+                                ? Colors.grey[100]
+                                : Colors.grey[900],
+                            inactiveColor:
+                                const Color.fromARGB(255, 90, 89, 89),
+                            overlayColor: WidgetStatePropertyAll(isDarkMode
+                                ? Colors.grey[900]
+                                : Colors.grey[100]),
                             labels: RangeLabels(
                               _currentRangeValues.start.round().toString(),
                               _currentRangeValues.end.round().toString(),
@@ -497,9 +506,11 @@ class _SwipeFilterPage extends State<SwipeFilterPage> {
                     ),
                     Text(
                       'Interests',
-                      style: AppFonts.titleBold(
+                      style: TextStyle(
+                          fontWeight: FontWeight.w700,
                           fontSize: 18,
-                          color: Theme.of(context).colorScheme.tertiary),
+                          color:
+                              isDarkMode ? Colors.grey[100] : Colors.grey[900]),
                     ),
                     SizedBox(
                       height: 10,
@@ -508,9 +519,7 @@ class _SwipeFilterPage extends State<SwipeFilterPage> {
                       height: MediaQuery.of(context).size.width / 2,
                       padding: EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                          border: Border.all(
-                              width: 1,
-                              color: Theme.of(context).colorScheme.tertiary),
+                          border: Border.all(width: 1, color: Colors.grey),
                           borderRadius: BorderRadius.circular(20)),
                       child: GridView.builder(
                         gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
@@ -550,7 +559,7 @@ class _SwipeFilterPage extends State<SwipeFilterPage> {
                                       activity,
                                       maxLines: 1,
                                       overflow: TextOverflow.ellipsis,
-                                      style: AppFonts.titleBold(
+                                      style: TextStyle(
                                           color: isSelected
                                               ? Theme.of(context).brightness ==
                                                       Brightness.light
@@ -602,9 +611,11 @@ class _SwipeFilterPage extends State<SwipeFilterPage> {
                     ),
                     Text(
                       'What are you interested in?',
-                      style: AppFonts.titleBold(
+                      style: TextStyle(
+                          fontWeight: FontWeight.w700,
                           fontSize: 18,
-                          color: Theme.of(context).colorScheme.tertiary),
+                          color:
+                              isDarkMode ? Colors.grey[100] : Colors.grey[900]),
                     ),
                     SizedBox(
                       height: 10,
@@ -612,9 +623,7 @@ class _SwipeFilterPage extends State<SwipeFilterPage> {
                     Container(
                       padding: EdgeInsets.all(16),
                       decoration: BoxDecoration(
-                          border: Border.all(
-                              width: 1,
-                              color: Theme.of(context).colorScheme.tertiary),
+                          border: Border.all(width: 1, color: Colors.grey),
                           borderRadius: BorderRadius.circular(20)),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -624,29 +633,31 @@ class _SwipeFilterPage extends State<SwipeFilterPage> {
                             children: [
                               Text(
                                 'Just a Homie',
-                                style: AppFonts.titleRegular(
-                                    color:
-                                        Theme.of(context).colorScheme.tertiary),
+                                style: TextStyle(
+                                    color: isDarkMode
+                                        ? Colors.grey[100]
+                                        : Colors.grey[900],
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.normal),
                               ),
                               Checkbox(
                                 checkColor: Theme.of(context).brightness ==
                                         Brightness.light
                                     ? Colors.white
                                     : Colors.black,
-                                activeColor:
-                                    Theme.of(context).colorScheme.tertiary,
+                                activeColor: isDarkMode
+                                    ? Colors.grey[100]
+                                    : Colors.grey[900],
                                 // isError: true,
                                 value: selectedsocialinterest == 'Just a Homie',
-                                side: BorderSide(
-                                    color:
-                                        Theme.of(context).colorScheme.tertiary,
-                                    width: 2),
+                                side: BorderSide(color: Colors.grey, width: 2),
                                 visualDensity:
                                     VisualDensity(horizontal: 0, vertical: -4),
 
                                 onChanged: (value) {
                                   setState(() {
-                                    selectedsocialinterest = value!?'Just a Homie':'';
+                                    selectedsocialinterest =
+                                        value! ? 'Just a Homie' : '';
                                   });
                                 },
                               ),
@@ -657,29 +668,32 @@ class _SwipeFilterPage extends State<SwipeFilterPage> {
                             children: [
                               Text(
                                 'Serious Connections',
-                                style: AppFonts.titleRegular(
-                                    color:
-                                        Theme.of(context).colorScheme.tertiary),
+                                style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.normal,
+                                    color: isDarkMode
+                                        ? Colors.grey[100]
+                                        : Colors.grey[900]),
                               ),
                               Checkbox(
                                 checkColor: Theme.of(context).brightness ==
                                         Brightness.light
                                     ? Colors.white
                                     : Colors.black,
-                                activeColor:
-                                    Theme.of(context).colorScheme.tertiary,
+                                activeColor: isDarkMode
+                                    ? Colors.grey[100]
+                                    : Colors.grey[900],
                                 // isError: true,
-                                value: selectedsocialinterest == 'Serious Connections',
-                                side: BorderSide(
-                                    color:
-                                        Theme.of(context).colorScheme.tertiary,
-                                    width: 2),
+                                value: selectedsocialinterest ==
+                                    'Serious Connections',
+                                side: BorderSide(color: Colors.grey, width: 2),
                                 visualDensity:
                                     VisualDensity(horizontal: 0, vertical: -4),
 
                                 onChanged: (value) {
                                   setState(() {
-                                    selectedsocialinterest = value!?'Serious Connections':'';
+                                    selectedsocialinterest =
+                                        value! ? 'Serious Connections' : '';
                                   });
                                 },
                               ),
@@ -690,29 +704,32 @@ class _SwipeFilterPage extends State<SwipeFilterPage> {
                             children: [
                               Text(
                                 'Casual Connections',
-                                style: AppFonts.titleRegular(
-                                    color:
-                                        Theme.of(context).colorScheme.tertiary),
+                                style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.normal,
+                                    color: isDarkMode
+                                        ? Colors.grey[100]
+                                        : Colors.grey[900]),
                               ),
                               Checkbox(
                                 checkColor: Theme.of(context).brightness ==
                                         Brightness.light
                                     ? Colors.white
                                     : Colors.black,
-                                activeColor:
-                                    Theme.of(context).colorScheme.tertiary,
+                                activeColor: isDarkMode
+                                    ? Colors.grey[100]
+                                    : Colors.grey[900],
                                 // isError: true,
-                                value: selectedsocialinterest == 'Casual Connections',
-                                side: BorderSide(
-                                    color:
-                                        Theme.of(context).colorScheme.tertiary,
-                                    width: 2),
+                                value: selectedsocialinterest ==
+                                    'Casual Connections',
+                                side: BorderSide(color: Colors.grey, width: 2),
                                 visualDensity:
                                     VisualDensity(horizontal: 0, vertical: -4),
 
                                 onChanged: (value) {
                                   setState(() {
-                                    selectedsocialinterest = value!?'Casual Connections':'';
+                                    selectedsocialinterest =
+                                        value! ? 'Casual Connections' : '';
                                   });
                                 },
                               ),
@@ -723,29 +740,31 @@ class _SwipeFilterPage extends State<SwipeFilterPage> {
                             children: [
                               Text(
                                 'Surprise Me',
-                                style: AppFonts.titleRegular(
-                                    color:
-                                        Theme.of(context).colorScheme.tertiary),
+                                style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.normal,
+                                    color: isDarkMode
+                                        ? Colors.grey[100]
+                                        : Colors.grey[900]),
                               ),
                               Checkbox(
                                 checkColor: Theme.of(context).brightness ==
                                         Brightness.light
                                     ? Colors.white
                                     : Colors.black,
-                                activeColor:
-                                    Theme.of(context).colorScheme.tertiary,
+                                activeColor: isDarkMode
+                                    ? Colors.grey[100]
+                                    : Colors.grey[900],
                                 // isError: true,
                                 value: selectedsocialinterest == 'Surprise Me',
-                                side: BorderSide(
-                                    color:
-                                        Theme.of(context).colorScheme.tertiary,
-                                    width: 2),
+                                side: BorderSide(color: Colors.grey, width: 2),
                                 visualDensity:
                                     VisualDensity(horizontal: 0, vertical: -4),
 
                                 onChanged: (value) {
                                   setState(() {
-                                    selectedsocialinterest = value!?'Surprise Me':'';
+                                    selectedsocialinterest =
+                                        value! ? 'Surprise Me' : '';
                                   });
                                 },
                               ),
@@ -756,29 +775,32 @@ class _SwipeFilterPage extends State<SwipeFilterPage> {
                             children: [
                               Text(
                                 'Short Term Fun',
-                                style: AppFonts.titleRegular(
-                                    color:
-                                        Theme.of(context).colorScheme.tertiary),
+                                style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.normal,
+                                    color: isDarkMode
+                                        ? Colors.grey[100]
+                                        : Colors.grey[900]),
                               ),
                               Checkbox(
                                 checkColor: Theme.of(context).brightness ==
                                         Brightness.light
                                     ? Colors.white
                                     : Colors.black,
-                                activeColor:
-                                    Theme.of(context).colorScheme.tertiary,
+                                activeColor: isDarkMode
+                                    ? Colors.grey[100]
+                                    : Colors.grey[900],
                                 // isError: true,
-                                value: selectedsocialinterest =='Short Term Fun',
-                                side: BorderSide(
-                                    color:
-                                        Theme.of(context).colorScheme.tertiary,
-                                    width: 2),
+                                value:
+                                    selectedsocialinterest == 'Short Term Fun',
+                                side: BorderSide(color: Colors.grey, width: 2),
                                 visualDensity:
                                     VisualDensity(horizontal: 0, vertical: -4),
 
                                 onChanged: (value) {
                                   setState(() {
-                                    selectedsocialinterest = value!?'Short Term Fun':'';
+                                    selectedsocialinterest =
+                                        value! ? 'Short Term Fun' : '';
                                   });
                                 },
                               ),
@@ -792,9 +814,11 @@ class _SwipeFilterPage extends State<SwipeFilterPage> {
                     ),
                     Text(
                       'What\u0027s your social energy level?',
-                      style: AppFonts.titleBold(
+                      style: TextStyle(
+                          fontWeight: FontWeight.w700,
                           fontSize: 18,
-                          color: Theme.of(context).colorScheme.tertiary),
+                          color:
+                              isDarkMode ? Colors.grey[100] : Colors.grey[900]),
                     ),
                     SizedBox(
                       height: 10,
@@ -802,9 +826,7 @@ class _SwipeFilterPage extends State<SwipeFilterPage> {
                     Container(
                       padding: EdgeInsets.all(16),
                       decoration: BoxDecoration(
-                          border: Border.all(
-                              width: 1,
-                              color: Theme.of(context).colorScheme.tertiary),
+                          border: Border.all(width: 1, color: Colors.grey),
                           borderRadius: BorderRadius.circular(20)),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -814,29 +836,31 @@ class _SwipeFilterPage extends State<SwipeFilterPage> {
                             children: [
                               Text(
                                 'Introvert',
-                                style: AppFonts.titleRegular(
-                                    color:
-                                        Theme.of(context).colorScheme.tertiary),
+                                style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.normal,
+                                    color: isDarkMode
+                                        ? Colors.grey[100]
+                                        : Colors.grey[900]),
                               ),
                               Checkbox(
                                 checkColor: Theme.of(context).brightness ==
                                         Brightness.light
                                     ? Colors.white
                                     : Colors.black,
-                                activeColor:
-                                    Theme.of(context).colorScheme.tertiary,
+                                activeColor: isDarkMode
+                                    ? Colors.grey[100]
+                                    : Colors.grey[900],
                                 // isError: true,
                                 value: selectedsocialenergy == 'Introvert',
-                                side: BorderSide(
-                                    color:
-                                        Theme.of(context).colorScheme.tertiary,
-                                    width: 2),
+                                side: BorderSide(color: Colors.grey, width: 2),
                                 visualDensity:
                                     VisualDensity(horizontal: 0, vertical: -4),
 
                                 onChanged: (value) {
                                   setState(() {
-                                    selectedsocialenergy = value!?'Introvert':'';
+                                    selectedsocialenergy =
+                                        value! ? 'Introvert' : '';
                                   });
                                 },
                               ),
@@ -847,29 +871,31 @@ class _SwipeFilterPage extends State<SwipeFilterPage> {
                             children: [
                               Text(
                                 'Extrovert',
-                                style: AppFonts.titleRegular(
-                                    color:
-                                        Theme.of(context).colorScheme.tertiary),
+                                style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.normal,
+                                    color: isDarkMode
+                                        ? Colors.grey[100]
+                                        : Colors.grey[900]),
                               ),
                               Checkbox(
                                 checkColor: Theme.of(context).brightness ==
                                         Brightness.light
                                     ? Colors.white
                                     : Colors.black,
-                                activeColor:
-                                    Theme.of(context).colorScheme.tertiary,
+                                activeColor: isDarkMode
+                                    ? Colors.grey[100]
+                                    : Colors.grey[900],
                                 // isError: true,
                                 value: selectedsocialenergy == 'Extrovert',
-                                side: BorderSide(
-                                    color:
-                                        Theme.of(context).colorScheme.tertiary,
-                                    width: 2),
+                                side: BorderSide(color: Colors.grey, width: 2),
                                 visualDensity:
                                     VisualDensity(horizontal: 0, vertical: -4),
 
                                 onChanged: (value) {
                                   setState(() {
-                                    selectedsocialenergy = value!?'Extrovert':'';
+                                    selectedsocialenergy =
+                                        value! ? 'Extrovert' : '';
                                   });
                                 },
                               ),
@@ -880,29 +906,31 @@ class _SwipeFilterPage extends State<SwipeFilterPage> {
                             children: [
                               Text(
                                 'Ambivert',
-                                style: AppFonts.titleRegular(
-                                    color:
-                                        Theme.of(context).colorScheme.tertiary),
+                                style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.normal,
+                                    color: isDarkMode
+                                        ? Colors.grey[100]
+                                        : Colors.grey[900]),
                               ),
                               Checkbox(
                                 checkColor: Theme.of(context).brightness ==
                                         Brightness.light
                                     ? Colors.white
                                     : Colors.black,
-                                activeColor:
-                                    Theme.of(context).colorScheme.tertiary,
+                                activeColor: isDarkMode
+                                    ? Colors.grey[100]
+                                    : Colors.grey[900],
                                 // isError: true,
                                 value: selectedsocialenergy == 'Ambivert',
-                                side: BorderSide(
-                                    color:
-                                        Theme.of(context).colorScheme.tertiary,
-                                    width: 2),
+                                side: BorderSide(color: Colors.grey, width: 2),
                                 visualDensity:
                                     VisualDensity(horizontal: 0, vertical: -4),
 
                                 onChanged: (value) {
                                   setState(() {
-                                    selectedsocialenergy = value!?'Ambivert':'';
+                                    selectedsocialenergy =
+                                        value! ? 'Ambivert' : '';
                                   });
                                 },
                               ),
@@ -916,9 +944,11 @@ class _SwipeFilterPage extends State<SwipeFilterPage> {
                     ),
                     Text(
                       'How often do you drink?',
-                      style: AppFonts.titleBold(
+                      style: TextStyle(
+                          fontWeight: FontWeight.w700,
                           fontSize: 18,
-                          color: Theme.of(context).colorScheme.tertiary),
+                          color:
+                              isDarkMode ? Colors.grey[100] : Colors.grey[900]),
                     ),
                     SizedBox(
                       height: 10,
@@ -926,9 +956,7 @@ class _SwipeFilterPage extends State<SwipeFilterPage> {
                     Container(
                       padding: EdgeInsets.all(16),
                       decoration: BoxDecoration(
-                          border: Border.all(
-                              width: 1,
-                              color: Theme.of(context).colorScheme.tertiary),
+                          border: Border.all(width: 1, color: Colors.grey),
                           borderRadius: BorderRadius.circular(20)),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -938,23 +966,24 @@ class _SwipeFilterPage extends State<SwipeFilterPage> {
                             children: [
                               Text(
                                 'Teetotaler',
-                                style: AppFonts.titleRegular(
-                                    color:
-                                        Theme.of(context).colorScheme.tertiary),
+                                style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.normal,
+                                    color: isDarkMode
+                                        ? Colors.grey[100]
+                                        : Colors.grey[900]),
                               ),
                               Checkbox(
                                 checkColor: Theme.of(context).brightness ==
                                         Brightness.light
                                     ? Colors.white
                                     : Colors.black,
-                                activeColor:
-                                    Theme.of(context).colorScheme.tertiary,
+                                activeColor: isDarkMode
+                                    ? Colors.grey[100]
+                                    : Colors.grey[900],
                                 // isError: true,
                                 value: selecteddrinker == 'Teetotaler',
-                                side: BorderSide(
-                                    color:
-                                        Theme.of(context).colorScheme.tertiary,
-                                    width: 2),
+                                side: BorderSide(color: Colors.grey, width: 2),
                                 visualDensity:
                                     VisualDensity(horizontal: 0, vertical: -4),
 
@@ -972,23 +1001,24 @@ class _SwipeFilterPage extends State<SwipeFilterPage> {
                             children: [
                               Text(
                                 'Social drinking',
-                                style: AppFonts.titleRegular(
-                                    color:
-                                        Theme.of(context).colorScheme.tertiary),
+                                style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.normal,
+                                    color: isDarkMode
+                                        ? Colors.grey[100]
+                                        : Colors.grey[900]),
                               ),
                               Checkbox(
                                 checkColor: Theme.of(context).brightness ==
                                         Brightness.light
                                     ? Colors.white
                                     : Colors.black,
-                                activeColor:
-                                    Theme.of(context).colorScheme.tertiary,
+                                activeColor: isDarkMode
+                                    ? Colors.grey[100]
+                                    : Colors.grey[900],
                                 // isError: true,
                                 value: selecteddrinker == 'Social drinking',
-                                side: BorderSide(
-                                    color:
-                                        Theme.of(context).colorScheme.tertiary,
-                                    width: 2),
+                                side: BorderSide(color: Colors.grey, width: 2),
                                 visualDensity:
                                     VisualDensity(horizontal: 0, vertical: -4),
 
@@ -1006,23 +1036,24 @@ class _SwipeFilterPage extends State<SwipeFilterPage> {
                             children: [
                               Text(
                                 'Weekends',
-                                style: AppFonts.titleRegular(
-                                    color:
-                                        Theme.of(context).colorScheme.tertiary),
+                                style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.normal,
+                                    color: isDarkMode
+                                        ? Colors.grey[100]
+                                        : Colors.grey[900]),
                               ),
                               Checkbox(
                                 checkColor: Theme.of(context).brightness ==
                                         Brightness.light
                                     ? Colors.white
                                     : Colors.black,
-                                activeColor:
-                                    Theme.of(context).colorScheme.tertiary,
+                                activeColor: isDarkMode
+                                    ? Colors.grey[100]
+                                    : Colors.grey[900],
                                 // isError: true,
                                 value: selecteddrinker == 'Weekends',
-                                side: BorderSide(
-                                    color:
-                                        Theme.of(context).colorScheme.tertiary,
-                                    width: 2),
+                                side: BorderSide(color: Colors.grey, width: 2),
                                 visualDensity:
                                     VisualDensity(horizontal: 0, vertical: -4),
 
@@ -1039,23 +1070,24 @@ class _SwipeFilterPage extends State<SwipeFilterPage> {
                             children: [
                               Text(
                                 'Drunkard',
-                                style: AppFonts.titleRegular(
-                                    color:
-                                        Theme.of(context).colorScheme.tertiary),
+                                style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.normal,
+                                    color: isDarkMode
+                                        ? Colors.grey[100]
+                                        : Colors.grey[900]),
                               ),
                               Checkbox(
                                 checkColor: Theme.of(context).brightness ==
                                         Brightness.light
                                     ? Colors.white
                                     : Colors.black,
-                                activeColor:
-                                    Theme.of(context).colorScheme.tertiary,
+                                activeColor: isDarkMode
+                                    ? Colors.grey[100]
+                                    : Colors.grey[900],
                                 // isError: true,
                                 value: selecteddrinker == 'Drunkard',
-                                side: BorderSide(
-                                    color:
-                                        Theme.of(context).colorScheme.tertiary,
-                                    width: 2),
+                                side: BorderSide(color: Colors.grey, width: 2),
                                 visualDensity:
                                     VisualDensity(horizontal: 0, vertical: -4),
 
@@ -1075,9 +1107,11 @@ class _SwipeFilterPage extends State<SwipeFilterPage> {
                     ),
                     Text(
                       'How often do you smoke?',
-                      style: AppFonts.titleBold(
+                      style: TextStyle(
+                          fontWeight: FontWeight.w700,
                           fontSize: 18,
-                          color: Theme.of(context).colorScheme.tertiary),
+                          color:
+                              isDarkMode ? Colors.grey[100] : Colors.grey[900]),
                     ),
                     SizedBox(
                       height: 10,
@@ -1085,9 +1119,7 @@ class _SwipeFilterPage extends State<SwipeFilterPage> {
                     Container(
                       padding: EdgeInsets.all(16),
                       decoration: BoxDecoration(
-                          border: Border.all(
-                              width: 1,
-                              color: Theme.of(context).colorScheme.tertiary),
+                          border: Border.all(width: 1, color: Colors.grey),
                           borderRadius: BorderRadius.circular(20)),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1097,23 +1129,24 @@ class _SwipeFilterPage extends State<SwipeFilterPage> {
                             children: [
                               Text(
                                 'Social smoking',
-                                style: AppFonts.titleRegular(
-                                    color:
-                                        Theme.of(context).colorScheme.tertiary),
+                                style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.normal,
+                                    color: isDarkMode
+                                        ? Colors.grey[100]
+                                        : Colors.grey[900]),
                               ),
                               Checkbox(
                                 checkColor: Theme.of(context).brightness ==
                                         Brightness.light
                                     ? Colors.white
                                     : Colors.black,
-                                activeColor:
-                                    Theme.of(context).colorScheme.tertiary,
+                                activeColor: isDarkMode
+                                    ? Colors.grey[100]
+                                    : Colors.grey[900],
                                 // isError: true,
                                 value: selectedsmoke == 'Social smoking',
-                                side: BorderSide(
-                                    color:
-                                        Theme.of(context).colorScheme.tertiary,
-                                    width: 2),
+                                side: BorderSide(color: Colors.grey, width: 2),
                                 visualDensity:
                                     VisualDensity(horizontal: 0, vertical: -4),
 
@@ -1131,23 +1164,24 @@ class _SwipeFilterPage extends State<SwipeFilterPage> {
                             children: [
                               Text(
                                 'Trying to quit',
-                                style: AppFonts.titleRegular(
-                                    color:
-                                        Theme.of(context).colorScheme.tertiary),
+                                style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.normal,
+                                    color: isDarkMode
+                                        ? Colors.grey[100]
+                                        : Colors.grey[900]),
                               ),
                               Checkbox(
                                 checkColor: Theme.of(context).brightness ==
                                         Brightness.light
                                     ? Colors.white
                                     : Colors.black,
-                                activeColor:
-                                    Theme.of(context).colorScheme.tertiary,
+                                activeColor: isDarkMode
+                                    ? Colors.grey[100]
+                                    : Colors.grey[900],
                                 // isError: true,
                                 value: selectedsmoke == 'Trying to quit',
-                                side: BorderSide(
-                                    color:
-                                        Theme.of(context).colorScheme.tertiary,
-                                    width: 2),
+                                side: BorderSide(color: Colors.grey, width: 2),
                                 visualDensity:
                                     VisualDensity(horizontal: 0, vertical: -4),
 
@@ -1165,23 +1199,24 @@ class _SwipeFilterPage extends State<SwipeFilterPage> {
                             children: [
                               Text(
                                 'Smoking when drinking',
-                                style: AppFonts.titleRegular(
-                                    color:
-                                        Theme.of(context).colorScheme.tertiary),
+                                style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.normal,
+                                    color: isDarkMode
+                                        ? Colors.grey[100]
+                                        : Colors.grey[900]),
                               ),
                               Checkbox(
                                 checkColor: Theme.of(context).brightness ==
                                         Brightness.light
                                     ? Colors.white
                                     : Colors.black,
-                                activeColor:
-                                    Theme.of(context).colorScheme.tertiary,
+                                activeColor: isDarkMode
+                                    ? Colors.grey[100]
+                                    : Colors.grey[900],
                                 // isError: true,
                                 value: selectedsmoke == 'Smoking when drinking',
-                                side: BorderSide(
-                                    color:
-                                        Theme.of(context).colorScheme.tertiary,
-                                    width: 2),
+                                side: BorderSide(color: Colors.grey, width: 2),
                                 visualDensity:
                                     VisualDensity(horizontal: 0, vertical: -4),
 
@@ -1199,23 +1234,24 @@ class _SwipeFilterPage extends State<SwipeFilterPage> {
                             children: [
                               Text(
                                 'Chain smoker',
-                                style: AppFonts.titleRegular(
-                                    color:
-                                        Theme.of(context).colorScheme.tertiary),
+                                style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.normal,
+                                    color: isDarkMode
+                                        ? Colors.grey[100]
+                                        : Colors.grey[900]),
                               ),
                               Checkbox(
                                 checkColor: Theme.of(context).brightness ==
                                         Brightness.light
                                     ? Colors.white
                                     : Colors.black,
-                                activeColor:
-                                    Theme.of(context).colorScheme.tertiary,
+                                activeColor: isDarkMode
+                                    ? Colors.grey[100]
+                                    : Colors.grey[900],
                                 // isError: true,
                                 value: selectedsmoke == 'Chain smoker',
-                                side: BorderSide(
-                                    color:
-                                        Theme.of(context).colorScheme.tertiary,
-                                    width: 2),
+                                side: BorderSide(color: Colors.grey, width: 2),
                                 visualDensity:
                                     VisualDensity(horizontal: 0, vertical: -4),
 
@@ -1236,9 +1272,11 @@ class _SwipeFilterPage extends State<SwipeFilterPage> {
                     ),
                     Text(
                       'Do you exercise?',
-                      style: AppFonts.titleBold(
+                      style: TextStyle(
+                          fontWeight: FontWeight.w700,
                           fontSize: 18,
-                          color: Theme.of(context).colorScheme.tertiary),
+                          color:
+                              isDarkMode ? Colors.grey[100] : Colors.grey[900]),
                     ),
                     SizedBox(
                       height: 10,
@@ -1246,9 +1284,7 @@ class _SwipeFilterPage extends State<SwipeFilterPage> {
                     Container(
                       padding: EdgeInsets.all(16),
                       decoration: BoxDecoration(
-                          border: Border.all(
-                              width: 1,
-                              color: Theme.of(context).colorScheme.tertiary),
+                          border: Border.all(width: 1, color: Colors.grey),
                           borderRadius: BorderRadius.circular(20)),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1258,23 +1294,24 @@ class _SwipeFilterPage extends State<SwipeFilterPage> {
                             children: [
                               Text(
                                 'Don\u0027t want to',
-                                style: AppFonts.titleRegular(
-                                    color:
-                                        Theme.of(context).colorScheme.tertiary),
+                                style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.normal,
+                                    color: isDarkMode
+                                        ? Colors.grey[100]
+                                        : Colors.grey[900]),
                               ),
                               Checkbox(
                                 checkColor: Theme.of(context).brightness ==
                                         Brightness.light
                                     ? Colors.white
                                     : Colors.black,
-                                activeColor:
-                                    Theme.of(context).colorScheme.tertiary,
+                                activeColor: isDarkMode
+                                    ? Colors.grey[100]
+                                    : Colors.grey[900],
                                 // isError: true,
                                 value: selectedexercise == 'Don\u0027t want to',
-                                side: BorderSide(
-                                    color:
-                                        Theme.of(context).colorScheme.tertiary,
-                                    width: 2),
+                                side: BorderSide(color: Colors.grey, width: 2),
                                 visualDensity:
                                     VisualDensity(horizontal: 0, vertical: -4),
 
@@ -1292,23 +1329,24 @@ class _SwipeFilterPage extends State<SwipeFilterPage> {
                             children: [
                               Text(
                                 'Every Day',
-                                style: AppFonts.titleRegular(
-                                    color:
-                                        Theme.of(context).colorScheme.tertiary),
+                                style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.normal,
+                                    color: isDarkMode
+                                        ? Colors.grey[100]
+                                        : Colors.grey[900]),
                               ),
                               Checkbox(
                                 checkColor: Theme.of(context).brightness ==
                                         Brightness.light
                                     ? Colors.white
                                     : Colors.black,
-                                activeColor:
-                                    Theme.of(context).colorScheme.tertiary,
+                                activeColor: isDarkMode
+                                    ? Colors.grey[100]
+                                    : Colors.grey[900],
                                 // isError: true,
                                 value: selectedexercise == 'Every Day',
-                                side: BorderSide(
-                                    color:
-                                        Theme.of(context).colorScheme.tertiary,
-                                    width: 2),
+                                side: BorderSide(color: Colors.grey, width: 2),
                                 visualDensity:
                                     VisualDensity(horizontal: 0, vertical: -4),
 
@@ -1326,23 +1364,24 @@ class _SwipeFilterPage extends State<SwipeFilterPage> {
                             children: [
                               Text(
                                 'Sometimes',
-                                style: AppFonts.titleRegular(
-                                    color:
-                                        Theme.of(context).colorScheme.tertiary),
+                                style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.normal,
+                                    color: isDarkMode
+                                        ? Colors.grey[100]
+                                        : Colors.grey[900]),
                               ),
                               Checkbox(
                                 checkColor: Theme.of(context).brightness ==
                                         Brightness.light
                                     ? Colors.white
                                     : Colors.black,
-                                activeColor:
-                                    Theme.of(context).colorScheme.tertiary,
+                                activeColor: isDarkMode
+                                    ? Colors.grey[100]
+                                    : Colors.grey[900],
                                 // isError: true,
                                 value: selectedexercise == 'Sometimes',
-                                side: BorderSide(
-                                    color:
-                                        Theme.of(context).colorScheme.tertiary,
-                                    width: 2),
+                                side: BorderSide(color: Colors.grey, width: 2),
                                 visualDensity:
                                     VisualDensity(horizontal: 0, vertical: -4),
 
@@ -1363,9 +1402,11 @@ class _SwipeFilterPage extends State<SwipeFilterPage> {
                     ),
                     Text(
                       'Do you like pets?',
-                      style: AppFonts.titleBold(
+                      style: TextStyle(
+                          fontWeight: FontWeight.w700,
                           fontSize: 18,
-                          color: Theme.of(context).colorScheme.tertiary),
+                          color:
+                              isDarkMode ? Colors.grey[100] : Colors.grey[900]),
                     ),
                     SizedBox(
                       height: 10,
@@ -1373,9 +1414,7 @@ class _SwipeFilterPage extends State<SwipeFilterPage> {
                     Container(
                       padding: EdgeInsets.all(16),
                       decoration: BoxDecoration(
-                          border: Border.all(
-                              width: 1,
-                              color: Theme.of(context).colorScheme.tertiary),
+                          border: Border.all(width: 1, color: Colors.grey),
                           borderRadius: BorderRadius.circular(20)),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1385,23 +1424,24 @@ class _SwipeFilterPage extends State<SwipeFilterPage> {
                             children: [
                               Text(
                                 'Furry Pets',
-                                style: AppFonts.titleRegular(
-                                    color:
-                                        Theme.of(context).colorScheme.tertiary),
+                                style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.normal,
+                                    color: isDarkMode
+                                        ? Colors.grey[100]
+                                        : Colors.grey[900]),
                               ),
                               Checkbox(
                                 checkColor: Theme.of(context).brightness ==
                                         Brightness.light
                                     ? Colors.white
                                     : Colors.black,
-                                activeColor:
-                                    Theme.of(context).colorScheme.tertiary,
+                                activeColor: isDarkMode
+                                    ? Colors.grey[100]
+                                    : Colors.grey[900],
                                 // isError: true,
                                 value: selectedpets == 'Furry Pets',
-                                side: BorderSide(
-                                    color:
-                                        Theme.of(context).colorScheme.tertiary,
-                                    width: 2),
+                                side: BorderSide(color: Colors.grey, width: 2),
                                 visualDensity:
                                     VisualDensity(horizontal: 0, vertical: -4),
 
@@ -1418,23 +1458,24 @@ class _SwipeFilterPage extends State<SwipeFilterPage> {
                             children: [
                               Text(
                                 'Amphibian',
-                                style: AppFonts.titleRegular(
-                                    color:
-                                        Theme.of(context).colorScheme.tertiary),
+                                style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.normal,
+                                    color: isDarkMode
+                                        ? Colors.grey[100]
+                                        : Colors.grey[900]),
                               ),
                               Checkbox(
                                 checkColor: Theme.of(context).brightness ==
                                         Brightness.light
                                     ? Colors.white
                                     : Colors.black,
-                                activeColor:
-                                    Theme.of(context).colorScheme.tertiary,
+                                activeColor: isDarkMode
+                                    ? Colors.grey[100]
+                                    : Colors.grey[900],
                                 // isError: true,
                                 value: selectedpets == 'Amphibian',
-                                side: BorderSide(
-                                    color:
-                                        Theme.of(context).colorScheme.tertiary,
-                                    width: 2),
+                                side: BorderSide(color: Colors.grey, width: 2),
                                 visualDensity:
                                     VisualDensity(horizontal: 0, vertical: -4),
 
@@ -1451,23 +1492,24 @@ class _SwipeFilterPage extends State<SwipeFilterPage> {
                             children: [
                               Text(
                                 'Allergic to pets',
-                                style: AppFonts.titleRegular(
-                                    color:
-                                        Theme.of(context).colorScheme.tertiary),
+                                style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.normal,
+                                    color: isDarkMode
+                                        ? Colors.grey[100]
+                                        : Colors.grey[900]),
                               ),
                               Checkbox(
                                 checkColor: Theme.of(context).brightness ==
                                         Brightness.light
                                     ? Colors.white
                                     : Colors.black,
-                                activeColor:
-                                    Theme.of(context).colorScheme.tertiary,
+                                activeColor: isDarkMode
+                                    ? Colors.grey[100]
+                                    : Colors.grey[900],
                                 // isError: true,
                                 value: selectedpets == 'Allergic to pets',
-                                side: BorderSide(
-                                    color:
-                                        Theme.of(context).colorScheme.tertiary,
-                                    width: 2),
+                                side: BorderSide(color: Colors.grey, width: 2),
                                 visualDensity:
                                     VisualDensity(horizontal: 0, vertical: -4),
 
@@ -1485,23 +1527,24 @@ class _SwipeFilterPage extends State<SwipeFilterPage> {
                             children: [
                               Text(
                                 'Don\u0027t like pets',
-                                style: AppFonts.titleRegular(
-                                    color:
-                                        Theme.of(context).colorScheme.tertiary),
+                                style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.normal,
+                                    color: isDarkMode
+                                        ? Colors.grey[100]
+                                        : Colors.grey[900]),
                               ),
                               Checkbox(
                                 checkColor: Theme.of(context).brightness ==
                                         Brightness.light
                                     ? Colors.white
                                     : Colors.black,
-                                activeColor:
-                                    Theme.of(context).colorScheme.tertiary,
+                                activeColor: isDarkMode
+                                    ? Colors.grey[100]
+                                    : Colors.grey[900],
                                 // isError: true,
                                 value: selectedpets == 'Don\u0027t like pets',
-                                side: BorderSide(
-                                    color:
-                                        Theme.of(context).colorScheme.tertiary,
-                                    width: 2),
+                                side: BorderSide(color: Colors.grey, width: 2),
                                 visualDensity:
                                     VisualDensity(horizontal: 0, vertical: -4),
 
@@ -1522,9 +1565,11 @@ class _SwipeFilterPage extends State<SwipeFilterPage> {
                     ),
                     Text(
                       'What\u0027s your communication style?',
-                      style: AppFonts.titleBold(
+                      style: TextStyle(
+                          fontWeight: FontWeight.w700,
                           fontSize: 18,
-                          color: Theme.of(context).colorScheme.tertiary),
+                          color:
+                              isDarkMode ? Colors.grey[100] : Colors.grey[900]),
                     ),
                     SizedBox(
                       height: 10,
@@ -1532,9 +1577,7 @@ class _SwipeFilterPage extends State<SwipeFilterPage> {
                     Container(
                       padding: EdgeInsets.all(16),
                       decoration: BoxDecoration(
-                          border: Border.all(
-                              width: 1,
-                              color: Theme.of(context).colorScheme.tertiary),
+                          border: Border.all(width: 1, color: Colors.grey),
                           borderRadius: BorderRadius.circular(20)),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1544,24 +1587,25 @@ class _SwipeFilterPage extends State<SwipeFilterPage> {
                             children: [
                               Text(
                                 'Bad Texter',
-                                style: AppFonts.titleRegular(
-                                    color:
-                                        Theme.of(context).colorScheme.tertiary),
+                                style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.normal,
+                                    color: isDarkMode
+                                        ? Colors.grey[100]
+                                        : Colors.grey[900]),
                               ),
                               Checkbox(
                                 checkColor: Theme.of(context).brightness ==
                                         Brightness.light
                                     ? Colors.white
                                     : Colors.black,
-                                activeColor:
-                                    Theme.of(context).colorScheme.tertiary,
+                                activeColor: isDarkMode
+                                    ? Colors.grey[100]
+                                    : Colors.grey[900],
                                 // isError: true,
                                 value:
                                     selectedCommunicationStyle == 'Bad Texter',
-                                side: BorderSide(
-                                    color:
-                                        Theme.of(context).colorScheme.tertiary,
-                                    width: 2),
+                                side: BorderSide(color: Colors.grey, width: 2),
                                 visualDensity:
                                     VisualDensity(horizontal: 0, vertical: -4),
 
@@ -1579,24 +1623,25 @@ class _SwipeFilterPage extends State<SwipeFilterPage> {
                             children: [
                               Text(
                                 'Big Time Texter',
-                                style: AppFonts.titleRegular(
-                                    color:
-                                        Theme.of(context).colorScheme.tertiary),
+                                style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.normal,
+                                    color: isDarkMode
+                                        ? Colors.grey[100]
+                                        : Colors.grey[900]),
                               ),
                               Checkbox(
                                 checkColor: Theme.of(context).brightness ==
                                         Brightness.light
                                     ? Colors.white
                                     : Colors.black,
-                                activeColor:
-                                    Theme.of(context).colorScheme.tertiary,
+                                activeColor: isDarkMode
+                                    ? Colors.grey[100]
+                                    : Colors.grey[900],
                                 // isError: true,
                                 value: selectedCommunicationStyle ==
                                     'Big Time Texter',
-                                side: BorderSide(
-                                    color:
-                                        Theme.of(context).colorScheme.tertiary,
-                                    width: 2),
+                                side: BorderSide(color: Colors.grey, width: 2),
                                 visualDensity:
                                     VisualDensity(horizontal: 0, vertical: -4),
 
@@ -1614,24 +1659,25 @@ class _SwipeFilterPage extends State<SwipeFilterPage> {
                             children: [
                               Text(
                                 'In Person',
-                                style: AppFonts.titleRegular(
-                                    color:
-                                        Theme.of(context).colorScheme.tertiary),
+                                style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.normal,
+                                    color: isDarkMode
+                                        ? Colors.grey[100]
+                                        : Colors.grey[900]),
                               ),
                               Checkbox(
                                 checkColor: Theme.of(context).brightness ==
                                         Brightness.light
                                     ? Colors.white
                                     : Colors.black,
-                                activeColor:
-                                    Theme.of(context).colorScheme.tertiary,
+                                activeColor: isDarkMode
+                                    ? Colors.grey[100]
+                                    : Colors.grey[900],
                                 // isError: true,
                                 value:
                                     selectedCommunicationStyle == 'In Person',
-                                side: BorderSide(
-                                    color:
-                                        Theme.of(context).colorScheme.tertiary,
-                                    width: 2),
+                                side: BorderSide(color: Colors.grey, width: 2),
                                 visualDensity:
                                     VisualDensity(horizontal: 0, vertical: -4),
 
@@ -1649,24 +1695,25 @@ class _SwipeFilterPage extends State<SwipeFilterPage> {
                             children: [
                               Text(
                                 'Phone caller',
-                                style: AppFonts.titleRegular(
-                                    color:
-                                        Theme.of(context).colorScheme.tertiary),
+                                style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.normal,
+                                    color: isDarkMode
+                                        ? Colors.grey[100]
+                                        : Colors.grey[900]),
                               ),
                               Checkbox(
                                 checkColor: Theme.of(context).brightness ==
                                         Brightness.light
                                     ? Colors.white
                                     : Colors.black,
-                                activeColor:
-                                    Theme.of(context).colorScheme.tertiary,
+                                activeColor: isDarkMode
+                                    ? Colors.grey[100]
+                                    : Colors.grey[900],
                                 // isError: true,
                                 value: selectedCommunicationStyle ==
                                     'Phone caller',
-                                side: BorderSide(
-                                    color:
-                                        Theme.of(context).colorScheme.tertiary,
-                                    width: 2),
+                                side: BorderSide(color: Colors.grey, width: 2),
                                 visualDensity:
                                     VisualDensity(horizontal: 0, vertical: -4),
 
@@ -1687,9 +1734,11 @@ class _SwipeFilterPage extends State<SwipeFilterPage> {
                     ),
                     Text(
                       'what\u0027s your Love language?',
-                      style: AppFonts.titleBold(
+                      style: TextStyle(
+                          fontWeight: FontWeight.w700,
                           fontSize: 18,
-                          color: Theme.of(context).colorScheme.tertiary),
+                          color:
+                              isDarkMode ? Colors.grey[100] : Colors.grey[900]),
                     ),
                     SizedBox(
                       height: 10,
@@ -1697,9 +1746,7 @@ class _SwipeFilterPage extends State<SwipeFilterPage> {
                     Container(
                       padding: EdgeInsets.all(16),
                       decoration: BoxDecoration(
-                          border: Border.all(
-                              width: 1,
-                              color: Theme.of(context).colorScheme.tertiary),
+                          border: Border.all(width: 1, color: Colors.grey),
                           borderRadius: BorderRadius.circular(20)),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1709,23 +1756,24 @@ class _SwipeFilterPage extends State<SwipeFilterPage> {
                             children: [
                               Text(
                                 'Compliments',
-                                style: AppFonts.titleRegular(
-                                    color:
-                                        Theme.of(context).colorScheme.tertiary),
+                                style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.normal,
+                                    color: isDarkMode
+                                        ? Colors.grey[100]
+                                        : Colors.grey[900]),
                               ),
                               Checkbox(
                                 checkColor: Theme.of(context).brightness ==
                                         Brightness.light
                                     ? Colors.white
                                     : Colors.black,
-                                activeColor:
-                                    Theme.of(context).colorScheme.tertiary,
+                                activeColor: isDarkMode
+                                    ? Colors.grey[100]
+                                    : Colors.grey[900],
                                 // isError: true,
                                 value: selectedLoveLanguage == 'compliments',
-                                side: BorderSide(
-                                    color:
-                                        Theme.of(context).colorScheme.tertiary,
-                                    width: 2),
+                                side: BorderSide(color: Colors.grey, width: 2),
                                 visualDensity:
                                     VisualDensity(horizontal: 0, vertical: -4),
 
@@ -1743,23 +1791,24 @@ class _SwipeFilterPage extends State<SwipeFilterPage> {
                             children: [
                               Text(
                                 'Physical touch',
-                                style: AppFonts.titleRegular(
-                                    color:
-                                        Theme.of(context).colorScheme.tertiary),
+                                style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.normal,
+                                    color: isDarkMode
+                                        ? Colors.grey[100]
+                                        : Colors.grey[900]),
                               ),
                               Checkbox(
                                 checkColor: Theme.of(context).brightness ==
                                         Brightness.light
                                     ? Colors.white
                                     : Colors.black,
-                                activeColor:
-                                    Theme.of(context).colorScheme.tertiary,
+                                activeColor: isDarkMode
+                                    ? Colors.grey[100]
+                                    : Colors.grey[900],
                                 // isError: true,
                                 value: selectedLoveLanguage == 'physical_touch',
-                                side: BorderSide(
-                                    color:
-                                        Theme.of(context).colorScheme.tertiary,
-                                    width: 2),
+                                side: BorderSide(color: Colors.grey, width: 2),
                                 visualDensity:
                                     VisualDensity(horizontal: 0, vertical: -4),
 
@@ -1777,23 +1826,24 @@ class _SwipeFilterPage extends State<SwipeFilterPage> {
                             children: [
                               Text(
                                 'Gifting/Receiving gifts',
-                                style: AppFonts.titleRegular(
-                                    color:
-                                        Theme.of(context).colorScheme.tertiary),
+                                style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.normal,
+                                    color: isDarkMode
+                                        ? Colors.grey[100]
+                                        : Colors.grey[900]),
                               ),
                               Checkbox(
                                 checkColor: Theme.of(context).brightness ==
                                         Brightness.light
                                     ? Colors.white
                                     : Colors.black,
-                                activeColor:
-                                    Theme.of(context).colorScheme.tertiary,
+                                activeColor: isDarkMode
+                                    ? Colors.grey[100]
+                                    : Colors.grey[900],
                                 // isError: true,
                                 value: selectedLoveLanguage == 'gifting',
-                                side: BorderSide(
-                                    color:
-                                        Theme.of(context).colorScheme.tertiary,
-                                    width: 2),
+                                side: BorderSide(color: Colors.grey, width: 2),
                                 visualDensity:
                                     VisualDensity(horizontal: 0, vertical: -4),
 
@@ -1811,23 +1861,24 @@ class _SwipeFilterPage extends State<SwipeFilterPage> {
                             children: [
                               Text(
                                 'Quality Time',
-                                style: AppFonts.titleRegular(
-                                    color:
-                                        Theme.of(context).colorScheme.tertiary),
+                                style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.normal,
+                                    color: isDarkMode
+                                        ? Colors.grey[100]
+                                        : Colors.grey[900]),
                               ),
                               Checkbox(
                                 checkColor: Theme.of(context).brightness ==
                                         Brightness.light
                                     ? Colors.white
                                     : Colors.black,
-                                activeColor:
-                                    Theme.of(context).colorScheme.tertiary,
+                                activeColor: isDarkMode
+                                    ? Colors.grey[100]
+                                    : Colors.grey[900],
                                 // isError: true,
                                 value: selectedLoveLanguage == 'quality_time',
-                                side: BorderSide(
-                                    color:
-                                        Theme.of(context).colorScheme.tertiary,
-                                    width: 2),
+                                side: BorderSide(color: Colors.grey, width: 2),
                                 visualDensity:
                                     VisualDensity(horizontal: 0, vertical: -4),
 
@@ -1845,24 +1896,25 @@ class _SwipeFilterPage extends State<SwipeFilterPage> {
                             children: [
                               Text(
                                 'Acts of service',
-                                style: AppFonts.titleRegular(
-                                    color:
-                                        Theme.of(context).colorScheme.tertiary),
+                                style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.normal,
+                                    color: isDarkMode
+                                        ? Colors.grey[100]
+                                        : Colors.grey[900]),
                               ),
                               Checkbox(
                                 checkColor: Theme.of(context).brightness ==
                                         Brightness.light
                                     ? Colors.white
                                     : Colors.black,
-                                activeColor:
-                                    Theme.of(context).colorScheme.tertiary,
+                                activeColor: isDarkMode
+                                    ? Colors.grey[100]
+                                    : Colors.grey[900],
                                 // isError: true,
                                 value:
                                     selectedLoveLanguage == 'acts_of_service',
-                                side: BorderSide(
-                                    color:
-                                        Theme.of(context).colorScheme.tertiary,
-                                    width: 2),
+                                side: BorderSide(color: Colors.grey, width: 2),
                                 visualDensity:
                                     VisualDensity(horizontal: 0, vertical: -4),
 

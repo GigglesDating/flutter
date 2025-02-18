@@ -6,10 +6,8 @@ import 'package:flutter/services.dart';
 import 'package:flutter_card_swiper/flutter_card_swiper.dart';
 import 'package:flutter_frontend/screens/member/explore_tab/swipe_filter_page.dart';
 import 'package:flutter_frontend/screens/prompt_screen.dart';
-import 'package:flutter_frontend/utilitis/appFonts.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import '../../user/swipe_user_profile_page.dart';
-
 
 class ExploreTab extends StatefulWidget {
   const ExploreTab({Key? key}) : super(key: key);
@@ -74,9 +72,6 @@ class _ExploreTabState extends State<ExploreTab> with WidgetsBindingObserver {
 
   int counter = 0;
 
-  // Future<void> handleSwipeRight(
-  //     String currentUserId, String swipedUserId) async {}
-
   List<String> userPRofile = [
     'assets/images/user2.png'
         'assets/images/user3.png'
@@ -140,17 +135,14 @@ class _ExploreTabState extends State<ExploreTab> with WidgetsBindingObserver {
                         builder: (context) => SwipeUserProfilePage(),
                       ));
                 }
-                if (direction == CardSwiperDirection.left ) {
-                  // if (showImageTiles) {
-                  //   randomizeTilePositions(); // Reset positions on every show after swap
-                  // }
+                if (direction == CardSwiperDirection.left) {
                   setState(() {
-                    showImageTiles =false;
+                    showImageTiles = false;
                   });
                 }
-                if(direction == CardSwiperDirection.right){
+                if (direction == CardSwiperDirection.right) {
                   setState(() {
-                    showImageTiles =false;
+                    showImageTiles = false;
                   });
                   Navigator.push(
                       context,
@@ -195,7 +187,7 @@ class _ExploreTabState extends State<ExploreTab> with WidgetsBindingObserver {
                               Center(
                                 child: Text(
                                   'Dhawani Tripati,26',
-                                  style: AppFonts.titleBold(
+                                  style: TextStyle(
                                       fontSize: 24, color: Colors.white),
                                 ),
                               ),
@@ -216,9 +208,10 @@ class _ExploreTabState extends State<ExploreTab> with WidgetsBindingObserver {
                                   ),
                                   Text(
                                     'Banglore',
-                                    style: AppFonts.titleBold(
+                                    style: TextStyle(
                                         fontSize: 16,
-                                        color: const Color.fromARGB(255, 200, 208, 216)),
+                                        color: const Color.fromARGB(
+                                            255, 200, 208, 216)),
                                   ),
                                 ],
                               ),
@@ -239,7 +232,7 @@ class _ExploreTabState extends State<ExploreTab> with WidgetsBindingObserver {
                                   Expanded(
                                     child: Text(
                                       'Lorem Ipsum is simply dummy text of the printing and typesetting industry..',
-                                      style: AppFonts.titleBold(
+                                      style: TextStyle(
                                           fontSize: 14, color: Colors.white),
                                     ),
                                   ),
@@ -255,15 +248,6 @@ class _ExploreTabState extends State<ExploreTab> with WidgetsBindingObserver {
                     ],
                   ),
                 );
-
-                //   Container(
-                //   decoration: const BoxDecoration(
-                //     image: DecorationImage(
-                //       image: AssetImage('assets/images/swipe_image.png'),
-                //       fit: BoxFit.cover,
-                //     ),
-                //   ),
-                // );
               },
             ),
           ),
@@ -289,7 +273,6 @@ class _ExploreTabState extends State<ExploreTab> with WidgetsBindingObserver {
                     )),
                 InkWell(
                     onTap: () {
-                      // Navigator.of(context).pop();
                       Navigator.push(
                           context,
                           MaterialPageRoute(
@@ -350,7 +333,7 @@ class _ExploreTabState extends State<ExploreTab> with WidgetsBindingObserver {
                               ),
                               Text(
                                 'Next Image',
-                                style: AppFonts.titleBold(
+                                style: TextStyle(
                                     fontSize: 10, color: Colors.white),
                               ),
                             ],
@@ -366,8 +349,6 @@ class _ExploreTabState extends State<ExploreTab> with WidgetsBindingObserver {
             ),
           ),
 
-
-          // Image Tiles (if tapped to show)
           if (showImageTiles) buildDraggableImageTiles(),
         ],
       ),

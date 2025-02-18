@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_frontend/utilitis/appFonts.dart';
 
 class ActivityScreen extends StatelessWidget {
   const ActivityScreen({super.key});
@@ -32,7 +31,7 @@ class ActivityScreen extends StatelessWidget {
           ),
           titleSpacing: 0,
           // foregroundColor: Theme.of(context).scaffoldBackgroundColor,
-          titleTextStyle: AppFonts.appBarTitle(
+          titleTextStyle: TextStyle(
               color: Theme.of(context).colorScheme.tertiary,
               fontSize: 20,
               fontWeight: FontWeight.w700),
@@ -51,7 +50,7 @@ class ActivityScreen extends StatelessWidget {
                   borderRadius: BorderRadius.circular(25),
                 ),
                 child: TabBar(
-                  labelStyle: AppFonts.titleBold(),
+                  labelStyle: TextStyle(fontSize: 16,fontWeight: FontWeight.w700,color: Colors.black),
                   tabs: const [
                     Tab(text: 'Date History'),
                     Tab(text: 'Posts History'),

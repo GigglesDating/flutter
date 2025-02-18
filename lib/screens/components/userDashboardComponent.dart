@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_frontend/screens/submenus/messenger_page.dart';
-import 'package:flutter_frontend/utilitis/appFonts.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:image_picker/image_picker.dart';
@@ -79,7 +78,7 @@ class _UserDashboardComponentState extends State<UserDashboardComponent> {
                         Center(
                           child: Text(
                             'Comments',
-                            style: AppFonts.titleBold(color: Colors.black),
+                            style: TextStyle(color: Colors.black,fontWeight: FontWeight.w700,fontSize: 16),
                           ),
                         ),
                         SizedBox(height: 10),
@@ -99,11 +98,11 @@ class _UserDashboardComponentState extends State<UserDashboardComponent> {
                                     'assets/images/nitanshu_profile_image.png'),
                               ),
                               title: Text('Nitanshu'),
-                              titleTextStyle: AppFonts.titleBold(
+                              titleTextStyle: TextStyle(fontWeight: FontWeight.w700,
                                   fontSize: 14, color: Colors.black),
                               subtitle: Text('i want to be there next time'),
-                              subtitleTextStyle: AppFonts.titleMedium(
-                                  fontSize: 12, color: Colors.black),
+                              subtitleTextStyle: TextStyle(
+                                  fontSize: 12, color: Colors.black,fontWeight: FontWeight.w500),
                               trailing: Icon(
                                 Icons.replay,
                                 color: Colors.black,
@@ -123,11 +122,11 @@ class _UserDashboardComponentState extends State<UserDashboardComponent> {
                             ),
                           ),
                           title: Text('sree'),
-                          titleTextStyle: AppFonts.titleBold(
-                              fontSize: 14, color: Colors.black),
+                          titleTextStyle: TextStyle(
+                              fontSize: 14, color: Colors.black,fontWeight: FontWeight.w500),
                           subtitle: Text('see you soon'),
-                          subtitleTextStyle: AppFonts.titleMedium(
-                              fontSize: 12, color: Colors.black),
+                          subtitleTextStyle: TextStyle(
+                              fontSize: 12, color: Colors.black,fontWeight: FontWeight.w500),
                         ),
                       ],
                     ),
@@ -139,7 +138,7 @@ class _UserDashboardComponentState extends State<UserDashboardComponent> {
                         controller: commentController,
                         focusNode: commentFocusNode,
 
-                        style: AppFonts.titleMedium(color: Colors.black),
+                        style: TextStyle(color: Colors.black,fontSize: 16,fontWeight: FontWeight.w500),
 
                         cursorHeight: 20,
                         cursorColor: Colors.black,
@@ -157,7 +156,7 @@ class _UserDashboardComponentState extends State<UserDashboardComponent> {
                           floatingLabelBehavior: FloatingLabelBehavior.never,
                           contentPadding: EdgeInsets.symmetric(horizontal: 12),
                           hintText: 'Post your comment',
-                          hintStyle: AppFonts.hintTitle(color: Colors.black),
+                          hintStyle: TextStyle(color: Colors.black,fontSize: 16,fontWeight: FontWeight.w700),
                           // suffix: Container(
                           //   width: 40,
                           //   height: 40,
@@ -419,8 +418,8 @@ class _UserDashboardComponentState extends State<UserDashboardComponent> {
                                 textAlign: TextAlign.start,
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
-                                style: AppFonts.titleRegular(
-                                    color: Colors.white, fontSize: 10),
+                                style: TextStyle(
+                                    color: Colors.white, fontSize: 10,fontWeight: FontWeight.normal),
                               ),
                             ],
                           ),

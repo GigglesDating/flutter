@@ -3,7 +3,6 @@ import 'package:flutter/services.dart';
 import 'package:flutter_frontend/screens/member/settings/delete_account.dart';
 import 'package:flutter_frontend/screens/member/settings/login_info.dart';
 import 'package:flutter_frontend/screens/member/settings/personal_details_page.dart';
-import 'package:flutter_frontend/utilitis/appFonts.dart';
 
 class AccountCenterScreen extends StatelessWidget {
   const AccountCenterScreen({super.key});
@@ -22,7 +21,7 @@ class AccountCenterScreen extends StatelessWidget {
         ),
         titleSpacing: 0,
         // foregroundColor: Theme.of(context).scaffoldBackgroundColor,
-        titleTextStyle: AppFonts.appBarTitle(
+        titleTextStyle: TextStyle(
             color: Theme.of(context).colorScheme.tertiary,
             fontSize: 20,
             fontWeight: FontWeight.w700),
@@ -57,7 +56,7 @@ class AccountCenterScreen extends StatelessWidget {
                   ),
                   Text(
                     'Personal Details',
-                    style: AppFonts.titleBold(
+                    style: TextStyle(
                         fontSize: 16,
                         color: Theme.of(context).colorScheme.tertiary,
                         fontWeight: FontWeight.w700),
@@ -91,7 +90,7 @@ class AccountCenterScreen extends StatelessWidget {
                   ),
                   Text(
                     'Login Info',
-                    style: AppFonts.titleBold(
+                    style: TextStyle(
                         fontSize: 16,
                         color: Theme.of(context).colorScheme.tertiary,
                         fontWeight: FontWeight.w700),
@@ -124,7 +123,7 @@ class AccountCenterScreen extends StatelessWidget {
                   ),
                   Text(
                     'Delete Account',
-                    style: AppFonts.titleBold(
+                    style: TextStyle(fontWeight: FontWeight.w700,
                         fontSize: 16, color: const Color.fromARGB(255, 176, 0, 32)),
                   ),
                   Spacer(),

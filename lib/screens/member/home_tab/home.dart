@@ -234,7 +234,8 @@ class _HomeTabState extends State<HomeTab> {
                     children: [
                       Text(
                         'Add Post',
-                        style: AppFonts.titleBold(
+                        style: TextStyle(
+                          fontWeight: FontWeight.w700,
                             color: Colors.black, fontSize: 24),
                       ),
                     ],

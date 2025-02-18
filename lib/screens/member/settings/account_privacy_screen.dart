@@ -25,7 +25,7 @@ class _AccountPrivacyScreenState extends State<AccountPrivacyScreen> {
         ),
         titleSpacing: 0,
         // foregroundColor: Theme.of(context).scaffoldBackgroundColor,
-        titleTextStyle: AppFonts.appBarTitle(
+        titleTextStyle: TextStyle(
             color: Theme.of(context).colorScheme.tertiary,
             fontSize: 20,
             fontWeight: FontWeight.w700),
@@ -38,7 +38,8 @@ class _AccountPrivacyScreenState extends State<AccountPrivacyScreen> {
             padding: EdgeInsets.symmetric(horizontal: 16.0),
             child: Text(
               'Content sharing settings',
-              style: AppFonts.titleMedium(
+              style: TextStyle(
+                fontWeight: FontWeight.w500,
                 fontSize: 16,
                 color: Colors.grey,
                 // fontWeight: FontWeight.w500,
@@ -111,8 +112,10 @@ class _AccountPrivacyScreenState extends State<AccountPrivacyScreen> {
                   const SizedBox(width: 12),
                   Text(
                     'Share only with',
-                    style: AppFonts.titleBold(
+                    style: TextStyle(
                       fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                      color: Colors.black
                       // fontWeight: FontWeight.w500,
                     ),
                   ),
@@ -136,7 +139,7 @@ class _AccountPrivacyScreenState extends State<AccountPrivacyScreen> {
                               color: const Color.fromARGB(255, 82, 113, 255),
                             ),
                             const SizedBox(width: 4),
-                            Text(value,style: AppFonts.titleBold(fontSize: 14),),
+                            Text(value,style: TextStyle(fontSize: 14,fontWeight: FontWeight.w700,color: Colors.black),),
                           ],
                         ),
                       );
@@ -202,7 +205,8 @@ class _AccountPrivacyScreenState extends State<AccountPrivacyScreen> {
                 Expanded(
                   child: Text(
                     title,
-                    style: AppFonts.titleBold(
+                    style: TextStyle(
+                      color: Colors.black,
                       fontSize: 16,
                       fontWeight: FontWeight.w500,
                     ),
@@ -220,7 +224,8 @@ class _AccountPrivacyScreenState extends State<AccountPrivacyScreen> {
               padding: const EdgeInsets.only(left: 44),
               child: Text(
                 description,
-                style: AppFonts.titleMedium(
+                style: TextStyle(
+                  fontWeight: FontWeight.w500,
                   color: const Color.fromARGB(255, 158, 158, 158),
                   fontSize: 12,
                 ),

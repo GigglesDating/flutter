@@ -31,6 +31,34 @@ class _CommentsSheetState extends State<CommentsSheet> {
       'text': 'Beautiful shot! 😍',
       'likes': 12,
       'timeAgo': '2h ago',
+      'replies': [
+        {
+          'id': '2',
+          'user': 'John Doe',
+          'userImage': 'assets/tempImages/users/user1.jpg',
+          'text': 'Thanks Sarah! 🙏',
+          'likes': 3,
+          'timeAgo': '1h ago',
+        }
+      ],
+    },
+    {
+      'id': '3',
+      'user': 'Mike Wilson',
+      'userImage': 'assets/tempImages/users/user3.jpg',
+      'text':
+          'The lighting in this photo is absolutely perfect! What camera did you use?',
+      'likes': 8,
+      'timeAgo': '1h ago',
+      'replies': [],
+    },
+    {
+      'id': '4',
+      'user': 'Emma Thompson',
+      'userImage': 'assets/tempImages/users/user4.jpg',
+      'text': 'This location looks amazing! Where was this taken? 🌟',
+      'likes': 15,
+      'timeAgo': '45m ago',
       'replies': [],
     },
   ];
@@ -48,11 +76,10 @@ class _CommentsSheetState extends State<CommentsSheet> {
     final minSheetHeight = availableHeight * 0.5;
 
     return GestureDetector(
+      behavior: HitTestBehavior.opaque,
       onTap: () {
-        // Dismiss keyboard when tapping outside input
-        if (_commentController.text.isEmpty) {
-          FocusScope.of(context).unfocus();
-        }
+        FocusScope.of(context).unfocus();
+        setState(() => _replyingTo = null);
       },
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
@@ -178,68 +205,127 @@ class _CommentsSheetState extends State<CommentsSheet> {
   Widget _buildCommentInput() {
     return Container(
       padding: EdgeInsets.all(widget.screenWidth * 0.04),
-      decoration: BoxDecoration(
-        color: widget.isDarkMode ? Colors.grey[900] : Colors.grey[50],
-        border: Border(
-          top: BorderSide(
-            color: widget.isDarkMode
-                ? Colors.white.withAlpha(153)
-                : Colors.black.withAlpha(153),
-          ),
-        ),
-      ),
-      child: Row(
+      child: Column(
         children: [
-          Expanded(
-            child: Container(
+          if (_replyingTo != null)
+            Container(
               padding: EdgeInsets.symmetric(
                 horizontal: widget.screenWidth * 0.04,
                 vertical: widget.screenWidth * 0.02,
               ),
-              decoration: BoxDecoration(
-                color: widget.isDarkMode
-                    ? Colors.white.withAlpha(153)
-                    : Colors.black.withAlpha(153),
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: TextField(
-                controller: _commentController,
-                style: TextStyle(
-                  color: widget.isDarkMode ? Colors.white : Colors.black,
-                ),
-                decoration: InputDecoration(
-                  hintText: 'Add a comment...',
-                  hintStyle: TextStyle(
-                    color: widget.isDarkMode
-                        ? Colors.white.withAlpha(153)
-                        : Colors.black.withAlpha(153),
+              child: Row(
+                children: [
+                  Text(
+                    'Replying',
+                    style: TextStyle(
+                      color: widget.isDarkMode
+                          ? Colors.white.withAlpha(153)
+                          : Colors.black.withAlpha(153),
+                    ),
                   ),
-                  border: InputBorder.none,
-                  isDense: true,
-                  contentPadding: EdgeInsets.zero,
-                ),
+                  SizedBox(width: widget.screenWidth * 0.02),
+                  GestureDetector(
+                    onTap: () => setState(() => _replyingTo = null),
+                    child: Icon(
+                      Icons.close,
+                      size: widget.screenWidth * 0.04,
+                      color: widget.isDarkMode
+                          ? Colors.white.withAlpha(153)
+                          : Colors.black.withAlpha(153),
+                    ),
+                  ),
+                ],
               ),
             ),
-          ),
-          SizedBox(width: widget.screenWidth * 0.02),
-          IconButton(
-            onPressed: () {
-              if (_commentController.text.isNotEmpty) {
-                // Add comment logic
-                _commentController.clear();
-                setState(() => _replyingTo = null);
-              }
-            },
-            icon: Icon(
-              Icons.send_rounded,
-              color: _commentController.text.isEmpty
-                  ? (widget.isDarkMode
-                      ? Colors.white.withAlpha(153)
-                      : Colors.black.withAlpha(153))
-                  : Theme.of(context).primaryColor,
+          Container(
+            padding: EdgeInsets.symmetric(
+              horizontal: widget.screenWidth * 0.04,
+              vertical: widget.screenWidth * 0.02,
             ),
-            padding: EdgeInsets.zero,
-            constraints: const BoxConstraints(),
+            decoration: BoxDecoration(
+              color: widget.isDarkMode ? Colors.black : Colors.white,
+              border: Border.all(
+                color: widget.isDarkMode ? Colors.white : Colors.black,
+                width: 1,
+              ),
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: _commentController,
+                    style: TextStyle(
+                      color: widget.isDarkMode ? Colors.white : Colors.black,
+                    ),
+                    decoration: InputDecoration(
+                      hintText: 'Add a comment...',
+                      hintStyle: TextStyle(
+                        color: widget.isDarkMode
+                            ? Colors.white.withAlpha(153)
+                            : Colors.black.withAlpha(153),
+                      ),
+                      border: InputBorder.none,
+                      isDense: true,
+                      contentPadding: EdgeInsets.zero,
+                    ),
+                  ),
+                ),
+                SizedBox(width: widget.screenWidth * 0.02),
+                GestureDetector(
+                  onTap: () {
+                    if (_commentController.text.isNotEmpty) {
+                      // Add comment/reply logic here
+                      setState(() {
+                        if (_replyingTo != null) {
+                          // Add reply
+                          final commentIndex = _comments
+                              .indexWhere((c) => c['id'] == _replyingTo);
+                          if (commentIndex != -1) {
+                            _comments[commentIndex]['replies'] ??= [];
+                            _comments[commentIndex]['replies'].add({
+                              'id': DateTime.now().toString(),
+                              'user': 'Current User',
+                              'userImage':
+                                  'assets/tempImages/users/current_user.jpg',
+                              'text': _commentController.text,
+                              'likes': 0,
+                              'timeAgo': 'just now',
+                            });
+                          }
+                        } else {
+                          // Add new comment
+                          _comments.add({
+                            'id': DateTime.now().toString(),
+                            'user': 'Current User',
+                            'userImage':
+                                'assets/tempImages/users/current_user.jpg',
+                            'text': _commentController.text,
+                            'likes': 0,
+                            'timeAgo': 'just now',
+                            'replies': [],
+                          });
+                        }
+                      });
+                      _commentController.clear();
+                      _replyingTo = null;
+                    }
+                  },
+                  child: Container(
+                    padding: EdgeInsets.all(widget.screenWidth * 0.025),
+                    decoration: BoxDecoration(
+                      color: widget.isDarkMode ? Colors.white : Colors.black,
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      Icons.send,
+                      color: widget.isDarkMode ? Colors.black : Colors.white,
+                      size: widget.screenWidth * 0.05,
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
         ],
       ),
@@ -247,7 +333,7 @@ class _CommentsSheetState extends State<CommentsSheet> {
   }
 }
 
-class _CommentItem extends StatelessWidget {
+class _CommentItem extends StatefulWidget {
   final Map<String, dynamic> comment;
   final bool isDarkMode;
   final Function(String) onReply;
@@ -261,98 +347,250 @@ class _CommentItem extends StatelessWidget {
   });
 
   @override
+  State<_CommentItem> createState() => _CommentItemState();
+}
+
+class _CommentItemState extends State<_CommentItem> {
+  bool isLiked = false;
+
+  @override
   Widget build(BuildContext context) {
-    return Container(
-      margin: EdgeInsets.symmetric(vertical: screenWidth * 0.02),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          CircleAvatar(
-            radius: screenWidth * 0.04,
-            backgroundImage: AssetImage(comment['userImage']),
-          ),
-          SizedBox(width: screenWidth * 0.02),
-          Expanded(
-            child: Column(
+    return GestureDetector(
+      onHorizontalDragEnd: (details) {
+        if (details.primaryVelocity! > 0) {
+          // Right swipe detected - always reply to primary comment
+          widget.onReply(widget.comment['id']);
+        }
+      },
+      onDoubleTap: () {
+        setState(() => isLiked = !isLiked);
+      },
+      child: Container(
+        margin: EdgeInsets.symmetric(vertical: widget.screenWidth * 0.02),
+        padding: EdgeInsets.all(widget.screenWidth * 0.03),
+        decoration: BoxDecoration(
+          color: widget.isDarkMode
+              ? Colors.white.withAlpha(13)
+              : Colors.black.withAlpha(7),
+          borderRadius: BorderRadius.circular(15),
+        ),
+        child: Column(
+          children: [
+            // Main comment
+            Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
-                  children: [
-                    Text(
-                      comment['user'],
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        color: isDarkMode ? Colors.white : Colors.black,
-                      ),
-                    ),
-                    SizedBox(width: screenWidth * 0.02),
-                    Text(
-                      comment['timeAgo'],
-                      style: TextStyle(
-                        color: isDarkMode
-                            ? Colors.white.withAlpha(153)
-                            : Colors.black.withAlpha(153),
-                        fontSize: screenWidth * 0.035,
-                      ),
-                    ),
-                  ],
+                CircleAvatar(
+                  radius: widget.screenWidth * 0.04,
+                  backgroundImage: AssetImage(widget.comment['userImage']),
                 ),
-                SizedBox(height: screenWidth * 0.01),
-                Text(
-                  comment['text'],
-                  style: TextStyle(
-                    color: isDarkMode ? Colors.white : Colors.black,
-                  ),
-                ),
-                SizedBox(height: screenWidth * 0.01),
-                Row(
-                  children: [
-                    Text(
-                      '${comment['likes']} likes',
-                      style: TextStyle(
-                        color: isDarkMode
-                            ? Colors.white.withAlpha(153)
-                            : Colors.black.withAlpha(153),
-                        fontSize: screenWidth * 0.035,
+                SizedBox(width: widget.screenWidth * 0.02),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            widget.comment['user'],
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: widget.isDarkMode
+                                  ? Colors.white
+                                  : Colors.black,
+                            ),
+                          ),
+                          Row(
+                            children: [
+                              Text(
+                                widget.comment['timeAgo'],
+                                style: TextStyle(
+                                  color: widget.isDarkMode
+                                      ? Colors.white.withAlpha(153)
+                                      : Colors.black.withAlpha(153),
+                                  fontSize: widget.screenWidth * 0.035,
+                                ),
+                              ),
+                              SizedBox(width: widget.screenWidth * 0.02),
+                              GestureDetector(
+                                onTap: () => setState(() => isLiked = !isLiked),
+                                child: Row(
+                                  children: [
+                                    Icon(
+                                      Icons.favorite,
+                                      size: widget.screenWidth * 0.035,
+                                      color: isLiked
+                                          ? Colors.red
+                                          : (widget.isDarkMode
+                                              ? Colors.white.withAlpha(153)
+                                              : Colors.black.withAlpha(153)),
+                                    ),
+                                    SizedBox(width: widget.screenWidth * 0.01),
+                                    Text('${widget.comment['likes']}'),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
                       ),
-                    ),
-                    SizedBox(width: screenWidth * 0.04),
-                    GestureDetector(
-                      onTap: () => onReply(comment['id']),
-                      child: Text(
-                        'Reply',
+                      SizedBox(height: widget.screenWidth * 0.01),
+                      Text(
+                        widget.comment['text'],
                         style: TextStyle(
-                          color: isDarkMode
-                              ? Colors.white.withAlpha(153)
-                              : Colors.black.withAlpha(153),
-                          fontSize: screenWidth * 0.035,
+                          color:
+                              widget.isDarkMode ? Colors.white : Colors.black,
                         ),
                       ),
-                    ),
-                  ],
-                ),
-                if (comment['replies'] != null && comment['replies'].isNotEmpty)
-                  Padding(
-                    padding: EdgeInsets.only(
-                      top: screenWidth * 0.02,
-                      left: screenWidth * 0.04, // Indent replies
-                    ),
-                    child: Column(
-                      children: [
-                        for (var reply in comment['replies'])
-                          _CommentItem(
-                            comment: reply,
-                            isDarkMode: isDarkMode,
-                            onReply: onReply,
-                            screenWidth: screenWidth,
-                          ),
-                      ],
-                    ),
+                    ],
                   ),
+                ),
               ],
             ),
-          ),
-        ],
+            // Replies with indent
+            if (widget.comment['replies'] != null)
+              ...widget.comment['replies']
+                  .map<Widget>((reply) => Container(
+                        margin: EdgeInsets.only(
+                          left: widget.screenWidth * 0.1,
+                          top: widget.screenWidth * 0.02,
+                        ),
+                        child: _ReplyItem(
+                          reply: reply,
+                          isDarkMode: widget.isDarkMode,
+                          screenWidth: widget.screenWidth,
+                          parentCommentId: widget.comment['id'],
+                          onReply: widget.onReply,
+                        ),
+                      ))
+                  .toList(),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ReplyItem extends StatefulWidget {
+  final Map<String, dynamic> reply;
+  final bool isDarkMode;
+  final double screenWidth;
+  final String parentCommentId;
+  final Function(String) onReply;
+
+  const _ReplyItem({
+    required this.reply,
+    required this.isDarkMode,
+    required this.screenWidth,
+    required this.parentCommentId,
+    required this.onReply,
+  });
+
+  @override
+  State<_ReplyItem> createState() => _ReplyItemState();
+}
+
+class _ReplyItemState extends State<_ReplyItem> {
+  bool isLiked = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onHorizontalDragEnd: (details) {
+        if (details.primaryVelocity! > 0) {
+          // When swiping on a reply, trigger reply to parent comment
+          widget.onReply(widget.parentCommentId);
+        }
+      },
+      onDoubleTap: () {
+        setState(() => isLiked = !isLiked);
+      },
+      child: Container(
+        margin: EdgeInsets.symmetric(vertical: widget.screenWidth * 0.02),
+        padding: EdgeInsets.all(widget.screenWidth * 0.03),
+        decoration: BoxDecoration(
+          color: widget.isDarkMode
+              ? Colors.white.withAlpha(13)
+              : Colors.black.withAlpha(7),
+          borderRadius: BorderRadius.circular(15),
+        ),
+        child: Column(
+          children: [
+            // Reply content
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                CircleAvatar(
+                  radius: widget.screenWidth * 0.04,
+                  backgroundImage: AssetImage(widget.reply['userImage']),
+                ),
+                SizedBox(width: widget.screenWidth * 0.02),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            widget.reply['user'],
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: widget.isDarkMode
+                                  ? Colors.white
+                                  : Colors.black,
+                            ),
+                          ),
+                          Row(
+                            children: [
+                              Text(
+                                widget.reply['timeAgo'],
+                                style: TextStyle(
+                                  color: widget.isDarkMode
+                                      ? Colors.white.withAlpha(153)
+                                      : Colors.black.withAlpha(153),
+                                  fontSize: widget.screenWidth * 0.035,
+                                ),
+                              ),
+                              SizedBox(width: widget.screenWidth * 0.02),
+                              GestureDetector(
+                                onTap: () => setState(() => isLiked = !isLiked),
+                                child: Row(
+                                  children: [
+                                    Icon(
+                                      Icons.favorite,
+                                      size: widget.screenWidth * 0.035,
+                                      color: isLiked
+                                          ? Colors.red
+                                          : (widget.isDarkMode
+                                              ? Colors.white.withAlpha(153)
+                                              : Colors.black.withAlpha(153)),
+                                    ),
+                                    SizedBox(width: widget.screenWidth * 0.01),
+                                    Text('${widget.reply['likes']}'),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                      SizedBox(height: widget.screenWidth * 0.01),
+                      Text(
+                        widget.reply['text'],
+                        style: TextStyle(
+                          color:
+                              widget.isDarkMode ? Colors.white : Colors.black,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }

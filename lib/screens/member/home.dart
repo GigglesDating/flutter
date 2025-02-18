@@ -190,7 +190,7 @@ class _HomeTabState extends State<HomeTab> {
       scrollDirection: Axis.horizontal,
       child: Row(
         children: [
-          _buildMyStory(isDarkMode),
+          _buildAddStoryButton(isDarkMode),
           ..._tempUserProfiles
               .map((profile) => _buildStoryItem(profile, isDarkMode)),
         ],
@@ -198,52 +198,48 @@ class _HomeTabState extends State<HomeTab> {
     );
   }
 
-  Widget _buildMyStory(bool isDarkMode) {
-    return Padding(
-      padding: const EdgeInsets.only(left: 16, right: 8),
-      child: Stack(
-        clipBehavior: Clip.none,
-        children: [
-          Container(
+  Widget _buildAddStoryButton(bool isDarkMode) {
+    return Stack(
+      children: [
+        Container(
+          width: 65,
+          height: 65,
+          margin: const EdgeInsets.symmetric(horizontal: 8),
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            border: Border.all(
+              color: isDarkMode
+                  ? Colors.white.withAlpha(38)
+                  : Colors.black.withAlpha(26),
+              width: 1,
+            ),
+            image: const DecorationImage(
+              image: AssetImage('assets/tempImages/users/user1.jpg'),
+              fit: BoxFit.cover,
+            ),
+          ),
+        ),
+        Positioned(
+          bottom: 0,
+          right: 6, // Adjusted from center
+          child: Container(
+            padding: const EdgeInsets.all(2),
             decoration: BoxDecoration(
+              color: isDarkMode ? Colors.black : Colors.white,
               shape: BoxShape.circle,
               border: Border.all(
-                color: Colors.green,
-                width: 2,
-              ),
-            ),
-            child: const CircleAvatar(
-              backgroundImage: AssetImage('assets/tempImages/users/user1.jpg'),
-              radius: 35,
-            ),
-          ),
-          Positioned(
-            bottom: 3,
-            right: 2,
-            child: Container(
-              width: 24,
-              height: 24,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: isDarkMode
-                    ? Colors.white
-                        .withAlpha(51) // 0.2 opacity for better visibility
-                    : Colors.black
-                        .withAlpha(38), // 0.15 opacity for better visibility
-                border: Border.all(
-                  color: isDarkMode ? Colors.white : Colors.black,
-                  width: 1,
-                ),
-              ),
-              child: Icon(
-                Icons.add,
                 color: isDarkMode ? Colors.white : Colors.black,
-                size: 18,
+                width: 1.5,
               ),
             ),
+            child: Icon(
+              Icons.add,
+              size: 20,
+              color: isDarkMode ? Colors.white : Colors.black,
+            ),
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 

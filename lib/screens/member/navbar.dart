@@ -6,6 +6,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import '../placeholder_template.dart';
 import '../barrel.dart';
 import 'package:vibration/vibration.dart';
+import 'dart:async';
 
 class NavigationController extends StatefulWidget {
   const NavigationController({super.key});
@@ -14,11 +15,14 @@ class NavigationController extends StatefulWidget {
   State<NavigationController> createState() => NavigationControllerState();
 }
 
-class NavigationControllerState extends State<NavigationController> {
+class NavigationControllerState extends State<NavigationController>
+    with SingleTickerProviderStateMixin {
   int _currentIndex = 0;
   bool _showNavBar = true;
   bool _isSOSActive = false;
   late Size size;
+  double _rotationValue = 0.0;
+  Timer? _rotationTimer;
 
   @override
   void initState() {
@@ -26,6 +30,7 @@ class NavigationControllerState extends State<NavigationController> {
     _hideSystemBars();
     // Show nav bar by default
     _showNavBar = true;
+    _startRotationTimer();
   }
 
   void _hideSystemBars() {
@@ -43,8 +48,19 @@ class NavigationControllerState extends State<NavigationController> {
     );
   }
 
+  void _startRotationTimer() {
+    _rotationTimer = Timer.periodic(const Duration(seconds: 3), (timer) {
+      if (_showNavBar && mounted) {
+        setState(() {
+          _rotationValue = _rotationValue + 1; // Full rotation
+        });
+      }
+    });
+  }
+
   @override
   void dispose() {
+    _rotationTimer?.cancel();
     // Restore system UI when disposing
     SystemChrome.setEnabledSystemUIMode(
       SystemUiMode.manual,
@@ -97,6 +113,17 @@ class NavigationControllerState extends State<NavigationController> {
                         vertical: size.height * 0.015,
                       ),
                       height: size.height * 0.075,
+                      decoration: BoxDecoration(
+                        boxShadow: [
+                          BoxShadow(
+                            color: isDarkMode
+                                ? Colors.white.withAlpha(15)
+                                : Colors.black.withAlpha(15),
+                            blurRadius: 1,
+                            spreadRadius: 0.5,
+                          ),
+                        ],
+                      ),
                       child: Stack(
                         children: [
                           // SVG Background
@@ -164,27 +191,34 @@ class NavigationControllerState extends State<NavigationController> {
       return SizedBox(width: iconSize * 1.5);
     }
 
-    return GestureDetector(
-      onTap: () => setState(() => _currentIndex = index),
-      child: Container(
-        width: iconSize,
-        height: iconSize,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          color: isDarkMode
-              ? Colors.white.withAlpha(38) // Same as PostCard dark mode
-              : Colors.black.withAlpha(26), // Same as PostCard light mode
-        ),
-        child: Center(
-          child: SvgPicture.asset(
-            getIconPath(index),
-            width: iconSize * 0.55,
-            height: iconSize * 0.55,
-            colorFilter: ColorFilter.mode(
-              isSelected
-                  ? Colors.green
-                  : (isDarkMode ? Colors.white : Colors.black),
-              BlendMode.srcIn,
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 300),
+      width: isSelected ? iconSize * 1.2 : iconSize,
+      height: isSelected ? iconSize * 1.2 : iconSize,
+      child: GestureDetector(
+        onTap: () => setState(() => _currentIndex = index),
+        child: Container(
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: isDarkMode
+                ? Colors.white.withAlpha(38)
+                : Colors.black.withAlpha(26),
+          ),
+          child: Center(
+            child: AnimatedRotation(
+              duration: const Duration(milliseconds: 500),
+              turns: isSelected ? _rotationValue : 0,
+              child: SvgPicture.asset(
+                getIconPath(index),
+                width: iconSize * 0.55,
+                height: iconSize * 0.55,
+                colorFilter: ColorFilter.mode(
+                  isSelected
+                      ? Colors.green
+                      : (isDarkMode ? Colors.white : Colors.black),
+                  BlendMode.srcIn,
+                ),
+              ),
             ),
           ),
         ),
@@ -221,9 +255,10 @@ class NavigationControllerState extends State<NavigationController> {
 
     return GestureDetector(
       onTap: _handleSOSPress,
-      child: Container(
-        width: size.width * 0.17, // Reduced from 0.17
-        height: size.width * 0.17, // Reduced from 0.17
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 300),
+        width: _isSOSActive ? size.width * 0.2 : size.width * 0.17,
+        height: _isSOSActive ? size.width * 0.2 : size.width * 0.17,
         decoration: BoxDecoration(
           color: isDarkMode
               ? const Color(0xFF121212)
@@ -242,21 +277,21 @@ class NavigationControllerState extends State<NavigationController> {
             ? ClipRRect(
                 borderRadius: BorderRadius.circular(size.width * 0.17),
                 child: OverflowBox(
-                  maxWidth: size.width * 0.25,
-                  maxHeight: size.width * 0.25,
+                  maxWidth: size.width * 0.3,
+                  maxHeight: size.width * 0.3,
                   child: Image.asset(
                     'assets/icons/nav_bar/sos.gif',
                     fit: BoxFit.cover,
-                    width: size.width * 0.25,
-                    height: size.width * 0.25,
+                    width: size.width * 0.3,
+                    height: size.width * 0.3,
                   ),
                 ),
               )
             : Center(
                 child: SvgPicture.asset(
                   'assets/icons/nav_bar/sos.svg',
-                  width: size.width * 0.08,
-                  height: size.width * 0.08,
+                  width: size.width * 0.13,
+                  height: size.width * 0.13,
                   colorFilter: ColorFilter.mode(
                     isDarkMode ? Colors.white : Colors.black,
                     BlendMode.srcIn,
@@ -311,7 +346,12 @@ class NavigationControllerState extends State<NavigationController> {
     setState(() {
       _currentIndex = index;
       _showNavBar = index != 1;
-      _updateSystemUI(index);
+
+      // Always ensure immersive mode
+      SystemChrome.setEnabledSystemUIMode(
+        SystemUiMode.immersiveSticky,
+        overlays: [], // Hide both status and navigation bars
+      );
     });
   }
 

@@ -69,15 +69,7 @@ void main() {
     );
   };
 
-  // Set system UI mode globally
-  SystemChrome.setEnabledSystemUIMode(
-    SystemUiMode.edgeToEdge,
-    overlays: [
-      SystemUiOverlay.top
-    ], // Only show status bar, hide navigation bar
-  );
-
-  // Set system UI style globally
+  // Set permanent system UI settings
   SystemChrome.setSystemUIOverlayStyle(
     const SystemUiOverlayStyle(
       statusBarColor: Colors.transparent,
@@ -85,6 +77,12 @@ void main() {
       systemNavigationBarDividerColor: Colors.transparent,
       systemNavigationBarContrastEnforced: false,
     ),
+  );
+
+  // Set initial system UI mode
+  SystemChrome.setEnabledSystemUIMode(
+    SystemUiMode.immersiveSticky,
+    overlays: [], // Hide both status and navigation bars
   );
 
   runApp(

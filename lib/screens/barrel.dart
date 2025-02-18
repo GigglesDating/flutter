@@ -2,7 +2,7 @@ export 'splash.dart';
 
 export 'common/banned.dart';
 export 'member/home.dart';
-export 'member/navbar.dart';
+export 'utilities/navbar.dart';
 export 'member/swipe.dart';
 
 export 'submenus/settings/settings.dart';
@@ -36,3 +36,5 @@ export '../network/think.dart';
 export 'utilities/comments_sheet.dart';
 export 'utilities/post_card.dart';
 export 'utilities/share_sheet.dart';
+
+export 'member/notifications.dart';

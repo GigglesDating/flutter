@@ -1,11 +1,11 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:flutter_frontend/screens/member/notifications.dart';
 import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart';
-import '../utilities/post_card.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter/foundation.dart' show kDebugMode;
+import 'package:flutter/services.dart';
+import 'package:flutter_frontend/screens/barrel.dart';
 
 class HomeTab extends StatefulWidget {
   const HomeTab({super.key});
@@ -126,11 +126,13 @@ class _HomeTabState extends State<HomeTab> {
         actions: [
           IconButton(
             onPressed: () {
+              HapticFeedback.lightImpact();
               Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => NotificationsPage(),
-                  ));
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const NotificationsPage(),
+                ),
+              );
             },
             icon: Container(
               width: 40,

@@ -106,18 +106,23 @@ class _SwipeScreenState extends State<SwipeScreen>
             Positioned(
               top: 40,
               left: 16,
-              child: Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: Colors.black.withAlpha(26),
-                ),
-                child: const Center(
-                  child: Icon(
-                    Icons.arrow_back_ios_new, // Flutter's native back icon
-                    color: Colors.white,
-                    size: 22,
+              child: GestureDetector(
+                onTap: () => Navigator.pop(context),
+                child: Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: isDarkMode
+                        ? Colors.white.withAlpha(38)
+                        : Colors.black.withAlpha(26),
+                  ),
+                  child: Center(
+                    child: Icon(
+                      Icons.arrow_back_ios_new,
+                      color: isDarkMode ? Colors.black : Colors.white,
+                      size: 22,
+                    ),
                   ),
                 ),
               ),
@@ -125,28 +130,33 @@ class _SwipeScreenState extends State<SwipeScreen>
             Positioned(
               top: 40,
               right: 16,
-              child: Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: Colors.black.withAlpha(26),
-                ),
-                child: Center(
-                  child: SvgPicture.asset(
-                    'assets/icons/swipe/filters.svg',
-                    width: 22,
-                    height: 22,
-                    colorFilter: const ColorFilter.mode(
-                      Colors.white,
-                      BlendMode.srcIn,
+              child: GestureDetector(
+                onTap: () {}, // Add filter screen navigation
+                child: Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: isDarkMode
+                        ? Colors.white.withAlpha(38)
+                        : Colors.black.withAlpha(26),
+                  ),
+                  child: Center(
+                    child: SvgPicture.asset(
+                      'assets/icons/swipe/filters.svg',
+                      width: 26,
+                      height: 26,
+                      colorFilter: ColorFilter.mode(
+                        isDarkMode ? Colors.black : Colors.white,
+                        BlendMode.srcIn,
+                      ),
                     ),
                   ),
                 ),
               ),
             ),
 
-            // User Info Section
+            // User Info Section with updated text colors
             Positioned(
               bottom: 60,
               left: 0,
@@ -158,8 +168,8 @@ class _SwipeScreenState extends State<SwipeScreen>
                   children: [
                     Text(
                       '${_profiles[_currentIndex]['name']}, ${_profiles[_currentIndex]['age']}',
-                      style: const TextStyle(
-                        color: Colors.white,
+                      style: TextStyle(
+                        color: isDarkMode ? Colors.black : Colors.white,
                         fontSize: 24,
                         fontWeight: FontWeight.w700,
                       ),
@@ -168,16 +178,16 @@ class _SwipeScreenState extends State<SwipeScreen>
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        const Icon(
-                          Icons.location_on, // Flutter's native location icon
+                        Icon(
+                          Icons.location_on,
                           size: 18,
-                          color: Colors.white,
+                          color: isDarkMode ? Colors.black : Colors.white,
                         ),
                         const SizedBox(width: 4),
                         Text(
                           _profiles[_currentIndex]['location'],
-                          style: const TextStyle(
-                            color: Colors.white,
+                          style: TextStyle(
+                            color: isDarkMode ? Colors.black : Colors.white,
                             fontSize: 16,
                           ),
                         ),
@@ -186,18 +196,17 @@ class _SwipeScreenState extends State<SwipeScreen>
                     const SizedBox(height: 20),
                     Row(
                       children: [
-                        const Icon(
-                          Icons
-                              .info_outline, // Flutter's native info icon for bio
-                          size: 18,
-                          color: Colors.white,
+                        Icon(
+                          Icons.info_outline,
+                          size: 20,
+                          color: isDarkMode ? Colors.black : Colors.white,
                         ),
                         const SizedBox(width: 8),
                         Expanded(
                           child: Text(
                             _profiles[_currentIndex]['bio'],
-                            style: const TextStyle(
-                              color: Colors.white,
+                            style: TextStyle(
+                              color: isDarkMode ? Colors.black : Colors.white,
                               fontSize: 14,
                             ),
                             textAlign: TextAlign.justify,

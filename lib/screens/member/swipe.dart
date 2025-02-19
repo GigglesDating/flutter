@@ -184,6 +184,7 @@ class _SwipeScreenState extends State<SwipeScreen>
                   setState(() {
                     _currentIndex = (_currentIndex + 1) % _profiles.length;
                     _cardOffset = Offset.zero;
+                    _showImageTiles = false;
                   });
                 } else {
                   setState(() {

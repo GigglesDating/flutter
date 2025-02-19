@@ -124,7 +124,7 @@ class _SwipeScreenState extends State<SwipeScreen>
               ),
             ),
 
-            // Top Action Buttons
+            // Back Button
             Positioned(
               top: 40,
               left: 16,
@@ -133,17 +133,23 @@ class _SwipeScreenState extends State<SwipeScreen>
                 height: 40,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: Colors.black.withAlpha(26),
+                  color: isDarkMode
+                      ? const Color.fromARGB(255, 87, 85, 85).withAlpha(38)
+                      : const Color.fromARGB(255, 87, 85, 85).withAlpha(26),
                 ),
-                child: const Center(
+                child: Center(
                   child: Icon(
-                    Icons.arrow_back_ios_new, // Flutter's native back icon
-                    color: Colors.white,
+                    Icons.arrow_back_ios_new,
+                    color: isDarkMode
+                        ? const Color.fromARGB(255, 255, 255, 255)
+                        : Colors.white,
                     size: 22,
                   ),
                 ),
               ),
             ),
+
+            // Filter Button
             Positioned(
               top: 40,
               right: 16,
@@ -159,7 +165,7 @@ class _SwipeScreenState extends State<SwipeScreen>
                     'assets/icons/swipe/filters.svg',
                     width: 38,
                     height: 38,
-                    colorFilter: const ColorFilter.mode(
+                    colorFilter: ColorFilter.mode(
                       Colors.white,
                       BlendMode.srcIn,
                     ),
@@ -175,6 +181,7 @@ class _SwipeScreenState extends State<SwipeScreen>
 
   Widget _buildCardInfo(int index) {
     final screenSize = MediaQuery.of(context).size;
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
 
     return Column(
       mainAxisAlignment: MainAxisAlignment.end,
@@ -194,26 +201,32 @@ class _SwipeScreenState extends State<SwipeScreen>
               Text(
                 '${_profiles[index]['name']}, ${_profiles[index]['age']}',
                 style: TextStyle(
-                  color: Colors.white,
+                  color: isDarkMode
+                      ? const Color.fromARGB(255, 255, 255, 255)
+                      : Colors.white,
                   fontSize: screenSize.width * 0.07,
                   fontWeight: FontWeight.bold,
                 ),
                 textAlign: TextAlign.center,
               ),
-              SizedBox(height: screenSize.height * 0.015),
+              SizedBox(height: screenSize.height * 0.008),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Icon(
                     Icons.location_on,
-                    color: Colors.white,
+                    color: isDarkMode
+                        ? const Color.fromARGB(255, 255, 255, 255)
+                        : Colors.white,
                     size: screenSize.width * 0.045,
                   ),
                   SizedBox(width: screenSize.width * 0.01),
                   Text(
                     _profiles[index]['location'],
                     style: TextStyle(
-                      color: Colors.white,
+                      color: isDarkMode
+                          ? const Color.fromARGB(255, 255, 255, 255)
+                          : Colors.white,
                       fontSize: screenSize.width * 0.04,
                     ),
                     textAlign: TextAlign.center,
@@ -229,16 +242,21 @@ class _SwipeScreenState extends State<SwipeScreen>
                     'assets/icons/swipe/bio.png',
                     width: screenSize.width * 0.075,
                     height: screenSize.width * 0.075,
-                    color: Colors.white,
+                    color: isDarkMode
+                        ? const Color.fromARGB(255, 255, 255, 255)
+                        : Colors.white,
                   ),
                   SizedBox(width: screenSize.width * 0.025),
                   Expanded(
                     child: Text(
                       _profiles[index]['bio'],
                       style: TextStyle(
-                        color: Colors.white,
+                        color: isDarkMode
+                            ? const Color.fromARGB(255, 255, 255, 255)
+                            : Colors.white,
                         fontSize: screenSize.width * 0.04,
                         height: 1.4,
+                        fontWeight: FontWeight.bold,
                       ),
                       textAlign: TextAlign.justify,
                       maxLines: 3,

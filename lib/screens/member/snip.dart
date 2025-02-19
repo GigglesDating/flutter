@@ -125,7 +125,7 @@ class _SnipTab extends State<SnipTab> with SingleTickerProviderStateMixin {
                           scale: _animation,
                           child: Icon(
                             Icons.favorite,
-                            color: Colors.red.withOpacity(0.8),
+                            color: Colors.red.withAlpha(150),
                             size: 100,
                           ),
                         ),
@@ -451,7 +451,6 @@ class _SnipTab extends State<SnipTab> with SingleTickerProviderStateMixin {
                             String message = commentController.text;
                             if (message.isNotEmpty) {
                               // Send the message
-                              print("Sending message: $message");
                               commentController.clear();
                             }
                           },

@@ -22,6 +22,20 @@ class _SwipeScreenState extends State<SwipeScreen>
         'assets/tempImages/users/usera/1.png',
         'assets/tempImages/users/usera/2.png',
         'assets/tempImages/users/usera/3.png',
+        'assets/tempImages/users/usera/4.png',
+      ],
+    },
+    {
+      'name': 'Sarah',
+      'age': 24,
+      'location': 'Bangalore',
+      'bio':
+          'Adventure seeker & coffee lover. Always up for trying new things and meeting new people.',
+      'images': [
+        'assets/tempImages/users/userb/1.png',
+        'assets/tempImages/users/userb/2.png',
+        'assets/tempImages/users/userb/3.png',
+        'assets/tempImages/users/userb/4.png',
       ],
     },
     // Add more profiles as needed
@@ -68,7 +82,7 @@ class _SwipeScreenState extends State<SwipeScreen>
         backgroundColor: isDarkMode ? Colors.black : Colors.white,
         body: Stack(
           children: [
-            // Main Card
+            // Main Card with Info
             GestureDetector(
               onPanUpdate: (details) {
                 setState(() {
@@ -98,6 +112,14 @@ class _SwipeScreenState extends State<SwipeScreen>
                       fit: BoxFit.cover,
                     ),
                   ),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      _buildCardInfo(_currentIndex),
+                      SizedBox(
+                          height: size.height * 0.1), // Extra bottom spacing
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -106,23 +128,18 @@ class _SwipeScreenState extends State<SwipeScreen>
             Positioned(
               top: 40,
               left: 16,
-              child: GestureDetector(
-                onTap: () => Navigator.pop(context),
-                child: Container(
-                  width: 40,
-                  height: 40,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: isDarkMode
-                        ? Colors.white.withAlpha(38)
-                        : Colors.black.withAlpha(26),
-                  ),
-                  child: Center(
-                    child: Icon(
-                      Icons.arrow_back_ios_new,
-                      color: isDarkMode ? Colors.black : Colors.white,
-                      size: 22,
-                    ),
+              child: Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Colors.black.withAlpha(26),
+                ),
+                child: const Center(
+                  child: Icon(
+                    Icons.arrow_back_ios_new, // Flutter's native back icon
+                    color: Colors.white,
+                    size: 22,
                   ),
                 ),
               ),
@@ -130,97 +147,110 @@ class _SwipeScreenState extends State<SwipeScreen>
             Positioned(
               top: 40,
               right: 16,
-              child: GestureDetector(
-                onTap: () {}, // Add filter screen navigation
-                child: Container(
-                  width: 40,
-                  height: 40,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: isDarkMode
-                        ? Colors.white.withAlpha(38)
-                        : Colors.black.withAlpha(26),
-                  ),
-                  child: Center(
-                    child: SvgPicture.asset(
-                      'assets/icons/swipe/filters.svg',
-                      width: 26,
-                      height: 26,
-                      colorFilter: ColorFilter.mode(
-                        isDarkMode ? Colors.black : Colors.white,
-                        BlendMode.srcIn,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-
-            // User Info Section with updated text colors
-            Positioned(
-              bottom: 60,
-              left: 0,
-              right: 0,
               child: Container(
-                padding: const EdgeInsets.all(20),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    Text(
-                      '${_profiles[_currentIndex]['name']}, ${_profiles[_currentIndex]['age']}',
-                      style: TextStyle(
-                        color: isDarkMode ? Colors.black : Colors.white,
-                        fontSize: 24,
-                        fontWeight: FontWeight.w700,
-                      ),
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Colors.black.withAlpha(26),
+                ),
+                child: Center(
+                  child: SvgPicture.asset(
+                    'assets/icons/swipe/filters.svg',
+                    width: 38,
+                    height: 38,
+                    colorFilter: const ColorFilter.mode(
+                      Colors.white,
+                      BlendMode.srcIn,
                     ),
-                    const SizedBox(height: 12),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          Icons.location_on,
-                          size: 18,
-                          color: isDarkMode ? Colors.black : Colors.white,
-                        ),
-                        const SizedBox(width: 4),
-                        Text(
-                          _profiles[_currentIndex]['location'],
-                          style: TextStyle(
-                            color: isDarkMode ? Colors.black : Colors.white,
-                            fontSize: 16,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 20),
-                    Row(
-                      children: [
-                        Icon(
-                          Icons.info_outline,
-                          size: 20,
-                          color: isDarkMode ? Colors.black : Colors.white,
-                        ),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: Text(
-                            _profiles[_currentIndex]['bio'],
-                            style: TextStyle(
-                              color: isDarkMode ? Colors.black : Colors.white,
-                              fontSize: 14,
-                            ),
-                            textAlign: TextAlign.justify,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
+                  ),
                 ),
               ),
             ),
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildCardInfo(int index) {
+    final screenSize = MediaQuery.of(context).size;
+
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.end,
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        Container(
+          width: double.infinity,
+          padding: EdgeInsets.only(
+            left: screenSize.width * 0.05,
+            right: screenSize.width * 0.05,
+            bottom: screenSize.height * 0.005,
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                '${_profiles[index]['name']}, ${_profiles[index]['age']}',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: screenSize.width * 0.07,
+                  fontWeight: FontWeight.bold,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              SizedBox(height: screenSize.height * 0.015),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.location_on,
+                    color: Colors.white,
+                    size: screenSize.width * 0.045,
+                  ),
+                  SizedBox(width: screenSize.width * 0.01),
+                  Text(
+                    _profiles[index]['location'],
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: screenSize.width * 0.04,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ],
+              ),
+              SizedBox(height: screenSize.height * 0.03),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Image.asset(
+                    'assets/icons/swipe/bio.png',
+                    width: screenSize.width * 0.075,
+                    height: screenSize.width * 0.075,
+                    color: Colors.white,
+                  ),
+                  SizedBox(width: screenSize.width * 0.025),
+                  Expanded(
+                    child: Text(
+                      _profiles[index]['bio'],
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: screenSize.width * 0.04,
+                        height: 1.4,
+                      ),
+                      textAlign: TextAlign.justify,
+                      maxLines: 3,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 }

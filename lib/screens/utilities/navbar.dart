@@ -1,12 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-//import 'package:flutter_floating_bottom_bar/flutter_floating_bottom_bar.dart';
-//import 'package:flutter_svg/flutter_svg.dart';
-import '../placeholder_template.dart';
-import '../barrel.dart';
 import 'package:vibration/vibration.dart';
 import 'dart:async';
+import '../barrel.dart';
 
 class NavigationController extends StatefulWidget {
   const NavigationController({super.key});

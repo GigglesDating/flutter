@@ -1,3 +1,5 @@
+export 'placeholder_template.dart';
+
 export 'splash.dart';
 
 export 'common/banned.dart';

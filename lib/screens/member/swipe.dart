@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'dart:math';
 
 class SwipeScreen extends StatefulWidget {
   const SwipeScreen({super.key});
@@ -44,6 +45,9 @@ class _SwipeScreenState extends State<SwipeScreen>
   int _currentIndex = 0;
   late AnimationController _cardController;
   Offset _cardOffset = Offset.zero;
+  bool _showImageTiles = false;
+  List<Offset> _tilePlacements = [];
+  final Random _random = Random();
 
   @override
   void initState() {
@@ -65,6 +69,53 @@ class _SwipeScreenState extends State<SwipeScreen>
     super.dispose();
   }
 
+  void _initializeTilePlacements(Size screenSize) {
+    // Calculate the middle 60% of the screen
+    final double startX = screenSize.width * 0.2;
+    final double endX = screenSize.width * 0.8;
+    final double startY = screenSize.height * 0.2;
+    final double endY = screenSize.height * 0.8;
+
+    _tilePlacements = List.generate(3, (index) {
+      return Offset(
+        startX + _random.nextDouble() * (endX - startX),
+        startY + _random.nextDouble() * (endY - startY),
+      );
+    });
+  }
+
+  Widget _buildMovableImageTile(String imagePath, int index, Size screenSize) {
+    return Positioned(
+      left: _tilePlacements[index].dx,
+      top: _tilePlacements[index].dy,
+      child: GestureDetector(
+        onPanUpdate: (details) {
+          setState(() {
+            _tilePlacements[index] += details.delta;
+          });
+        },
+        child: Container(
+          width: screenSize.width * 0.25,
+          height: screenSize.width * 0.35,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(10),
+            image: DecorationImage(
+              image: AssetImage(imagePath),
+              fit: BoxFit.cover,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.3),
+                blurRadius: 10,
+                spreadRadius: 2,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
@@ -84,6 +135,14 @@ class _SwipeScreenState extends State<SwipeScreen>
           children: [
             // Main Card with Info
             GestureDetector(
+              onTap: () {
+                setState(() {
+                  if (!_showImageTiles) {
+                    _initializeTilePlacements(size);
+                  }
+                  _showImageTiles = !_showImageTiles;
+                });
+              },
               onPanUpdate: (details) {
                 setState(() {
                   _cardOffset += details.delta;
@@ -103,23 +162,39 @@ class _SwipeScreenState extends State<SwipeScreen>
               },
               child: Transform.translate(
                 offset: _cardOffset,
-                child: Container(
-                  width: size.width,
-                  height: size.height,
-                  decoration: BoxDecoration(
-                    image: DecorationImage(
-                      image: AssetImage(_profiles[_currentIndex]['images'][0]),
-                      fit: BoxFit.cover,
+                child: Stack(
+                  children: [
+                    Container(
+                      width: size.width,
+                      height: size.height,
+                      decoration: BoxDecoration(
+                        image: DecorationImage(
+                          image:
+                              AssetImage(_profiles[_currentIndex]['images'][0]),
+                          fit: BoxFit.cover,
+                        ),
+                      ),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          _buildCardInfo(_currentIndex),
+                          SizedBox(height: size.height * 0.1),
+                        ],
+                      ),
                     ),
-                  ),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    children: [
-                      _buildCardInfo(_currentIndex),
-                      SizedBox(
-                          height: size.height * 0.1), // Extra bottom spacing
-                    ],
-                  ),
+                    if (_showImageTiles)
+                      ..._profiles[_currentIndex]['images']
+                          .skip(1) // Skip the first image as it's the main one
+                          .toList()
+                          .asMap()
+                          .entries
+                          .map((entry) => _buildMovableImageTile(
+                                entry.value,
+                                entry.key,
+                                size,
+                              ))
+                          .toList(),
+                  ],
                 ),
               ),
             ),

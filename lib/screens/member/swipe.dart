@@ -70,11 +70,11 @@ class _SwipeScreenState extends State<SwipeScreen>
   }
 
   void _initializeTilePlacements(Size screenSize) {
-    // Calculate the middle 60% of the screen
-    final double startX = screenSize.width * 0.2;
-    final double endX = screenSize.width * 0.8;
-    final double startY = screenSize.height * 0.2;
-    final double endY = screenSize.height * 0.8;
+    // Calculate the middle 45% of the screen
+    final double startX = screenSize.width * 0.275;
+    final double endX = screenSize.width * 0.725;
+    final double startY = screenSize.height * 0.275;
+    final double endY = screenSize.height * 0.725;
 
     _tilePlacements = List.generate(3, (index) {
       return Offset(
@@ -95,8 +95,8 @@ class _SwipeScreenState extends State<SwipeScreen>
           });
         },
         child: Container(
-          width: screenSize.width * 0.25,
-          height: screenSize.width * 0.35,
+          width: screenSize.width * 0.35,
+          height: screenSize.width * 0.45,
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(10),
             image: DecorationImage(
@@ -105,7 +105,7 @@ class _SwipeScreenState extends State<SwipeScreen>
             ),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.3),
+                color: Colors.black.withAlpha(30),
                 blurRadius: 10,
                 spreadRadius: 2,
               ),

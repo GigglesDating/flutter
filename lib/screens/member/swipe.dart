@@ -70,11 +70,15 @@ class _SwipeScreenState extends State<SwipeScreen>
   }
 
   void _initializeTilePlacements(Size screenSize) {
-    // Calculate the middle 45% of the screen
+    // Calculate the biased placement area (higher on screen)
+    // X remains same (27.5% from each side)
     final double startX = screenSize.width * 0.275;
     final double endX = screenSize.width * 0.725;
-    final double startY = screenSize.height * 0.275;
-    final double endY = screenSize.height * 0.725;
+
+    // Y is now biased towards top
+    // 17.5% from top, 37.5% from bottom
+    final double startY = screenSize.height * 0.175; // Changed from 0.275
+    final double endY = screenSize.height * 0.625; // Changed from 0.725
 
     _tilePlacements = List.generate(3, (index) {
       return Offset(
@@ -92,6 +96,33 @@ class _SwipeScreenState extends State<SwipeScreen>
         onPanUpdate: (details) {
           setState(() {
             _tilePlacements[index] += details.delta;
+          });
+        },
+        onTap: () {
+          setState(() {
+            // Get current main image
+            String currentMainImage = _profiles[_currentIndex]['images'][0];
+
+            // Get the index of the tapped image in the full images array
+            int tappedImageIndex =
+                _profiles[_currentIndex]['images'].indexOf(imagePath);
+
+            // Create a new list of images
+            List<String> newImages =
+                List.from(_profiles[_currentIndex]['images']);
+
+            // Swap the images
+            newImages[0] = imagePath;
+            newImages[tappedImageIndex] = currentMainImage;
+
+            // Update the profile's images
+            _profiles[_currentIndex] = {
+              ..._profiles[_currentIndex],
+              'images': newImages,
+            };
+
+            // Hide the tiles
+            _showImageTiles = false;
           });
         },
         child: Container(

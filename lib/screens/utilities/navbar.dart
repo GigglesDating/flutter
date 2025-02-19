@@ -25,9 +25,16 @@ class NavigationControllerState extends State<NavigationController>
   void initState() {
     super.initState();
     _hideSystemBars();
-    // Show nav bar by default
     _showNavBar = true;
     _startRotationTimer();
+
+    // Add this to ensure UI stays hidden after any navigation
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      SystemChrome.setEnabledSystemUIMode(
+        SystemUiMode.immersiveSticky,
+        overlays: [],
+      );
+    });
   }
 
   void _hideSystemBars() {
@@ -184,13 +191,21 @@ class NavigationControllerState extends State<NavigationController>
       child: GestureDetector(
         onTap: () {
           if (_currentIndex != index) {
-            // Only animate if we're switching to this tab
             setState(() {
-              _rotationValue = _rotationValue + 1; // One full rotation
+              _rotationValue = _rotationValue + 1;
               _currentIndex = index;
             });
 
-            // Reset rotation after animation
+            // Navigate to SnipTab when index is 3
+            if (index == 3) {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const SnipTab(),
+                ),
+              );
+            }
+
             Future.delayed(const Duration(milliseconds: 500), () {
               if (mounted && _currentIndex == index) {
                 setState(() => _rotationValue = 0);

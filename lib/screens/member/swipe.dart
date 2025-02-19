@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_card_swiper/flutter_card_swiper.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'dart:math';
+import '../barrel.dart';
 
 // Define enum at the top level, before the class
 enum SwipeDirection { left, right, up, none }
@@ -187,7 +188,25 @@ class _SwipeScreenState extends State<SwipeScreen>
                 children: [
                   // Back Button
                   GestureDetector(
-                    onTap: () => Navigator.pop(context),
+                    onTap: () async {
+                      // First, ensure we're in immersive mode
+                      await SystemChrome.setEnabledSystemUIMode(
+                        SystemUiMode.immersiveSticky,
+                        overlays: [],
+                      );
+
+                      if (!mounted) return;
+
+                      // Then navigate with replacement
+                      Navigator.of(context).pushReplacement(
+                        PageRouteBuilder(
+                          pageBuilder:
+                              (context, animation, secondaryAnimation) =>
+                                  const NavigationController(),
+                          transitionDuration: Duration.zero,
+                        ),
+                      );
+                    },
                     child: Container(
                       padding: EdgeInsets.all(size.width * 0.01),
                       decoration: BoxDecoration(
@@ -339,6 +358,7 @@ class _SwipeScreenState extends State<SwipeScreen>
                 style: TextStyle(
                   color: Colors.white,
                   fontSize: size.width * 0.035,
+                  fontWeight: FontWeight.w600,
                 ),
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,

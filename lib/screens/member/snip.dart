@@ -1,4 +1,3 @@
-import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_frontend/main.dart';
@@ -16,8 +15,6 @@ class SnipTab extends StatefulWidget {
 class _SnipTab extends State<SnipTab> with SingleTickerProviderStateMixin {
   late VideoPlayerController _controller;
   bool isPlaying = false;
-  CameraController? _cameraController;
-  final bool _isCameraInitialized = false;
   TextEditingController commentController = TextEditingController();
   FocusNode commentFocusNode = FocusNode();
   final GlobalKey _buttonKey = GlobalKey();
@@ -161,7 +158,10 @@ class _SnipTab extends State<SnipTab> with SingleTickerProviderStateMixin {
                                   icon: SvgPicture.asset(
                                     'assets/icons/feed/like.svg',
                                     height: 50,
-                                    color: _isLiked ? Colors.red : Colors.white,
+                                    colorFilter: ColorFilter.mode(
+                                      _isLiked ? Colors.red : Colors.white,
+                                      BlendMode.srcIn,
+                                    ),
                                   ),
                                 ),
                               ),
@@ -177,7 +177,10 @@ class _SnipTab extends State<SnipTab> with SingleTickerProviderStateMixin {
                                     icon: SvgPicture.asset(
                                       'assets/icons/feed/comment.svg',
                                       height: 50,
-                                      color: Colors.white,
+                                      colorFilter: const ColorFilter.mode(
+                                        Colors.white,
+                                        BlendMode.srcIn,
+                                      ),
                                     )),
                               ),
                               const SizedBox(
@@ -189,13 +192,16 @@ class _SnipTab extends State<SnipTab> with SingleTickerProviderStateMixin {
                                 child: IconButton(
                                     key: _buttonKey,
                                     onPressed: () async {
-                                      // Get button's position
                                       showPopupMenu();
                                     },
                                     icon: SvgPicture.asset(
-                                        'assets/icons/feed/ping_icon.svg',
-                                        height: 50,
-                                        color: Colors.white)),
+                                      'assets/icons/feed/ping_icon.svg',
+                                      height: 50,
+                                      colorFilter: const ColorFilter.mode(
+                                        Colors.white,
+                                        BlendMode.srcIn,
+                                      ),
+                                    )),
                               ),
                               SizedBox(
                                 height: 16,
@@ -338,7 +344,7 @@ class _SnipTab extends State<SnipTab> with SingleTickerProviderStateMixin {
         ),
       ),
       isScrollControlled: true,
-      backgroundColor: Colors.white.withOpacity(0.9),
+      backgroundColor: Colors.black.withAlpha(255),
       builder: (context) {
         return Padding(
           padding: MediaQuery.of(context).viewInsets,

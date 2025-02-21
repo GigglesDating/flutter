@@ -21,6 +21,8 @@ class NavigationControllerState extends State<NavigationController>
   double _rotationValue = 0.0;
   Timer? _rotationTimer;
 
+  int get currentIndex => _currentIndex;
+
   @override
   void initState() {
     super.initState();

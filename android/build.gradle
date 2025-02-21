@@ -19,6 +19,11 @@ allprojects {
            url = "https://s3.ap-south-1.amazonaws.com/hvsdk/android/releases"
         } 
     }
+    
+    tasks.withType(JavaCompile) {
+        options.compilerArgs << '-Xlint:none'
+        options.deprecation = false
+    }
 }
 
 rootProject.buildDir = "../build"

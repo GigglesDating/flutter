@@ -7,6 +7,9 @@ export 'member/home.dart';
 export 'utilities/navbar.dart';
 export 'member/swipe.dart';
 export 'member/snip.dart';
+export 'utilities/action_bar.dart';
+export 'utilities/comments_sheet.dart';
+export 'utilities/share_sheet.dart';
 
 export 'submenus/settings/settings.dart';
 export 'submenus/settings/subpages/account_privacy_screen.dart';
@@ -36,8 +39,6 @@ export 'waitlist/profileCreationScreens/profile_creation3.dart';
 
 export '../network/think.dart';
 
-export 'utilities/comments_sheet.dart';
 export 'utilities/post_card.dart';
-export 'utilities/share_sheet.dart';
-
 export 'member/notifications.dart';
+export 'utilities/snip_card.dart';

@@ -25,16 +25,9 @@ class NavigationControllerState extends State<NavigationController>
   void initState() {
     super.initState();
     _hideSystemBars();
+    // Show nav bar by default
     _showNavBar = true;
     _startRotationTimer();
-
-    // Add this to ensure UI stays hidden after any navigation
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      SystemChrome.setEnabledSystemUIMode(
-        SystemUiMode.immersiveSticky,
-        overlays: [],
-      );
-    });
   }
 
   void _hideSystemBars() {
@@ -191,21 +184,13 @@ class NavigationControllerState extends State<NavigationController>
       child: GestureDetector(
         onTap: () {
           if (_currentIndex != index) {
+            // Only animate if we're switching to this tab
             setState(() {
-              _rotationValue = _rotationValue + 1;
+              _rotationValue = _rotationValue + 1; // One full rotation
               _currentIndex = index;
             });
 
-            // Navigate to SnipTab when index is 3
-            if (index == 3) {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const SnipTab(),
-                ),
-              );
-            }
-
+            // Reset rotation after animation
             Future.delayed(const Duration(milliseconds: 500), () {
               if (mounted && _currentIndex == index) {
                 setState(() => _rotationValue = 0);
@@ -325,13 +310,7 @@ class NavigationControllerState extends State<NavigationController>
       label: 'SOS',
       screen: const PlaceholderScreen(screenName: 'SOS', message: 'SOS Screen'),
     ),
-    (
-      label: 'Reel',
-      screen: const PlaceholderScreen(
-        screenName: 'Reel',
-        message: 'Reel Screen',
-      ),
-    ),
+    (label: 'Snips', screen: const SnipTab()),
     (
       label: 'Profile',
       screen: const PlaceholderScreen(

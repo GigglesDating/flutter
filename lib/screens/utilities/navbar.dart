@@ -26,6 +26,12 @@ class NavigationControllerState extends State<NavigationController>
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      SystemChrome.setEnabledSystemUIMode(
+        SystemUiMode.immersiveSticky,
+        overlays: [],
+      );
+    });
     _hideSystemBars();
     // Show nav bar by default
     _showNavBar = true;
@@ -327,10 +333,10 @@ class NavigationControllerState extends State<NavigationController>
       _currentIndex = index;
       _showNavBar = index != 1;
 
-      // Always ensure immersive mode
+      // Ensure immersive mode is maintained
       SystemChrome.setEnabledSystemUIMode(
         SystemUiMode.immersiveSticky,
-        overlays: [], // Hide both status and navigation bars
+        overlays: [],
       );
     });
   }

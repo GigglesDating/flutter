@@ -217,7 +217,7 @@ class _SnipCardState extends State<SnipCard> {
                 scale: widget.animation,
                 child: Icon(
                   Icons.favorite,
-                  color: Colors.red.withOpacity(0.8),
+                  color: Colors.red.withAlpha(100),
                   size: 100,
                 ),
               ),
@@ -234,7 +234,7 @@ class _SnipCardState extends State<SnipCard> {
               onCommentTap: _showCommentsSheet,
               onShareTap: _showShareSheet,
               orientation: ActionBarOrientation.vertical,
-              backgroundColor: Colors.black.withOpacity(0.5),
+              backgroundColor: Colors.black.withAlpha(50),
             ),
           ),
 

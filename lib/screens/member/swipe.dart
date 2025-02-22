@@ -60,7 +60,6 @@ class _SwipeScreenState extends State<SwipeScreen>
   @override
   void initState() {
     super.initState();
-    SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
   }
 
   @override
@@ -97,10 +96,6 @@ class _SwipeScreenState extends State<SwipeScreen>
 
   @override
   void dispose() {
-    SystemChrome.setEnabledSystemUIMode(
-      SystemUiMode.manual,
-      overlays: SystemUiOverlay.values,
-    );
     super.dispose();
   }
 
@@ -210,7 +205,7 @@ class _SwipeScreenState extends State<SwipeScreen>
                     final navState = context
                         .findAncestorStateOfType<NavigationControllerState>();
                     if (navState != null) {
-                      navState.setCurrentIndex(0);
+                      navState.handleNavigation(0);
                     }
                   },
                   child: Container(

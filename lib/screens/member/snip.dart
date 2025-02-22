@@ -114,14 +114,14 @@ class _SnipTab extends State<SnipTab>
     });
   }
 
-  void _playNextVideo() {
-    _controllers[_currentVideoIndex].pause();
-    _currentVideoIndex = (_currentVideoIndex + 1) % _controllers.length;
-    _controllers[_currentVideoIndex].play();
-    setState(() {
-      isPlaying = true;
-    });
-  }
+  // void _playNextVideo() {
+  //   _controllers[_currentVideoIndex].pause();
+  //   _currentVideoIndex = (_currentVideoIndex + 1) % _controllers.length;
+  //   _controllers[_currentVideoIndex].play();
+  //   setState(() {
+  //     isPlaying = true;
+  //   });
+  // }
 
   void onDoubleTap() {
     if (!_isLiked) {
@@ -184,7 +184,7 @@ class _SnipTab extends State<SnipTab>
                           scale: _animation,
                           child: Icon(
                             Icons.favorite,
-                            color: Colors.red.withOpacity(0.8),
+                            color: Colors.red.withAlpha(100),
                             size: 100,
                           ),
                         ),
@@ -332,7 +332,7 @@ class _SnipTab extends State<SnipTab>
         ),
       ),
       isScrollControlled: true,
-      backgroundColor: Colors.white.withOpacity(0.9),
+      backgroundColor: Colors.white.withAlpha(90),
       builder: (context) {
         return Padding(
           padding: MediaQuery.of(context).viewInsets,
@@ -445,7 +445,7 @@ class _SnipTab extends State<SnipTab>
                             String message = commentController.text;
                             if (message.isNotEmpty) {
                               // Send the message
-                              print("Sending message: $message");
+                              //print("Sending message: $message");
                               commentController.clear();
                             }
                           },

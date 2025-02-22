@@ -9,12 +9,12 @@ class NavigationController extends StatefulWidget {
   const NavigationController({super.key});
 
   @override
-  State<NavigationController> createState() => NavigationControllerState();
+  NavigationControllerState createState() => NavigationControllerState();
 }
 
-class NavigationControllerState extends State<NavigationController>
-    with SingleTickerProviderStateMixin {
+class NavigationControllerState extends State<NavigationController> {
   int _currentIndex = 0;
+  late PageController _pageController;
   bool _showNavBar = true;
   bool _isSOSActive = false;
   late Size size;
@@ -23,34 +23,28 @@ class NavigationControllerState extends State<NavigationController>
 
   int get currentIndex => _currentIndex;
 
+  void _enforceImmersiveMode() {
+    SystemChrome.setEnabledSystemUIMode(
+      SystemUiMode.immersiveSticky,
+      overlays: [],
+    );
+
+    SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
+      statusBarColor: Colors.transparent,
+      systemNavigationBarColor: Colors.transparent,
+      systemNavigationBarDividerColor: Colors.transparent,
+      statusBarIconBrightness: Brightness.light,
+      systemNavigationBarIconBrightness: Brightness.light,
+    ));
+  }
+
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      SystemChrome.setEnabledSystemUIMode(
-        SystemUiMode.immersiveSticky,
-        overlays: [],
-      );
-    });
-    _hideSystemBars();
-    // Show nav bar by default
+    _pageController = PageController(initialPage: _currentIndex);
+    _enforceImmersiveMode();
     _showNavBar = true;
     _startRotationTimer();
-  }
-
-  void _hideSystemBars() {
-    SystemChrome.setEnabledSystemUIMode(
-      SystemUiMode.immersiveSticky,
-      overlays: [], // This hides both status bar and navigation bar
-    );
-
-    SystemChrome.setSystemUIOverlayStyle(
-      const SystemUiOverlayStyle(
-        statusBarColor: Colors.transparent,
-        systemNavigationBarColor: Colors.transparent,
-        systemNavigationBarDividerColor: Colors.transparent,
-      ),
-    );
   }
 
   void _startRotationTimer() {
@@ -66,6 +60,7 @@ class NavigationControllerState extends State<NavigationController>
   @override
   void dispose() {
     _rotationTimer?.cancel();
+    _pageController.dispose();
     // Restore system UI when disposing
     SystemChrome.setEnabledSystemUIMode(
       SystemUiMode.manual,
@@ -96,9 +91,22 @@ class NavigationControllerState extends State<NavigationController>
         body: Stack(
           children: [
             // Main content
-            IndexedStack(
-              index: _currentIndex,
-              children: _navigationItems.map((item) => item.screen).toList(),
+            PageView(
+              controller: _pageController,
+              physics: const NeverScrollableScrollPhysics(), // Disable swipe
+              children: [
+                const HomeTab(),
+                const SwipeScreen(),
+                const Scaffold(), // Empty scaffold for center button
+                const SnipTab(),
+                const PlaceholderScreen(
+                  screenName: 'Profile',
+                  message: 'Profile Screen',
+                ),
+              ],
+              onPageChanged: (index) {
+                setState(() => _currentIndex = index);
+              },
             ),
 
             // Navigation bar with SOS button
@@ -192,13 +200,12 @@ class NavigationControllerState extends State<NavigationController>
       child: GestureDetector(
         onTap: () {
           if (_currentIndex != index) {
-            // Only animate if we're switching to this tab
             setState(() {
-              _rotationValue = _rotationValue + 1; // One full rotation
+              _rotationValue = _rotationValue + 1;
               _currentIndex = index;
             });
+            _pageController.jumpToPage(index);
 
-            // Reset rotation after animation
             Future.delayed(const Duration(milliseconds: 500), () {
               if (mounted && _currentIndex == index) {
                 setState(() => _rotationValue = 0);
@@ -237,10 +244,13 @@ class NavigationControllerState extends State<NavigationController>
 
   Widget _buildProfileItem(int index) {
     final isSelected = _currentIndex == index;
-    final iconSize = size.width * 0.1; // Match nav item size
+    final iconSize = size.width * 0.1;
 
     return GestureDetector(
-      onTap: () => setState(() => _currentIndex = index),
+      onTap: () {
+        setState(() => _currentIndex = index);
+        _pageController.jumpToPage(index);
+      },
       child: Container(
         width: iconSize,
         height: iconSize,
@@ -311,34 +321,11 @@ class NavigationControllerState extends State<NavigationController>
     );
   }
 
-  final List<({String label, Widget screen})> _navigationItems = [
-    (label: 'Home', screen: const HomeTab()),
-    (label: 'Swipe', screen: const SwipeScreen()),
-    (
-      label: 'SOS',
-      screen: const PlaceholderScreen(screenName: 'SOS', message: 'SOS Screen'),
-    ),
-    (label: 'Snips', screen: const SnipTab()),
-    (
-      label: 'Profile',
-      screen: const PlaceholderScreen(
-        screenName: 'Profile',
-        message: 'Profile Screen',
-      ),
-    ),
-  ];
-
-  void setCurrentIndex(int index) {
-    setState(() {
-      _currentIndex = index;
-      _showNavBar = index != 1;
-
-      // Ensure immersive mode is maintained
-      SystemChrome.setEnabledSystemUIMode(
-        SystemUiMode.immersiveSticky,
-        overlays: [],
-      );
-    });
+  void handleNavigation(int index) {
+    setState(() => _currentIndex = index);
+    _pageController.jumpToPage(index);
+    _enforceImmersiveMode();
+    _showNavBar = index != 1;
   }
 
   void hideNavBar() {

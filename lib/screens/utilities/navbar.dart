@@ -6,42 +6,34 @@ import 'dart:async';
 import '../barrel.dart';
 
 class NavigationController extends StatefulWidget {
-  const NavigationController({super.key});
+  final int initialIndex;
+  const NavigationController({super.key, this.initialIndex = 0});
 
   @override
-  NavigationControllerState createState() => NavigationControllerState();
+  State<NavigationController> createState() => _NavigationControllerState();
 }
 
-class NavigationControllerState extends State<NavigationController> {
-  int _currentIndex = 0;
-  late PageController _pageController;
+class _NavigationControllerState extends State<NavigationController> {
+  late int _currentIndex;
+  final List<Widget> _screens = [
+    const HomeTab(),
+    const SwipeScreen(),
+    const SnipTab(),
+    const PlaceholderScreen(
+      screenName: 'Profile',
+      message: 'Profile Screen',
+    ),
+  ];
   bool _showNavBar = true;
   bool _isSOSActive = false;
   late Size size;
   double _rotationValue = 0.0;
   Timer? _rotationTimer;
 
-  int get currentIndex => _currentIndex;
-
-  void _enforceImmersiveMode() {
-    SystemChrome.setEnabledSystemUIMode(
-      SystemUiMode.immersiveSticky,
-      overlays: [],
-    );
-
-    SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
-      statusBarColor: Colors.transparent,
-      systemNavigationBarColor: Colors.transparent,
-      systemNavigationBarDividerColor: Colors.transparent,
-      statusBarIconBrightness: Brightness.light,
-      systemNavigationBarIconBrightness: Brightness.light,
-    ));
-  }
-
   @override
   void initState() {
     super.initState();
-    _pageController = PageController(initialPage: _currentIndex);
+    _currentIndex = widget.initialIndex;
     _enforceImmersiveMode();
     _showNavBar = true;
     _startRotationTimer();
@@ -60,13 +52,20 @@ class NavigationControllerState extends State<NavigationController> {
   @override
   void dispose() {
     _rotationTimer?.cancel();
-    _pageController.dispose();
     // Restore system UI when disposing
     SystemChrome.setEnabledSystemUIMode(
       SystemUiMode.manual,
       overlays: SystemUiOverlay.values,
     );
     super.dispose();
+  }
+
+  void _onItemTapped(int index) {
+    if (_currentIndex == index) return; // Don't reload if already on the page
+
+    setState(() {
+      _currentIndex = index;
+    });
   }
 
   @override
@@ -78,94 +77,116 @@ class NavigationControllerState extends State<NavigationController> {
     // Only show nav bar if not on SwipeScreen
     _showNavBar = _currentIndex != 1; // 1 is the index for SwipeScreen
 
-    return AnnotatedRegion<SystemUiOverlayStyle>(
-      value: const SystemUiOverlayStyle(
-        statusBarColor: Colors.transparent,
-        systemNavigationBarColor: Colors.transparent,
-        systemNavigationBarDividerColor: Colors.transparent,
-        statusBarIconBrightness: Brightness.light,
-        systemNavigationBarIconBrightness: Brightness.light,
-      ),
-      child: Scaffold(
-        backgroundColor: isDarkMode ? Colors.black : Colors.white,
-        body: Stack(
-          children: [
-            // Main content
-            PageView(
-              controller: _pageController,
-              physics: const NeverScrollableScrollPhysics(), // Disable swipe
-              children: [
-                const HomeTab(),
-                const SwipeScreen(),
-                const Scaffold(), // Empty scaffold for center button
-                const SnipTab(),
-                const PlaceholderScreen(
-                  screenName: 'Profile',
-                  message: 'Profile Screen',
-                ),
-              ],
-              onPageChanged: (index) {
-                setState(() => _currentIndex = index);
-              },
-            ),
+    return PopScope(
+      canPop: false,
+      onPopInvoked: (didPop) {
+        if (didPop) return;
+        if (_currentIndex != 0) {
+          setState(() {
+            _currentIndex = 0;
+          });
+        }
+      },
+      child: AnnotatedRegion<SystemUiOverlayStyle>(
+        value: const SystemUiOverlayStyle(
+          statusBarColor: Colors.transparent,
+          systemNavigationBarColor: Colors.transparent,
+          systemNavigationBarDividerColor: Colors.transparent,
+          statusBarIconBrightness: Brightness.light,
+          systemNavigationBarIconBrightness: Brightness.light,
+        ),
+        child: Scaffold(
+          backgroundColor: isDarkMode ? Colors.black : Colors.white,
+          body: Stack(
+            children: [
+              // Main content
+              IndexedStack(
+                index: _currentIndex,
+                children: _screens,
+              ),
 
-            // Navigation bar with SOS button
-            if (_showNavBar)
-              Positioned(
-                bottom: bottomPadding,
-                left: 0,
-                right: 0,
-                child: Stack(
-                  clipBehavior: Clip.none,
-                  alignment: Alignment.topCenter,
-                  children: [
-                    // Main navigation bar
-                    Container(
-                      margin: EdgeInsets.symmetric(
-                        horizontal: size.width * 0.05,
-                        vertical: size.height * 0.015,
-                      ),
-                      height: size.height * 0.075,
-                      child: Stack(
-                        children: [
-                          // SVG Background
-                          Positioned.fill(
-                            child: SvgPicture.asset(
-                              'assets/app/nav.svg',
-                              fit: BoxFit.fill,
-                              colorFilter: ColorFilter.mode(
-                                isDarkMode ? Colors.black : Colors.white,
-                                BlendMode.srcIn,
+              // Navigation bar with SOS button
+              if (_showNavBar)
+                Positioned(
+                  bottom: bottomPadding,
+                  left: 0,
+                  right: 0,
+                  child: Stack(
+                    clipBehavior: Clip.none,
+                    alignment: Alignment.topCenter,
+                    children: [
+                      // Main navigation bar
+                      Container(
+                        margin: EdgeInsets.symmetric(
+                          horizontal: size.width * 0.05,
+                          vertical: size.height * 0.015,
+                        ),
+                        height: size.height * 0.075,
+                        child: Stack(
+                          children: [
+                            // SVG Background
+                            Positioned.fill(
+                              child: SvgPicture.asset(
+                                'assets/app/nav.svg',
+                                fit: BoxFit.fill,
+                                colorFilter: ColorFilter.mode(
+                                  isDarkMode ? Colors.black : Colors.white,
+                                  BlendMode.srcIn,
+                                ),
                               ),
                             ),
-                          ),
-                          // Icons Row
-                          Center(
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                              children: [
-                                _buildNavItem(0),
-                                _buildNavItem(1),
-                                _buildNavItem(2),
-                                _buildNavItem(3),
-                                _buildProfileItem(4),
-                              ],
+                            // Icons Row
+                            Center(
+                              child: Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceEvenly,
+                                children: [
+                                  _buildNavItem(0),
+                                  _buildNavItem(1),
+                                  _buildNavItem(2),
+                                  _buildNavItem(3),
+                                  _buildProfileItem(4),
+                                ],
+                              ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
-                    ),
 
-                    // Floating SOS button
-                    Positioned(
-                      top: -(size.height *
-                          0.02), // Adjust this value to move the button up/down
-                      child: _buildSOSButton(),
-                    ),
-                  ],
+                      // Floating SOS button
+                      Positioned(
+                        top: -(size.height *
+                            0.02), // Adjust this value to move the button up/down
+                        child: _buildSOSButton(),
+                      ),
+                    ],
+                  ),
                 ),
+            ],
+          ),
+          bottomNavigationBar: BottomNavigationBar(
+            currentIndex: _currentIndex,
+            onTap: _onItemTapped,
+            type: BottomNavigationBarType.fixed,
+            items: const [
+              BottomNavigationBarItem(
+                icon: Icon(Icons.home),
+                label: 'Home',
               ),
-          ],
+              BottomNavigationBarItem(
+                icon: Icon(Icons.favorite),
+                label: 'Swipe',
+              ),
+              BottomNavigationBarItem(
+                icon: Icon(Icons.video_library),
+                label: 'Snip',
+              ),
+              BottomNavigationBarItem(
+                icon: Icon(Icons.person),
+                label: 'Profile',
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -203,13 +224,6 @@ class NavigationControllerState extends State<NavigationController> {
             setState(() {
               _rotationValue = _rotationValue + 1;
               _currentIndex = index;
-            });
-            _pageController.jumpToPage(index);
-
-            Future.delayed(const Duration(milliseconds: 500), () {
-              if (mounted && _currentIndex == index) {
-                setState(() => _rotationValue = 0);
-              }
             });
           }
         },
@@ -249,7 +263,6 @@ class NavigationControllerState extends State<NavigationController> {
     return GestureDetector(
       onTap: () {
         setState(() => _currentIndex = index);
-        _pageController.jumpToPage(index);
       },
       child: Container(
         width: iconSize,
@@ -322,10 +335,14 @@ class NavigationControllerState extends State<NavigationController> {
   }
 
   void handleNavigation(int index) {
-    setState(() => _currentIndex = index);
-    _pageController.jumpToPage(index);
+    if (_currentIndex == index) return; // Don't navigate if already on the page
+
+    setState(() {
+      _currentIndex = index;
+      _showNavBar = index != 1; // Hide navbar on swipe screen
+    });
+
     _enforceImmersiveMode();
-    _showNavBar = index != 1;
   }
 
   void hideNavBar() {
@@ -381,5 +398,20 @@ class NavigationControllerState extends State<NavigationController> {
         }
       });
     }
+  }
+
+  void _enforceImmersiveMode() {
+    SystemChrome.setEnabledSystemUIMode(
+      SystemUiMode.immersiveSticky,
+      overlays: [],
+    );
+
+    SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
+      statusBarColor: Colors.transparent,
+      systemNavigationBarColor: Colors.transparent,
+      systemNavigationBarDividerColor: Colors.transparent,
+      statusBarIconBrightness: Brightness.light,
+      systemNavigationBarIconBrightness: Brightness.light,
+    ));
   }
 }

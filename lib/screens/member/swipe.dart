@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_card_swiper/flutter_card_swiper.dart';
 import 'dart:math';
 import '../barrel.dart';
@@ -15,7 +14,7 @@ class SwipeScreen extends StatefulWidget {
 }
 
 class _SwipeScreenState extends State<SwipeScreen>
-    with TickerProviderStateMixin {
+    with TickerProviderStateMixin, WidgetsBindingObserver {
   final List<Map<String, dynamic>> _profiles = [
     {
       'name': 'Sarah Something',
@@ -135,131 +134,164 @@ class _SwipeScreenState extends State<SwipeScreen>
     return true;
   }
 
+  void _handleNavigation(int index) {
+    if (mounted) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (context) => NavigationController(initialIndex: index),
+        ),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    final size = MediaQuery.of(context).size;
-
-    return Scaffold(
-      backgroundColor: Colors.black,
-      body: Stack(
-        children: [
-          // Main Card Swiper
-          CardSwiper(
-            controller: _cardSwiperController,
-            cardsCount: _profiles.length,
-            padding: EdgeInsets.zero,
-            allowedSwipeDirection:
-                AllowedSwipeDirection.only(up: true, right: true, left: true),
-            onSwipe: _onSwipe,
-            cardBuilder:
-                (context, index, percentThresholdX, percentThresholdY) {
-              return GestureDetector(
-                onTap: () {
-                  setState(() {
-                    _showImageTiles = !_showImageTiles;
-                    _currentIndex = index;
-                    if (_showImageTiles) _initializeTilePlacements();
-                  });
-                },
-                child: Stack(
-                  children: [
-                    // Main profile image
-                    Container(
-                      width: size.width,
-                      height: size.height,
-                      decoration: BoxDecoration(
-                        image: DecorationImage(
-                          image: AssetImage(_profiles[index]['images'][0]),
-                          fit: BoxFit.cover,
-                        ),
-                      ),
-                    ),
-                    // Show tiles for current card only
-                    if (_showImageTiles && index == _currentIndex)
-                      ...(_buildImageTiles()),
-                    // Card info overlay
-                    Align(
-                      alignment: Alignment.bottomCenter,
-                      child: Padding(
-                        padding: const EdgeInsets.all(16.0),
-                        child: _buildCardInfo(index),
-                      ),
-                    ),
-                  ],
-                ),
-              );
-            },
-          ),
-
-          // Navigation Buttons at the top
-          Positioned(
-            top: MediaQuery.of(context).padding.top + size.height * 0.02,
-            left: size.width * 0.04,
-            right: size.width * 0.04,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                // Back Button
-                GestureDetector(
+    return PopScope(
+      canPop: false,
+      onPopInvoked: (didPop) {
+        if (didPop) return;
+        _handleNavigation(0);
+      },
+      child: Scaffold(
+        backgroundColor: Colors.black,
+        body: Stack(
+          children: [
+            // Main Card Swiper
+            CardSwiper(
+              controller: _cardSwiperController,
+              cardsCount: _profiles.length,
+              numberOfCardsDisplayed: 2,
+              backCardOffset: const Offset(0, 40),
+              padding: EdgeInsets.only(
+                top: MediaQuery.of(context).padding.top,
+                bottom: MediaQuery.of(context).padding.bottom + 100,
+              ),
+              onSwipe: _onSwipe,
+              cardBuilder:
+                  (context, index, percentThresholdX, percentThresholdY) {
+                return GestureDetector(
                   onTap: () {
-                    final navState = context
-                        .findAncestorStateOfType<NavigationControllerState>();
-                    if (navState != null) {
-                      navState.handleNavigation(0);
-                    }
+                    setState(() {
+                      _showImageTiles = !_showImageTiles;
+                      _currentIndex = index;
+                      if (_showImageTiles) _initializeTilePlacements();
+                    });
                   },
-                  child: Container(
-                    padding: EdgeInsets.all(size.width * 0.01),
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: Colors.black.withAlpha(26),
-                    ),
-                    child: Icon(
-                      Icons.arrow_back_ios_new,
-                      color: Colors.white,
-                      size: size.width * 0.07,
-                    ),
-                  ),
-                ),
-                // Filter Button
-                GestureDetector(
-                  onTap: () {
-                    showModalBottomSheet(
-                      context: context,
-                      isScrollControlled: true,
-                      backgroundColor: Colors.transparent,
-                      builder: (context) => DraggableScrollableSheet(
-                        initialChildSize: 0.95,
-                        minChildSize: 0.5,
-                        maxChildSize: 0.95,
-                        builder: (_, controller) => Container(
-                          decoration: BoxDecoration(
-                            color: Theme.of(context).scaffoldBackgroundColor,
-                            borderRadius:
-                                BorderRadius.vertical(top: Radius.circular(20)),
+                  child: Stack(
+                    children: [
+                      // Main profile image
+                      Container(
+                        width: MediaQuery.of(context).size.width,
+                        height: MediaQuery.of(context).size.height,
+                        decoration: BoxDecoration(
+                          image: DecorationImage(
+                            image: AssetImage(_profiles[index]['images'][0]),
+                            fit: BoxFit.cover,
                           ),
-                          child: SwipeFilterPage(),
                         ),
                       ),
-                    );
-                  },
-                  child: Container(
-                    padding: EdgeInsets.all(size.width * 0.01),
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: Colors.black.withAlpha(26),
-                    ),
-                    child: Icon(
-                      Icons.tune,
-                      color: Colors.white,
-                      size: size.width * 0.07,
+                      // Show tiles for current card only
+                      if (_showImageTiles && index == _currentIndex)
+                        ...(_buildImageTiles()),
+                      // Card info overlay
+                      Align(
+                        alignment: Alignment.bottomCenter,
+                        child: Padding(
+                          padding: const EdgeInsets.all(16.0),
+                          child: _buildCardInfo(index),
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
+
+            // Navigation Buttons at the top
+            Positioned(
+              top: MediaQuery.of(context).padding.top +
+                  MediaQuery.of(context).size.height * 0.02,
+              left: MediaQuery.of(context).size.width * 0.04,
+              right: MediaQuery.of(context).size.width * 0.04,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  // Back Button
+                  GestureDetector(
+                    onTap: () => _handleNavigation(0),
+                    child: Container(
+                      padding: EdgeInsets.all(
+                          MediaQuery.of(context).size.width * 0.01),
+                      decoration: BoxDecoration(
+                        color: Colors.black.withOpacity(0.3),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        Icons.arrow_back,
+                        color: Colors.white,
+                      ),
                     ),
                   ),
-                ),
-              ],
+                  // Filter Button
+                  GestureDetector(
+                    onTap: () {
+                      showModalBottomSheet(
+                        context: context,
+                        isScrollControlled: true,
+                        backgroundColor: Colors.transparent,
+                        builder: (context) => DraggableScrollableSheet(
+                          initialChildSize: 0.95,
+                          minChildSize: 0.5,
+                          maxChildSize: 0.95,
+                          builder: (_, controller) => Container(
+                            decoration: BoxDecoration(
+                              color: Theme.of(context).scaffoldBackgroundColor,
+                              borderRadius: BorderRadius.vertical(
+                                  top: Radius.circular(20)),
+                            ),
+                            child: SwipeFilterPage(),
+                          ),
+                        ),
+                      );
+                    },
+                    child: Container(
+                      padding: EdgeInsets.all(
+                          MediaQuery.of(context).size.width * 0.01),
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: Colors.black.withAlpha(26),
+                      ),
+                      child: Icon(
+                        Icons.tune,
+                        color: Colors.white,
+                        size: MediaQuery.of(context).size.width * 0.07,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
+        bottomNavigationBar: BottomNavigationBar(
+          currentIndex: 1,
+          onTap: _handleNavigation,
+          items: const [
+            BottomNavigationBarItem(
+              icon: Icon(Icons.home),
+              label: 'Home',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.favorite),
+              label: 'Swipe',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.person),
+              label: 'Profile',
+            ),
+          ],
+        ),
       ),
     );
   }

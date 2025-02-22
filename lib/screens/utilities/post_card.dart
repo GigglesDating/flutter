@@ -389,6 +389,41 @@ class _PostCardState extends State<PostCard>
                 ),
               ),
             ),
+
+          // Three-dots menu button
+          Positioned(
+            top: 10,
+            right: 10,
+            child: GestureDetector(
+              onTap: () {
+                showModalBottomSheet(
+                  context: context,
+                  isScrollControlled: true,
+                  backgroundColor: Colors.transparent,
+                  builder: (context) => ReportSheet(
+                    isDarkMode: Theme.of(context).brightness == Brightness.dark,
+                    screenWidth: MediaQuery.of(context).size.width,
+                  ),
+                );
+              },
+              child: Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Theme.of(context).brightness == Brightness.dark
+                      ? Colors.white.withOpacity(0.1)
+                      : Colors.black.withOpacity(0.1),
+                ),
+                child: Icon(
+                  Icons.more_vert,
+                  color: Theme.of(context).brightness == Brightness.dark
+                      ? Colors.white
+                      : Colors.black,
+                  size: 20,
+                ),
+              ),
+            ),
+          ),
         ],
       ),
     );

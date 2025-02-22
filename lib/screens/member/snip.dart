@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_frontend/screens/member/home.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:video_player/video_player.dart';
+import '../barrel.dart';
 
 class SnipTab extends StatefulWidget {
   const SnipTab({super.key});
@@ -300,11 +300,7 @@ class _SnipTab extends State<SnipTab>
                 setState(() {
                   isPlaying = false;
                 });
-                Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => HomeTab(),
-                    ));
+                _handleNavigation(0);
               },
               child: Stack(
                 clipBehavior: Clip.none,
@@ -559,5 +555,16 @@ class _SnipTab extends State<SnipTab>
     }
     _animationController.dispose();
     super.dispose();
+  }
+
+  void _handleNavigation(int index) {
+    if (!mounted) return;
+
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(
+        builder: (context) => NavigationController(initialIndex: index),
+      ),
+    );
   }
 }

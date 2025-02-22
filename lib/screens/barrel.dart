@@ -10,6 +10,7 @@ export 'member/snip.dart';
 export 'utilities/action_bar.dart';
 export 'utilities/comments_sheet.dart';
 export 'utilities/share_sheet.dart';
+export 'utilities/report.dart';
 
 export 'submenus/settings/settings.dart';
 export 'submenus/settings/subpages/account_privacy_screen.dart';

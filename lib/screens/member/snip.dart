@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_frontend/screens/member/home.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:video_player/video_player.dart';
+import '../barrel.dart';
 
 class SnipTab extends StatefulWidget {
   const SnipTab({super.key});
@@ -14,7 +14,7 @@ class SnipTab extends StatefulWidget {
 
 class _SnipTab extends State<SnipTab>
     with SingleTickerProviderStateMixin, WidgetsBindingObserver {
-  late List<VideoPlayerController> _controllers;
+  late List<VideoPlayerController?> _controllers;
   int _currentVideoIndex = 0;
   bool isPlaying = false;
   TextEditingController commentController = TextEditingController();
@@ -24,6 +24,15 @@ class _SnipTab extends State<SnipTab>
   late AnimationController _animationController;
   late Animation<double> _animation;
   bool _isLiked = false;
+  final int _preloadLimit = 2;
+  bool _isActive = false;
+
+  // Local video assets
+  final List<String> videoAssets = [
+    'assets/video/1.mp4',
+    'assets/video/2.mp4',
+    'assets/video/3.mp4',
+  ];
 
   @override
   void initState() {
@@ -36,16 +45,51 @@ class _SnipTab extends State<SnipTab>
       // Set icons to white
       statusBarBrightness: Brightness.light, // For iOS
     ));
-    _initializeVideoControllers();
+    _setupAnimationController();
+    _initializeControllers();
+  }
+
+  void _setupAnimationController() {
     _animationController = AnimationController(
       vsync: this,
-      duration: Duration(milliseconds: 300),
+      duration: const Duration(milliseconds: 300),
     );
-
     _animation = CurvedAnimation(
       parent: _animationController,
       curve: Curves.easeOut,
     );
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Check if we're the active route
+    if (ModalRoute.of(context)?.isCurrent ?? false) {
+      _activate();
+    } else {
+      _deactivate();
+    }
+  }
+
+  void _activate() {
+    if (!_isActive) {
+      _isActive = true;
+      _initializeControllers();
+    }
+  }
+
+  void _deactivate() {
+    if (_isActive) {
+      _isActive = false;
+      _disposeControllers();
+    }
+  }
+
+  void _disposeControllers() {
+    for (var controller in _controllers) {
+      controller?.dispose();
+    }
+    _controllers = List.generate(videoAssets.length, (_) => null);
   }
 
   @override
@@ -56,7 +100,7 @@ class _SnipTab extends State<SnipTab>
         state == AppLifecycleState.detached) {
       // App is in background or navigated away
       for (var controller in _controllers) {
-        controller.pause();
+        controller?.pause();
       }
       setState(() {
         isPlaying = false;
@@ -64,261 +108,171 @@ class _SnipTab extends State<SnipTab>
     }
   }
 
-  @override
-  void deactivate() {
-    // Called when this screen is removed from the navigation stack
-    for (var controller in _controllers) {
-      controller.pause();
-    }
-    setState(() {
-      isPlaying = false;
-    });
-    super.deactivate();
+  void _initializeControllers() {
+    _controllers = List.generate(videoAssets.length, (_) => null);
+    _initializeControllerAtIndex(0);
   }
 
-  Future<void> _initializeVideoControllers() async {
-    // Initialize list of video controllers
-    _controllers = [
-      VideoPlayerController.asset('assets/video/1.mp4'),
-      VideoPlayerController.asset('assets/video/2.mp4'),
-    ];
+  Future<void> _initializeControllerAtIndex(int index) async {
+    if (index < 0 || index >= _controllers.length) return;
 
-    // Initialize all controllers
-    for (var controller in _controllers) {
+    await _controllers[index]?.dispose();
+
+    try {
+      final controller = VideoPlayerController.asset(videoAssets[index]);
       await controller.initialize();
+
+      if (!mounted) {
+        await controller.dispose();
+        return;
+      }
+
+      setState(() {
+        _controllers[index] = controller;
+      });
+
       controller.setLooping(true);
-    }
+      controller.setVolume(_isMuted ? 0.0 : 1.0);
 
-    // Start playing the first video
-    if (_controllers.isNotEmpty) {
-      _controllers[0].play();
-      isPlaying = true;
+      if (index == _currentVideoIndex) {
+        controller.play();
+      }
+    } catch (e) {
+      debugPrint('Error initializing video at index $index: $e');
     }
-
-    setState(() {});
   }
 
   void toggleVolume() {
     setState(() {
       _isMuted = !_isMuted;
-      _controllers[_currentVideoIndex].setVolume(_isMuted ? 0.0 : 1.0);
-      _controllers[_currentVideoIndex].play();
+      _controllers[_currentVideoIndex]?.setVolume(_isMuted ? 0.0 : 1.0);
+      _controllers[_currentVideoIndex]?.play();
     });
   }
 
   void pauser() {
     setState(() {
       _isMuted = !_isMuted;
-      _controllers[_currentVideoIndex].pause();
+      _controllers[_currentVideoIndex]?.pause();
       isPlaying = false;
     });
   }
 
-  // void _playNextVideo() {
-  //   _controllers[_currentVideoIndex].pause();
-  //   _currentVideoIndex = (_currentVideoIndex + 1) % _controllers.length;
-  //   _controllers[_currentVideoIndex].play();
-  //   setState(() {
-  //     isPlaying = true;
-  //   });
-  // }
-
   void onDoubleTap() {
-    if (!_isLiked) {
-      setState(() {
-        _isLiked = true;
-      });
-    }
-    _animationController.forward().then((_) => _animationController.reverse());
+    HapticFeedback.lightImpact();
+    setState(() {
+      _isLiked = !_isLiked;
+      // Show heart animation
+      Center(
+        child: ScaleTransition(
+          scale: _animation,
+          child: Icon(
+            Icons.favorite,
+            color: Colors.red.withAlpha(100),
+            size: 100,
+          ),
+        ),
+      );
+    });
+    _animationController.forward().then((_) {
+      _animationController.reverse();
+    });
   }
 
   @override
   Widget build(BuildContext context) {
-    SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle.light.copyWith(
-      statusBarColor: Colors.transparent,
-      // Make it transparent or choose any color
-      statusBarIconBrightness: Brightness.light,
-      // Set icons to white
-      statusBarBrightness: Brightness.light, // For iOS
-    ));
     return Scaffold(
-      body: Stack(
-        children: [
-          PageView.builder(
-            itemCount: _controllers.length,
-            scrollDirection: Axis.vertical,
-            onPageChanged: (index) {
-              for (var controller in _controllers) {
-                if (controller.value.isPlaying) {
-                  controller.pause();
-                }
-              }
-              setState(() {
-                _currentVideoIndex = index;
-                _controllers[_currentVideoIndex].play();
-                isPlaying = true;
-              });
-            },
-            itemBuilder: (context, index) {
-              return GestureDetector(
-                onTap: toggleVolume,
-                onDoubleTap: onDoubleTap,
-                onLongPress: pauser,
-                child: Stack(
-                  children: [
-                    Positioned.fill(
-                      child: _controllers[index].value.isInitialized
-                          ? FittedBox(
-                              fit: BoxFit.cover,
-                              child: SizedBox(
-                                width: _controllers[index].value.size.width,
-                                height: _controllers[index].value.size.height,
-                                child: VideoPlayer(_controllers[index]),
-                              ),
-                            )
-                          : Center(child: CircularProgressIndicator()),
-                    ),
-                    if (_isLiked)
-                      Center(
-                        child: ScaleTransition(
-                          scale: _animation,
-                          child: Icon(
-                            Icons.favorite,
-                            color: Colors.red.withAlpha(100),
-                            size: 100,
-                          ),
-                        ),
-                      ),
-                    Positioned(
-                        left: 16,
-                        right: 16,
-                        bottom: kToolbarHeight,
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.start,
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          children: [
-                            Container(
-                              decoration: BoxDecoration(
-                                  shape: BoxShape.circle,
-                                  border: Border.all(
-                                    color:
-                                        const Color.fromARGB(255, 148, 177, 67),
-                                    width: 1,
-                                  )),
-                              child: const CircleAvatar(
-                                radius: 33,
-                                backgroundColor: Colors.white,
-                                child: CircleAvatar(
-                                  backgroundImage: AssetImage(
-                                      'assets/tempImages/users/user2.jpg'),
-                                  radius: 30,
-                                ),
-                              ),
-                            ),
-                            SizedBox(
-                              width: 10,
-                            ),
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text('Shalini Reddy',
-                                    style: TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.w700,
-                                      color: Colors.black,
-                                    )),
-                                SizedBox(
-                                  height: 4,
-                                ),
-                                Text(
-                                  'Had a wonderful day near the brigade road\nvintage joke of the day',
-                                  maxLines: 2,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: TextStyle(
-                                      fontSize: 12, color: Colors.black),
-                                ),
-                              ],
-                            ),
-                          ],
-                        )),
-                  ],
-                ),
-              );
-            },
-          ),
-          Padding(
-            padding: const EdgeInsets.only(top: 30, left: 6),
-            child: Row(
-              children: [
-                IconButton(
-                    onPressed: () {
-                      for (var controller in _controllers) {
-                        controller.pause();
-                      }
-                      setState(() {
-                        isPlaying = false;
-                      });
-                      Navigator.pop(context);
-                    },
-                    icon: Icon(
-                      Icons.arrow_back_ios,
-                      color: Colors.black,
-                    )),
-                Positioned(
-                  top: kToolbarHeight,
-                  // left: 16,
-                  child: Stack(
-                    clipBehavior: Clip.none,
-                    children: [
-                      Positioned(
-                          top: 6,
-                          left: 46,
-                          child: SvgPicture.asset(
-                            'assets/icons/snip_icon.svg',
-                            width: 30,
-                            height: 30,
-                          )),
-                      Text('Snip',
-                          style: TextStyle(
-                              color: Colors.black,
-                              fontSize: 28,
-                              fontWeight: FontWeight.w700)),
-                    ],
-                  ),
-                ),
-              ],
+      extendBodyBehindAppBar: true,
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        automaticallyImplyLeading: false,
+        title: const Padding(
+          padding: EdgeInsets.only(left: 8.0),
+          child: Text(
+            'Snip',
+            style: TextStyle(
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
             ),
           ),
-          Positioned(
-            top: kToolbarHeight,
-            right: 20,
-            child: InkWell(
+        ),
+        actions: [
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: GestureDetector(
               onTap: () {
-                for (var controller in _controllers) {
-                  controller.pause();
-                }
-                setState(() {
-                  isPlaying = false;
-                });
-                Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => HomeTab(),
-                    ));
+                // TODO: Implement video selection
               },
-              child: Stack(
-                clipBehavior: Clip.none,
-                children: [
-                  SvgPicture.asset(
-                    'assets/icons/feed/snip_camera_icon.svg',
-                    width: 40,
-                    height: 40,
+              child: Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Colors.black.withAlpha(25),
+                ),
+                child: SvgPicture.asset(
+                  'assets/icons/nav_bar/snip.svg',
+                  width: 24,
+                  height: 24,
+                  colorFilter: const ColorFilter.mode(
+                    Colors.white,
+                    BlendMode.srcIn,
                   ),
-                ],
+                ),
               ),
             ),
           ),
         ],
+      ),
+      body: PageView.builder(
+        itemCount: videoAssets.length,
+        scrollDirection: Axis.vertical,
+        onPageChanged: _handlePageChange,
+        itemBuilder: (context, index) {
+          return GestureDetector(
+            onTap: toggleVolume,
+            onDoubleTap: onDoubleTap,
+            onLongPress: pauser,
+            child: Stack(
+              children: [
+                // Video player
+                SizedBox.expand(
+                  child: _controllers[index]?.value.isInitialized ?? false
+                      ? FittedBox(
+                          fit: BoxFit.cover,
+                          child: SizedBox(
+                            width: _controllers[index]!.value.size.width,
+                            height: _controllers[index]!.value.size.height,
+                            child: VideoPlayer(_controllers[index]!),
+                          ),
+                        )
+                      : const Center(child: CircularProgressIndicator()),
+                ),
+
+                // Action bar
+                Positioned(
+                  right: 8,
+                  bottom: MediaQuery.of(context).size.height * 0.15,
+                  child: ActionBar(
+                    isDarkMode: true,
+                    isLiked: _isLiked,
+                    onLikeTap: () {
+                      setState(() {
+                        _isLiked = !_isLiked;
+                      });
+                    },
+                    onCommentTap: () {
+                      showCommentBottomSheet(context);
+                    },
+                    onShareTap: () {
+                      // Implement share sheet
+                    },
+                  ),
+                ),
+              ],
+            ),
+          );
+        },
       ),
     );
   }
@@ -553,11 +507,42 @@ class _SnipTab extends State<SnipTab>
 
   @override
   void dispose() {
-    WidgetsBinding.instance.removeObserver(this);
     for (var controller in _controllers) {
-      controller.dispose();
+      controller?.dispose();
     }
     _animationController.dispose();
+    WidgetsBinding.instance.removeObserver(this);
     super.dispose();
+  }
+
+  void _handlePageChange(int index) async {
+    // Pause current video
+    await _controllers[_currentVideoIndex]?.pause();
+
+    // Dispose controllers outside the preload range
+    for (var i = 0; i < _controllers.length; i++) {
+      if (i < index - _preloadLimit || i > index + _preloadLimit) {
+        await _controllers[i]?.dispose();
+        setState(() {
+          _controllers[i] = null;
+        });
+      }
+    }
+
+    // Initialize videos within preload range
+    for (var i = index - _preloadLimit; i <= index + _preloadLimit; i++) {
+      if (i >= 0 &&
+          i < videoAssets.length &&
+          (_controllers[i]?.value.isInitialized ?? false) == false) {
+        await _initializeControllerAtIndex(i);
+      }
+    }
+
+    setState(() {
+      _currentVideoIndex = index;
+    });
+
+    // Play new video
+    await _controllers[index]?.play();
   }
 }

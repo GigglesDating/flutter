@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_card_swiper/flutter_card_swiper.dart';
 import 'dart:math';
 import '../barrel.dart';
@@ -205,7 +204,7 @@ class _SwipeScreenState extends State<SwipeScreen>
                     final navState = context
                         .findAncestorStateOfType<NavigationControllerState>();
                     if (navState != null) {
-                      navState.handleNavigation(0);
+                      navState.setCurrentIndex(0);
                     }
                   },
                   child: Container(

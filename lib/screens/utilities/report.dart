@@ -53,6 +53,19 @@ class _ReportSheetState extends State<ReportSheet> {
     },
   );
 
+  bool isAnyCheckboxSelected() {
+    return justdontlikeit ||
+        bullying ||
+        selfinjury ||
+        nudity ||
+        scam ||
+        falseinformation ||
+        pretendingtobesomeone ||
+        sellingrestricteditems ||
+        violenceorhate ||
+        userunderage;
+  }
+
   @override
   Widget build(BuildContext context) {
     return SizedBox(
@@ -96,7 +109,7 @@ class _ReportSheetState extends State<ReportSheet> {
                     height: 24,
                   ),
                   Text(
-                    ' Report and Block the user',
+                    ' Report / Block',
                     style: TextStyle(
                         fontWeight: FontWeight.w800,
                         fontSize: 18,
@@ -110,36 +123,11 @@ class _ReportSheetState extends State<ReportSheet> {
                   Row(
                     children: [
                       Spacer(),
-                      Padding(
-                        padding: const EdgeInsets.only(right: 7),
-                        child: Card(
-                          shape: ContinuousRectangleBorder(
-                              borderRadius: BorderRadius.circular(30)),
-                          child: TextButton(
-                              onPressed: () {
-                                Navigator.pop(context);
-                                Fluttertoast.showToast(
-                                    msg: "Reported successfully",
-                                    toastLength: Toast.LENGTH_SHORT,
-                                    gravity: ToastGravity.CENTER,
-                                    timeInSecForIosWeb: 1,
-                                    backgroundColor: Colors.black,
-                                    textColor: Colors.white,
-                                    fontSize: 16.0);
-                              },
-                              child: Text(
-                                "Report",
-                                style: TextStyle(
-                                    color: Colors.red,
-                                    fontWeight: FontWeight.w700),
-                              )),
-                        ),
-                      ),
                     ],
                   ),
                   Padding(
                     padding: const EdgeInsets.only(
-                        left: 20, right: 20, bottom: 20, top: 10),
+                        left: 20, right: 20, bottom: 10, top: 10),
                     child: Container(
                       padding: EdgeInsets.all(16),
                       decoration: BoxDecoration(
@@ -525,6 +513,136 @@ class _ReportSheetState extends State<ReportSheet> {
                         ],
                       ),
                     ),
+                  ),
+                  Row(
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.only(left: 170, bottom: 10),
+                        child: TextButton(
+                            style: ButtonStyle(
+                                minimumSize:
+                                    WidgetStatePropertyAll(Size(80, 40)),
+                                elevation: WidgetStatePropertyAll(100),
+                                backgroundColor:
+                                    WidgetStateProperty.all(Colors.red),
+                                shape: WidgetStateProperty.all(
+                                    ContinuousRectangleBorder(
+                                        borderRadius: BorderRadius.all(
+                                            Radius.circular(20))))),
+                            onPressed: () {
+                              Navigator.pop(context);
+                              Fluttertoast.showToast(
+                                  msg: "Blocked successfully",
+                                  toastLength: Toast.LENGTH_SHORT,
+                                  gravity: ToastGravity.CENTER,
+                                  timeInSecForIosWeb: 1,
+                                  backgroundColor: Colors.black,
+                                  textColor: Colors.white,
+                                  fontSize: 16.0);
+                            },
+                            child: Text(
+                              "Block",
+                              style: TextStyle(
+                                  color: Colors.black,
+                                  fontWeight: FontWeight.w700),
+                            )),
+                      ),
+                      SizedBox(
+                        width: 30,
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.only(
+                            right: 0, bottom: 10, left: 0),
+                        child: TextButton(
+                            style: ButtonStyle(
+                                minimumSize:
+                                    WidgetStatePropertyAll(Size(80, 40)),
+                                elevation: WidgetStatePropertyAll(100),
+                                backgroundColor: WidgetStateProperty.all(
+                                    isAnyCheckboxSelected()
+                                        ? (widget.isDarkMode
+                                            ? Colors.grey[900]
+                                            : Colors.grey[100])
+                                        : Colors.grey[400]),
+                                shape: WidgetStateProperty.all(
+                                    ContinuousRectangleBorder(
+                                        borderRadius: BorderRadius.all(
+                                            Radius.circular(20))))),
+                            onPressed: isAnyCheckboxSelected()
+                                ? () {
+                                    Navigator.pop(context);
+                                    Fluttertoast.showToast(
+                                        msg: "Reported successfully",
+                                        toastLength: Toast.LENGTH_SHORT,
+                                        gravity: ToastGravity.CENTER,
+                                        timeInSecForIosWeb: 1,
+                                        backgroundColor: widget.isDarkMode
+                                            ? Colors.grey[100]
+                                            : Colors.grey[900],
+                                        textColor: widget.isDarkMode
+                                            ? Colors.grey[900]
+                                            : Colors.grey[100],
+                                        fontSize: 16.0);
+                                    showDialog(
+                                      context: context,
+                                      builder: (context) => AlertDialog(
+                                        backgroundColor: widget.isDarkMode
+                                            ? Colors.black87
+                                            : Colors.white,
+                                        elevation: 100,
+                                        content: Text(
+                                            "Would you also preffer to block this account?"),
+                                        actions: [
+                                          TextButton(
+                                            onPressed: () {
+                                              Navigator.pop(context);
+                                              Fluttertoast.showToast(
+                                                  msg: "Blocked successfully",
+                                                  toastLength:
+                                                      Toast.LENGTH_SHORT,
+                                                  gravity: ToastGravity.CENTER,
+                                                  timeInSecForIosWeb: 1,
+                                                  backgroundColor:
+                                                      widget.isDarkMode
+                                                          ? Colors.grey[100]
+                                                          : Colors.grey[900],
+                                                  textColor: widget.isDarkMode
+                                                      ? Colors.grey[900]
+                                                      : Colors.grey[100],
+                                                  fontSize: 16.0);
+                                            },
+                                            child: Text(
+                                              "Yes",
+                                              style: TextStyle(
+                                                  color: Colors.red,
+                                                  fontSize: 17),
+                                            ),
+                                          ),
+                                          TextButton(
+                                              onPressed: () {
+                                                Navigator.pop(context);
+                                              },
+                                              child: Text("No",
+                                                  style:
+                                                      TextStyle(fontSize: 17))),
+                                        ],
+                                      ),
+                                    );
+                                  }
+                                : null,
+                            child: Text(
+                              "Report",
+                              style: TextStyle(
+                                  color: isAnyCheckboxSelected()
+                                      ? Colors.red
+                                      : Colors.grey[600],
+                                  fontWeight: FontWeight.w700),
+                            )),
+                      ),
+                      SizedBox(
+                        width: 10,
+                      )
+                    ],
                   ),
                 ],
               ),

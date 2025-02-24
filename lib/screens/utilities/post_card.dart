@@ -117,7 +117,7 @@ class _PostCardState extends State<PostCard>
 
           // Overlays with IgnorePointer
           IgnorePointer(
-            ignoring: true, // Make sure overlays don't intercept touches
+            ignoring: false, // Make sure overlays don't intercept touches
             child: Stack(
               children: [
                 // Profile Picture and Stats Overlay
@@ -127,29 +127,54 @@ class _PostCardState extends State<PostCard>
                   child: Row(
                     children: [
                       // Profile Picture
-                      Container(
-                        padding: EdgeInsets.all(2),
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: widget.isDarkMode
-                              ? Colors.black.withAlpha(230)
-                              : Colors.white.withAlpha(230),
-                          border: Border.all(
-                            color: widget.isDarkMode
-                                ? Colors.white.withAlpha(38)
-                                : Colors.black.withAlpha(26),
-                            width: 1,
+                      Row(
+                        children: [
+                          Container(
+                            padding: EdgeInsets.all(2),
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: widget.isDarkMode
+                                  ? Colors.black.withAlpha(230)
+                                  : Colors.white.withAlpha(230),
+                              border: Border.all(
+                                color: widget.isDarkMode
+                                    ? Colors.white.withAlpha(38)
+                                    : Colors.black.withAlpha(26),
+                                width: 1,
+                              ),
+                            ),
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(50),
+                              child: Image.asset(
+                                widget.post['userImage'],
+                                width: screenWidth * 0.12,
+                                height: screenWidth * 0.12,
+                                fit: BoxFit.cover,
+                              ),
+                            ),
                           ),
-                        ),
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(50),
-                          child: Image.asset(
-                            widget.post['userImage'],
-                            width: screenWidth * 0.12,
-                            height: screenWidth * 0.12,
-                            fit: BoxFit.cover,
+                          SizedBox(
+                            width: 250,
                           ),
-                        ),
+                          Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: GestureDetector(
+                              onTap: _showReportSheet,
+                              child: Container(
+                                padding: const EdgeInsets.all(8),
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  color: Colors.black.withAlpha(25),
+                                ),
+                                child: const Icon(
+                                  Icons.more_vert,
+                                  color: Colors.white,
+                                  size: 24,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                       // Stats with animation
                       AnimatedOpacity(
@@ -462,6 +487,21 @@ class _PostCardState extends State<PostCard>
         isDarkMode: widget.isDarkMode,
         post: widget.post,
         screenWidth: MediaQuery.of(context).size.width,
+      ),
+    );
+  }
+
+  void _showReportSheet() {
+    print('pressed');
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    final screenWidth = MediaQuery.of(context).size.width;
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (context) => ReportSheet(
+        isDarkMode: isDarkMode,
+        screenWidth: screenWidth,
       ),
     );
   }

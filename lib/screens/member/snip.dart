@@ -26,6 +26,7 @@ class _SnipTab extends State<SnipTab>
   bool _isLiked = false;
   final int _preloadLimit = 2;
   bool _isActive = false;
+  bool _showHeart = false;
 
   // Local video assets
   final List<String> videoAssets = [
@@ -162,20 +163,12 @@ class _SnipTab extends State<SnipTab>
     HapticFeedback.lightImpact();
     setState(() {
       _isLiked = !_isLiked;
-      // Show heart animation
-      Center(
-        child: ScaleTransition(
-          scale: _animation,
-          child: Icon(
-            Icons.favorite,
-            color: Colors.red.withAlpha(100),
-            size: 100,
-          ),
-        ),
-      );
+      _showHeart = true;
     });
     _animationController.forward().then((_) {
-      _animationController.reverse();
+      _animationController.reverse().then((_) {
+        setState(() => _showHeart = false);
+      });
     });
   }
 
@@ -264,11 +257,28 @@ class _SnipTab extends State<SnipTab>
                     onCommentTap: () {
                       showCommentBottomSheet(context);
                     },
-                    onShareTap: () {
-                      // Implement share sheet
-                    },
+                    onShareTap: _showShareSheet,
                   ),
                 ),
+
+                // Heart Animation
+                if (_showHeart)
+                  Positioned.fill(
+                    child: AnimatedOpacity(
+                      duration: const Duration(milliseconds: 200),
+                      opacity: _showHeart ? 1.0 : 0.0,
+                      child: Center(
+                        child: ScaleTransition(
+                          scale: _animation,
+                          child: Icon(
+                            Icons.favorite,
+                            color: Colors.white.withAlpha(255),
+                            size: MediaQuery.of(context).size.width * 0.3,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
               ],
             ),
           );
@@ -544,5 +554,21 @@ class _SnipTab extends State<SnipTab>
 
     // Play new video
     await _controllers[index]?.play();
+  }
+
+  void _showShareSheet() {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (context) => ShareSheet(
+        isDarkMode: isDarkMode,
+        post: {
+          'type': 'snip',
+          'url': videoAssets[_currentVideoIndex],
+        },
+        screenWidth: MediaQuery.of(context).size.width,
+      ),
+    );
   }
 }

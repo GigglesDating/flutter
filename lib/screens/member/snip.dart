@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:video_player/video_player.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import '../barrel.dart';
 
 class SnipTab extends StatefulWidget {
@@ -184,7 +185,7 @@ class _SnipTab extends State<SnipTab>
             const Text(
               'Snip',
               style: TextStyle(
-                fontSize: 24,
+                fontSize: 25,
                 fontWeight: FontWeight.bold,
               ),
             ),
@@ -194,15 +195,19 @@ class _SnipTab extends State<SnipTab>
                 // TODO: Implement video upload
               },
               child: Container(
-                padding: const EdgeInsets.all(6),
+                padding: const EdgeInsets.all(7),
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: Colors.white.withAlpha(38),
+                  color: const Color.fromARGB(255, 0, 0, 0).withAlpha(25),
                 ),
-                child: const Icon(
-                  Icons.add,
-                  size: 20,
-                  color: Colors.white,
+                child: SvgPicture.asset(
+                  'assets/icons/snip/snip_upload.svg',
+                  width: 24,
+                  height: 24,
+                  colorFilter: const ColorFilter.mode(
+                    Color.fromARGB(255, 0, 0, 0),
+                    BlendMode.srcIn,
+                  ),
                 ),
               ),
             ),
@@ -221,7 +226,7 @@ class _SnipTab extends State<SnipTab>
                 ),
                 child: const Icon(
                   Icons.more_vert,
-                  color: Colors.white,
+                  color: Color.fromARGB(255, 0, 0, 0),
                   size: 24,
                 ),
               ),

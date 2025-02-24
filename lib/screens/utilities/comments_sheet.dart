@@ -338,7 +338,7 @@ class _CommentsSheetState extends State<CommentsSheet> {
 class _CommentItem extends StatefulWidget {
   final Map<String, dynamic> comment;
   final bool isDarkMode;
-  final Function(String) onReply;
+  final Function(String?) onReply;
   final double screenWidth;
 
   const _CommentItem({
@@ -360,8 +360,11 @@ class _CommentItemState extends State<_CommentItem> {
     return GestureDetector(
       onHorizontalDragEnd: (details) {
         if (details.primaryVelocity! > 0) {
-          // Right swipe detected - always reply to primary comment
+          // Right swipe detected - reply to comment
           widget.onReply(widget.comment['id']);
+        } else if (details.primaryVelocity! < 0) {
+          // Left swipe detected - cancel reply
+          widget.onReply(null);
         }
       },
       onDoubleTap: () {
@@ -483,7 +486,7 @@ class _ReplyItem extends StatefulWidget {
   final bool isDarkMode;
   final double screenWidth;
   final String parentCommentId;
-  final Function(String) onReply;
+  final Function(String?) onReply;
 
   const _ReplyItem({
     required this.reply,
@@ -505,8 +508,11 @@ class _ReplyItemState extends State<_ReplyItem> {
     return GestureDetector(
       onHorizontalDragEnd: (details) {
         if (details.primaryVelocity! > 0) {
-          // When swiping on a reply, trigger reply to parent comment
+          // Right swipe detected - reply to parent comment
           widget.onReply(widget.parentCommentId);
+        } else if (details.primaryVelocity! < 0) {
+          // Left swipe detected - cancel reply
+          widget.onReply(null);
         }
       },
       onDoubleTap: () {

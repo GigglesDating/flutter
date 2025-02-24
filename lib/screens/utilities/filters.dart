@@ -31,132 +31,6 @@ class _SwipeFilterPage extends State<SwipeFilterPage> {
   String selectedsocialenergy = '';
   String selectedsocialinterest = '';
 
-  final List<Map<String, dynamic>> _activities = [
-    {"name": "Film Festivals", "icon": Icons.movie},
-    {"name": "Coffee Shop Visits", "icon": Icons.coffee},
-    {"name": "Basket ball", "icon": Icons.sports_basketball},
-    {"name": "Concerts & Live Music", "icon": Icons.music_note},
-    {"name": "Dining Out", "icon": Icons.restaurant},
-    {"name": "Video Gaming", "icon": Icons.sports_esports},
-    {"name": "Gym", "icon": Icons.fitness_center},
-    {"name": "Reading & Book Clubs", "icon": Icons.book},
-    {"name": "Horseback Riding", "icon": Icons.bedroom_baby},
-    {"name": "Hiking", "icon": Icons.hiking},
-    {"name": "Wine Tasting", "icon": Icons.wine_bar},
-    {"name": "Cocktail Tasting", "icon": Icons.liquor},
-    {"name": "Clubbing & Nightlife", "icon": Icons.nightlife},
-    {"name": "Bar Hopping", "icon": Icons.sports_bar},
-    {"name": "Food Festivals", "icon": Icons.festival},
-    {"name": "Cooking Classes", "icon": Icons.soup_kitchen},
-    {"name": "Escape Rooms", "icon": Icons.door_sliding},
-    {"name": "Picnics", "icon": Icons.deck},
-    {"name": "Camping", "icon": Icons.house_siding},
-    {"name": "Beach Days", "icon": Icons.beach_access},
-    {"name": "Kayaking & Canoeing", "icon": Icons.kayaking},
-    {"name": "Cycling", "icon": Icons.directions_bike},
-    {"name": "Waterfalls & Caves", "icon": Icons.terrain},
-    {"name": "Skydiving", "icon": Icons.paragliding},
-    {"name": "Bungee Jumping", "icon": Icons.settings_accessibility},
-    {"name": "Zip-lining", "icon": Icons.sports_handball_sharp},
-    {"name": "Tennis", "icon": Icons.sports_tennis},
-    {"name": "Bowling", "icon": Icons.group_work},
-    {"name": "Yoga", "icon": Icons.self_improvement},
-    {"name": "Billiards & Pool", "icon": Icons.hdr_strong_rounded},
-    {"name": "Running", "icon": Icons.directions_run},
-    {"name": "Art Galleries", "icon": Icons.museum},
-    {"name": "Museum Hopping", "icon": Icons.account_balance},
-    {"name": "Theater & Drama", "icon": Icons.theater_comedy},
-    {"name": "Poetry Slams", "icon": Icons.mic},
-    {"name": "Photography", "icon": Icons.photo_camera},
-    {"name": "Crafting & DIY", "icon": Icons.construction},
-    {"name": "Pottery Classes", "icon": Icons.table_bar},
-    {"name": "Board Games & Card Games", "icon": Icons.casino},
-    {"name": "Karaoke Nights", "icon": Icons.mic_external_on},
-    {"name": "Trivia Nights", "icon": Icons.quiz},
-    {"name": "Amusement Parks", "icon": Icons.attractions},
-    {"name": "Arcades", "icon": Icons.gamepad},
-    {"name": "Puzzle Solving", "icon": Icons.extension},
-    {"name": "Laser Tag & Paintball", "icon": Icons.gps_fixed},
-    {"name": "Gardening", "icon": Icons.yard},
-    {"name": "Bird Watching", "icon": Icons.visibility},
-    {"name": "Botanical Gardens", "icon": Icons.park},
-    {"name": "Stargazing", "icon": Icons.star_rounded},
-    {"name": "Spa Days", "icon": Icons.spa},
-    {"name": "Scenic Drives", "icon": Icons.directions_car},
-    {"name": "Reading & Book Clubs", "icon": Icons.menu_book},
-    {"name": "Language Learning", "icon": Icons.translate},
-    {"name": "Robotics", "icon": Icons.smart_toy},
-    {"name": "Chess & Strategy Games", "icon": Icons.grid_on},
-    {"name": "Writing & Journaling", "icon": Icons.edit_note},
-    {"name": "Science", "icon": Icons.science},
-    {"name": "Public Speaking", "icon": Icons.record_voice_over},
-    {"name": "Road Trips", "icon": Icons.directions_car_outlined},
-    {"name": "Weekend Getaways", "icon": Icons.holiday_village},
-    {"name": "City Tours", "icon": Icons.location_city},
-    {"name": "Backpacking", "icon": Icons.backpack},
-    {"name": "Mountain Trekking", "icon": Icons.landscape},
-    {"name": "Safari Adventures", "icon": Icons.tour},
-    {"name": "Historical Sites", "icon": Icons.temple_hindu},
-    {"name": "Painting & Drawing", "icon": Icons.palette},
-    {"name": "Origami & Paper Crafts", "icon": Icons.diamond},
-    {"name": "Knitting & Crochet", "icon": Icons.tag_rounded},
-    {"name": "Scrapbooking", "icon": Icons.photo_album},
-    {"name": "Antique Hunting", "icon": Icons.takeout_dining},
-    {"name": "Magic Tricks & Illusions", "icon": Icons.auto_awesome},
-    {"name": "Coding & Programming", "icon": Icons.code},
-    {"name": "VR Gaming", "icon": Icons.view_in_ar},
-    {"name": "Blockchain & Crypto", "icon": Icons.currency_bitcoin},
-    {"name": "Digital Art & NFTs", "icon": Icons.draw},
-    {"name": "Drone Flying", "icon": Icons.connecting_airports},
-    {"name": "Gadget Tinkering", "icon": Icons.build},
-    {"name": "Vlogging ", "icon": Icons.video_camera_front},
-    {"name": "Anime", "icon": Icons.local_movies},
-    {"name": "Biking", "icon": Icons.pedal_bike},
-    {"name": "Cricket", "icon": Icons.sports_cricket},
-    {"name": "Football", "icon": Icons.sports_football},
-    {"name": "Martial Arts", "icon": Icons.sports_martial_arts},
-    {"name": "Darts", "icon": Icons.track_changes_outlined},
-    {"name": "Volley Ball", "icon": Icons.sports_volleyball},
-    {"name": "Archery", "icon": Icons.crisis_alert},
-    {"name": "Skating", "icon": Icons.skateboarding},
-    {"name": "Streaming", "icon": Icons.videocam_sharp},
-    {"name": "Binge watching", "icon": Icons.ondemand_video},
-    {"name": "Designing", "icon": Icons.design_services},
-    {"name": "Stand-up comedy", "icon": Icons.mic_external_on},
-    {"name": "Carrom", "icon": Icons.spoke},
-    {"name": "Table tennis", "icon": Icons.sports_tennis},
-    {"name": "Air gun shooting", "icon": Icons.crisis_alert},
-    {"name": "Volunteering", "icon": Icons.volunteer_activism},
-    {"name": "Badminton", "icon": Icons.sports_tennis},
-    {"name": "Dancing", "icon": Icons.sports_gymnastics},
-    {"name": "Pets", "icon": Icons.pets},
-    {"name": "Pickle ball", "icon": Icons.sports_baseball},
-    {"name": "Potluck Dinner", "icon": Icons.dinner_dining},
-    {"name": "Rock climbing", "icon": Icons.volcano},
-    {"name": "Singing", "icon": Icons.mic_external_on},
-    {"name": "Street Food Exploring", "icon": Icons.dining_rounded},
-    {"name": "Swimming", "icon": Icons.pool},
-    {
-      "name": "Ancient Civilizations & Archaeology",
-      "icon": Icons.temple_buddhist
-    },
-    {"name": "Enviornmental Activism", "icon": Icons.south_america},
-    {"name": "Bonfire and BBQ nights", "icon": Icons.fireplace_outlined},
-    {"name": "Baking", "icon": Icons.cake},
-    {"name": "Comics", "icon": Icons.menu_book_rounded},
-  ];
-  final Set<String> _selectedActivities = <String>{};
-  // Method to toggle selection
-  void _toggleSelection(String activity) {
-    setState(() {
-      if (_selectedActivities.contains(activity)) {
-        _selectedActivities.remove(activity);
-      } else {
-        _selectedActivities.add(activity);
-      }
-    });
-  }
-
   final WidgetStateProperty<Color?> trackColor =
       WidgetStateProperty.resolveWith<Color?>(
     (Set<WidgetState> states) {
@@ -211,6 +85,35 @@ class _SwipeFilterPage extends State<SwipeFilterPage> {
         'assets/images/user3.png'
         'assets/images/user4.png'
         'assets/images/user5.png'
+  ];
+
+  // New additions for interests
+  final TextEditingController _searchController = TextEditingController();
+  final List<String> _selectedInterests = [];
+  String _searchQuery = '';
+
+  // Sample interests list (you can modify this)
+  final List<String> _allInterests = [
+    'Photography',
+    'Travel',
+    'Cooking',
+    'Music',
+    'Art',
+    'Sports',
+    'Reading',
+    'Gaming',
+    'Fitness',
+    'Technology',
+    'Movies',
+    'Dancing',
+    'Nature',
+    'Fashion',
+    'Food',
+    'Pets',
+    'Writing',
+    'Yoga',
+    'Coffee',
+    'Wine'
   ];
 
   @override
@@ -512,8 +415,8 @@ class _SwipeFilterPage extends State<SwipeFilterPage> {
                               inactiveColor:
                                   const Color.fromARGB(255, 90, 89, 89),
                               overlayColor: WidgetStatePropertyAll(isDarkMode
-                                  ? Colors.grey[900]
-                                  : Colors.grey[100]),
+                                  ? Colors.grey[900]?.withValues(alpha: 128)
+                                  : Colors.grey[100]?.withValues(alpha: 128)),
                               labels: RangeLabels(
                                 _currentRangeValues.start.round().toString(),
                                 _currentRangeValues.end.round().toString(),
@@ -537,102 +440,7 @@ class _SwipeFilterPage extends State<SwipeFilterPage> {
                       SizedBox(
                         height: 16,
                       ),
-                      Text(
-                        'Interests',
-                        style: TextStyle(
-                            fontWeight: FontWeight.w700,
-                            fontSize: 18,
-                            color: isDarkMode
-                                ? Colors.grey[100]
-                                : Colors.grey[900]),
-                      ),
-                      SizedBox(
-                        height: 10,
-                      ),
-                      Container(
-                        height: MediaQuery.of(context).size.width / 2,
-                        padding: EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                            border: Border.all(width: 1, color: Colors.grey),
-                            borderRadius: BorderRadius.circular(20)),
-                        child: GridView.builder(
-                          gridDelegate:
-                              SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: 3, // 3 items per row
-                            childAspectRatio: 3, // Adjust height-to-width ratio
-                            crossAxisSpacing: 8,
-                            mainAxisSpacing: 8,
-                          ),
-                          physics: ScrollPhysics(),
-                          itemCount: _activities.length,
-                          shrinkWrap: true,
-                          itemBuilder: (context, index) {
-                            String activity = _activities[index]["name"];
-                            IconData icon = _activities[index]["icon"];
-
-                            bool isSelected =
-                                _selectedActivities.contains(activity);
-
-                            return GestureDetector(
-                              onTap: () => _toggleSelection(activity),
-                              child: Container(
-                                decoration: BoxDecoration(
-                                  color: isSelected
-                                      ? Theme.of(context).brightness ==
-                                              Brightness.light
-                                          ? Colors.black
-                                          : Colors.white
-                                      : Colors.grey[300],
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                padding: EdgeInsets.all(8),
-                                child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Expanded(
-                                      child: Text(
-                                        activity,
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                        style: TextStyle(
-                                            color: isSelected
-                                                ? Theme.of(context)
-                                                            .brightness ==
-                                                        Brightness.light
-                                                    ? Colors.white
-                                                    : Colors.black
-                                                : Theme.of(context)
-                                                            .brightness ==
-                                                        Brightness.light
-                                                    ? Colors.black
-                                                    : Colors.white,
-                                            fontWeight: isSelected
-                                                ? FontWeight.bold
-                                                : FontWeight.normal,
-                                            fontSize: 12),
-                                      ),
-                                    ),
-                                    const SizedBox(width: 4),
-                                    Icon(
-                                      icon,
-                                      size: 12,
-                                      color: isSelected
-                                          ? Theme.of(context).brightness ==
-                                                  Brightness.light
-                                              ? Colors.white
-                                              : Colors.black
-                                          : Theme.of(context).brightness ==
-                                                  Brightness.light
-                                              ? Colors.black
-                                              : Colors.white,
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            );
-                          },
-                        ),
-                      ),
+                      _buildInterestsSection(isDarkMode),
                     ],
                   ),
                 ),
@@ -1865,152 +1673,6 @@ class _SwipeFilterPage extends State<SwipeFilterPage> {
                                 ),
                               ],
                             ),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text(
-                                  'Physical touch',
-                                  style: TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.normal,
-                                      color: isDarkMode
-                                          ? Colors.grey[100]
-                                          : Colors.grey[900]),
-                                ),
-                                Checkbox(
-                                  checkColor: Theme.of(context).brightness ==
-                                          Brightness.light
-                                      ? Colors.white
-                                      : Colors.black,
-                                  activeColor: isDarkMode
-                                      ? Colors.grey[100]
-                                      : Colors.grey[900],
-                                  // isError: true,
-                                  value:
-                                      selectedLoveLanguage == 'physical_touch',
-                                  side:
-                                      BorderSide(color: Colors.grey, width: 2),
-                                  visualDensity: VisualDensity(
-                                      horizontal: 0, vertical: -4),
-
-                                  onChanged: (value) {
-                                    setState(() {
-                                      selectedLoveLanguage =
-                                          value! ? 'physical_touch' : '';
-                                    });
-                                  },
-                                ),
-                              ],
-                            ),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text(
-                                  'Gifting/Receiving gifts',
-                                  style: TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.normal,
-                                      color: isDarkMode
-                                          ? Colors.grey[100]
-                                          : Colors.grey[900]),
-                                ),
-                                Checkbox(
-                                  checkColor: Theme.of(context).brightness ==
-                                          Brightness.light
-                                      ? Colors.white
-                                      : Colors.black,
-                                  activeColor: isDarkMode
-                                      ? Colors.grey[100]
-                                      : Colors.grey[900],
-                                  // isError: true,
-                                  value: selectedLoveLanguage == 'gifting',
-                                  side:
-                                      BorderSide(color: Colors.grey, width: 2),
-                                  visualDensity: VisualDensity(
-                                      horizontal: 0, vertical: -4),
-
-                                  onChanged: (value) {
-                                    setState(() {
-                                      selectedLoveLanguage =
-                                          value! ? 'gifting' : '';
-                                    });
-                                  },
-                                ),
-                              ],
-                            ),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text(
-                                  'Quality Time',
-                                  style: TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.normal,
-                                      color: isDarkMode
-                                          ? Colors.grey[100]
-                                          : Colors.grey[900]),
-                                ),
-                                Checkbox(
-                                  checkColor: Theme.of(context).brightness ==
-                                          Brightness.light
-                                      ? Colors.white
-                                      : Colors.black,
-                                  activeColor: isDarkMode
-                                      ? Colors.grey[100]
-                                      : Colors.grey[900],
-                                  // isError: true,
-                                  value: selectedLoveLanguage == 'quality_time',
-                                  side:
-                                      BorderSide(color: Colors.grey, width: 2),
-                                  visualDensity: VisualDensity(
-                                      horizontal: 0, vertical: -4),
-
-                                  onChanged: (value) {
-                                    setState(() {
-                                      selectedLoveLanguage =
-                                          value! ? 'quality_time' : '';
-                                    });
-                                  },
-                                ),
-                              ],
-                            ),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text(
-                                  'Acts of service',
-                                  style: TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.normal,
-                                      color: isDarkMode
-                                          ? Colors.grey[100]
-                                          : Colors.grey[900]),
-                                ),
-                                Checkbox(
-                                  checkColor: Theme.of(context).brightness ==
-                                          Brightness.light
-                                      ? Colors.white
-                                      : Colors.black,
-                                  activeColor: isDarkMode
-                                      ? Colors.grey[100]
-                                      : Colors.grey[900],
-                                  // isError: true,
-                                  value:
-                                      selectedLoveLanguage == 'acts_of_service',
-                                  side:
-                                      BorderSide(color: Colors.grey, width: 2),
-                                  visualDensity: VisualDensity(
-                                      horizontal: 0, vertical: -4),
-
-                                  onChanged: (value) {
-                                    setState(() {
-                                      selectedLoveLanguage =
-                                          value! ? 'acts_of_service' : '';
-                                    });
-                                  },
-                                ),
-                              ],
-                            ),
                           ],
                         ),
                       ),
@@ -2022,6 +1684,104 @@ class _SwipeFilterPage extends State<SwipeFilterPage> {
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildInterestsSection(bool isDarkMode) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Interests',
+          style: TextStyle(
+              fontWeight: FontWeight.w700,
+              fontSize: 18,
+              color: isDarkMode ? Colors.grey[100] : Colors.grey[900]),
+        ),
+        SizedBox(height: 10),
+        // Search Bar
+        Container(
+          padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          decoration: BoxDecoration(
+            color: isDarkMode ? Colors.grey[900] : Colors.grey[100],
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: TextField(
+            controller: _searchController,
+            onChanged: (value) => setState(() => _searchQuery = value),
+            style: TextStyle(
+              color: isDarkMode ? Colors.white : Colors.black,
+            ),
+            decoration: InputDecoration(
+              hintText: 'Search interests...',
+              border: InputBorder.none,
+              icon: Icon(
+                Icons.search,
+                color: isDarkMode ? Colors.white70 : Colors.black54,
+              ),
+            ),
+          ),
+        ),
+        SizedBox(height: 16),
+        // Interests Chips
+        Container(
+          height: 200, // Adjust height as needed
+          decoration: BoxDecoration(
+            color: isDarkMode
+                ? Colors.grey[900]!.withValues(alpha: 128)
+                : Colors.grey[100]!.withValues(alpha: 128),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: SingleChildScrollView(
+            padding: EdgeInsets.all(12),
+            child: Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: _allInterests
+                  .where((interest) => interest
+                      .toLowerCase()
+                      .contains(_searchQuery.toLowerCase()))
+                  .map((interest) => GestureDetector(
+                        onTap: () {
+                          setState(() {
+                            if (_selectedInterests.contains(interest)) {
+                              _selectedInterests.remove(interest);
+                            } else {
+                              _selectedInterests.add(interest);
+                            }
+                          });
+                          HapticFeedback.lightImpact();
+                        },
+                        child: Container(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 8,
+                          ),
+                          decoration: BoxDecoration(
+                            color: _selectedInterests.contains(interest)
+                                ? (isDarkMode ? Colors.white : Colors.black)
+                                : Colors.transparent,
+                            border: Border.all(
+                              color: isDarkMode ? Colors.white : Colors.black,
+                              width: 1,
+                            ),
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Text(
+                            interest,
+                            style: TextStyle(
+                              color: _selectedInterests.contains(interest)
+                                  ? (isDarkMode ? Colors.black : Colors.white)
+                                  : (isDarkMode ? Colors.white : Colors.black),
+                            ),
+                          ),
+                        ),
+                      ))
+                  .toList(),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

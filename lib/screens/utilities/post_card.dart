@@ -492,7 +492,6 @@ class _PostCardState extends State<PostCard>
   }
 
   void _showReportSheet() {
-    print('pressed');
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
     final screenWidth = MediaQuery.of(context).size.width;
 

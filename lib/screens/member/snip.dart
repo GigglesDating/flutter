@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_svg/svg.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:video_player/video_player.dart';
 import '../barrel.dart';
@@ -180,37 +179,50 @@ class _SnipTab extends State<SnipTab>
         backgroundColor: Colors.transparent,
         elevation: 0,
         automaticallyImplyLeading: false,
-        title: const Padding(
-          padding: EdgeInsets.only(left: 8.0),
-          child: Text(
-            'Snip',
-            style: TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
+        title: Row(
+          children: [
+            const Text(
+              'Snip',
+              style: TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+              ),
             ),
-          ),
+            const SizedBox(width: 8),
+            GestureDetector(
+              onTap: () {
+                // TODO: Implement video upload
+              },
+              child: Container(
+                padding: const EdgeInsets.all(6),
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Colors.white.withAlpha(38),
+                ),
+                child: const Icon(
+                  Icons.add,
+                  size: 20,
+                  color: Colors.white,
+                ),
+              ),
+            ),
+          ],
         ),
         actions: [
           Padding(
             padding: const EdgeInsets.all(8.0),
             child: GestureDetector(
-              onTap: () {
-                // TODO: Implement video selection
-              },
+              onTap: _showReportSheet,
               child: Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   color: Colors.black.withAlpha(25),
                 ),
-                child: SvgPicture.asset(
-                  'assets/icons/nav_bar/snip.svg',
-                  width: 24,
-                  height: 24,
-                  colorFilter: const ColorFilter.mode(
-                    Colors.white,
-                    BlendMode.srcIn,
-                  ),
+                child: const Icon(
+                  Icons.more_vert,
+                  color: Colors.white,
+                  size: 24,
                 ),
               ),
             ),
@@ -254,9 +266,7 @@ class _SnipTab extends State<SnipTab>
                         _isLiked = !_isLiked;
                       });
                     },
-                    onCommentTap: () {
-                      showCommentBottomSheet(context);
-                    },
+                    onCommentTap: () => showCommentBottomSheet(context),
                     onShareTap: _showShareSheet,
                   ),
                 ),
@@ -287,155 +297,34 @@ class _SnipTab extends State<SnipTab>
     );
   }
 
-  void showCommentBottomSheet(BuildContext context) async {
-    await showModalBottomSheet(
+  void showCommentBottomSheet(BuildContext context) {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    final screenHeight = MediaQuery.of(context).size.height;
+    final screenWidth = MediaQuery.of(context).size.width;
+
+    showModalBottomSheet(
       context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(
-          top: Radius.circular(16.0),
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      barrierColor: Colors.black.withAlpha(128),
+      enableDrag: true,
+      isDismissible: true,
+      useSafeArea: true,
+      builder: (context) => Padding(
+        padding: EdgeInsets.only(
+          bottom: MediaQuery.of(context).viewInsets.bottom,
+        ),
+        child: CommentsSheet(
+          isDarkMode: isDarkMode,
+          post: {
+            'id': _currentVideoIndex.toString(),
+            'type': 'snip',
+            'url': videoAssets[_currentVideoIndex],
+          },
+          screenHeight: screenHeight,
+          screenWidth: screenWidth,
         ),
       ),
-      isScrollControlled: true,
-      backgroundColor: Colors.white.withAlpha(90),
-      builder: (context) {
-        return Padding(
-          padding: MediaQuery.of(context).viewInsets,
-          child: SingleChildScrollView(
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Center(
-                      child: SizedBox(
-                          width: 80,
-                          height: 16,
-                          child: SvgPicture.asset(
-                            'assets/icons/bottomsheet_top_icon.svg',
-                          ))),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const SizedBox(height: 16),
-                      Center(
-                        child: Text(
-                          'Comments',
-                          style: TextStyle(color: Colors.black),
-                        ),
-                      ),
-                      SizedBox(height: 10),
-                      ListView.builder(
-                        shrinkWrap: true,
-                        physics: const NeverScrollableScrollPhysics(),
-                        padding: EdgeInsets.zero,
-                        itemCount: 3,
-                        itemBuilder: (context, index) {
-                          return ListTile(
-                            visualDensity:
-                                const VisualDensity(horizontal: 0, vertical: 0),
-                            contentPadding: EdgeInsets.zero,
-                            leading: ClipOval(
-                              child: Image.asset(
-                                  'assets/images/nitanshu_profile_image.png'),
-                            ),
-                            title: Text('Nitanshu'),
-                            titleTextStyle:
-                                TextStyle(fontSize: 14, color: Colors.black),
-                            subtitle: Text('i want to be there next time'),
-                            subtitleTextStyle:
-                                TextStyle(fontSize: 12, color: Colors.black),
-                            trailing: Icon(
-                              Icons.replay,
-                              color: Colors.black,
-                            ),
-                          );
-                        },
-                      ),
-                      ListTile(
-                        visualDensity:
-                            const VisualDensity(horizontal: 0, vertical: 0),
-                        contentPadding: EdgeInsets.only(left: 50),
-                        leading: ClipOval(
-                          child: Image.asset(
-                            'assets/images/user2.png',
-                            width: 32,
-                            height: 32,
-                          ),
-                        ),
-                        title: Text('sree'),
-                        titleTextStyle:
-                            TextStyle(fontSize: 14, color: Colors.black),
-                        subtitle: Text('see you soon'),
-                        subtitleTextStyle:
-                            TextStyle(fontSize: 12, color: Colors.black),
-                      ),
-                    ],
-                  ),
-                  SizedBox(height: 20),
-                  SizedBox(
-                    height: 48,
-                    child: TextFormField(
-                      controller: commentController,
-                      focusNode: commentFocusNode,
-
-                      style: TextStyle(color: Colors.black),
-
-                      cursorHeight: 20,
-                      cursorColor: Colors.black,
-                      // maxLength: 10,
-                      maxLines: 1,
-                      minLines: 1,
-                      onChanged: (value) {
-                        if (value.isNotEmpty) {
-                          setState(() {});
-                        }
-                      },
-
-                      keyboardType: TextInputType.text,
-                      decoration: InputDecoration(
-                        floatingLabelBehavior: FloatingLabelBehavior.never,
-                        contentPadding: EdgeInsets.symmetric(horizontal: 12),
-                        hintText: 'Post your comment',
-                        hintStyle: TextStyle(color: Colors.black),
-                        suffixIcon: IconButton(
-                          icon: Icon(
-                            Icons.send,
-                            color: Colors.black,
-                          ),
-                          onPressed: () {
-                            // Handle send button press here
-                            String message = commentController.text;
-                            if (message.isNotEmpty) {
-                              // Send the message
-                              //print("Sending message: $message");
-                              commentController.clear();
-                            }
-                          },
-                        ),
-                        enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.all(Radius.circular(12)),
-                            borderSide: BorderSide(color: Colors.black)),
-                        errorBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.all(Radius.circular(12)),
-                            borderSide: BorderSide(color: Colors.black)),
-                        border: OutlineInputBorder(
-                            borderRadius: BorderRadius.all(Radius.circular(12)),
-                            borderSide: BorderSide(color: Colors.black)),
-                        focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.all(Radius.circular(12)),
-                            borderSide: BorderSide(color: Colors.black)),
-                      ),
-                    ),
-                  ),
-                  SizedBox(height: 10),
-                ],
-              ),
-            ),
-          ),
-        );
-      },
     );
   }
 
@@ -568,6 +457,20 @@ class _SnipTab extends State<SnipTab>
           'url': videoAssets[_currentVideoIndex],
         },
         screenWidth: MediaQuery.of(context).size.width,
+      ),
+    );
+  }
+
+  void _showReportSheet() {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    final screenWidth = MediaQuery.of(context).size.width;
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (context) => ReportSheet(
+        isDarkMode: isDarkMode,
+        screenWidth: screenWidth,
       ),
     );
   }

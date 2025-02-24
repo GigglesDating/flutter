@@ -42,3 +42,4 @@ export '../network/think.dart';
 export 'utilities/post_card.dart';
 export 'member/notifications.dart';
 export 'utilities/filters.dart';
+export 'utilities/report.dart';

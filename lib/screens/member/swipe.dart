@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_card_swiper/flutter_card_swiper.dart';
 import 'dart:math';
 import '../barrel.dart';
+import 'dart:ui';
 
 // Define enum at the top level, before the class
 enum SwipeDirection { left, right, up, none }
@@ -227,17 +228,35 @@ class _SwipeScreenState extends State<SwipeScreen>
                       context: context,
                       isScrollControlled: true,
                       backgroundColor: Colors.transparent,
-                      builder: (context) => DraggableScrollableSheet(
-                        initialChildSize: 0.95,
-                        minChildSize: 0.5,
-                        maxChildSize: 0.95,
-                        builder: (_, controller) => Container(
-                          decoration: BoxDecoration(
-                            color: Theme.of(context).scaffoldBackgroundColor,
+                      barrierColor: Colors.black.withAlpha(51),
+                      enableDrag: true,
+                      isDismissible: true,
+                      useSafeArea: true,
+                      builder: (context) => Padding(
+                        padding: EdgeInsets.only(
+                          bottom: MediaQuery.of(context).viewInsets.bottom,
+                        ),
+                        child: Container(
+                          constraints: BoxConstraints(
+                            maxHeight: MediaQuery.of(context).size.height * 0.9,
+                          ),
+                          child: ClipRRect(
                             borderRadius:
                                 BorderRadius.vertical(top: Radius.circular(20)),
+                            child: BackdropFilter(
+                              filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  color: Theme.of(context)
+                                      .scaffoldBackgroundColor
+                                      .withAlpha(128),
+                                  borderRadius: BorderRadius.vertical(
+                                      top: Radius.circular(20)),
+                                ),
+                                child: SwipeFilterPage(),
+                              ),
+                            ),
                           ),
-                          child: SwipeFilterPage(),
                         ),
                       ),
                     );
@@ -355,20 +374,49 @@ class _SwipeScreenState extends State<SwipeScreen>
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         // Added extra spacing at the top
-        SizedBox(
-            height: size.height *
-                0.02), // Adjust this value as needed (2% of screen height)
+        SizedBox(height: size.height * 0.02),
 
-        // Name and Age
-        Center(
-          child: Text(
-            '${_profiles[index]['name']}, ${_profiles[index]['age']}',
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: size.width * 0.06,
-              fontWeight: FontWeight.bold,
+        // Name and Age with Report Button (new combined row)
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            // Report Button
+            GestureDetector(
+              onTap: () {
+                showModalBottomSheet(
+                  context: context,
+                  isScrollControlled: true,
+                  backgroundColor: Colors.transparent,
+                  builder: (context) => ReportSheet(
+                    isDarkMode: Theme.of(context).brightness == Brightness.dark,
+                    screenWidth: MediaQuery.of(context).size.width,
+                  ),
+                );
+              },
+              child: Container(
+                padding: EdgeInsets.all(size.width * 0.01),
+                margin: EdgeInsets.only(right: size.width * 0.02),
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Colors.black.withAlpha(26),
+                ),
+                child: Icon(
+                  Icons.more_vert,
+                  color: Colors.white,
+                  size: size.width * 0.07,
+                ),
+              ),
             ),
-          ),
+            // Name and Age Text
+            Text(
+              '${_profiles[index]['name']}, ${_profiles[index]['age']}',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: size.width * 0.06,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ],
         ),
         SizedBox(height: size.height * 0.01), //0.007
 

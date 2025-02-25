@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_frontend/screens/barrel.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'dart:math';
 import 'dart:ui'; // Add this import for ImageFilter
@@ -56,7 +57,11 @@ class _UserProfileState extends State<UserProfile> {
                       // Settings icon
                       GestureDetector(
                         onTap: () {
-                          // TODO: Implement settings navigation
+                          Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => SettingsPage(),
+                              ));
                         },
                         child: Container(
                           padding: EdgeInsets.all(size.width * 0.02),

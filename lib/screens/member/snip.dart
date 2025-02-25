@@ -1,31 +1,34 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:video_player/video_player.dart';
+import 'package:visibility_detector/visibility_detector.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import '../barrel.dart';
 
 class SnipTab extends StatefulWidget {
   const SnipTab({super.key});
 
   @override
-  State<SnipTab> createState() => _SnipTab();
+  State<SnipTab> createState() => _SnipTabState();
 }
 
-class _SnipTab extends State<SnipTab>
-    with SingleTickerProviderStateMixin, WidgetsBindingObserver {
-  late List<VideoPlayerController?> _controllers;
+class _SnipTabState extends State<SnipTab>
+    with WidgetsBindingObserver, TickerProviderStateMixin {
+  List<VideoPlayerController?> _controllers = [];
   int _currentVideoIndex = 0;
-  bool isPlaying = false;
+  bool _isMuted = false;
+  bool _isLiked = false;
+  bool _showHeart = false;
+  bool isPlaying = true;
+  final _buttonKey = GlobalKey();
+  late AnimationController _animationController;
+  final int _preloadLimit = 1; // Preload one video on each side
+  bool _isActive = false;
   TextEditingController commentController = TextEditingController();
   FocusNode commentFocusNode = FocusNode();
-  final GlobalKey _buttonKey = GlobalKey();
-  bool _isMuted = false;
-  late AnimationController _animationController;
-  late Animation<double> _animation;
-  bool _isLiked = false;
-  final int _preloadLimit = 2;
-  bool _isActive = false;
-  bool _showHeart = false;
 
   // Local video assets
   final List<String> videoAssets = [
@@ -45,19 +48,11 @@ class _SnipTab extends State<SnipTab>
       // Set icons to white
       statusBarBrightness: Brightness.light, // For iOS
     ));
-    _setupAnimationController();
-    _initializeControllers();
-  }
-
-  void _setupAnimationController() {
     _animationController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 300),
+      duration: const Duration(milliseconds: 500),
     );
-    _animation = CurvedAnimation(
-      parent: _animationController,
-      curve: Curves.easeOut,
-    );
+    _initializeControllers();
   }
 
   @override
@@ -74,22 +69,31 @@ class _SnipTab extends State<SnipTab>
   void _activate() {
     if (!_isActive) {
       _isActive = true;
-      _initializeControllers();
+      // Only re-initialize if controllers are not already initialized.
+      if (_controllers.isEmpty || _controllers[_currentVideoIndex] == null) {
+        _initializeControllers();
+      } else {
+        // If already initialized, just play.
+        _controllers[_currentVideoIndex]?.play();
+      }
     }
   }
 
   void _deactivate() {
     if (_isActive) {
       _isActive = false;
-      _disposeControllers();
+      // Pause, but *don't* dispose, unless outside preload limit.
+      _pauseCurrentController();
     }
   }
 
-  void _disposeControllers() {
-    for (var controller in _controllers) {
-      controller?.dispose();
+  void _pauseCurrentController() {
+    if (_controllers[_currentVideoIndex] != null) {
+      _controllers[_currentVideoIndex]?.pause();
+      setState(() {
+        isPlaying = false;
+      });
     }
-    _controllers = List.generate(videoAssets.length, (_) => null);
   }
 
   @override
@@ -99,12 +103,16 @@ class _SnipTab extends State<SnipTab>
         state == AppLifecycleState.inactive ||
         state == AppLifecycleState.detached) {
       // App is in background or navigated away
-      for (var controller in _controllers) {
-        controller?.pause();
+      _pauseCurrentController(); // Use the helper function
+    }
+    if (state == AppLifecycleState.resumed) {
+      // App is back in foreground.  Play *only* if we are the active route.
+      if (ModalRoute.of(context)?.isCurrent ?? false) {
+        _controllers[_currentVideoIndex]?.play();
+        setState(() {
+          isPlaying = true;
+        });
       }
-      setState(() {
-        isPlaying = false;
-      });
     }
   }
 
@@ -116,7 +124,10 @@ class _SnipTab extends State<SnipTab>
   Future<void> _initializeControllerAtIndex(int index) async {
     if (index < 0 || index >= _controllers.length) return;
 
-    await _controllers[index]?.dispose();
+    // Dispose only if it exists and is initialized.
+    if (_controllers[index] != null) {
+      await _controllers[index]!.dispose();
+    }
 
     try {
       final controller = VideoPlayerController.asset(videoAssets[index]);
@@ -136,25 +147,21 @@ class _SnipTab extends State<SnipTab>
 
       if (index == _currentVideoIndex) {
         controller.play();
+        setState(() {
+          isPlaying = true; // Ensure isPlaying is updated
+        });
       }
     } catch (e) {
       debugPrint('Error initializing video at index $index: $e');
     }
   }
 
-  void toggleVolume() {
+  Future<void> toggleVolume() async {
+    if (_controllers[_currentVideoIndex] == null) return;
+    final newVolume = _isMuted ? 1.0 : 0.0;
+    await _controllers[_currentVideoIndex]!.setVolume(newVolume);
     setState(() {
       _isMuted = !_isMuted;
-      _controllers[_currentVideoIndex]?.setVolume(_isMuted ? 0.0 : 1.0);
-      _controllers[_currentVideoIndex]?.play();
-    });
-  }
-
-  void pauser() {
-    setState(() {
-      _isMuted = !_isMuted;
-      _controllers[_currentVideoIndex]?.pause();
-      isPlaying = false;
     });
   }
 
@@ -166,13 +173,38 @@ class _SnipTab extends State<SnipTab>
     });
     _animationController.forward().then((_) {
       _animationController.reverse().then((_) {
-        setState(() => _showHeart = false);
+        setState(() {
+          _showHeart = false;
+        });
       });
     });
   }
 
+  void pauser() {
+    setState(() {
+      _isMuted = !_isMuted;
+      _controllers[_currentVideoIndex]?.pause();
+      isPlaying = false;
+    });
+  }
+
+  void togglePlay() {
+    if (_controllers[_currentVideoIndex] != null) {
+      if (isPlaying) {
+        _controllers[_currentVideoIndex]?.pause();
+      } else {
+        _controllers[_currentVideoIndex]?.play();
+      }
+      setState(() {
+        isPlaying = !isPlaying;
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+
     return Scaffold(
       extendBodyBehindAppBar: true,
       appBar: AppBar(
@@ -181,28 +213,30 @@ class _SnipTab extends State<SnipTab>
         automaticallyImplyLeading: false,
         title: Row(
           children: [
-            const Text(
+            Text(
               'Snip',
               style: TextStyle(
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
+                color: isDarkMode ? Colors.white : Colors.black,
               ),
             ),
             const SizedBox(width: 8),
-            GestureDetector(
-              onTap: () {
-                // TODO: Implement video upload
-              },
-              child: Container(
-                padding: const EdgeInsets.all(6),
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: Colors.white.withAlpha(38),
-                ),
-                child: const Icon(
-                  Icons.add,
-                  size: 20,
-                  color: Colors.white,
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: isDarkMode
+                    ? Colors.white.withAlpha(80)
+                    : Colors.black.withAlpha(26),
+              ),
+              child: SvgPicture.asset(
+                'assets/icons/snip/snip_upload.svg',
+                width: 24,
+                height: 24,
+                colorFilter: ColorFilter.mode(
+                  isDarkMode ? Colors.white : Colors.black.withAlpha(204),
+                  BlendMode.srcIn,
                 ),
               ),
             ),
@@ -210,94 +244,159 @@ class _SnipTab extends State<SnipTab>
         ),
         actions: [
           Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: GestureDetector(
-              onTap: _showReportSheet,
-              child: Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: Colors.black.withAlpha(25),
-                ),
-                child: const Icon(
+            padding: const EdgeInsets.only(right: 8),
+            child: Container(
+              padding: const EdgeInsets.all(5),
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: isDarkMode
+                    ? Colors.white.withAlpha(80)
+                    : Colors.black.withAlpha(26),
+              ),
+              child: IconButton(
+                icon: Icon(
                   Icons.more_vert,
-                  color: Colors.white,
+                  color:
+                      isDarkMode ? Colors.white : Colors.black.withAlpha(204),
                   size: 24,
                 ),
+                onPressed: _showReportSheet,
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(),
               ),
             ),
           ),
         ],
       ),
-      body: PageView.builder(
-        itemCount: videoAssets.length,
-        scrollDirection: Axis.vertical,
-        onPageChanged: _handlePageChange,
-        itemBuilder: (context, index) {
-          return GestureDetector(
-            onTap: toggleVolume,
-            onDoubleTap: onDoubleTap,
-            onLongPress: pauser,
-            child: Stack(
-              children: [
-                // Video player
-                SizedBox.expand(
-                  child: _controllers[index]?.value.isInitialized ?? false
-                      ? FittedBox(
-                          fit: BoxFit.cover,
-                          child: SizedBox(
-                            width: _controllers[index]!.value.size.width,
-                            height: _controllers[index]!.value.size.height,
-                            child: VideoPlayer(_controllers[index]!),
-                          ),
-                        )
-                      : const Center(child: CircularProgressIndicator()),
-                ),
-
-                // Action bar
-                Positioned(
-                  right: 8,
-                  bottom: MediaQuery.of(context).size.height * 0.15,
-                  child: ActionBar(
-                    isDarkMode: true,
-                    isLiked: _isLiked,
-                    onLikeTap: () {
-                      setState(() {
-                        _isLiked = !_isLiked;
-                      });
+      body: Stack(
+        children: [
+          // Full screen PageView for videos
+          Positioned.fill(
+            child: PageView.builder(
+              scrollDirection: Axis.vertical,
+              itemCount: videoAssets.length,
+              onPageChanged: _handlePageChange,
+              itemBuilder: (context, index) {
+                return VisibilityDetector(
+                  key: Key('video_$index'),
+                  onVisibilityChanged: (visibilityInfo) {
+                    if (mounted) {
+                      if (visibilityInfo.visibleFraction > 0.8) {
+                        if (index == _currentVideoIndex &&
+                            (ModalRoute.of(context)?.isCurrent ?? false)) {
+                          _controllers[index]?.play();
+                          setState(() {
+                            isPlaying = true;
+                          });
+                        }
+                      } else {
+                        _controllers[index]?.pause();
+                        setState(() {
+                          isPlaying = false;
+                        });
+                      }
+                    }
+                  },
+                  child: GestureDetector(
+                    onTap: () {
+                      if (!isPlaying) {
+                        // If video is paused, resume on tap
+                        togglePlay();
+                      } else {
+                        // If video is playing, toggle mute/unmute
+                        toggleVolume();
+                      }
                     },
-                    onCommentTap: () => showCommentBottomSheet(context),
-                    onShareTap: _showShareSheet,
-                  ),
-                ),
+                    onDoubleTap: onDoubleTap, // Keep double tap for like/unlike
+                    onLongPress: () {
+                      if (isPlaying) {
+                        // Only pause if video is currently playing
+                        togglePlay();
+                      }
+                    },
+                    child: Container(
+                      color: Colors.black,
+                      child: Stack(
+                        children: [
+                          // Video Player with proper sizing
+                          if (_controllers[index] != null &&
+                              _controllers[index]!.value.isInitialized)
+                            Container(
+                              color: Colors.black,
+                              child: Center(
+                                child: Container(
+                                  width: MediaQuery.of(context).size.width,
+                                  height: MediaQuery.of(context).size.height,
+                                  child: FittedBox(
+                                    fit: BoxFit.cover,
+                                    clipBehavior: Clip.hardEdge,
+                                    child: SizedBox(
+                                      width:
+                                          _controllers[index]!.value.size.width,
+                                      height: _controllers[index]!
+                                          .value
+                                          .size
+                                          .height,
+                                      child: VideoPlayer(_controllers[index]!),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            )
+                          else
+                            const Center(
+                              child: CircularProgressIndicator(
+                                color: Colors.white,
+                              ),
+                            ),
 
-                // Heart Animation
-                if (_showHeart)
-                  Positioned.fill(
-                    child: AnimatedOpacity(
-                      duration: const Duration(milliseconds: 200),
-                      opacity: _showHeart ? 1.0 : 0.0,
-                      child: Center(
-                        child: ScaleTransition(
-                          scale: _animation,
-                          child: Icon(
-                            Icons.favorite,
-                            color: Colors.white.withAlpha(255),
-                            size: MediaQuery.of(context).size.width * 0.3,
+                          // Like animation overlay
+                          if (_showHeart)
+                            Center(
+                              child: FadeTransition(
+                                opacity: _animationController,
+                                child: const Icon(
+                                  Icons.favorite,
+                                  color: Colors.red,
+                                  size: 100,
+                                ),
+                              ),
+                            ),
+
+                          // Action bar
+                          Positioned(
+                            right: MediaQuery.of(context).size.width * 0.02,
+                            bottom: MediaQuery.of(context).size.height * 0.15,
+                            child: ActionBar(
+                              isDarkMode: isDarkMode,
+                              isLiked: _isLiked,
+                              onLikeTap: onDoubleTap,
+                              onCommentTap: () =>
+                                  showCommentBottomSheet(context),
+                              onShareTap: _showShareSheet,
+                              orientation: ActionBarOrientation.vertical,
+                              backgroundColor: isDarkMode
+                                  ? Colors.black.withAlpha(230)
+                                  : Colors.white.withAlpha(230),
+                            ),
                           ),
-                        ),
+                        ],
                       ),
                     ),
                   ),
-              ],
+                );
+              },
             ),
-          );
-        },
+          ),
+        ],
       ),
     );
   }
 
   void showCommentBottomSheet(BuildContext context) {
+    // Pause video and store current position
+    _controllers[_currentVideoIndex]?.pause();
+
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
     final screenHeight = MediaQuery.of(context).size.height;
     final screenWidth = MediaQuery.of(context).size.width;
@@ -306,7 +405,8 @@ class _SnipTab extends State<SnipTab>
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      barrierColor: Colors.black.withAlpha(128),
+      barrierColor:
+          Colors.black.withValues(alpha: 128, red: 0, green: 0, blue: 0),
       enableDrag: true,
       isDismissible: true,
       useSafeArea: true,
@@ -325,7 +425,15 @@ class _SnipTab extends State<SnipTab>
           screenWidth: screenWidth,
         ),
       ),
-    );
+    ).then((_) {
+      if (mounted) {
+        // Resume from stored position
+        _controllers[_currentVideoIndex]?.play();
+        setState(() {
+          isPlaying = true;
+        });
+      }
+    });
   }
 
   void showPopupMenu() {
@@ -415,24 +523,24 @@ class _SnipTab extends State<SnipTab>
   }
 
   void _handlePageChange(int index) async {
-    // Pause current video
-    await _controllers[_currentVideoIndex]?.pause();
+    // Pause the *current* video.
+    _pauseCurrentController();
 
-    // Dispose controllers outside the preload range
+    // Dispose controllers *outside* the preload range.
     for (var i = 0; i < _controllers.length; i++) {
       if (i < index - _preloadLimit || i > index + _preloadLimit) {
-        await _controllers[i]?.dispose();
-        setState(() {
-          _controllers[i] = null;
-        });
+        if (_controllers[i] != null) {
+          await _controllers[i]!.dispose();
+          setState(() {
+            _controllers[i] = null;
+          });
+        }
       }
     }
 
-    // Initialize videos within preload range
+    // Initialize videos *within* preload range.
     for (var i = index - _preloadLimit; i <= index + _preloadLimit; i++) {
-      if (i >= 0 &&
-          i < videoAssets.length &&
-          (_controllers[i]?.value.isInitialized ?? false) == false) {
+      if (i >= 0 && i < videoAssets.length && _controllers[i] == null) {
         await _initializeControllerAtIndex(i);
       }
     }
@@ -441,15 +549,27 @@ class _SnipTab extends State<SnipTab>
       _currentVideoIndex = index;
     });
 
-    // Play new video
-    await _controllers[index]?.play();
+    // Play the *new* current video.
+    _controllers[index]?.play();
+    setState(() {
+      isPlaying = true;
+    });
   }
 
   void _showShareSheet() {
+    // Pause the video *before* showing the bottom sheet.
+    _controllers[_currentVideoIndex]?.pause();
+    setState(() {
+      isPlaying = false;
+    });
+
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
+      barrierColor:
+          Colors.black.withValues(alpha: 128, red: 0, green: 0, blue: 0),
       builder: (context) => ShareSheet(
         isDarkMode: isDarkMode,
         post: {
@@ -458,20 +578,61 @@ class _SnipTab extends State<SnipTab>
         },
         screenWidth: MediaQuery.of(context).size.width,
       ),
-    );
+    ).then((_) {
+      // Resume playback *after* the bottom sheet is closed.
+      if (mounted) {
+        // Crucially, *remove* the seekTo. Just play.
+        _controllers[_currentVideoIndex]?.play();
+        setState(() {
+          isPlaying = true;
+        });
+      }
+    });
   }
 
   void _showReportSheet() {
+    // Pause *before* showing the sheet.
+    _controllers[_currentVideoIndex]?.pause();
+    setState(() {
+      isPlaying = false;
+    });
+
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
     final screenWidth = MediaQuery.of(context).size.width;
 
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
+      barrierColor:
+          Colors.black.withValues(alpha: 128, red: 0, green: 0, blue: 0),
       builder: (context) => ReportSheet(
         isDarkMode: isDarkMode,
         screenWidth: screenWidth,
       ),
-    );
+    ).then((_) {
+      // Resume *after* the sheet is closed.
+      if (mounted) {
+        // *Remove* seekTo.
+        _controllers[_currentVideoIndex]?.play();
+        setState(() {
+          isPlaying = true;
+        });
+      }
+    });
+  }
+
+  double _getVideoScale(Size videoSize, Size screenSize) {
+    final videoRatio = videoSize.width / videoSize.height;
+    final screenRatio = screenSize.width / screenSize.height;
+
+    // If video is in landscape and we want portrait
+    if (videoRatio > 1) {
+      // Scale based on height to force portrait
+      return screenSize.height / (videoSize.width / screenRatio);
+    }
+
+    // If video is already in portrait
+    final scale = screenRatio / videoRatio;
+    return scale > 1 ? scale : 1.0;
   }
 }

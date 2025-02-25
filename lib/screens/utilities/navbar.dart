@@ -243,10 +243,21 @@ class NavigationControllerState extends State<NavigationController>
 
   Widget _buildProfileItem(int index) {
     final isSelected = _currentIndex == index;
-    final iconSize = size.width * 0.1; // Match nav item size
+    final iconSize = size.width * 0.1;
 
     return GestureDetector(
-      onTap: () => setState(() => _currentIndex = index),
+      onTap: () {
+        if (_currentIndex != index) {
+          setState(() => _currentIndex = index);
+          // Replace instead of push to avoid stack issues
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const UserProfile(),
+            ),
+          );
+        }
+      },
       child: Container(
         width: iconSize,
         height: iconSize,

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:flutter/services.dart'; // Add this import
 import 'dart:math';
 import 'dart:ui'; // Add this import for ImageFilter
 
@@ -32,6 +33,21 @@ class _UserProfileState extends State<UserProfile> {
   void initState() {
     super.initState();
     userBio = userData['bio'];
+    // Hide system bars
+    SystemChrome.setEnabledSystemUIMode(
+      SystemUiMode.immersiveSticky,
+      overlays: [], // Empty array means hide all
+    );
+  }
+
+  @override
+  void dispose() {
+    // Restore system bars when leaving screen
+    SystemChrome.setEnabledSystemUIMode(
+      SystemUiMode.edgeToEdge,
+      overlays: SystemUiOverlay.values,
+    );
+    super.dispose();
   }
 
   @override
@@ -127,7 +143,7 @@ class _UserProfileState extends State<UserProfile> {
   }
 
   Widget _buildBackgroundImage(Size size) {
-    return Container(
+    return SizedBox(
       width: size.width,
       height: size.height,
       child: Stack(
@@ -154,89 +170,125 @@ class _UserProfileState extends State<UserProfile> {
         horizontal: size.width * 0.04,
         vertical: size.height * 0.04,
       ),
-      child: Stack(
-        alignment: Alignment.center,
+      child: Column(
         children: [
           // Main Container - Controls the overall frame size
-          Container(
-            width: size.width * .7, // Controls width of oval
-            height: size.width * 0.9, // Controls height of oval
-            decoration: BoxDecoration(
-              color: Colors.transparent,
-              // This BorderRadius controls the oval shape of the container
-              borderRadius: BorderRadius.vertical(
-                // Top curve of the oval - adjust multipliers to change shape
-                top: Radius.elliptical(
-                  size.width * 0.8, // Horizontal curve at top
-                  size.width * 0.8, // Vertical curve at top
+          Stack(
+            alignment: Alignment.center,
+            children: [
+              Container(
+                width: size.width * .7, // Controls width of oval
+                height: size.width * 0.9, // Controls height of oval
+                decoration: BoxDecoration(
+                  color: Colors.transparent,
+                  // This BorderRadius controls the oval shape of the container
+                  borderRadius: BorderRadius.vertical(
+                    // Top curve of the oval - adjust multipliers to change shape
+                    top: Radius.elliptical(
+                      size.width * 0.8, // Horizontal curve at top
+                      size.width * 0.8, // Vertical curve at top
+                    ),
+                    // Bottom curve of the oval - adjust multipliers to change shape
+                    bottom: Radius.elliptical(
+                      size.width * 0.8, // Horizontal curve at bottom
+                      size.width *
+                          0.8, // Vertical curve at bottom - larger value makes it more elongated
+                    ),
+                  ),
+                  // Border styling
+                  border: Border.all(
+                    color: isDarkMode
+                        ? Colors.white.withAlpha(80)
+                        : Colors.black.withAlpha(26),
+                    width: 2,
+                  ),
                 ),
-                // Bottom curve of the oval - adjust multipliers to change shape
-                bottom: Radius.elliptical(
-                  size.width * 0.8, // Horizontal curve at bottom
-                  size.width *
-                      0.8, // Vertical curve at bottom - larger value makes it more elongated
+                // ClipRRect ensures the image follows the same shape as the container
+                child: ClipRRect(
+                  // This must match the container's BorderRadius exactly
+                  borderRadius: BorderRadius.vertical(
+                    top: Radius.elliptical(size.width * 0.8, size.width * 0.8),
+                    bottom:
+                        Radius.elliptical(size.width * 0.8, size.width * 0.8),
+                  ),
+                  child: Image.asset(
+                    userData['profileImage'],
+                    fit: BoxFit.cover, // Controls how image fills the space
+                    // You can adjust alignment to control which part of image is visible
+                    // alignment: Alignment.topCenter,  // Uncomment to focus on top of image
+                  ),
                 ),
               ),
-              // Border styling
-              border: Border.all(
-                color: isDarkMode
-                    ? Colors.white.withAlpha(80)
-                    : Colors.black.withAlpha(26),
-                width: 2,
-              ),
-            ),
-            // ClipRRect ensures the image follows the same shape as the container
-            child: ClipRRect(
-              // This must match the container's BorderRadius exactly
-              borderRadius: BorderRadius.vertical(
-                top: Radius.elliptical(size.width * 0.8, size.width * 0.8),
-                bottom: Radius.elliptical(size.width * 0.8, size.width * 0.8),
-              ),
-              child: Image.asset(
-                userData['profileImage'],
-                fit: BoxFit.cover, // Controls how image fills the space
-                // You can adjust alignment to control which part of image is visible
-                // alignment: Alignment.topCenter,  // Uncomment to focus on top of image
-              ),
-            ),
-          ),
 
-          // Heart icon with friend count overlay - positioned half in/out of profile picture
-          Positioned(
-            top: size.width * 0.06, // Moved up to overlay profile picture edge
-            right:
-                size.width * 0.1, // Moved right to overlay profile picture edge
-            child: Stack(
-              alignment: Alignment.center,
-              children: [
-                Icon(
-                  Icons.favorite,
-                  color: Colors.red,
-                  size: size.width * 0.11, // Reduced size
-                  shadows: [
-                    Shadow(
-                      color: Colors.black.withAlpha(50),
-                      blurRadius: 10,
+              // Heart icon with friend count overlay - positioned half in/out of profile picture
+              Positioned(
+                top: size.width *
+                    0.06, // Moved up to overlay profile picture edge
+                right: size.width *
+                    0.1, // Moved right to overlay profile picture edge
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    Icon(
+                      Icons.favorite,
+                      color: Colors.red,
+                      size: size.width * 0.11, // Reduced size
+                      shadows: [
+                        Shadow(
+                          color: Colors.black.withAlpha(50),
+                          blurRadius: 10,
+                        ),
+                      ],
+                    ),
+                    Text(
+                      '${userData['friendCount']}',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: size.width *
+                            0.035, // Adjusted text size to match smaller heart
+                        fontWeight: FontWeight.bold,
+                        shadows: [
+                          Shadow(
+                            color: Colors.black.withAlpha(100),
+                            blurRadius: 4,
+                          ),
+                        ],
+                      ),
                     ),
                   ],
                 ),
-                Text(
-                  '${userData['friendCount']}',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: size.width *
-                        0.035, // Adjusted text size to match smaller heart
-                    fontWeight: FontWeight.bold,
-                    shadows: [
-                      Shadow(
-                        color: Colors.black.withAlpha(100),
-                        blurRadius: 4,
-                      ),
-                    ],
-                  ),
-                ),
-              ],
+              ),
+            ],
+          ),
+
+          // Name and Location
+          SizedBox(height: size.height * 0.02),
+          Text(
+            userData['name'],
+            style: TextStyle(
+              color: isDarkMode ? Colors.white : Colors.black,
+              fontSize: size.width * 0.05,
+              fontWeight: FontWeight.w600,
             ),
+          ),
+          SizedBox(height: size.height * 0.01),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                Icons.location_on,
+                color: isDarkMode ? Colors.white70 : Colors.black54,
+                size: size.width * 0.04,
+              ),
+              SizedBox(width: size.width * 0.01),
+              Text(
+                userData['location'],
+                style: TextStyle(
+                  color: isDarkMode ? Colors.white70 : Colors.black54,
+                  fontSize: size.width * 0.035,
+                ),
+              ),
+            ],
           ),
         ],
       ),
@@ -621,7 +673,7 @@ class _UserProfileState extends State<UserProfile> {
               ),
 
               // Connect Button
-              Container(
+              SizedBox(
                 height: size.width * 0.08,
                 child: ElevatedButton(
                   onPressed: () {
@@ -678,12 +730,6 @@ class _UserProfileState extends State<UserProfile> {
                     0.65, // Increased width to maintain aspect ratio
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(20),
-                  border: Border.all(
-                    color: isDarkMode
-                        ? Colors.white.withAlpha(38)
-                        : Colors.black.withAlpha(26),
-                    width: 1,
-                  ),
                 ),
                 child: Stack(
                   children: [
@@ -754,12 +800,6 @@ class _UserProfileState extends State<UserProfile> {
                 width: size.width * 0.4, // Width of reel
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(20),
-                  border: Border.all(
-                    color: isDarkMode
-                        ? Colors.white.withAlpha(38)
-                        : Colors.black.withAlpha(26),
-                    width: 1,
-                  ),
                 ),
                 child: Stack(
                   children: [

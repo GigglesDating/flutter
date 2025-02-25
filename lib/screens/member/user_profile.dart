@@ -159,7 +159,7 @@ class _UserProfileState extends State<UserProfile> {
         children: [
           // Main Container - Controls the overall frame size
           Container(
-            width: size.width * 1.0, // Controls width of oval
+            width: size.width * .7, // Controls width of oval
             height: size.width * 0.9, // Controls height of oval
             decoration: BoxDecoration(
               color: Colors.transparent,
@@ -189,8 +189,8 @@ class _UserProfileState extends State<UserProfile> {
             child: ClipRRect(
               // This must match the container's BorderRadius exactly
               borderRadius: BorderRadius.vertical(
-                top: Radius.elliptical(size.width * 0.4, size.width * 0.4),
-                bottom: Radius.elliptical(size.width * 0.4, size.width * 0.4),
+                top: Radius.elliptical(size.width * 0.8, size.width * 0.8),
+                bottom: Radius.elliptical(size.width * 0.8, size.width * 0.8),
               ),
               child: Image.asset(
                 userData['profileImage'],
@@ -657,10 +657,16 @@ class _UserProfileState extends State<UserProfile> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        SizedBox(
+            height: size.height * 0.03), // Increased gap after Spotify section
+
         // Posts Section
         Container(
-          margin: EdgeInsets.symmetric(vertical: size.height * 0.02),
-          height: size.width * 0.7, // Height based on aspect ratio
+          margin: EdgeInsets.only(
+              bottom:
+                  size.height * 0.005), // Reduced gap between posts and reels
+          height: size.width *
+              0.95, // Increased height to match post card aspect ratio
           child: ListView.builder(
             padding: EdgeInsets.symmetric(horizontal: size.width * 0.04),
             scrollDirection: Axis.horizontal,
@@ -668,7 +674,8 @@ class _UserProfileState extends State<UserProfile> {
             itemBuilder: (context, index) {
               return Container(
                 margin: EdgeInsets.only(right: size.width * 0.04),
-                width: size.width * 0.4, // Width of post
+                width: size.width *
+                    0.65, // Increased width to maintain aspect ratio
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(20),
                   border: Border.all(
@@ -735,8 +742,8 @@ class _UserProfileState extends State<UserProfile> {
 
         // Reels Section
         Container(
-          margin: EdgeInsets.only(top: size.height * 0.02),
-          height: size.width * 0.7,
+          margin: EdgeInsets.zero,
+          height: size.width * 0.85, // Increased height for reels
           child: ListView.builder(
             padding: EdgeInsets.symmetric(horizontal: size.width * 0.04),
             scrollDirection: Axis.horizontal,
@@ -744,7 +751,7 @@ class _UserProfileState extends State<UserProfile> {
             itemBuilder: (context, index) {
               return Container(
                 margin: EdgeInsets.only(right: size.width * 0.04),
-                width: size.width * 0.3, // Smaller width for reels
+                width: size.width * 0.4, // Width of reel
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(20),
                   border: Border.all(

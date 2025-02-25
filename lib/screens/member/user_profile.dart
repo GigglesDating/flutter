@@ -318,7 +318,7 @@ class _UserProfileState extends State<UserProfile> {
 
   Widget _buildBioSection(bool isDarkMode, Size size) {
     return ClipRRect(
-      borderRadius: BorderRadius.circular(30), // Matching outer curve
+      borderRadius: BorderRadius.circular(30),
       child: BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 10.0, sigmaY: 10.0),
         child: Container(
@@ -361,24 +361,14 @@ class _UserProfileState extends State<UserProfile> {
 
               // Bio Text
               ClipRRect(
-                borderRadius: BorderRadius.only(
-                  topLeft: Radius.circular(25),
-                  topRight: Radius.circular(15),
-                  bottomLeft: Radius.circular(15),
-                  bottomRight: Radius.circular(25),
-                ),
+                borderRadius: BorderRadius.circular(12),
                 child: BackdropFilter(
                   filter: ImageFilter.blur(sigmaX: 5.0, sigmaY: 5.0),
                   child: Container(
                     padding: EdgeInsets.all(size.width * 0.03),
                     decoration: BoxDecoration(
                       color: Colors.white.withAlpha(13),
-                      borderRadius: BorderRadius.only(
-                        topLeft: Radius.circular(25),
-                        topRight: Radius.circular(15),
-                        bottomLeft: Radius.circular(15),
-                        bottomRight: Radius.circular(25),
-                      ),
+                      borderRadius: BorderRadius.circular(12),
                       border: Border.all(
                         color: Colors.white.withAlpha(26),
                         width: 1,
@@ -387,7 +377,7 @@ class _UserProfileState extends State<UserProfile> {
                     child: Text(
                       userData['bio'],
                       style: TextStyle(
-                        color: Colors.white.withAlpha(230),
+                        color: isDarkMode ? Colors.white : Colors.black,
                         fontSize: size.width * 0.035,
                       ),
                     ),
@@ -404,12 +394,7 @@ class _UserProfileState extends State<UserProfile> {
   Widget _buildInterestChip(
       String label, String emoji, bool isDarkMode, Size size) {
     return ClipRRect(
-      borderRadius: BorderRadius.only(
-        topLeft: Radius.circular(20),
-        topRight: Radius.circular(10),
-        bottomLeft: Radius.circular(10),
-        bottomRight: Radius.circular(20),
-      ),
+      borderRadius: BorderRadius.circular(20),
       child: BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 5.0, sigmaY: 5.0),
         child: Container(
@@ -420,12 +405,7 @@ class _UserProfileState extends State<UserProfile> {
           ),
           decoration: BoxDecoration(
             color: Colors.white.withAlpha(13),
-            borderRadius: BorderRadius.only(
-              topLeft: Radius.circular(20),
-              topRight: Radius.circular(10),
-              bottomLeft: Radius.circular(10),
-              bottomRight: Radius.circular(20),
-            ),
+            borderRadius: BorderRadius.circular(20),
             border: Border.all(
               color: Colors.white.withAlpha(26),
               width: 1,
@@ -442,7 +422,7 @@ class _UserProfileState extends State<UserProfile> {
               Text(
                 label,
                 style: TextStyle(
-                  color: Colors.white.withAlpha(230),
+                  color: isDarkMode ? Colors.white : Colors.black,
                   fontSize: size.width * 0.035,
                 ),
               ),

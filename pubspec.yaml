@@ -35,6 +35,8 @@ dependencies:
   flutter_card_swiper: ^7.0.2
   chewie: ^1.7.5
   visibility_detector: ^0.4.0+2
+  svg_path_parser: ^1.1.2
+
 
 dev_dependencies:
   flutter_test:
@@ -81,6 +83,7 @@ flutter:
     - assets/app/
     - assets/icons/snip/
     - assets/icons/profile/
+    - assets/icons/profile/frames/
 
  
 

@@ -34,79 +34,87 @@ class _UserProfileState extends State<UserProfile> {
     return Scaffold(
       backgroundColor: isDarkMode ? Colors.black : Colors.white,
       extendBodyBehindAppBar: true,
-      appBar: _buildAppBar(isDarkMode, size),
       body: Stack(
         children: [
           // Blurred background
           _buildBackgroundImage(size),
 
-          // Main content
+          // Main content with scrolling app bar
           SingleChildScrollView(
-            child: SafeArea(
-              child: Column(
-                children: [
-                  _buildProfileHeader(isDarkMode, size),
-                  _buildStats(isDarkMode, size),
-                  _buildBioSection(isDarkMode, size),
-                  _buildSpotifyWidget(isDarkMode, size),
-                  _buildContentGrids(isDarkMode, size),
-                ],
-              ),
+            child: Column(
+              children: [
+                // Custom scrolling app bar
+                Padding(
+                  padding: EdgeInsets.only(
+                    top: MediaQuery.of(context).padding.top + 10,
+                    left: size.width * 0.04,
+                    right: size.width * 0.04,
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      // Settings icon
+                      GestureDetector(
+                        onTap: () {
+                          // TODO: Implement settings navigation
+                        },
+                        child: Container(
+                          padding: EdgeInsets.all(size.width * 0.02),
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: isDarkMode
+                                ? Colors.white.withAlpha(38)
+                                : Colors.black.withAlpha(26),
+                          ),
+                          child: SvgPicture.asset(
+                            'assets/icons/profile/settings.svg',
+                            width: size.width * 0.05,
+                            height: size.width * 0.05,
+                            colorFilter: ColorFilter.mode(
+                              isDarkMode ? Colors.white : Colors.black,
+                              BlendMode.srcIn,
+                            ),
+                          ),
+                        ),
+                      ),
+                      // Profile upload button
+                      GestureDetector(
+                        onTap: () {
+                          // TODO: Implement profile picture upload
+                        },
+                        child: Container(
+                          padding: EdgeInsets.all(size.width * 0.02),
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: isDarkMode
+                                ? Colors.white.withAlpha(38)
+                                : Colors.black.withAlpha(26),
+                          ),
+                          child: SvgPicture.asset(
+                            'assets/icons/profile/upload.svg',
+                            width: size.width * 0.05,
+                            height: size.width * 0.05,
+                            colorFilter: ColorFilter.mode(
+                              isDarkMode ? Colors.white : Colors.black,
+                              BlendMode.srcIn,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                // Rest of the content
+                _buildProfileHeader(isDarkMode, size),
+                _buildStats(isDarkMode, size),
+                _buildBioSection(isDarkMode, size),
+                _buildSpotifyWidget(isDarkMode, size),
+                _buildContentGrids(isDarkMode, size),
+              ],
             ),
           ),
         ],
       ),
-    );
-  }
-
-  PreferredSizeWidget _buildAppBar(bool isDarkMode, Size size) {
-    return AppBar(
-      backgroundColor: Colors.transparent,
-      elevation: 0,
-      leading: Container(
-        margin: EdgeInsets.only(left: size.width * 0.02),
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          color: isDarkMode
-              ? Colors.white.withAlpha(80)
-              : Colors.black.withAlpha(26),
-        ),
-        child: IconButton(
-          icon: Icon(
-            Icons.settings,
-            color: isDarkMode ? Colors.white : Colors.black,
-            size: size.width * 0.06,
-          ),
-          onPressed: () {
-            // TODO: Implement settings navigation
-          },
-        ),
-      ),
-      actions: [
-        Container(
-          margin: EdgeInsets.only(right: size.width * 0.02),
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: isDarkMode
-                ? Colors.white.withAlpha(80)
-                : Colors.black.withAlpha(26),
-          ),
-          child: IconButton(
-            icon: SvgPicture.asset(
-              'assets/icons/profile/profile_pic_upload.svg',
-              width: size.width * 0.06,
-              height: size.width * 0.06,
-              colorFilter: ColorFilter.mode(
-                isDarkMode ? Colors.white : Colors.black,
-                BlendMode.srcIn,
-              ),
-            ),
-            onPressed: () {
-              // TODO: Implement profile picture upload
-            },
-          ),
-        ),
-      ],
     );
   }
 
@@ -185,45 +193,41 @@ class _UserProfileState extends State<UserProfile> {
             ),
           ),
 
-          // Friend count heart icon overlay
+          // Heart icon with friend count overlay - positioned half in/out of profile picture
           Positioned(
-            top: size.width * 0.05,
-            right: size.width * 0.15,
-            child: Container(
-              padding: EdgeInsets.symmetric(
-                horizontal: size.width * 0.03,
-                vertical: size.width * 0.015,
-              ),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(20),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withAlpha(26),
-                    blurRadius: 10,
-                    spreadRadius: 2,
-                  ),
-                ],
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    Icons.favorite,
-                    color: Colors.red,
-                    size: size.width * 0.045,
-                  ),
-                  SizedBox(width: size.width * 0.01),
-                  Text(
-                    '${userData['friendCount']}',
-                    style: TextStyle(
-                      color: Colors.black,
-                      fontSize: size.width * 0.035,
-                      fontWeight: FontWeight.bold,
+            top: size.width * 0.06, // Moved up to overlay profile picture edge
+            right:
+                size.width * 0.1, // Moved right to overlay profile picture edge
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                Icon(
+                  Icons.favorite,
+                  color: Colors.red,
+                  size: size.width * 0.11, // Reduced size
+                  shadows: [
+                    Shadow(
+                      color: Colors.black.withAlpha(50),
+                      blurRadius: 10,
                     ),
+                  ],
+                ),
+                Text(
+                  '${userData['friendCount']}',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: size.width *
+                        0.035, // Adjusted text size to match smaller heart
+                    fontWeight: FontWeight.bold,
+                    shadows: [
+                      Shadow(
+                        color: Colors.black.withAlpha(100),
+                        blurRadius: 4,
+                      ),
+                    ],
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
         ],
@@ -232,41 +236,55 @@ class _UserProfileState extends State<UserProfile> {
   }
 
   Widget _buildStats(bool isDarkMode, Size size) {
-    return Container(
-      margin: EdgeInsets.symmetric(
-        horizontal: size.width * 0.04,
-        vertical: size.height * 0.02,
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-        children: [
-          Expanded(
-            child: _buildStatItem(
-                isDarkMode, size, '${userData['stats']['posts']}', 'Posts'),
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(30), // More rounded corners
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 10.0, sigmaY: 10.0),
+        child: Container(
+          margin: EdgeInsets.symmetric(
+            horizontal: size.width * 0.04,
+            vertical: size.height * 0.02,
           ),
-          Container(
-            height: size.height * 0.04,
-            width: 1,
-            color: isDarkMode
-                ? Colors.white.withAlpha(50)
-                : Colors.black.withAlpha(26),
+          padding: EdgeInsets.all(size.width * 0.04),
+          decoration: BoxDecoration(
+            color: Colors.white.withAlpha(25),
+            borderRadius: BorderRadius.only(
+              topLeft: Radius.circular(40),
+              topRight: Radius.circular(20),
+              bottomLeft: Radius.circular(20),
+              bottomRight: Radius.circular(40),
+            ),
+            border: Border.all(
+              color: Colors.white.withAlpha(51),
+              width: 1.5,
+            ),
           ),
-          Expanded(
-            child: _buildStatItem(
-                isDarkMode, size, '${userData['stats']['dates']}', 'Dates'),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              _buildStatItem(
+                  isDarkMode, size, '${userData['stats']['posts']}', 'Posts'),
+              SizedBox(
+                height: size.height * 0.04,
+                child: VerticalDivider(
+                  color: Colors.white.withAlpha(51),
+                  width: 1,
+                ),
+              ),
+              _buildStatItem(
+                  isDarkMode, size, '${userData['stats']['dates']}', 'Dates'),
+              SizedBox(
+                height: size.height * 0.04,
+                child: VerticalDivider(
+                  color: Colors.white.withAlpha(51),
+                  width: 1,
+                ),
+              ),
+              _buildStatItem(
+                  isDarkMode, size, '${userData['stats']['rating']}', 'Rating'),
+            ],
           ),
-          Container(
-            height: size.height * 0.04,
-            width: 1,
-            color: isDarkMode
-                ? Colors.white.withAlpha(50)
-                : Colors.black.withAlpha(26),
-          ),
-          Expanded(
-            child: _buildStatItem(
-                isDarkMode, size, '${userData['stats']['rating']}', 'Rating'),
-          ),
-        ],
+        ),
       ),
     );
   }
@@ -299,339 +317,357 @@ class _UserProfileState extends State<UserProfile> {
   }
 
   Widget _buildBioSection(bool isDarkMode, Size size) {
-    return Container(
-      margin: EdgeInsets.symmetric(
-        horizontal: size.width * 0.04,
-        vertical: size.height * 0.02,
-      ),
-      padding: EdgeInsets.all(size.width * 0.04),
-      decoration: BoxDecoration(
-        color: isDarkMode
-            ? Colors.white.withAlpha(20)
-            : Colors.black.withAlpha(10),
-        borderRadius: BorderRadius.circular(15),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Horizontal scrollable preferences
-          SizedBox(
-            height: size.height * 0.05,
-            child: ListView(
-              scrollDirection: Axis.horizontal,
-              children: [
-                _buildPreferenceChip(isDarkMode, size, '👩 Female'),
-                _buildPreferenceChip(isDarkMode, size, '🚭 Non-smoker'),
-                _buildPreferenceChip(isDarkMode, size, '🍷 Social drinker'),
-                _buildPreferenceChip(isDarkMode, size, '🎵 Music lover'),
-                _buildPreferenceChip(isDarkMode, size, '🏃‍♀️ Active'),
-              ],
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(30), // Matching outer curve
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 10.0, sigmaY: 10.0),
+        child: Container(
+          margin: EdgeInsets.symmetric(
+            horizontal: size.width * 0.04,
+            vertical: size.height * 0.02,
+          ),
+          padding: EdgeInsets.all(size.width * 0.04),
+          decoration: BoxDecoration(
+            color: Colors.white.withAlpha(25),
+            borderRadius: BorderRadius.only(
+              topLeft: Radius.circular(20),
+              topRight: Radius.circular(40),
+              bottomLeft: Radius.circular(40),
+              bottomRight: Radius.circular(20),
+            ),
+            border: Border.all(
+              color: Colors.white.withAlpha(51),
+              width: 1.5,
             ),
           ),
-
-          SizedBox(height: size.height * 0.02),
-
-          // Bio text
-          GestureDetector(
-            onTap: () {
-              // TODO: Implement bio edit functionality
-            },
-            child: Container(
-              padding: EdgeInsets.all(size.width * 0.03),
-              decoration: BoxDecoration(
-                color: isDarkMode
-                    ? Colors.white.withAlpha(10)
-                    : Colors.black.withAlpha(5),
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(
-                  color: isDarkMode
-                      ? Colors.white.withAlpha(30)
-                      : Colors.black.withAlpha(20),
-                  width: 1,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Interests List
+              SizedBox(
+                height: size.width * 0.12,
+                child: ListView(
+                  scrollDirection: Axis.horizontal,
+                  children: [
+                    _buildInterestChip('Female', '😊', isDarkMode, size),
+                    _buildInterestChip('Non-smoker', '🚭', isDarkMode, size),
+                    _buildInterestChip(
+                        'Social drinker', '🍷', isDarkMode, size),
+                  ],
                 ),
               ),
-              child: Row(
-                children: [
-                  Expanded(
+
+              SizedBox(height: size.height * 0.02),
+
+              // Bio Text
+              ClipRRect(
+                borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(25),
+                  topRight: Radius.circular(15),
+                  bottomLeft: Radius.circular(15),
+                  bottomRight: Radius.circular(25),
+                ),
+                child: BackdropFilter(
+                  filter: ImageFilter.blur(sigmaX: 5.0, sigmaY: 5.0),
+                  child: Container(
+                    padding: EdgeInsets.all(size.width * 0.03),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withAlpha(13),
+                      borderRadius: BorderRadius.only(
+                        topLeft: Radius.circular(25),
+                        topRight: Radius.circular(15),
+                        bottomLeft: Radius.circular(15),
+                        bottomRight: Radius.circular(25),
+                      ),
+                      border: Border.all(
+                        color: Colors.white.withAlpha(26),
+                        width: 1,
+                      ),
+                    ),
                     child: Text(
                       userData['bio'],
                       style: TextStyle(
-                        color: isDarkMode ? Colors.white : Colors.black,
+                        color: Colors.white.withAlpha(230),
                         fontSize: size.width * 0.035,
-                        height: 1.4,
                       ),
                     ),
                   ),
-                  Icon(
-                    Icons.edit,
-                    color: isDarkMode
-                        ? Colors.white.withAlpha(150)
-                        : Colors.black.withAlpha(150),
-                    size: size.width * 0.045,
-                  ),
-                ],
+                ),
               ),
-            ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
 
-  Widget _buildPreferenceChip(bool isDarkMode, Size size, String label) {
-    return Container(
-      margin: EdgeInsets.only(right: size.width * 0.02),
-      padding: EdgeInsets.symmetric(
-        horizontal: size.width * 0.03,
-        vertical: size.width * 0.015,
+  Widget _buildInterestChip(
+      String label, String emoji, bool isDarkMode, Size size) {
+    return ClipRRect(
+      borderRadius: BorderRadius.only(
+        topLeft: Radius.circular(20),
+        topRight: Radius.circular(10),
+        bottomLeft: Radius.circular(10),
+        bottomRight: Radius.circular(20),
       ),
-      decoration: BoxDecoration(
-        color: isDarkMode
-            ? Colors.white.withAlpha(30)
-            : Colors.black.withAlpha(20),
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Text(
-        label,
-        style: TextStyle(
-          color: isDarkMode ? Colors.white : Colors.black,
-          fontSize: size.width * 0.035,
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 5.0, sigmaY: 5.0),
+        child: Container(
+          margin: EdgeInsets.only(right: size.width * 0.02),
+          padding: EdgeInsets.symmetric(
+            horizontal: size.width * 0.04,
+            vertical: size.width * 0.02,
+          ),
+          decoration: BoxDecoration(
+            color: Colors.white.withAlpha(13),
+            borderRadius: BorderRadius.only(
+              topLeft: Radius.circular(20),
+              topRight: Radius.circular(10),
+              bottomLeft: Radius.circular(10),
+              bottomRight: Radius.circular(20),
+            ),
+            border: Border.all(
+              color: Colors.white.withAlpha(26),
+              width: 1,
+            ),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                emoji,
+                style: TextStyle(fontSize: size.width * 0.04),
+              ),
+              SizedBox(width: size.width * 0.02),
+              Text(
+                label,
+                style: TextStyle(
+                  color: Colors.white.withAlpha(230),
+                  fontSize: size.width * 0.035,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
 
   Widget _buildSpotifyWidget(bool isDarkMode, Size size) {
-    return Container(
-      margin: EdgeInsets.symmetric(
-        horizontal: size.width * 0.04,
-        vertical: size.height * 0.02,
+    return ClipRRect(
+      borderRadius: BorderRadius.only(
+        topLeft: Radius.circular(40),
+        topRight: Radius.circular(20),
+        bottomLeft: Radius.circular(20),
+        bottomRight: Radius.circular(40),
       ),
-      padding: EdgeInsets.all(size.width * 0.04),
-      decoration: BoxDecoration(
-        color: isDarkMode
-            ? Colors.white.withAlpha(20)
-            : Colors.black.withAlpha(10),
-        borderRadius: BorderRadius.circular(15),
-      ),
-      child: Row(
-        children: [
-          // Spotify Icon
-          Container(
-            padding: EdgeInsets.all(size.width * 0.02),
-            decoration: BoxDecoration(
-              color: Colors.green,
-              shape: BoxShape.circle,
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 10.0, sigmaY: 10.0),
+        child: Container(
+          margin: EdgeInsets.symmetric(
+            horizontal: size.width * 0.04,
+            vertical: size.height * 0.02,
+          ),
+          padding: EdgeInsets.all(size.width * 0.04),
+          decoration: BoxDecoration(
+            color: Colors.white.withAlpha(25),
+            borderRadius: BorderRadius.only(
+              topLeft: Radius.circular(40),
+              topRight: Radius.circular(20),
+              bottomLeft: Radius.circular(20),
+              bottomRight: Radius.circular(40),
             ),
-            child: Image.asset(
-              'assets/icons/profile/spotify.png',
-              width: size.width * 0.06,
-              height: size.width * 0.06,
-              color: Colors.white,
+            border: Border.all(
+              color: Colors.white.withAlpha(51),
+              width: 1.5,
             ),
           ),
-
-          SizedBox(width: size.width * 0.03),
-
-          // Wave Animation and Text
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'My Anthem',
-                  style: TextStyle(
-                    color: isDarkMode
-                        ? Colors.white.withAlpha(150)
-                        : Colors.black.withAlpha(150),
-                    fontSize: size.width * 0.035,
-                  ),
-                ),
-                SizedBox(height: size.height * 0.01),
-                // Placeholder Wave Animation
-                Container(
-                  height: size.height * 0.03,
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.start,
-                    children: List.generate(
-                      20,
-                      (index) => Container(
-                        margin: EdgeInsets.symmetric(horizontal: 1),
-                        width: 3,
-                        height: (index % 3 + 1) * 8.0,
-                        decoration: BoxDecoration(
-                          color: Colors.green.withAlpha(100),
-                          borderRadius: BorderRadius.circular(5),
-                        ),
+          child: Row(
+            children: [
+              Stack(
+                alignment: Alignment.centerRight,
+                children: [
+                  Container(
+                    padding: EdgeInsets.all(size.width * 0.02),
+                    decoration: BoxDecoration(
+                      color: Colors.green,
+                      shape: BoxShape.circle,
+                    ),
+                    child: SvgPicture.asset(
+                      'assets/icons/profile/spotify.svg',
+                      width: size.width * 0.06,
+                      height: size.width * 0.06,
+                      colorFilter: const ColorFilter.mode(
+                        Colors.white,
+                        BlendMode.srcIn,
                       ),
                     ),
                   ),
-                ),
-              ],
-            ),
-          ),
-
-          // Connect Button
-          Container(
-            padding: EdgeInsets.symmetric(
-              horizontal: size.width * 0.03,
-              vertical: size.width * 0.015,
-            ),
-            decoration: BoxDecoration(
-              color: Colors.green,
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: Text(
-              'Connect',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: size.width * 0.035,
-                fontWeight: FontWeight.w600,
+                  Positioned(
+                    left: size.width * 0.08,
+                    child: SvgPicture.asset(
+                      'assets/icons/profile/sound_wave.svg',
+                      height: size.width * 0.04,
+                      width: size.width * 0.15,
+                      colorFilter: ColorFilter.mode(
+                        isDarkMode ? Colors.white : Colors.black,
+                        BlendMode.srcIn,
+                      ),
+                    ),
+                  ),
+                ],
               ),
-            ),
+              SizedBox(width: size.width * 0.15),
+              Text(
+                'My Anthem',
+                style: TextStyle(
+                  color: isDarkMode ? Colors.white : Colors.black,
+                  fontSize: size.width * 0.04,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
 
   Widget _buildContentGrids(bool isDarkMode, Size size) {
-    // Temporary post data - will come from backend later
-    final List<String> posts = [
-      'assets/tempImages/posts/post1.png',
-      'assets/tempImages/posts/post2.jpg',
-      'assets/tempImages/posts/post3.png',
-      'assets/tempImages/posts/post4.png',
-    ];
-
-    final List<String> reels = [
-      'assets/tempImages/reels/reel1.png',
-      'assets/tempImages/reels/reel2.jpg',
-      'assets/tempImages/reels/reel3.png',
-      'assets/tempImages/reels/reel4.png',
-    ];
-
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         // Posts Section
-        Padding(
-          padding: EdgeInsets.symmetric(
-            horizontal: size.width * 0.04,
-            vertical: size.height * 0.02,
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Posts',
-                style: TextStyle(
-                  color: isDarkMode ? Colors.white : Colors.black,
-                  fontSize: size.width * 0.045,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              SizedBox(height: size.height * 0.02),
-              _buildGrid(isDarkMode, size, posts),
-            ],
-          ),
-        ),
-
-        // Reels Section
-        Padding(
-          padding: EdgeInsets.symmetric(
-            horizontal: size.width * 0.04,
-            vertical: size.height * 0.02,
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Reels',
-                style: TextStyle(
-                  color: isDarkMode ? Colors.white : Colors.black,
-                  fontSize: size.width * 0.045,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              SizedBox(height: size.height * 0.02),
-              _buildGrid(isDarkMode, size, reels),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildGrid(bool isDarkMode, Size size, List<String> items) {
-    return GridView.builder(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2,
-        crossAxisSpacing: size.width * 0.03,
-        mainAxisSpacing: size.width * 0.03,
-        childAspectRatio: 1,
-      ),
-      itemCount: items.length,
-      itemBuilder: (context, index) {
-        return Stack(
-          children: [
-            // Content Container
-            Container(
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(15),
-                border: Border.all(
-                  color: isDarkMode
-                      ? Colors.white.withAlpha(30)
-                      : Colors.black.withAlpha(20),
-                  width: 1,
-                ),
-              ),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(15),
-                child: Image.asset(
-                  items[index],
-                  fit: BoxFit.cover,
-                ),
-              ),
-            ),
-
-            // Like Count
-            Positioned(
-              top: size.width * 0.02,
-              right: size.width * 0.02,
-              child: Container(
-                padding: EdgeInsets.symmetric(
-                  horizontal: size.width * 0.02,
-                  vertical: size.width * 0.01,
-                ),
+        Container(
+          margin: EdgeInsets.symmetric(vertical: size.height * 0.02),
+          height: size.width * 0.7, // Height based on aspect ratio
+          child: ListView.builder(
+            padding: EdgeInsets.symmetric(horizontal: size.width * 0.04),
+            scrollDirection: Axis.horizontal,
+            itemCount: 6,
+            itemBuilder: (context, index) {
+              return Container(
+                margin: EdgeInsets.only(right: size.width * 0.04),
+                width: size.width * 0.4, // Width of post
                 decoration: BoxDecoration(
-                  color: Colors.black.withAlpha(51),
-                  borderRadius: BorderRadius.circular(15),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(
+                    color: isDarkMode
+                        ? Colors.white.withAlpha(38)
+                        : Colors.black.withAlpha(26),
+                    width: 1,
+                  ),
                 ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
+                child: Stack(
                   children: [
-                    Icon(
-                      Icons.favorite,
-                      color: Colors.white,
-                      size: size.width * 0.035,
+                    // Post Image with 4:5 aspect ratio
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(19),
+                      child: AspectRatio(
+                        aspectRatio: 4 / 5,
+                        child: Image.asset(
+                          'assets/tempImages/posts/post${index + 1}.png',
+                          fit: BoxFit.cover,
+                        ),
+                      ),
                     ),
-                    SizedBox(width: size.width * 0.01),
-                    Text(
-                      '${Random().nextInt(100)}', // Temporary random likes
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: size.width * 0.03,
+                    // Heart and likes count overlay
+                    Positioned(
+                      top: 10,
+                      right: 10,
+                      child: Stack(
+                        alignment: Alignment.center,
+                        children: [
+                          Icon(
+                            Icons.favorite,
+                            color: Colors.red,
+                            size: size.width * 0.07,
+                            shadows: [
+                              Shadow(
+                                color: Colors.black.withAlpha(50),
+                                blurRadius: 10,
+                              ),
+                            ],
+                          ),
+                          Text(
+                            '${Random().nextInt(100)}',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: size.width * 0.02,
+                              fontWeight: FontWeight.bold,
+                              shadows: [
+                                Shadow(
+                                  color: Colors.black.withAlpha(100),
+                                  blurRadius: 4,
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ],
                 ),
-              ),
-            ),
-          ],
-        );
-      },
+              );
+            },
+          ),
+        ),
+
+        // Reels Section
+        Container(
+          margin: EdgeInsets.only(top: size.height * 0.02),
+          height: size.width * 0.7,
+          child: ListView.builder(
+            padding: EdgeInsets.symmetric(horizontal: size.width * 0.04),
+            scrollDirection: Axis.horizontal,
+            itemCount: 6,
+            itemBuilder: (context, index) {
+              return Container(
+                margin: EdgeInsets.only(right: size.width * 0.04),
+                width: size.width * 0.3, // Smaller width for reels
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(
+                    color: isDarkMode
+                        ? Colors.white.withAlpha(38)
+                        : Colors.black.withAlpha(26),
+                    width: 1,
+                  ),
+                ),
+                child: Stack(
+                  children: [
+                    // Reel Thumbnail with 9:16 aspect ratio
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(19),
+                      child: AspectRatio(
+                        aspectRatio: 9 / 16,
+                        child: Image.asset(
+                          'assets/tempImages/reels/reel${index + 1}.png',
+                          fit: BoxFit.cover,
+                        ),
+                      ),
+                    ),
+                    // Play icon overlay
+                    Center(
+                      child: Icon(
+                        Icons.play_circle_outline,
+                        color: Colors.white,
+                        size: size.width * 0.08,
+                        shadows: [
+                          Shadow(
+                            color: Colors.black.withAlpha(100),
+                            blurRadius: 8,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
+        ),
+      ],
     );
   }
 }

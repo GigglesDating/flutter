@@ -11,11 +11,62 @@ class NotificationsPage extends StatefulWidget {
 
 class _NotificationsPage extends State<NotificationsPage> {
   final List<String> userProfile = [
-    'assets/light/favicon.png',
-    'assets/light/favicon.png',
-    'assets/light/favicon.png',
-    'assets/light/favicon.png',
-    'assets/light/favicon.png',
+    'assets/tempImages/users/usera/1.png',
+    'assets/tempImages/users/usera/2.png',
+    'assets/tempImages/users/usera/3.png',
+    'assets/tempImages/users/usera/4.png',
+    'assets/tempImages/users/userb/1.png',
+    'assets/tempImages/users/userb/2.png',
+    'assets/tempImages/users/userb/3.png',
+    'assets/tempImages/users/userb/4.png',
+    'assets/tempImages/users/userc/1.png',
+    'assets/tempImages/users/userc/2.png',
+    'assets/tempImages/users/userc/3.png',
+    'assets/tempImages/users/userc/4.png',
+  ];
+  List con1 = [
+    'Aditi rao',
+    'Rahul jakur',
+    'Athul m',
+    'Meena rama',
+    'Drishya unni',
+    'Nimisha ajayan',
+    'meenakshi ramesh',
+    'Lakshmi',
+    'Arya lakshmi',
+    'Pooja lakhra',
+    'diksha mehta',
+    'Priya varma',
+    // 'anushka sharma',
+    // 'pooja hedge',
+    // 'sunny wayne',
+    // 'appu kuttan',
+    // 'Ben binoy',
+    // 'harshida fathima',
+    // 'swetha lakshmi',
+    // 'Aditi rao',
+    // 'Rahul jakur',
+    // 'Athul m',
+    // 'Meena rama',
+    // 'Drishya unni',
+    // 'Nimisha ajayan',
+    // 'meenakshi ramesh',
+    // 'Lakshmi',
+    // 'Arya lakshmi',
+    // 'Pooja lakhra',
+    // 'diksha mehta',
+    // 'Priya varma',
+    // 'anushka sharma',
+    // 'pooja hedge',
+    // 'sunny wayne',
+    // 'appu kuttan',
+    // 'Ben binoy',
+    // 'harshida fathima',
+    // 'swetha lakshmi',
+    // 'appu kuttan',
+    // 'Ben binoy',
+    // 'harshida fathima',
+    // 'swetha lakshmi',
   ];
 
   @override
@@ -102,7 +153,7 @@ class _NotificationsPage extends State<NotificationsPage> {
                           ),
                           SizedBox(height: screenWidth * 0.02),
                           Text(
-                            'Natuan',
+                            con1[index],
                             style: TextStyle(
                               color: isDarkMode ? Colors.white : Colors.black,
                               fontSize: screenWidth * 0.04,
@@ -169,6 +220,9 @@ class _NotificationsPage extends State<NotificationsPage> {
 
   Widget _buildNotificationItem(
       String profileImage, bool isDarkMode, double screenWidth) {
+    // Find the index of the profileImage in userProfile list
+    final index = userProfile.indexOf(profileImage);
+    
     return Padding(
       padding: EdgeInsets.all(screenWidth * 0.02),
       child: GestureDetector(
@@ -197,7 +251,7 @@ class _NotificationsPage extends State<NotificationsPage> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  '@Natuan Express',
+                  index < con1.length ? con1[index] : 'Unknown User',
                   style: TextStyle(
                     fontWeight: FontWeight.w700,
                     color: isDarkMode ? Colors.white : Colors.black,

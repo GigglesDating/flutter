@@ -94,26 +94,107 @@ class _SwipeFilterPage extends State<SwipeFilterPage> {
 
   // Sample interests list (you can modify this)
   final List<String> _allInterests = [
-    'Photography',
-    'Travel',
-    'Cooking',
-    'Music',
-    'Art',
-    'Sports',
-    'Reading',
-    'Gaming',
-    'Fitness',
-    'Technology',
-    'Movies',
-    'Dancing',
-    'Nature',
-    'Fashion',
-    'Food',
-    'Pets',
-    'Writing',
-    'Yoga',
-    'Coffee',
-    'Wine'
+    'movie',
+    'coffee',
+    'shopping_bag',
+    'sports_basketball',
+    'music_note',
+    'restaurant',
+    'sports_esports',
+    'fitness_center',
+    'book',
+    'bedroom_baby',
+    'hiking',
+    'local_bar',
+    'camera_alt',
+    'travel_explore',
+    'wine_bar',
+    'liquor',
+    'nightlife',
+    'sports_bar',
+    'festival',
+    'soup_kitchen',
+    'door_sliding',
+    'deck',
+    'house_siding',
+    'beach_access',
+    'kayaking',
+    'directions_bike',
+    'terrain',
+    'paragliding',
+    'settings_accessibility',
+    'sports_handball_sharp',
+    'sports_tennis',
+    'circle_rounded',
+    'self_improvement',
+    'pool',
+    'directions_run',
+    'museum',
+    'account_balance',
+    'theater_comedy',
+    'mic',
+    'photo_camera',
+    'construction',
+    'table_bar',
+    'casino',
+    'mic_external_on',
+    'quiz',
+    'attractions',
+    'gamepad',
+    'extension',
+    'sports_hockey',
+    'gps_fixed',
+    'yard',
+    'visibility',
+    'park',
+    'star_rounded',
+    'spa',
+    'hot_tub',
+    'directions_car',
+    'menu_book',
+    'translate',
+    'smart_toy',
+    'grid_on',
+    'edit_note',
+    'science',
+    'record_voice_over',
+    'directions_car_outlined',
+    'holiday_village',
+    'location_city',
+    'backpack',
+    'landscape',
+    'tour',
+    'temple_hindu',
+    'palette',
+    'diamond',
+    'tag_rounded',
+    'photo_album',
+    'vignette_sharp',
+    'auto_awesome',
+    'code',
+    'view_in_ar',
+    'currency_bitcoin',
+    'draw',
+    'connecting_airports',
+    'build',
+    'video_camera_front',
+    'local_movies',
+    'pedal_bike',
+    'sports_cricket',
+    'sports_football',
+    'sports_martial_arts',
+    'track_changes_outlined',
+    'sports_volleyball',
+    'track_changes',
+    'skateboarding',
+    'videocam_sharp',
+    'ondemand_video',
+    'design_services',
+    'piano',
+    'spoke',
+    'crisis_alert',
+    'menu_book_rounded',
+    'volunteer_activism',
   ];
 
   @override
@@ -143,7 +224,30 @@ class _SwipeFilterPage extends State<SwipeFilterPage> {
         length: 2,
         child: Scaffold(
           appBar: AppBar(
-            title: Text('Narrow your search'),
+            leading: IconButton(
+              onPressed: () => Navigator.pop(context),
+              icon: Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: isDarkMode
+                      ? Colors.white.withAlpha(38)
+                      : Colors.black.withAlpha(26),
+                ),
+                child: Center(
+                  child: Icon(
+                    Icons.arrow_back,
+                    color: isDarkMode ? Colors.white : Colors.black,
+                    size: 22,
+                  ),
+                ),
+              ),
+            ),
+            title: Text(
+              'Narrow your search',
+              style: TextStyle(fontWeight: FontWeight.w700),
+            ),
             titleSpacing: 15,
             backgroundColor: Theme.of(context).scaffoldBackgroundColor,
             elevation: 0,
@@ -1673,6 +1777,152 @@ class _SwipeFilterPage extends State<SwipeFilterPage> {
                                 ),
                               ],
                             ),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  'Physical touch',
+                                  style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.normal,
+                                      color: isDarkMode
+                                          ? Colors.grey[100]
+                                          : Colors.grey[900]),
+                                ),
+                                Checkbox(
+                                  checkColor: Theme.of(context).brightness ==
+                                          Brightness.light
+                                      ? Colors.white
+                                      : Colors.black,
+                                  activeColor: isDarkMode
+                                      ? Colors.grey[100]
+                                      : Colors.grey[900],
+                                  // isError: true,
+                                  value:
+                                      selectedLoveLanguage == 'physical_touch',
+                                  side:
+                                      BorderSide(color: Colors.grey, width: 2),
+                                  visualDensity: VisualDensity(
+                                      horizontal: 0, vertical: -4),
+
+                                  onChanged: (value) {
+                                    setState(() {
+                                      selectedLoveLanguage =
+                                          value! ? 'physical_touch' : '';
+                                    });
+                                  },
+                                ),
+                              ],
+                            ),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  'Gifting/Receiving gifts',
+                                  style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.normal,
+                                      color: isDarkMode
+                                          ? Colors.grey[100]
+                                          : Colors.grey[900]),
+                                ),
+                                Checkbox(
+                                  checkColor: Theme.of(context).brightness ==
+                                          Brightness.light
+                                      ? Colors.white
+                                      : Colors.black,
+                                  activeColor: isDarkMode
+                                      ? Colors.grey[100]
+                                      : Colors.grey[900],
+                                  // isError: true,
+                                  value: selectedLoveLanguage == 'gifting',
+                                  side:
+                                      BorderSide(color: Colors.grey, width: 2),
+                                  visualDensity: VisualDensity(
+                                      horizontal: 0, vertical: -4),
+
+                                  onChanged: (value) {
+                                    setState(() {
+                                      selectedLoveLanguage =
+                                          value! ? 'gifting' : '';
+                                    });
+                                  },
+                                ),
+                              ],
+                            ),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  'Quality Time',
+                                  style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.normal,
+                                      color: isDarkMode
+                                          ? Colors.grey[100]
+                                          : Colors.grey[900]),
+                                ),
+                                Checkbox(
+                                  checkColor: Theme.of(context).brightness ==
+                                          Brightness.light
+                                      ? Colors.white
+                                      : Colors.black,
+                                  activeColor: isDarkMode
+                                      ? Colors.grey[100]
+                                      : Colors.grey[900],
+                                  // isError: true,
+                                  value: selectedLoveLanguage == 'quality_time',
+                                  side:
+                                      BorderSide(color: Colors.grey, width: 2),
+                                  visualDensity: VisualDensity(
+                                      horizontal: 0, vertical: -4),
+
+                                  onChanged: (value) {
+                                    setState(() {
+                                      selectedLoveLanguage =
+                                          value! ? 'quality_time' : '';
+                                    });
+                                  },
+                                ),
+                              ],
+                            ),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  'Acts of service',
+                                  style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.normal,
+                                      color: isDarkMode
+                                          ? Colors.grey[100]
+                                          : Colors.grey[900]),
+                                ),
+                                Checkbox(
+                                  checkColor: Theme.of(context).brightness ==
+                                          Brightness.light
+                                      ? Colors.white
+                                      : Colors.black,
+                                  activeColor: isDarkMode
+                                      ? Colors.grey[100]
+                                      : Colors.grey[900],
+                                  // isError: true,
+                                  value:
+                                      selectedLoveLanguage == 'acts_of_service',
+                                  side:
+                                      BorderSide(color: Colors.grey, width: 2),
+                                  visualDensity: VisualDensity(
+                                      horizontal: 0, vertical: -4),
+
+                                  onChanged: (value) {
+                                    setState(() {
+                                      selectedLoveLanguage =
+                                          value! ? 'acts_of_service' : '';
+                                    });
+                                  },
+                                ),
+                              ],
+                            ),
                           ],
                         ),
                       ),
@@ -1691,38 +1941,63 @@ class _SwipeFilterPage extends State<SwipeFilterPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          'Interests',
-          style: TextStyle(
-              fontWeight: FontWeight.w700,
-              fontSize: 18,
-              color: isDarkMode ? Colors.grey[100] : Colors.grey[900]),
+        Padding(
+          padding: const EdgeInsets.only(top: 10, left: 10, bottom: 10),
+          child: Text(
+            'Interests',
+            style: TextStyle(
+                fontWeight: FontWeight.w700,
+                fontSize: 18,
+                color: isDarkMode ? Colors.grey[100] : Colors.grey[900]),
+          ),
+        ),
+        // SizedBox(height: 10),
+        // Search Bar
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            decoration: BoxDecoration(
+              color: Colors.grey[100],
+              borderRadius: BorderRadius.circular(30),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withAlpha(10),
+                  blurRadius: 4,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: Row(
+              children: [
+                Icon(Icons.search, color: Colors.grey[600]),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: TextField(
+                    controller: _searchController,
+                    onChanged: (value) => setState(() => _searchQuery = value),
+                    decoration: InputDecoration(
+                      hintText: 'Search interests...',
+                      border: InputBorder.none,
+                      hintStyle: TextStyle(color: Colors.grey[500]),
+                    ),
+                  ),
+                ),
+                if (_searchController.text.isNotEmpty)
+                  GestureDetector(
+                    onTap: () {
+                      setState(() {
+                        _searchController.clear();
+                        _searchQuery = '';
+                      });
+                    },
+                    child: Icon(Icons.close, color: Colors.grey[600]),
+                  ),
+              ],
+            ),
+          ),
         ),
         SizedBox(height: 10),
-        // Search Bar
-        Container(
-          padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          decoration: BoxDecoration(
-            color: isDarkMode ? Colors.grey[900] : Colors.grey[100],
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: TextField(
-            controller: _searchController,
-            onChanged: (value) => setState(() => _searchQuery = value),
-            style: TextStyle(
-              color: isDarkMode ? Colors.white : Colors.black,
-            ),
-            decoration: InputDecoration(
-              hintText: 'Search interests...',
-              border: InputBorder.none,
-              icon: Icon(
-                Icons.search,
-                color: isDarkMode ? Colors.white70 : Colors.black54,
-              ),
-            ),
-          ),
-        ),
-        SizedBox(height: 16),
         // Interests Chips
         Container(
           height: 200, // Adjust height as needed

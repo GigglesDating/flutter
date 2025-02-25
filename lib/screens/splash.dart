@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_frontend/screens/member/liked_accounts.dart';
 import 'barrel.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -40,7 +41,7 @@ class _SplashScreenState extends State<SplashScreen>
 
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(
-          builder: (context) => const NavigationController(),
+          builder: (context) => const SwipeFilterPage(),
         ),
       );
     } catch (e) {

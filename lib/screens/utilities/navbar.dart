@@ -26,31 +26,20 @@ class NavigationControllerState extends State<NavigationController>
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      SystemChrome.setEnabledSystemUIMode(
-        SystemUiMode.immersiveSticky,
-        overlays: [],
-      );
-    });
     _hideSystemBars();
-    // Show nav bar by default
-    _showNavBar = true;
     _startRotationTimer();
   }
 
   void _hideSystemBars() {
     SystemChrome.setEnabledSystemUIMode(
       SystemUiMode.immersiveSticky,
-      overlays: [], // This hides both status bar and navigation bar
+      overlays: [], // Empty array means hide all
     );
-
-    SystemChrome.setSystemUIOverlayStyle(
-      const SystemUiOverlayStyle(
-        statusBarColor: Colors.transparent,
-        systemNavigationBarColor: Colors.transparent,
-        systemNavigationBarDividerColor: Colors.transparent,
-      ),
-    );
+    SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
+      statusBarColor: Colors.transparent,
+      systemNavigationBarColor: Colors.transparent,
+      systemNavigationBarDividerColor: Colors.transparent,
+    ));
   }
 
   void _startRotationTimer() {
@@ -198,13 +187,22 @@ class NavigationControllerState extends State<NavigationController>
       child: GestureDetector(
         onTap: () {
           if (_currentIndex != index) {
-            // Only animate if we're switching to this tab
             setState(() {
-              _rotationValue = _rotationValue + 1; // One full rotation
+              _rotationValue = _rotationValue + 1;
               _currentIndex = index;
             });
 
-            // Reset rotation after animation
+            // Ensure system bars remain hidden
+            SystemChrome.setEnabledSystemUIMode(
+              SystemUiMode.immersiveSticky,
+              overlays: [],
+            );
+            SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
+              statusBarColor: Colors.transparent,
+              systemNavigationBarColor: Colors.transparent,
+              systemNavigationBarDividerColor: Colors.transparent,
+            ));
+
             Future.delayed(const Duration(milliseconds: 500), () {
               if (mounted && _currentIndex == index) {
                 setState(() => _rotationValue = 0);
@@ -248,14 +246,10 @@ class NavigationControllerState extends State<NavigationController>
     return GestureDetector(
       onTap: () {
         if (_currentIndex != index) {
-          setState(() => _currentIndex = index);
-          // Replace instead of push to avoid stack issues
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(
-              builder: (context) => const UserProfile(),
-            ),
-          );
+          setState(() {
+            _currentIndex = index;
+            _showNavBar = true;
+          });
         }
       },
       child: Container(
@@ -339,10 +333,7 @@ class NavigationControllerState extends State<NavigationController>
     (label: 'Snips', builder: () => const SnipTab()),
     (
       label: 'Profile',
-      builder: () => const PlaceholderScreen(
-            screenName: 'Profile',
-            message: 'Profile Screen',
-          ),
+      builder: () => const UserProfile(),
     ),
   ];
 

@@ -4,6 +4,8 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter/services.dart'; // Add this import
 import 'dart:math';
 import 'dart:ui'; // Add this import for ImageFilter
+import 'package:image_picker/image_picker.dart';
+import 'package:image_cropper/image_cropper.dart';
 
 class UserProfile extends StatefulWidget {
   const UserProfile({super.key});
@@ -29,24 +31,26 @@ class _UserProfileState extends State<UserProfile> {
   };
 
   late String userBio;
+  final ImagePicker _picker = ImagePicker();
 
   @override
   void initState() {
     super.initState();
     userBio = userData['bio'];
-    // Hide system bars
-    SystemChrome.setEnabledSystemUIMode(
-      SystemUiMode.immersiveSticky,
-      overlays: [], // Empty array means hide all
-    );
+    SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
+    SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
+      statusBarColor: Colors.transparent,
+      systemNavigationBarColor: Colors.transparent,
+      systemNavigationBarDividerColor: Colors.transparent,
+    ));
   }
 
   @override
   void dispose() {
-    // Restore system bars when leaving screen
+    // Don't restore system bars when leaving screen
     SystemChrome.setEnabledSystemUIMode(
-      SystemUiMode.edgeToEdge,
-      overlays: SystemUiOverlay.values,
+      SystemUiMode.immersiveSticky,
+      overlays: [],
     );
     super.dispose();
   }
@@ -59,6 +63,7 @@ class _UserProfileState extends State<UserProfile> {
     return Scaffold(
       backgroundColor: isDarkMode ? Colors.black : Colors.white,
       extendBodyBehindAppBar: true,
+      extendBody: true,
       body: Stack(
         children: [
           // Blurred background
@@ -108,9 +113,7 @@ class _UserProfileState extends State<UserProfile> {
                       ),
                       // Profile upload button
                       GestureDetector(
-                        onTap: () {
-                          // TODO: Implement profile picture upload
-                        },
+                        onTap: _showImageSourceDialog,
                         child: Container(
                           padding: EdgeInsets.all(size.width * 0.02),
                           decoration: BoxDecoration(
@@ -137,7 +140,6 @@ class _UserProfileState extends State<UserProfile> {
                 _buildProfileHeader(isDarkMode, size),
                 _buildStats(isDarkMode, size),
                 _buildBioSection(isDarkMode, size),
-                _buildSpotifyWidget(isDarkMode, size),
                 _buildContentGrids(isDarkMode, size),
               ],
             ),
@@ -228,7 +230,7 @@ class _UserProfileState extends State<UserProfile> {
               // Heart icon with friend count overlay - positioned half in/out of profile picture
               Positioned(
                 top: size.width *
-                    0.06, // Moved up to overlay profile picture edge
+                    0.76, // Moved up to overlay profile picture edge
                 right: size.width *
                     0.1, // Moved right to overlay profile picture edge
                 child: Stack(
@@ -237,7 +239,7 @@ class _UserProfileState extends State<UserProfile> {
                     Icon(
                       Icons.favorite,
                       color: Colors.red,
-                      size: size.width * 0.11, // Reduced size
+                      size: size.width * 0.13, // Reduced size
                       shadows: [
                         Shadow(
                           color: Colors.black.withAlpha(50),
@@ -711,135 +713,223 @@ class _UserProfileState extends State<UserProfile> {
   }
 
   Widget _buildContentGrids(bool isDarkMode, Size size) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        SizedBox(
-            height: size.height * 0.03), // Increased gap after Spotify section
+    // Define consistent spacing values
+    final sectionSpacing = size.height * 0.01; // Space between major sections
 
-        // Posts Section
-        Container(
-          margin: EdgeInsets.only(
-              bottom:
-                  size.height * 0.005), // Reduced gap between posts and reels
-          height: size.width *
-              0.95, // Increased height to match post card aspect ratio
-          child: ListView.builder(
-            padding: EdgeInsets.symmetric(horizontal: size.width * 0.04),
-            scrollDirection: Axis.horizontal,
-            itemCount: 6,
-            itemBuilder: (context, index) {
-              return Container(
-                margin: EdgeInsets.only(right: size.width * 0.04),
-                width: size.width *
-                    0.65, // Increased width to maintain aspect ratio
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Stack(
-                  children: [
-                    // Post Image with 4:5 aspect ratio
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(19),
-                      child: AspectRatio(
-                        aspectRatio: 4 / 5,
-                        child: Image.asset(
-                          'assets/tempImages/posts/post${index + 1}.png',
-                          fit: BoxFit.cover,
+    return Padding(
+      padding: EdgeInsets.symmetric(vertical: sectionSpacing),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Spotify Section
+          _buildSpotifyWidget(isDarkMode, size),
+
+          SizedBox(height: sectionSpacing), // Consistent spacing
+
+          // Posts Section
+          SizedBox(
+            height: size.width * 0.8,
+            child: ListView.builder(
+              padding: EdgeInsets.symmetric(
+                horizontal: size.width * 0.04,
+              ),
+              scrollDirection: Axis.horizontal,
+              itemCount: 6,
+              itemBuilder: (context, index) {
+                return Container(
+                  margin: EdgeInsets.only(right: size.width * 0.04),
+                  width: size.width * 0.55,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Stack(
+                    children: [
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(19),
+                        child: AspectRatio(
+                          aspectRatio: 4 / 5,
+                          child: Image.asset(
+                            'assets/tempImages/posts/post${index + 1}.png',
+                            fit: BoxFit.cover,
+                          ),
                         ),
                       ),
-                    ),
-                    // Heart and likes count overlay
-                    Positioned(
-                      top: 10,
-                      right: 10,
-                      child: Stack(
-                        alignment: Alignment.center,
-                        children: [
-                          Icon(
-                            Icons.favorite,
-                            color: Colors.red,
-                            size: size.width * 0.07,
-                            shadows: [
-                              Shadow(
-                                color: Colors.black.withAlpha(50),
-                                blurRadius: 10,
-                              ),
-                            ],
-                          ),
-                          Text(
-                            '${Random().nextInt(100)}',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: size.width * 0.02,
-                              fontWeight: FontWeight.bold,
-                              shadows: [
-                                Shadow(
-                                  color: Colors.black.withAlpha(100),
-                                  blurRadius: 4,
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              );
-            },
+                    ],
+                  ),
+                );
+              },
+            ),
           ),
-        ),
 
-        // Reels Section
-        Container(
-          margin: EdgeInsets.zero,
-          height: size.width * 0.85, // Increased height for reels
-          child: ListView.builder(
-            padding: EdgeInsets.symmetric(horizontal: size.width * 0.04),
-            scrollDirection: Axis.horizontal,
-            itemCount: 6,
-            itemBuilder: (context, index) {
-              return Container(
-                margin: EdgeInsets.only(right: size.width * 0.04),
-                width: size.width * 0.4, // Width of reel
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Stack(
-                  children: [
-                    // Reel Thumbnail with 9:16 aspect ratio
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(19),
-                      child: AspectRatio(
-                        aspectRatio: 9 / 16,
-                        child: Image.asset(
-                          'assets/tempImages/reels/reel${index + 1}.png',
-                          fit: BoxFit.cover,
+          SizedBox(
+              height: sectionSpacing), // Consistent spacing_buildContentGrids
+
+          // Reels Section
+          SizedBox(
+            height: size.width * 1.0,
+            child: ListView.builder(
+              padding: EdgeInsets.symmetric(
+                horizontal: size.width * 0.04,
+              ),
+              scrollDirection: Axis.horizontal,
+              itemCount: 6,
+              itemBuilder: (context, index) {
+                return Container(
+                  margin: EdgeInsets.only(right: size.width * 0.04),
+                  width: size.width * 0.45,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Stack(
+                    children: [
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(19),
+                        child: AspectRatio(
+                          aspectRatio: 9 / 16,
+                          child: Image.asset(
+                            'assets/tempImages/reels/reel${index + 1}.png',
+                            fit: BoxFit.cover,
+                          ),
                         ),
                       ),
-                    ),
-                    // Play icon overlay
-                    Center(
-                      child: Icon(
-                        Icons.play_circle_outline,
-                        color: Colors.white,
-                        size: size.width * 0.08,
-                        shadows: [
-                          Shadow(
-                            color: Colors.black.withAlpha(100),
-                            blurRadius: 8,
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              );
-            },
+                    ],
+                  ),
+                );
+              },
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
+  }
+
+  Future<void> _showImageSourceDialog() async {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (BuildContext context) {
+        final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+        return Container(
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: isDarkMode ? Colors.black : Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(25)),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                'Choose Image Source',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: isDarkMode ? Colors.white : Colors.black,
+                ),
+              ),
+              const SizedBox(height: 20),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  _imageSourceOption(
+                    icon: Icons.camera_alt,
+                    title: 'Camera',
+                    isDarkMode: isDarkMode,
+                    onTap: () {
+                      Navigator.pop(context);
+                      _pickImage(ImageSource.camera);
+                    },
+                  ),
+                  _imageSourceOption(
+                    icon: Icons.photo_library,
+                    title: 'Gallery',
+                    isDarkMode: isDarkMode,
+                    onTap: () {
+                      Navigator.pop(context);
+                      _pickImage(ImageSource.gallery);
+                    },
+                  ),
+                ],
+              ),
+              const SizedBox(height: 20),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _imageSourceOption({
+    required IconData icon,
+    required String title,
+    required bool isDarkMode,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: isDarkMode
+                  ? Colors.white.withAlpha(38)
+                  : Colors.black.withAlpha(26),
+            ),
+            child: Icon(
+              icon,
+              size: 32,
+              color: isDarkMode ? Colors.white : Colors.black,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            title,
+            style: TextStyle(
+              color: isDarkMode ? Colors.white : Colors.black,
+              fontSize: 16,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _pickImage(ImageSource source) async {
+    try {
+      final XFile? image = await _picker.pickImage(source: source);
+      if (image != null) {
+        final croppedFile = await ImageCropper().cropImage(
+          sourcePath: image.path,
+          aspectRatio: const CropAspectRatio(ratioX: 1, ratioY: 1),
+          compressQuality: 90,
+          uiSettings: [
+            AndroidUiSettings(
+              toolbarTitle: 'Crop Image',
+              toolbarColor: Colors.black,
+              toolbarWidgetColor: Colors.white,
+              initAspectRatio: CropAspectRatioPreset.square,
+              lockAspectRatio: true,
+              hideBottomControls: true,
+            ),
+            IOSUiSettings(
+              title: 'Crop Image',
+              aspectRatioLockEnabled: true,
+              resetAspectRatioEnabled: false,
+              minimumAspectRatio: 1.0,
+            ),
+          ],
+        );
+
+        if (croppedFile != null) {
+          setState(() {
+            userData['profileImage'] = croppedFile.path;
+          });
+        }
+      }
+    } catch (error) {
+      debugPrint('Error picking/cropping image: $error');
+    }
   }
 }

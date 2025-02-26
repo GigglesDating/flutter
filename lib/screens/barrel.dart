@@ -44,3 +44,4 @@ export 'member/notifications.dart';
 export 'utilities/filters.dart';
 export 'utilities/report.dart';
 export 'member/user_profile.dart';
+export 'submenus/settings/subpages/likes.dart';

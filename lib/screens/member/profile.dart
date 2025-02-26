@@ -232,36 +232,46 @@ class _ProfileState extends State<Profile> {
                     0.76, // Moved up to overlay profile picture edge
                 right: size.width *
                     0.1, // Moved right to overlay profile picture edge
-                child: Stack(
-                  alignment: Alignment.center,
-                  children: [
-                    Icon(
-                      Icons.favorite,
-                      color: Colors.red,
-                      size: size.width * 0.13, // Reduced size
-                      shadows: [
-                        Shadow(
-                          color: Colors.black.withAlpha(50),
-                          blurRadius: 10,
-                        ),
-                      ],
-                    ),
-                    Text(
-                      '${userData['friendCount']}',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: size.width *
-                            0.035, // Adjusted text size to match smaller heart
-                        fontWeight: FontWeight.bold,
+                child: GestureDetector(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const LikedAccounts(),
+                      ),
+                    );
+                  },
+                  child: Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      Icon(
+                        Icons.favorite,
+                        color: Colors.red,
+                        size: size.width * 0.13, // Reduced size
                         shadows: [
                           Shadow(
-                            color: Colors.black.withAlpha(100),
-                            blurRadius: 4,
+                            color: Colors.black.withAlpha(50),
+                            blurRadius: 10,
                           ),
                         ],
                       ),
-                    ),
-                  ],
+                      Text(
+                        '${userData['friendCount']}',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: size.width *
+                              0.035, // Adjusted text size to match smaller heart
+                          fontWeight: FontWeight.bold,
+                          shadows: [
+                            Shadow(
+                              color: Colors.black.withAlpha(100),
+                              blurRadius: 4,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ],

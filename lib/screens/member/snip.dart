@@ -324,7 +324,7 @@ class _SnipTabState extends State<SnipTab>
                             Container(
                               color: Colors.black,
                               child: Center(
-                                child: Container(
+                                child: SizedBox(
                                   width: MediaQuery.of(context).size.width,
                                   height: MediaQuery.of(context).size.height,
                                   child: FittedBox(
@@ -605,7 +605,7 @@ class _SnipTabState extends State<SnipTab>
       backgroundColor: Colors.transparent,
       barrierColor:
           Colors.black.withValues(alpha: 128, red: 0, green: 0, blue: 0),
-      builder: (context) => ReportSheet(
+      builder: (context) => ContentReportSheet(
         isDarkMode: isDarkMode,
         screenWidth: screenWidth,
       ),
@@ -621,18 +621,18 @@ class _SnipTabState extends State<SnipTab>
     });
   }
 
-  double _getVideoScale(Size videoSize, Size screenSize) {
-    final videoRatio = videoSize.width / videoSize.height;
-    final screenRatio = screenSize.width / screenSize.height;
+  // double _getVideoScale(Size videoSize, Size screenSize) {
+  //   final videoRatio = videoSize.width / videoSize.height;
+  //   final screenRatio = screenSize.width / screenSize.height;
 
-    // If video is in landscape and we want portrait
-    if (videoRatio > 1) {
-      // Scale based on height to force portrait
-      return screenSize.height / (videoSize.width / screenRatio);
-    }
+  //   // If video is in landscape and we want portrait
+  //   if (videoRatio > 1) {
+  //     // Scale based on height to force portrait
+  //     return screenSize.height / (videoSize.width / screenRatio);
+  //   }
 
-    // If video is already in portrait
-    final scale = screenRatio / videoRatio;
-    return scale > 1 ? scale : 1.0;
-  }
+  //   // If video is already in portrait
+  //   final scale = screenRatio / videoRatio;
+  //   return scale > 1 ? scale : 1.0;
+  // }
 }

@@ -387,7 +387,7 @@ class _SwipeScreenState extends State<SwipeScreen>
                   context: context,
                   isScrollControlled: true,
                   backgroundColor: Colors.transparent,
-                  builder: (context) => ReportSheet(
+                  builder: (context) => UserReportSheet(
                     isDarkMode: Theme.of(context).brightness == Brightness.dark,
                     screenWidth: MediaQuery.of(context).size.width,
                   ),

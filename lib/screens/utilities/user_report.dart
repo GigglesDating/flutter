@@ -3,23 +3,21 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 
-class ReportSheet extends StatefulWidget {
+class UserReportSheet extends StatefulWidget {
   final bool isDarkMode;
   final double screenWidth;
 
-  const ReportSheet({
+  const UserReportSheet({
     super.key,
     required this.isDarkMode,
     required this.screenWidth,
   });
 
   @override
-  State<ReportSheet> createState() => _ReportSheetState();
+  State<UserReportSheet> createState() => _UserReportSheetState();
 }
 
-class _ReportSheetState extends State<ReportSheet> {
-  bool isDatingEveryOne = false;
-  bool justdontlikeit = false;
+class _UserReportSheetState extends State<UserReportSheet> {
   bool bullying = false;
   bool selfinjury = false;
   bool nudity = false;
@@ -29,6 +27,7 @@ class _ReportSheetState extends State<ReportSheet> {
   bool sellingrestricteditems = false;
   bool violenceorhate = false;
   bool userunderage = false;
+  bool justdontlikeit = false;
 
   final WidgetStateProperty<Color?> trackColor =
       WidgetStateProperty.resolveWith<Color?>(
@@ -144,43 +143,6 @@ class _ReportSheetState extends State<ReportSheet> {
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               Text(
-                                "I just don't like it",
-                                style: TextStyle(
-                                    color: widget.isDarkMode
-                                        ? Colors.grey[100]
-                                        : Colors.grey[900],
-                                    fontWeight: FontWeight.w500),
-                              ),
-                              Checkbox(
-                                checkColor: Theme.of(context).brightness ==
-                                        Brightness.light
-                                    ? Colors.white
-                                    : Colors.black,
-                                activeColor: widget.isDarkMode
-                                    ? Colors.grey[100]
-                                    : Colors.grey[900],
-                                // isError: true,
-                                value: justdontlikeit,
-                                side: BorderSide(
-                                    color: widget.isDarkMode
-                                        ? Colors.white
-                                        : Colors.black,
-                                    width: 1),
-                                visualDensity:
-                                    VisualDensity(horizontal: 0, vertical: -4),
-
-                                onChanged: (value) {
-                                  setState(() {
-                                    justdontlikeit = value!;
-                                  });
-                                },
-                              ),
-                            ],
-                          ),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text(
                                 'Bullying or unwanted contact',
                                 style: TextStyle(
                                     color: widget.isDarkMode
@@ -218,7 +180,7 @@ class _ReportSheetState extends State<ReportSheet> {
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               Text(
-                                'Suicuide,self-injury',
+                                'Suicide,self-injury',
                                 style: TextStyle(
                                     color: widget.isDarkMode
                                         ? Colors.grey[100]
@@ -532,7 +494,7 @@ class _ReportSheetState extends State<ReportSheet> {
                             onPressed: () {
                               Navigator.pop(context);
                               Fluttertoast.showToast(
-                                  msg: "Blocked successfully",
+                                  msg: "Blocked",
                                   toastLength: Toast.LENGTH_SHORT,
                                   gravity: ToastGravity.CENTER,
                                   timeInSecForIosWeb: 1,
@@ -572,7 +534,8 @@ class _ReportSheetState extends State<ReportSheet> {
                                 ? () {
                                     Navigator.pop(context);
                                     Fluttertoast.showToast(
-                                        msg: "Reported successfully",
+                                        msg:
+                                            "Thank you for your valuable feedback, this will help us keep our community clean.",
                                         toastLength: Toast.LENGTH_SHORT,
                                         gravity: ToastGravity.CENTER,
                                         timeInSecForIosWeb: 1,
@@ -597,7 +560,7 @@ class _ReportSheetState extends State<ReportSheet> {
                                             onPressed: () {
                                               Navigator.pop(context);
                                               Fluttertoast.showToast(
-                                                  msg: "Blocked successfully",
+                                                  msg: "Blocked",
                                                   toastLength:
                                                       Toast.LENGTH_SHORT,
                                                   gravity: ToastGravity.CENTER,

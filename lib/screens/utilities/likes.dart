@@ -245,7 +245,7 @@ class _SwipeFilterPage extends State<LikedAccounts> {
                           background: Container(
                             // Right swipe background
                             decoration: BoxDecoration(
-                              color: Colors.green.withOpacity(0.2),
+                              color: Colors.green.withAlpha(25),
                               borderRadius: BorderRadius.circular(20),
                             ),
                             child: const Align(
@@ -260,7 +260,7 @@ class _SwipeFilterPage extends State<LikedAccounts> {
                           secondaryBackground: Container(
                             // Left swipe background
                             decoration: BoxDecoration(
-                              color: Colors.red.withOpacity(0.2),
+                              color: Colors.red.withAlpha(25),
                               borderRadius: BorderRadius.circular(20),
                             ),
                             child: const Align(
@@ -294,7 +294,7 @@ class _SwipeFilterPage extends State<LikedAccounts> {
                                     padding: const EdgeInsets.symmetric(
                                         horizontal: 8, vertical: 4),
                                     decoration: BoxDecoration(
-                                      color: Colors.black.withOpacity(0.5),
+                                      color: Colors.black.withAlpha(100),
                                       borderRadius: BorderRadius.circular(10),
                                     ),
                                     child: Text(
@@ -355,7 +355,7 @@ class _SwipeFilterPage extends State<LikedAccounts> {
                         },
                         background: Container(
                           decoration: BoxDecoration(
-                            color: Colors.green.withOpacity(0.2),
+                            color: Colors.green.withAlpha(25),
                             borderRadius: BorderRadius.circular(20),
                           ),
                           child: const Align(
@@ -368,7 +368,7 @@ class _SwipeFilterPage extends State<LikedAccounts> {
                         ),
                         secondaryBackground: Container(
                           decoration: BoxDecoration(
-                            color: Colors.red.withOpacity(0.2),
+                            color: Colors.red.withAlpha(25),
                             borderRadius: BorderRadius.circular(20),
                           ),
                           child: const Align(

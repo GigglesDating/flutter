@@ -498,7 +498,7 @@ class _PostCardState extends State<PostCard>
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
-      builder: (context) => ReportSheet(
+      builder: (context) => ContentReportSheet(
         isDarkMode: isDarkMode,
         screenWidth: screenWidth,
       ),

@@ -40,7 +40,7 @@ class _SplashScreenState extends State<SplashScreen>
 
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(
-          builder: (context) => const FAQScreen(),
+          builder: (context) => const NavigationController(),
         ),
       );
     } catch (e) {

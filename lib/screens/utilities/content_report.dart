@@ -18,9 +18,6 @@ class ContentReportSheet extends StatefulWidget {
 }
 
 class _ContentReportSheetState extends State<ContentReportSheet> {
-  // bool isDatingEveryOne = false;
-  bool justdontlikeit = false;
-  bool threatening = false;
   bool bullying = false;
   bool selfinjury = false;
   bool nudity = false;
@@ -29,7 +26,9 @@ class _ContentReportSheetState extends State<ContentReportSheet> {
   bool pretendingtobesomeone = false;
   bool sellingrestricteditems = false;
   bool violenceorhate = false;
-  // bool userunderage = false;
+  bool userunderage = false;
+  bool justdontlikeit = false;
+  bool threatening = false;
 
   final WidgetStateProperty<Color?> trackColor =
       WidgetStateProperty.resolveWith<Color?>(
@@ -64,11 +63,14 @@ class _ContentReportSheetState extends State<ContentReportSheet> {
         falseinformation ||
         pretendingtobesomeone ||
         sellingrestricteditems ||
-        violenceorhate;
+        violenceorhate ||
+        userunderage;
   }
 
   @override
   Widget build(BuildContext context) {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    final size = MediaQuery.of(context).size;
     return SizedBox(
       height: MediaQuery.of(context).size.height * 0.50,
       child: ClipRRect(
@@ -107,7 +109,7 @@ class _ContentReportSheetState extends State<ContentReportSheet> {
                     ),
                   ),
                   SizedBox(
-                    height: 20,
+                    height: 24,
                   ),
                   Text(
                     ' Report / Block',
@@ -140,397 +142,485 @@ class _ContentReportSheetState extends State<ContentReportSheet> {
                           borderRadius: BorderRadius.circular(20)),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
-                        spacing: 2,
                         children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text(
-                                "I just don't like it",
-                                style: TextStyle(
-                                    color: widget.isDarkMode
-                                        ? Colors.grey[100]
-                                        : Colors.grey[900],
-                                    fontWeight: FontWeight.w500),
-                              ),
-                              Checkbox(
-                                checkColor: Theme.of(context).brightness ==
-                                        Brightness.light
-                                    ? Colors.white
-                                    : Colors.black,
-                                activeColor: widget.isDarkMode
-                                    ? Colors.grey[100]
-                                    : Colors.grey[900],
-                                // isError: true,
-                                value: justdontlikeit,
-                                side: BorderSide(
-                                    color: widget.isDarkMode
-                                        ? Colors.white
-                                        : Colors.black,
-                                    width: 1),
-                                visualDensity:
-                                    VisualDensity(horizontal: 0, vertical: -4),
-
-                                onChanged: (value) {
-                                  setState(() {
-                                    justdontlikeit = value!;
-                                  });
-                                },
-                              ),
-                            ],
+                          GestureDetector(
+                            onTap: () {
+                              setState(() {
+                                justdontlikeit = !justdontlikeit;
+                              });
+                            },
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  "I just don't like it",
+                                  style: TextStyle(
+                                      color: widget.isDarkMode
+                                          ? Colors.grey[100]
+                                          : Colors.grey[900],
+                                      fontWeight: FontWeight.w700),
+                                ),
+                                Checkbox(
+                                  checkColor: Theme.of(context).brightness ==
+                                          Brightness.light
+                                      ? Colors.white
+                                      : Colors.black,
+                                  activeColor: widget.isDarkMode
+                                      ? Colors.grey[100]
+                                      : Colors.grey[900],
+                                  value: justdontlikeit,
+                                  side: BorderSide(
+                                      color: widget.isDarkMode
+                                          ? Colors.white
+                                          : Colors.black,
+                                      width: 1),
+                                  visualDensity: VisualDensity(
+                                      horizontal: 0, vertical: -4),
+                                  onChanged: (value) {
+                                    setState(() {
+                                      justdontlikeit = value!;
+                                    });
+                                  },
+                                ),
+                              ],
+                            ),
                           ),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text(
-                                "Threatening to share do\n sharing nude images",
-                                style: TextStyle(
-                                    color: widget.isDarkMode
-                                        ? Colors.grey[100]
-                                        : Colors.grey[900],
-                                    fontWeight: FontWeight.w500),
-                              ),
-                              Checkbox(
-                                checkColor: Theme.of(context).brightness ==
-                                        Brightness.light
-                                    ? Colors.white
-                                    : Colors.black,
-                                activeColor: widget.isDarkMode
-                                    ? Colors.grey[100]
-                                    : Colors.grey[900],
-                                // isError: true,
-                                value: threatening,
-                                side: BorderSide(
-                                    color: widget.isDarkMode
-                                        ? Colors.white
-                                        : Colors.black,
-                                    width: 1),
-                                visualDensity:
-                                    VisualDensity(horizontal: 0, vertical: -4),
 
-                                onChanged: (value) {
-                                  setState(() {
-                                    threatening = value!;
-                                  });
-                                },
-                              ),
-                            ],
+                          GestureDetector(
+                            onTap: () {
+                              setState(() {
+                                threatening = !threatening;
+                              });
+                            },
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  'Threatening to share or \nsharing nude images',
+                                  style: TextStyle(
+                                      color: widget.isDarkMode
+                                          ? Colors.grey[100]
+                                          : Colors.grey[900],
+                                      fontWeight: FontWeight.w700),
+                                ),
+                                Checkbox(
+                                  checkColor: Theme.of(context).brightness ==
+                                          Brightness.light
+                                      ? Colors.white
+                                      : Colors.black,
+                                  activeColor: widget.isDarkMode
+                                      ? Colors.grey[100]
+                                      : Colors.grey[900],
+                                  value: threatening,
+                                  side: BorderSide(
+                                      color: widget.isDarkMode
+                                          ? Colors.white
+                                          : Colors.black,
+                                      width: 1),
+                                  visualDensity: VisualDensity(
+                                      horizontal: 0, vertical: -4),
+                                  onChanged: (value) {
+                                    setState(() {
+                                      threatening = value!;
+                                    });
+                                  },
+                                ),
+                              ],
+                            ),
                           ),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text(
-                                'Bullying or unwanted contact',
-                                style: TextStyle(
-                                    color: widget.isDarkMode
-                                        ? Colors.grey[100]
-                                        : Colors.grey[900],
-                                    fontWeight: FontWeight.w500),
-                              ),
-                              Checkbox(
-                                checkColor: Theme.of(context).brightness ==
-                                        Brightness.light
-                                    ? Colors.white
-                                    : Colors.black,
-                                activeColor: widget.isDarkMode
-                                    ? Colors.grey[100]
-                                    : Colors.grey[900],
-                                // isError: true,
-                                value: bullying,
-                                side: BorderSide(
-                                    color: widget.isDarkMode
-                                        ? Colors.white
-                                        : Colors.black,
-                                    width: 1),
-                                visualDensity:
-                                    VisualDensity(horizontal: 0, vertical: -4),
-
-                                onChanged: (value) {
-                                  setState(() {
-                                    bullying = value!;
-                                  });
-                                },
-                              ),
-                            ],
+                          GestureDetector(
+                            onTap: () {
+                              setState(() {
+                                bullying = !bullying;
+                              });
+                            },
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  'Bullying or harassment',
+                                  style: TextStyle(
+                                      color: widget.isDarkMode
+                                          ? Colors.grey[100]
+                                          : Colors.grey[900],
+                                      fontWeight: FontWeight.w700),
+                                ),
+                                Checkbox(
+                                  checkColor: Theme.of(context).brightness ==
+                                          Brightness.light
+                                      ? Colors.white
+                                      : Colors.black,
+                                  activeColor: widget.isDarkMode
+                                      ? Colors.grey[100]
+                                      : Colors.grey[900],
+                                  value: bullying,
+                                  side: BorderSide(
+                                      color: widget.isDarkMode
+                                          ? Colors.white
+                                          : Colors.black,
+                                      width: 1),
+                                  visualDensity: VisualDensity(
+                                      horizontal: 0, vertical: -4),
+                                  onChanged: (value) {
+                                    setState(() {
+                                      bullying = value!;
+                                    });
+                                  },
+                                ),
+                              ],
+                            ),
                           ),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text(
-                                'Suicide,self-injury',
-                                style: TextStyle(
-                                    color: widget.isDarkMode
-                                        ? Colors.grey[100]
-                                        : Colors.grey[900],
-                                    fontWeight: FontWeight.w500),
-                              ),
-                              Checkbox(
-                                checkColor: Theme.of(context).brightness ==
-                                        Brightness.light
-                                    ? Colors.white
-                                    : Colors.black,
-                                activeColor: widget.isDarkMode
-                                    ? Colors.grey[100]
-                                    : Colors.grey[900],
-                                // isError: true,
-                                value: selfinjury,
-                                side: BorderSide(
-                                    color: widget.isDarkMode
-                                        ? Colors.white
-                                        : Colors.black,
-                                    width: 1),
-                                visualDensity:
-                                    VisualDensity(horizontal: 0, vertical: -4),
-
-                                onChanged: (value) {
-                                  setState(() {
-                                    selfinjury = value!;
-                                  });
-                                },
-                              ),
-                            ],
+                          GestureDetector(
+                            onTap: () {
+                              setState(() {
+                                selfinjury = !selfinjury;
+                              });
+                            },
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  'Suicide,self-injury',
+                                  style: TextStyle(
+                                      color: widget.isDarkMode
+                                          ? Colors.grey[100]
+                                          : Colors.grey[900],
+                                      fontWeight: FontWeight.w700),
+                                ),
+                                Checkbox(
+                                  checkColor: Theme.of(context).brightness ==
+                                          Brightness.light
+                                      ? Colors.white
+                                      : Colors.black,
+                                  activeColor: widget.isDarkMode
+                                      ? Colors.grey[100]
+                                      : Colors.grey[900],
+                                  value: selfinjury,
+                                  side: BorderSide(
+                                      color: widget.isDarkMode
+                                          ? Colors.white
+                                          : Colors.black,
+                                      width: 1),
+                                  visualDensity: VisualDensity(
+                                      horizontal: 0, vertical: -4),
+                                  onChanged: (value) {
+                                    setState(() {
+                                      selfinjury = value!;
+                                    });
+                                  },
+                                ),
+                              ],
+                            ),
                           ),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text(
-                                'Nudity or sexuality',
-                                style: TextStyle(
-                                    color: widget.isDarkMode
-                                        ? Colors.grey[100]
-                                        : Colors.grey[900],
-                                    fontWeight: FontWeight.w500),
-                              ),
-                              Checkbox(
-                                checkColor: Theme.of(context).brightness ==
-                                        Brightness.light
-                                    ? Colors.white
-                                    : Colors.black,
-                                activeColor: widget.isDarkMode
-                                    ? Colors.grey[100]
-                                    : Colors.grey[900],
-                                // isError: true,
-                                value: nudity,
-                                side: BorderSide(
-                                    color: widget.isDarkMode
-                                        ? Colors.white
-                                        : Colors.black,
-                                    width: 1),
-                                visualDensity:
-                                    VisualDensity(horizontal: 0, vertical: -4),
-
-                                onChanged: (value) {
-                                  setState(() {
-                                    nudity = value!;
-                                  });
-                                },
-                              ),
-                            ],
+                          GestureDetector(
+                            onTap: () {
+                              setState(() {
+                                nudity = !nudity;
+                              });
+                            },
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  'Nudity or sexuality',
+                                  style: TextStyle(
+                                      color: widget.isDarkMode
+                                          ? Colors.grey[100]
+                                          : Colors.grey[900],
+                                      fontWeight: FontWeight.w700),
+                                ),
+                                Checkbox(
+                                  checkColor: Theme.of(context).brightness ==
+                                          Brightness.light
+                                      ? Colors.white
+                                      : Colors.black,
+                                  activeColor: widget.isDarkMode
+                                      ? Colors.grey[100]
+                                      : Colors.grey[900],
+                                  value: nudity,
+                                  side: BorderSide(
+                                      color: widget.isDarkMode
+                                          ? Colors.white
+                                          : Colors.black,
+                                      width: 1),
+                                  visualDensity: VisualDensity(
+                                      horizontal: 0, vertical: -4),
+                                  onChanged: (value) {
+                                    setState(() {
+                                      nudity = value!;
+                                    });
+                                  },
+                                ),
+                              ],
+                            ),
                           ),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text(
-                                'Scam, fruad or spam',
-                                style: TextStyle(
-                                    color: widget.isDarkMode
-                                        ? Colors.grey[100]
-                                        : Colors.grey[900],
-                                    fontWeight: FontWeight.w500),
-                              ),
-                              Checkbox(
-                                checkColor: Theme.of(context).brightness ==
-                                        Brightness.light
-                                    ? Colors.white
-                                    : Colors.black,
-                                activeColor: widget.isDarkMode
-                                    ? Colors.grey[100]
-                                    : Colors.grey[900],
-                                // isError: true,
-                                value: scam,
-                                side: BorderSide(
-                                    color: widget.isDarkMode
-                                        ? Colors.white
-                                        : Colors.black,
-                                    width: 1),
-                                visualDensity:
-                                    VisualDensity(horizontal: 0, vertical: -4),
-
-                                onChanged: (value) {
-                                  setState(() {
-                                    scam = value!;
-                                  });
-                                },
-                              ),
-                            ],
+                          GestureDetector(
+                            onTap: () {
+                              setState(() {
+                                scam = !scam;
+                              });
+                            },
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  'Scam, fruad or spam',
+                                  style: TextStyle(
+                                      color: widget.isDarkMode
+                                          ? Colors.grey[100]
+                                          : Colors.grey[900],
+                                      fontWeight: FontWeight.w700),
+                                ),
+                                Checkbox(
+                                  checkColor: Theme.of(context).brightness ==
+                                          Brightness.light
+                                      ? Colors.white
+                                      : Colors.black,
+                                  activeColor: widget.isDarkMode
+                                      ? Colors.grey[100]
+                                      : Colors.grey[900],
+                                  value: scam,
+                                  side: BorderSide(
+                                      color: widget.isDarkMode
+                                          ? Colors.white
+                                          : Colors.black,
+                                      width: 1),
+                                  visualDensity: VisualDensity(
+                                      horizontal: 0, vertical: -4),
+                                  onChanged: (value) {
+                                    setState(() {
+                                      scam = value!;
+                                    });
+                                  },
+                                ),
+                              ],
+                            ),
                           ),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text(
-                                'False information',
-                                style: TextStyle(
-                                    color: widget.isDarkMode
-                                        ? Colors.grey[100]
-                                        : Colors.grey[900],
-                                    fontWeight: FontWeight.w500),
-                              ),
-                              Checkbox(
-                                checkColor: Theme.of(context).brightness ==
-                                        Brightness.light
-                                    ? Colors.white
-                                    : Colors.black,
-                                activeColor: widget.isDarkMode
-                                    ? Colors.grey[100]
-                                    : Colors.grey[900],
-                                // isError: true,
-                                value: falseinformation,
-                                side: BorderSide(
-                                    color: widget.isDarkMode
-                                        ? Colors.white
-                                        : Colors.black,
-                                    width: 1),
-                                visualDensity:
-                                    VisualDensity(horizontal: 0, vertical: -4),
-
-                                onChanged: (value) {
-                                  setState(() {
-                                    falseinformation = value!;
-                                  });
-                                },
-                              ),
-                            ],
+                          GestureDetector(
+                            onTap: () {
+                              setState(() {
+                                falseinformation = !falseinformation;
+                              });
+                            },
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  'Promoting false information',
+                                  style: TextStyle(
+                                      color: widget.isDarkMode
+                                          ? Colors.grey[100]
+                                          : Colors.grey[900],
+                                      fontWeight: FontWeight.w700),
+                                ),
+                                Checkbox(
+                                  checkColor: Theme.of(context).brightness ==
+                                          Brightness.light
+                                      ? Colors.white
+                                      : Colors.black,
+                                  activeColor: widget.isDarkMode
+                                      ? Colors.grey[100]
+                                      : Colors.grey[900],
+                                  value: falseinformation,
+                                  side: BorderSide(
+                                      color: widget.isDarkMode
+                                          ? Colors.white
+                                          : Colors.black,
+                                      width: 1),
+                                  visualDensity: VisualDensity(
+                                      horizontal: 0, vertical: -4),
+                                  onChanged: (value) {
+                                    setState(() {
+                                      falseinformation = value!;
+                                    });
+                                  },
+                                ),
+                              ],
+                            ),
                           ),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text(
-                                'Pretending to be someone else',
-                                style: TextStyle(
-                                    color: widget.isDarkMode
-                                        ? Colors.grey[100]
-                                        : Colors.grey[900],
-                                    fontWeight: FontWeight.w500),
-                              ),
-                              Checkbox(
-                                checkColor: Theme.of(context).brightness ==
-                                        Brightness.light
-                                    ? Colors.white
-                                    : Colors.black,
-                                activeColor: widget.isDarkMode
-                                    ? Colors.grey[100]
-                                    : Colors.grey[900],
-                                // isError: true,
-                                value: pretendingtobesomeone,
-                                side: BorderSide(
-                                    color: widget.isDarkMode
-                                        ? Colors.white
-                                        : Colors.black,
-                                    width: 1),
-                                visualDensity:
-                                    VisualDensity(horizontal: 0, vertical: -4),
-
-                                onChanged: (value) {
-                                  setState(() {
-                                    pretendingtobesomeone = value!;
-                                  });
-                                },
-                              ),
-                            ],
+                          GestureDetector(
+                            onTap: () {
+                              setState(() {
+                                pretendingtobesomeone = !pretendingtobesomeone;
+                              });
+                            },
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  'Pretending to be someone else',
+                                  style: TextStyle(
+                                      color: widget.isDarkMode
+                                          ? Colors.grey[100]
+                                          : Colors.grey[900],
+                                      fontWeight: FontWeight.w700),
+                                ),
+                                Checkbox(
+                                  checkColor: Theme.of(context).brightness ==
+                                          Brightness.light
+                                      ? Colors.white
+                                      : Colors.black,
+                                  activeColor: widget.isDarkMode
+                                      ? Colors.grey[100]
+                                      : Colors.grey[900],
+                                  value: pretendingtobesomeone,
+                                  side: BorderSide(
+                                      color: widget.isDarkMode
+                                          ? Colors.white
+                                          : Colors.black,
+                                      width: 1),
+                                  visualDensity: VisualDensity(
+                                      horizontal: 0, vertical: -4),
+                                  onChanged: (value) {
+                                    setState(() {
+                                      pretendingtobesomeone = value!;
+                                    });
+                                  },
+                                ),
+                              ],
+                            ),
                           ),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text(
-                                'Selling or promoting restricted items',
-                                style: TextStyle(
-                                    color: widget.isDarkMode
-                                        ? Colors.grey[100]
-                                        : Colors.grey[900],
-                                    fontWeight: FontWeight.w500),
-                              ),
-                              Checkbox(
-                                checkColor: Theme.of(context).brightness ==
-                                        Brightness.light
-                                    ? Colors.white
-                                    : Colors.black,
-                                activeColor: widget.isDarkMode
-                                    ? Colors.grey[100]
-                                    : Colors.grey[900],
-                                // isError: true,
-                                value: sellingrestricteditems,
-                                side: BorderSide(
-                                    color: widget.isDarkMode
-                                        ? Colors.white
-                                        : Colors.black,
-                                    width: 1),
-                                visualDensity:
-                                    VisualDensity(horizontal: 0, vertical: -4),
-
-                                onChanged: (value) {
-                                  setState(() {
-                                    sellingrestricteditems = value!;
-                                  });
-                                },
-                              ),
-                            ],
+                          GestureDetector(
+                            onTap: () {
+                              setState(() {
+                                sellingrestricteditems =
+                                    !sellingrestricteditems;
+                              });
+                            },
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  'Selling or promoting restricted items',
+                                  style: TextStyle(
+                                      color: widget.isDarkMode
+                                          ? Colors.grey[100]
+                                          : Colors.grey[900],
+                                      fontWeight: FontWeight.w700),
+                                ),
+                                Checkbox(
+                                  checkColor: Theme.of(context).brightness ==
+                                          Brightness.light
+                                      ? Colors.white
+                                      : Colors.black,
+                                  activeColor: widget.isDarkMode
+                                      ? Colors.grey[100]
+                                      : Colors.grey[900],
+                                  value: sellingrestricteditems,
+                                  side: BorderSide(
+                                      color: widget.isDarkMode
+                                          ? Colors.white
+                                          : Colors.black,
+                                      width: 1),
+                                  visualDensity: VisualDensity(
+                                      horizontal: 0, vertical: -4),
+                                  onChanged: (value) {
+                                    setState(() {
+                                      sellingrestricteditems = value!;
+                                    });
+                                  },
+                                ),
+                              ],
+                            ),
                           ),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text(
-                                'Violence, hate or exploitation',
-                                style: TextStyle(
-                                    color: widget.isDarkMode
-                                        ? Colors.grey[100]
-                                        : Colors.grey[900],
-                                    fontWeight: FontWeight.w500),
-                              ),
-                              Checkbox(
-                                checkColor: Theme.of(context).brightness ==
-                                        Brightness.light
-                                    ? Colors.white
-                                    : Colors.black,
-                                activeColor: widget.isDarkMode
-                                    ? Colors.grey[100]
-                                    : Colors.grey[900],
-                                // isError: true,
-                                value: violenceorhate,
-                                side: BorderSide(
-                                    color: widget.isDarkMode
-                                        ? Colors.white
-                                        : Colors.black,
-                                    width: 1),
-                                visualDensity:
-                                    VisualDensity(horizontal: 0, vertical: -4),
-
-                                onChanged: (value) {
-                                  setState(() {
-                                    violenceorhate = value!;
-                                  });
-                                },
-                              ),
-                            ],
+                          GestureDetector(
+                            onTap: () {
+                              setState(() {
+                                violenceorhate = !violenceorhate;
+                              });
+                            },
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  'Violence, hate or exploitation',
+                                  style: TextStyle(
+                                      color: widget.isDarkMode
+                                          ? Colors.grey[100]
+                                          : Colors.grey[900],
+                                      fontWeight: FontWeight.w700),
+                                ),
+                                Checkbox(
+                                  checkColor: Theme.of(context).brightness ==
+                                          Brightness.light
+                                      ? Colors.white
+                                      : Colors.black,
+                                  activeColor: widget.isDarkMode
+                                      ? Colors.grey[100]
+                                      : Colors.grey[900],
+                                  value: violenceorhate,
+                                  side: BorderSide(
+                                      color: widget.isDarkMode
+                                          ? Colors.white
+                                          : Colors.black,
+                                      width: 1),
+                                  visualDensity: VisualDensity(
+                                      horizontal: 0, vertical: -4),
+                                  onChanged: (value) {
+                                    setState(() {
+                                      violenceorhate = value!;
+                                    });
+                                  },
+                                ),
+                              ],
+                            ),
                           ),
+                          // GestureDetector(
+                          //   onTap: () {
+                          //     setState(() {
+                          //       userunderage = !userunderage;
+                          //     });
+                          //   },
+                          //   child: Row(
+                          //     mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          //     children: [
+                          //       Text(
+                          //         'The user maybe under 18 years',
+                          //         style: TextStyle(
+                          //             color: widget.isDarkMode
+                          //                 ? Colors.grey[100]
+                          //                 : Colors.grey[900],
+                          //             fontWeight: FontWeight.w500),
+                          //       ),
+                          //       Checkbox(
+                          //         checkColor: Theme.of(context).brightness ==
+                          //                 Brightness.light
+                          //             ? Colors.white
+                          //             : Colors.black,
+                          //         activeColor: widget.isDarkMode
+                          //             ? Colors.grey[100]
+                          //             : Colors.grey[900],
+                          //         value: userunderage,
+                          //         side: BorderSide(
+                          //             color: widget.isDarkMode
+                          //                 ? Colors.white
+                          //                 : Colors.black,
+                          //             width: 1),
+                          //         visualDensity: VisualDensity(
+                          //             horizontal: 0, vertical: -4),
+                          //         onChanged: (value) {
+                          //           setState(() {
+                          //             userunderage = value!;
+                          //           });
+                          //         },
+                          //       ),
+                          //     ],
+                          //   ),
+                          // ),
                         ],
                       ),
                     ),
                   ),
                   Row(
                     children: [
-                      Padding(
-                        padding: const EdgeInsets.only(left: 190, bottom: 10),
-                        child: TextButton(
-                            style: ButtonStyle(
-                                minimumSize:
-                                    WidgetStatePropertyAll(Size(80, 40)),
-                                elevation: WidgetStatePropertyAll(100),
-                                backgroundColor:
-                                    WidgetStateProperty.all(Colors.red),
-                                shape: WidgetStateProperty.all(
-                                    ContinuousRectangleBorder(
-                                        borderRadius: BorderRadius.all(
-                                            Radius.circular(20))))),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        // spacing: 3,
+                        children: [
+                          SizedBox(
+                            width: 200,
+                          ),
+                          TextButton(
                             onPressed: () {
                               Navigator.pop(context);
                               Fluttertoast.showToast(
@@ -542,40 +632,29 @@ class _ContentReportSheetState extends State<ContentReportSheet> {
                                   textColor: Colors.white,
                                   fontSize: 16.0);
                             },
+                            style: ElevatedButton.styleFrom(
+                              padding: EdgeInsets.only(left: 10, right: 10),
+                              backgroundColor:
+                                  isDarkMode ? Colors.white : Colors.black,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                            ),
                             child: Text(
-                              "Block",
+                              'Block',
                               style: TextStyle(
-                                  color: Colors.black,
-                                  fontWeight: FontWeight.w700),
-                            )),
-                      ),
-                      SizedBox(
-                        width: 20,
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.only(
-                            right: 0, bottom: 10, left: 0),
-                        child: TextButton(
-                            style: ButtonStyle(
-                                minimumSize:
-                                    WidgetStatePropertyAll(Size(80, 40)),
-                                elevation: WidgetStatePropertyAll(100),
-                                backgroundColor: WidgetStateProperty.all(
-                                    isAnyCheckboxSelected()
-                                        ? (widget.isDarkMode
-                                            ? Colors.grey[900]
-                                            : Colors.grey[100])
-                                        : Colors.grey[400]),
-                                shape: WidgetStateProperty.all(
-                                    ContinuousRectangleBorder(
-                                        borderRadius: BorderRadius.all(
-                                            Radius.circular(20))))),
+                                color: Colors.red,
+                              ),
+                            ),
+                          ),
+                          SizedBox(width: size.width * 0.02),
+                          ElevatedButton(
                             onPressed: isAnyCheckboxSelected()
                                 ? () {
                                     Navigator.pop(context);
                                     Fluttertoast.showToast(
                                         msg:
-                                            "Thank you for your valubale feedback, this will help us keep our community clean.",
+                                            "Thank you for your valuable feedback, this will help us keep our community clean.",
                                         toastLength: Toast.LENGTH_SHORT,
                                         gravity: ToastGravity.CENTER,
                                         timeInSecForIosWeb: 1,
@@ -633,18 +712,22 @@ class _ContentReportSheetState extends State<ContentReportSheet> {
                                     );
                                   }
                                 : null,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor:
+                                  isDarkMode ? Colors.white : Colors.black,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                            ),
                             child: Text(
-                              "Report",
+                              'Report',
                               style: TextStyle(
-                                  color: isAnyCheckboxSelected()
-                                      ? Colors.red
-                                      : Colors.grey[600],
-                                  fontWeight: FontWeight.w700),
-                            )),
+                                color: isDarkMode ? Colors.black : Colors.white,
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
-                      SizedBox(
-                        width: 10,
-                      )
                     ],
                   ),
                 ],

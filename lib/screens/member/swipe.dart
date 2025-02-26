@@ -111,10 +111,7 @@ class _SwipeScreenState extends State<SwipeScreen>
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => const PlaceholderScreen(
-              screenName: 'Profile View',
-              message: 'Full profile view here',
-            ),
+            builder: (context) => UserProfile()
           ),
         );
         break;
@@ -387,7 +384,7 @@ class _SwipeScreenState extends State<SwipeScreen>
                   context: context,
                   isScrollControlled: true,
                   backgroundColor: Colors.transparent,
-                  builder: (context) => UserReportSheet(
+                  builder: (context) => ContentReportSheet(
                     isDarkMode: Theme.of(context).brightness == Brightness.dark,
                     screenWidth: MediaQuery.of(context).size.width,
                   ),

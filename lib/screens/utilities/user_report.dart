@@ -141,6 +141,7 @@ class _UserReportSheetState extends State<UserReportSheet> {
                         children: [
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            spacing: 2,
                             children: [
                               Text(
                                 'Bullying or unwanted contact',

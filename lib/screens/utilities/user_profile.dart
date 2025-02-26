@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_frontend/screens/barrel.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter/services.dart'; // Add this import
-import 'dart:math';
 import 'dart:ui'; // Add this import for ImageFilter
 import 'package:image_picker/image_picker.dart';
 import 'package:image_cropper/image_cropper.dart';

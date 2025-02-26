@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_frontend/screens/submenus/settings/subpages/delete_account.dart';
-import 'package:flutter_frontend/screens/submenus/settings/subpages/login_info.dart';
-import 'package:flutter_frontend/screens/submenus/settings/subpages/personal_details_page.dart';
+import 'package:flutter_frontend/screens/member/settings/subpages/delete_account.dart';
+import 'package:flutter_frontend/screens/member/settings/subpages/login_info.dart';
+import 'package:flutter_frontend/screens/member/settings/subpages/personal_details_page.dart';
 
 class AccountCenterScreen extends StatelessWidget {
   const AccountCenterScreen({super.key});
@@ -50,7 +50,8 @@ class AccountCenterScreen extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   Icon(Icons.person,
-                      size: 24, color: isDarkMode ? Colors.white : Colors.black),
+                      size: 24,
+                      color: isDarkMode ? Colors.white : Colors.black),
                   SizedBox(
                     width: 8,
                   ),
@@ -63,7 +64,8 @@ class AccountCenterScreen extends StatelessWidget {
                   ),
                   Spacer(),
                   Icon(Icons.arrow_forward_ios,
-                      color: isDarkMode ? Colors.white : Colors.black, size: 15),
+                      color: isDarkMode ? Colors.white : Colors.black,
+                      size: 15),
                 ],
               ),
             ),
@@ -84,7 +86,8 @@ class AccountCenterScreen extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   Icon(Icons.key_outlined,
-                      size: 24, color: isDarkMode ? Colors.white : Colors.black),
+                      size: 24,
+                      color: isDarkMode ? Colors.white : Colors.black),
                   SizedBox(
                     width: 8,
                   ),
@@ -97,7 +100,8 @@ class AccountCenterScreen extends StatelessWidget {
                   ),
                   Spacer(),
                   Icon(Icons.arrow_forward_ios,
-                      color: isDarkMode ? Colors.white : Colors.black, size: 15),
+                      color: isDarkMode ? Colors.white : Colors.black,
+                      size: 15),
                 ],
               ),
             ),
@@ -117,14 +121,17 @@ class AccountCenterScreen extends StatelessWidget {
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  Icon(Icons.delete, size: 24, color: const Color.fromARGB(255, 176, 0, 32)),
+                  Icon(Icons.delete,
+                      size: 24, color: const Color.fromARGB(255, 176, 0, 32)),
                   SizedBox(
                     width: 8,
                   ),
                   Text(
                     'Delete Account',
-                    style: TextStyle(fontWeight: FontWeight.w700,
-                        fontSize: 16, color: const Color.fromARGB(255, 176, 0, 32)),
+                    style: TextStyle(
+                        fontWeight: FontWeight.w700,
+                        fontSize: 16,
+                        color: const Color.fromARGB(255, 176, 0, 32)),
                   ),
                   Spacer(),
                   Icon(Icons.arrow_forward_ios,

@@ -333,7 +333,7 @@ class NavigationControllerState extends State<NavigationController>
     (label: 'Snips', builder: () => const SnipTab()),
     (
       label: 'Profile',
-      builder: () => const UserProfile(),
+      builder: () => const Profile(),
     ),
   ];
 

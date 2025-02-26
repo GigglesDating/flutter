@@ -745,25 +745,31 @@ class _ProfileState extends State<Profile> {
               scrollDirection: Axis.horizontal,
               itemCount: 6,
               itemBuilder: (context, index) {
-                return Container(
-                  margin: EdgeInsets.only(right: size.width * 0.04),
-                  width: size.width * 0.55,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Stack(
-                    children: [
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(19),
-                        child: AspectRatio(
-                          aspectRatio: 4 / 5,
-                          child: Image.asset(
-                            'assets/tempImages/posts/post${index + 1}.png',
-                            fit: BoxFit.cover,
-                          ),
-                        ),
+                return GestureDetector(
+                  onTap: () => _showPostOverlay(context, index, isDarkMode),
+                  child: Hero(
+                    tag: 'post_profile_$index',
+                    child: Container(
+                      margin: EdgeInsets.only(right: size.width * 0.04),
+                      width: size.width * 0.55,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(20),
                       ),
-                    ],
+                      child: Stack(
+                        children: [
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(19),
+                            child: AspectRatio(
+                              aspectRatio: 4 / 5,
+                              child: Image.asset(
+                                'assets/tempImages/posts/post${index + 1}.png',
+                                fit: BoxFit.cover,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
                 );
               },
@@ -940,5 +946,143 @@ class _ProfileState extends State<Profile> {
     } catch (error) {
       debugPrint('Error picking/cropping image: $error');
     }
+  }
+
+  void _showPostOverlay(BuildContext context, int index, bool isDarkMode) {
+    final Map<String, dynamic> postData = {
+      'image': 'assets/tempImages/posts/post${index + 1}.png',
+      'isVideo': false,
+      'caption': '',
+      'likes': 0,
+      'comments': 0,
+      'timeAgo': '',
+      'userImage': userData['profileImage'],
+      'userName': userData['name'],
+      'location': userData['location'],
+    };
+
+    showDialog(
+      context: context,
+      barrierColor: Colors.black.withAlpha(100),
+      builder: (context) {
+        final size = MediaQuery.of(context).size;
+        return Dialog(
+          backgroundColor: Colors.transparent,
+          insetPadding: EdgeInsets.zero,
+          child: GestureDetector(
+            onHorizontalDragEnd: (details) {
+              if (details.primaryVelocity! > 0 && index > 0) {
+                // Right swipe - show previous post
+                Navigator.pop(context);
+                _showPostOverlay(context, index - 1, isDarkMode);
+              } else if (details.primaryVelocity! < 0 && index < 5) {
+                // Assuming 6 posts total
+                // Left swipe - show next post
+                Navigator.pop(context);
+                _showPostOverlay(context, index + 1, isDarkMode);
+              }
+            },
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                // Close button
+                Positioned(
+                  top: size.height * 0.05,
+                  right: size.width * 0.05,
+                  child: IconButton(
+                    icon: const Icon(
+                      Icons.close,
+                      color: Colors.white,
+                      size: 30,
+                    ),
+                    onPressed: () => Navigator.pop(context),
+                  ),
+                ),
+
+                // Post Card with custom more button handler
+                SizedBox(
+                  width: size.width * 0.95,
+                  height: size.width * 1.4,
+                  child: PostCard(
+                    post: postData,
+                    isDarkMode: isDarkMode,
+                    onMoreTap: () => _showDeletePostDialog(context, index),
+                  ),
+                ),
+
+                // Navigation indicators (optional)
+                if (index > 0)
+                  Positioned(
+                    left: size.width * 0.02,
+                    child: Icon(
+                      Icons.arrow_back_ios,
+                      color: Colors.white.withAlpha(128),
+                      size: 24,
+                    ),
+                  ),
+                if (index < 5)
+                  Positioned(
+                    right: size.width * 0.02,
+                    child: Icon(
+                      Icons.arrow_forward_ios,
+                      color: Colors.white.withAlpha(128),
+                      size: 24,
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  // Add this new method to handle post deletion
+  void _showDeletePostDialog(BuildContext context, int index) {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: isDarkMode ? Colors.black : Colors.white,
+        title: Text(
+          'Delete Post?',
+          style: TextStyle(
+            color: isDarkMode ? Colors.white : Colors.black,
+          ),
+        ),
+        content: Text(
+          'Are you sure you want to delete this post? This action cannot be undone.',
+          style: TextStyle(
+            color: isDarkMode ? Colors.white : Colors.black,
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(
+              'Cancel',
+              style: TextStyle(
+                color: isDarkMode ? Colors.white70 : Colors.black54,
+              ),
+            ),
+          ),
+          TextButton(
+            onPressed: () {
+              // Handle post deletion here
+              // TODO: Implement actual deletion logic
+              Navigator.pop(context); // Close delete dialog
+              Navigator.pop(context); // Close post overlay
+            },
+            child: Text(
+              'Delete',
+              style: TextStyle(
+                color: Colors.red,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }

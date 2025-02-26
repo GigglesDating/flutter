@@ -6,11 +6,13 @@ import '../barrel.dart';
 class PostCard extends StatefulWidget {
   final Map<String, dynamic> post;
   final bool isDarkMode;
+  final VoidCallback? onMoreTap;
 
   const PostCard({
     super.key,
     required this.post,
     required this.isDarkMode,
+    this.onMoreTap,
   });
 
   @override
@@ -42,6 +44,10 @@ class _PostCardState extends State<PostCard>
   void dispose() {
     _animationController.dispose();
     super.dispose();
+  }
+
+  bool get _hasContent {
+    return widget.post['caption']?.isNotEmpty == true;
   }
 
   @override
@@ -121,67 +127,40 @@ class _PostCardState extends State<PostCard>
             child: Stack(
               children: [
                 // Profile Picture and Stats Overlay
-                Positioned(
-                  top: screenWidth * 0.04,
-                  left: screenWidth * 0.06,
-                  child: Row(
-                    children: [
-                      // Profile Picture
-                      Row(
-                        children: [
-                          Container(
-                            padding: EdgeInsets.all(2),
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
+                if (_showTextOverlay)
+                  Positioned(
+                    top: screenWidth * 0.04,
+                    left: screenWidth * 0.06,
+                    child: Row(
+                      children: [
+                        // Profile Picture
+                        Container(
+                          padding: EdgeInsets.all(2),
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: widget.isDarkMode
+                                ? Colors.black.withAlpha(230)
+                                : Colors.white.withAlpha(230),
+                            border: Border.all(
                               color: widget.isDarkMode
-                                  ? Colors.black.withAlpha(230)
-                                  : Colors.white.withAlpha(230),
-                              border: Border.all(
-                                color: widget.isDarkMode
-                                    ? Colors.white.withAlpha(38)
-                                    : Colors.black.withAlpha(26),
-                                width: 1,
-                              ),
-                            ),
-                            child: ClipRRect(
-                              borderRadius: BorderRadius.circular(50),
-                              child: Image.asset(
-                                widget.post['userImage'],
-                                width: screenWidth * 0.12,
-                                height: screenWidth * 0.12,
-                                fit: BoxFit.cover,
-                              ),
+                                  ? Colors.white.withAlpha(38)
+                                  : Colors.black.withAlpha(26),
+                              width: 1,
                             ),
                           ),
-                          SizedBox(
-                            width: 250,
-                          ),
-                          Padding(
-                            padding: const EdgeInsets.all(8.0),
-                            child: GestureDetector(
-                              onTap: _showReportSheet,
-                              child: Container(
-                                padding: const EdgeInsets.all(8),
-                                decoration: BoxDecoration(
-                                  shape: BoxShape.circle,
-                                  color: Colors.black.withAlpha(25),
-                                ),
-                                child: const Icon(
-                                  Icons.more_vert,
-                                  color: Colors.white,
-                                  size: 24,
-                                ),
-                              ),
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(50),
+                            child: Image.asset(
+                              widget.post['userImage'],
+                              width: screenWidth * 0.12,
+                              height: screenWidth * 0.12,
+                              fit: BoxFit.cover,
                             ),
                           ),
-                        ],
-                      ),
-                      // Stats with animation
-                      AnimatedOpacity(
-                        duration: const Duration(milliseconds: 200),
-                        opacity: _showTextOverlay ? 1.0 : 0.0,
-                        child: Container(
-                          margin: EdgeInsets.only(left: screenWidth * 0.02),
+                        ),
+                        SizedBox(width: screenWidth * 0.03),
+                        // Post Stats
+                        Container(
                           padding: EdgeInsets.symmetric(
                             horizontal: screenWidth * 0.03,
                             vertical: screenWidth * 0.015,
@@ -200,16 +179,8 @@ class _PostCardState extends State<PostCard>
                           ),
                           child: Row(
                             children: [
-                              Icon(
-                                Icons.favorite,
-                                size: screenWidth * 0.04,
-                                color: widget.isDarkMode
-                                    ? Colors.white
-                                    : Colors.black,
-                              ),
-                              SizedBox(width: screenWidth * 0.01),
                               Text(
-                                '${widget.post['likes']}',
+                                '${widget.post['likes']} likes',
                                 style: TextStyle(
                                   color: widget.isDarkMode
                                       ? Colors.white
@@ -217,125 +188,55 @@ class _PostCardState extends State<PostCard>
                                   fontSize: screenWidth * 0.035,
                                 ),
                               ),
-                              Text(
-                                ' | ',
-                                style: TextStyle(
-                                  color: widget.isDarkMode
-                                      ? Colors.white
-                                      : Colors.black,
-                                  fontSize: screenWidth * 0.035,
-                                ),
-                              ),
+                              SizedBox(width: screenWidth * 0.02),
                               Text(
                                 widget.post['timeAgo'],
                                 style: TextStyle(
                                   color: widget.isDarkMode
-                                      ? Colors.white
-                                      : Colors.black,
+                                      ? Colors.white.withAlpha(179)
+                                      : Colors.black.withAlpha(179),
                                   fontSize: screenWidth * 0.035,
                                 ),
                               ),
                             ],
                           ),
                         ),
-                      ),
-                    ],
-                  ),
-                ),
-
-                // Post Description Overlay with fade animation only
-                Positioned(
-                  left: screenWidth * 0.05,
-                  right: screenWidth * 0.05,
-                  bottom: screenWidth * 0.05,
-                  child: AnimatedOpacity(
-                    duration: const Duration(milliseconds: 200),
-                    opacity: _showTextOverlay ? 1.0 : 0.0,
-                    child: LayoutBuilder(
-                      builder: (context, constraints) {
-                        final textSpan = TextSpan(
-                          text: widget.post['caption'] ?? '',
-                          style: TextStyle(
-                            color: Colors.white.withAlpha(255),
-                            fontSize: screenWidth * 0.035,
-                            height: 1.3,
-                          ),
-                        );
-                        final textPainter = TextPainter(
-                          text: textSpan,
-                          textDirection: TextDirection.ltr,
-                          maxLines: 2,
-                        );
-                        textPainter.layout(maxWidth: constraints.maxWidth);
-
-                        final isMultiLine = textPainter.didExceedMaxLines;
-
-                        return Container(
-                          padding: EdgeInsets.symmetric(
-                            horizontal: screenWidth * 0.04,
-                            vertical: screenWidth * 0.03,
-                          ),
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              begin: Alignment.topCenter,
-                              end: Alignment.bottomCenter,
-                              colors: [
-                                Colors.transparent,
-                                Colors.black.withAlpha(77),
-                                Colors.black.withAlpha(179),
-                              ],
-                            ),
-                            borderRadius: BorderRadius.circular(15),
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Text(
-                                widget.post['username'] ?? '',
-                                style: TextStyle(
-                                  color: Colors.white.withAlpha(255),
-                                  fontSize: screenWidth * 0.04,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              SizedBox(height: screenWidth * 0.01),
-                              if (isMultiLine)
-                                ConstrainedBox(
-                                  constraints: BoxConstraints(
-                                    maxHeight: screenWidth * 0.3,
-                                  ),
-                                  child: SingleChildScrollView(
-                                    child: Text(
-                                      widget.post['caption'] ?? '',
-                                      style: TextStyle(
-                                        color: Colors.white.withAlpha(255),
-                                        fontSize: screenWidth * 0.035,
-                                        height: 1.3,
-                                      ),
-                                    ),
-                                  ),
-                                )
-                              else
-                                Padding(
-                                  padding: EdgeInsets.only(
-                                      bottom: screenWidth * 0.02),
-                                  child: Text(
-                                    widget.post['caption'] ?? '',
-                                    style: TextStyle(
-                                      color: Colors.white.withAlpha(255),
-                                      fontSize: screenWidth * 0.035,
-                                      height: 1.3,
-                                    ),
-                                  ),
-                                ),
-                            ],
-                          ),
-                        );
-                      },
+                      ],
                     ),
                   ),
-                ),
+
+                // Description Overlay (at bottom)
+                if (_showTextOverlay && _hasContent)
+                  Positioned(
+                    bottom: 0,
+                    left: 0,
+                    right: 0,
+                    child: Container(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: screenWidth * 0.04,
+                        vertical: screenWidth * 0.03,
+                      ),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          colors: [
+                            Colors.transparent,
+                            Colors.black.withAlpha(77),
+                            Colors.black.withAlpha(179),
+                          ],
+                        ),
+                        borderRadius: BorderRadius.circular(15),
+                      ),
+                      child: Text(
+                        widget.post['caption'],
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: screenWidth * 0.04,
+                        ),
+                      ),
+                    ),
+                  ),
               ],
             ),
           ),
@@ -414,6 +315,25 @@ class _PostCardState extends State<PostCard>
                 ),
               ),
             ),
+
+          // Three dots button (always visible)
+          Positioned(
+            top: screenWidth * 0.04,
+            right: screenWidth * 0.06,
+            child: IconButton(
+              icon: Icon(
+                Icons.more_vert,
+                color: widget.isDarkMode ? Colors.white : Colors.black,
+              ),
+              onPressed: () {
+                if (widget.onMoreTap != null) {
+                  widget.onMoreTap!();
+                } else {
+                  _showReportSheet();
+                }
+              },
+            ),
+          ),
         ],
       ),
     );

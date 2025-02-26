@@ -140,6 +140,7 @@ class _ContentReportSheetState extends State<ContentReportSheet> {
                           borderRadius: BorderRadius.circular(20)),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
+                        spacing: 2,
                         children: [
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -182,7 +183,7 @@ class _ContentReportSheetState extends State<ContentReportSheet> {
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               Text(
-                                "Threatening to or do sharing nude images",
+                                "Threatening to share do\n sharing nude images",
                                 style: TextStyle(
                                     color: widget.isDarkMode
                                         ? Colors.grey[100]
@@ -511,43 +512,6 @@ class _ContentReportSheetState extends State<ContentReportSheet> {
                               ),
                             ],
                           ),
-                          // Row(
-                          //   mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          //   children: [
-                          //     Text(
-                          //       'The user maybe under 18 years',
-                          //       style: TextStyle(
-                          //           color: widget.isDarkMode
-                          //               ? Colors.grey[100]
-                          //               : Colors.grey[900],
-                          //           fontWeight: FontWeight.w500),
-                          //     ),
-                          //     Checkbox(
-                          //       checkColor: Theme.of(context).brightness ==
-                          //               Brightness.light
-                          //           ? Colors.white
-                          //           : Colors.black,
-                          //       activeColor: widget.isDarkMode
-                          //           ? Colors.grey[100]
-                          //           : Colors.grey[900],
-                          //       // isError: true,
-                          //       value: userunderage,
-                          //       side: BorderSide(
-                          //           color: widget.isDarkMode
-                          //               ? Colors.white
-                          //               : Colors.black,
-                          //           width: 1),
-                          //       visualDensity:
-                          //           VisualDensity(horizontal: 0, vertical: -4),
-
-                          //       onChanged: (value) {
-                          //         setState(() {
-                          //           userunderage = value!;
-                          //         });
-                          //       },
-                          //     ),
-                          //   ],
-                          // ),
                         ],
                       ),
                     ),

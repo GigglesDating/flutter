@@ -3,8 +3,8 @@ import 'package:flutter_frontend/screens/barrel.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter/services.dart'; // Add this import
 import 'dart:ui'; // Add this import for ImageFilter
-// import 'package:image_picker/image_picker.dart';
-// import 'package:image_cropper/image_cropper.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:image_cropper/image_cropper.dart';
 
 class UserProfile extends StatefulWidget {
   const UserProfile({super.key});
@@ -16,7 +16,7 @@ class UserProfile extends StatefulWidget {
 class _UserProfileState extends State<UserProfile> {
   // Temporary user data - later will come from backend
   final Map<String, dynamic> userData = {
-    'name': 'Kabir singh',
+    'name': 'Anna Joseph',
     'location': 'Bangalore',
     'profileImage': 'assets/tempImages/users/user1.jpg',
     'friendCount': 27,
@@ -30,7 +30,7 @@ class _UserProfileState extends State<UserProfile> {
   };
 
   late String userBio;
-  // final ImagePicker _picker = ImagePicker();
+  final ImagePicker _picker = ImagePicker();
 
   @override
   void initState() {
@@ -82,8 +82,25 @@ class _UserProfileState extends State<UserProfile> {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
+                      
+                      GestureDetector(
+                        onTap: () {
+                          Navigator.pop(context);
+                        },
+                        child: Container(
+                          padding: EdgeInsets.all(size.width * 0.01),
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: Colors.black.withAlpha(26),
+                          ),
+                          child: Icon(
+                            Icons.arrow_back_ios_new,
+                            color: Colors.white,
+                            size: size.width * 0.07,
+                          ),
+                        ),
+                      ),
                       // Report button
-                      SizedBox(),
                       Padding(
                         padding: const EdgeInsets.all(8.0),
                         child: GestureDetector(
@@ -202,36 +219,46 @@ class _UserProfileState extends State<UserProfile> {
                     0.76, // Moved up to overlay profile picture edge
                 right: size.width *
                     0.1, // Moved right to overlay profile picture edge
-                child: Stack(
-                  alignment: Alignment.center,
-                  children: [
-                    Icon(
-                      Icons.favorite,
-                      color: Colors.red,
-                      size: size.width * 0.13, // Reduced size
-                      shadows: [
-                        Shadow(
-                          color: Colors.black.withAlpha(50),
-                          blurRadius: 10,
-                        ),
-                      ],
-                    ),
-                    Text(
-                      '${userData['friendCount']}',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: size.width *
-                            0.035, // Adjusted text size to match smaller heart
-                        fontWeight: FontWeight.bold,
+                child: GestureDetector(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const LikedAccounts(),
+                      ),
+                    );
+                  },
+                  child: Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      Icon(
+                        Icons.favorite,
+                        color: Colors.red,
+                        size: size.width * 0.13, // Reduced size
                         shadows: [
                           Shadow(
-                            color: Colors.black.withAlpha(100),
-                            blurRadius: 4,
+                            color: Colors.black.withAlpha(50),
+                            blurRadius: 10,
                           ),
                         ],
                       ),
-                    ),
-                  ],
+                      Text(
+                        '${userData['friendCount']}',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: size.width *
+                              0.035, // Adjusted text size to match smaller heart
+                          fontWeight: FontWeight.bold,
+                          shadows: [
+                            Shadow(
+                              color: Colors.black.withAlpha(100),
+                              blurRadius: 4,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ],
@@ -242,7 +269,7 @@ class _UserProfileState extends State<UserProfile> {
           Text(
             userData['name'],
             style: TextStyle(
-              color: isDarkMode ? Colors.white : Colors.black,
+              color: isDarkMode ? Colors.black : Colors.white,
               fontSize: size.width * 0.05,
               fontWeight: FontWeight.w600,
             ),
@@ -253,14 +280,14 @@ class _UserProfileState extends State<UserProfile> {
             children: [
               Icon(
                 Icons.location_on,
-                color: isDarkMode ? Colors.white70 : Colors.black54,
+                color: isDarkMode ? Colors.black54 : Colors.white70,
                 size: size.width * 0.04,
               ),
               SizedBox(width: size.width * 0.01),
               Text(
                 userData['location'],
                 style: TextStyle(
-                  color: isDarkMode ? Colors.white70 : Colors.black54,
+                  color: isDarkMode ? Colors.black54 : Colors.white70,
                   fontSize: size.width * 0.035,
                 ),
               ),
@@ -403,11 +430,14 @@ class _UserProfileState extends State<UserProfile> {
                 ),
               ),
               SizedBox(height: size.height * 0.02),
-              Text(
-                userBio,
-                style: TextStyle(
-                  color: secondaryTextColor,
-                  fontSize: size.width * 0.035,
+              GestureDetector(
+                // onTap: () => _showBioEditSheet(context, isDarkMode, size),
+                child: Text(
+                  userBio,
+                  style: TextStyle(
+                    color: secondaryTextColor,
+                    fontSize: size.width * 0.035,
+                  ),
                 ),
               ),
             ],
@@ -416,6 +446,137 @@ class _UserProfileState extends State<UserProfile> {
       ),
     );
   }
+
+  // void _showBioEditSheet(BuildContext context, bool isDarkMode, Size size) {
+  //   final TextEditingController bioController =
+  //       TextEditingController(text: userBio);
+
+  //   showModalBottomSheet(
+  //     context: context,
+  //     isScrollControlled: true,
+  //     backgroundColor: Colors.transparent,
+  //     builder: (context) => ClipRRect(
+  //       borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
+  //       child: BackdropFilter(
+  //         filter: ImageFilter.blur(sigmaX: 10.0, sigmaY: 10.0),
+  //         child: Container(
+  //           padding: EdgeInsets.only(
+  //             bottom: MediaQuery.of(context).viewInsets.bottom,
+  //             left: size.width * 0.04,
+  //             right: size.width * 0.04,
+  //             top: size.width * 0.04,
+  //           ),
+  //           decoration: BoxDecoration(
+  //             color: isDarkMode
+  //                 ? Colors.black.withAlpha(230)
+  //                 : Colors.white.withAlpha(230),
+  //             borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
+  //             border: Border.all(
+  //               color: isDarkMode
+  //                   ? Colors.white.withAlpha(51)
+  //                   : Colors.black.withAlpha(51),
+  //             ),
+  //           ),
+  //           child: Column(
+  //             mainAxisSize: MainAxisSize.min,
+  //             children: [
+  //               Container(
+  //                 width: size.width * 0.15,
+  //                 height: 4,
+  //                 margin: EdgeInsets.only(bottom: size.width * 0.04),
+  //                 decoration: BoxDecoration(
+  //                   color: isDarkMode
+  //                       ? Colors.white.withAlpha(38)
+  //                       : Colors.black.withAlpha(26),
+  //                   borderRadius: BorderRadius.circular(2),
+  //                 ),
+  //               ),
+  //               TextField(
+  //                 controller: bioController,
+  //                 maxLines: 4,
+  //                 maxLength: 350,
+  //                 style: TextStyle(
+  //                   color: isDarkMode ? Colors.white : Colors.black,
+  //                   fontSize: size.width * 0.035,
+  //                 ),
+  //                 decoration: InputDecoration(
+  //                   hintText: 'Write about yourself...',
+  //                   hintStyle: TextStyle(
+  //                     color: isDarkMode
+  //                         ? Colors.white.withAlpha(128)
+  //                         : Colors.black.withAlpha(128),
+  //                   ),
+  //                   border: OutlineInputBorder(
+  //                     borderRadius: BorderRadius.circular(15),
+  //                     borderSide: BorderSide(
+  //                       color: isDarkMode
+  //                           ? Colors.white.withAlpha(51)
+  //                           : Colors.black.withAlpha(51),
+  //                     ),
+  //                   ),
+  //                   enabledBorder: OutlineInputBorder(
+  //                     borderRadius: BorderRadius.circular(15),
+  //                     borderSide: BorderSide(
+  //                       color: isDarkMode
+  //                           ? Colors.white.withAlpha(51)
+  //                           : Colors.black.withAlpha(51),
+  //                     ),
+  //                   ),
+  //                   focusedBorder: OutlineInputBorder(
+  //                     borderRadius: BorderRadius.circular(15),
+  //                     borderSide: BorderSide(
+  //                       color: isDarkMode ? Colors.white : Colors.black,
+  //                     ),
+  //                   ),
+  //                 ),
+  //               ),
+  //               SizedBox(height: size.width * 0.04),
+  //               Row(
+  //                 mainAxisAlignment: MainAxisAlignment.end,
+  //                 children: [
+  //                   TextButton(
+  //                     onPressed: () => Navigator.pop(context),
+  //                     child: Text(
+  //                       'Cancel',
+  //                       style: TextStyle(
+  //                         color: isDarkMode ? Colors.white70 : Colors.black54,
+  //                       ),
+  //                     ),
+  //                   ),
+  //                   SizedBox(width: size.width * 0.02),
+  //                   ElevatedButton(
+  //                     onPressed: () {
+  //                       setState(() {
+  //                         userBio = bioController.text;
+  //                         // Update the userData map as well if needed
+  //                         userData['bio'] = userBio;
+  //                       });
+  //                       Navigator.pop(context);
+  //                     },
+  //                     style: ElevatedButton.styleFrom(
+  //                       backgroundColor:
+  //                           isDarkMode ? Colors.white : Colors.black,
+  //                       shape: RoundedRectangleBorder(
+  //                         borderRadius: BorderRadius.circular(20),
+  //                       ),
+  //                     ),
+  //                     child: Text(
+  //                       'Save',
+  //                       style: TextStyle(
+  //                         color: isDarkMode ? Colors.black : Colors.white,
+  //                       ),
+  //                     ),
+  //                   ),
+  //                 ],
+  //               ),
+  //               SizedBox(height: size.width * 0.02),
+  //             ],
+  //           ),
+  //         ),
+  //       ),
+  //     ),
+  //   );
+  // }
 
   Widget _buildInterestChip(
       String label, String emoji, Color textColor, Size size) {
@@ -571,25 +732,31 @@ class _UserProfileState extends State<UserProfile> {
               scrollDirection: Axis.horizontal,
               itemCount: 6,
               itemBuilder: (context, index) {
-                return Container(
-                  margin: EdgeInsets.only(right: size.width * 0.04),
-                  width: size.width * 0.55,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Stack(
-                    children: [
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(19),
-                        child: AspectRatio(
-                          aspectRatio: 4 / 5,
-                          child: Image.asset(
-                            'assets/tempImages/posts/post${index + 1}.png',
-                            fit: BoxFit.cover,
-                          ),
-                        ),
+                return GestureDetector(
+                  onTap: () => _showPostOverlay(context, index, isDarkMode),
+                  child: Hero(
+                    tag: 'post_profile_$index',
+                    child: Container(
+                      margin: EdgeInsets.only(right: size.width * 0.04),
+                      width: size.width * 0.55,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(20),
                       ),
-                    ],
+                      child: Stack(
+                        children: [
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(19),
+                            child: AspectRatio(
+                              aspectRatio: 4 / 5,
+                              child: Image.asset(
+                                'assets/tempImages/posts/post${index + 1}.png',
+                                fit: BoxFit.cover,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
                 );
               },
@@ -638,6 +805,273 @@ class _UserProfileState extends State<UserProfile> {
     );
   }
 
+  // Future<void> _showImageSourceDialog() async {
+  //   showModalBottomSheet(
+  //     context: context,
+  //     backgroundColor: Colors.transparent,
+  //     builder: (BuildContext context) {
+  //       final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+  //       return Container(
+  //         padding: const EdgeInsets.all(20),
+  //         decoration: BoxDecoration(
+  //           color: isDarkMode ? Colors.black : Colors.white,
+  //           borderRadius: BorderRadius.vertical(top: Radius.circular(25)),
+  //         ),
+  //         child: Column(
+  //           mainAxisSize: MainAxisSize.min,
+  //           children: [
+  //             Text(
+  //               'Choose Image Source',
+  //               style: TextStyle(
+  //                 fontSize: 20,
+  //                 fontWeight: FontWeight.bold,
+  //                 color: isDarkMode ? Colors.white : Colors.black,
+  //               ),
+  //             ),
+  //             const SizedBox(height: 20),
+  //             Row(
+  //               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+  //               children: [
+  //                 _imageSourceOption(
+  //                   icon: Icons.camera_alt,
+  //                   title: 'Camera',
+  //                   isDarkMode: isDarkMode,
+  //                   onTap: () {
+  //                     Navigator.pop(context);
+  //                     _pickImage(ImageSource.camera);
+  //                   },
+  //                 ),
+  //                 _imageSourceOption(
+  //                   icon: Icons.photo_library,
+  //                   title: 'Gallery',
+  //                   isDarkMode: isDarkMode,
+  //                   onTap: () {
+  //                     Navigator.pop(context);
+  //                     _pickImage(ImageSource.gallery);
+  //                   },
+  //                 ),
+  //               ],
+  //             ),
+  //             const SizedBox(height: 20),
+  //           ],
+  //         ),
+  //       );
+  //     },
+  //   );
+  // }
+
+  // Widget _imageSourceOption({
+  //   required IconData icon,
+  //   required String title,
+  //   required bool isDarkMode,
+  //   required VoidCallback onTap,
+  // }) {
+  //   return GestureDetector(
+  //     onTap: onTap,
+  //     child: Column(
+  //       mainAxisSize: MainAxisSize.min,
+  //       children: [
+  //         Container(
+  //           padding: const EdgeInsets.all(12),
+  //           decoration: BoxDecoration(
+  //             shape: BoxShape.circle,
+  //             color: isDarkMode
+  //                 ? Colors.white.withAlpha(38)
+  //                 : Colors.black.withAlpha(26),
+  //           ),
+  //           child: Icon(
+  //             icon,
+  //             size: 32,
+  //             color: isDarkMode ? Colors.white : Colors.black,
+  //           ),
+  //         ),
+  //         const SizedBox(height: 8),
+  //         Text(
+  //           title,
+  //           style: TextStyle(
+  //             color: isDarkMode ? Colors.white : Colors.black,
+  //             fontSize: 16,
+  //           ),
+  //         ),
+  //       ],
+  //     ),
+  //   );
+  // }
+
+  // Future<void> _pickImage(ImageSource source) async {
+  //   try {
+  //     final XFile? image = await _picker.pickImage(source: source);
+  //     if (image != null) {
+  //       final croppedFile = await ImageCropper().cropImage(
+  //         sourcePath: image.path,
+  //         aspectRatio: const CropAspectRatio(ratioX: 1, ratioY: 1),
+  //         compressQuality: 90,
+  //         uiSettings: [
+  //           AndroidUiSettings(
+  //             toolbarTitle: 'Crop Image',
+  //             toolbarColor: Colors.black,
+  //             toolbarWidgetColor: Colors.white,
+  //             initAspectRatio: CropAspectRatioPreset.square,
+  //             lockAspectRatio: true,
+  //             hideBottomControls: true,
+  //           ),
+  //           IOSUiSettings(
+  //             title: 'Crop Image',
+  //             aspectRatioLockEnabled: true,
+  //             resetAspectRatioEnabled: false,
+  //             minimumAspectRatio: 1.0,
+  //           ),
+  //         ],
+  //       );
+
+  //       if (croppedFile != null) {
+  //         setState(() {
+  //           userData['profileImage'] = croppedFile.path;
+  //         });
+  //       }
+  //     }
+  //   } catch (error) {
+  //     debugPrint('Error picking/cropping image: $error');
+  //   }
+  // }
+
+  void _showPostOverlay(BuildContext context, int index, bool isDarkMode) {
+    final Map<String, dynamic> postData = {
+      'image': 'assets/tempImages/posts/post${index + 1}.png',
+      'isVideo': false,
+      'caption': '',
+      'likes': 0,
+      'comments': 0,
+      'timeAgo': '',
+      'userImage': userData['profileImage'],
+      'userName': userData['name'],
+      'location': userData['location'],
+    };
+
+    showDialog(
+      context: context,
+      barrierColor: Colors.black.withAlpha(100),
+      builder: (context) {
+        final size = MediaQuery.of(context).size;
+        return Dialog(
+          backgroundColor: Colors.transparent,
+          insetPadding: EdgeInsets.zero,
+          child: GestureDetector(
+            onHorizontalDragEnd: (details) {
+              if (details.primaryVelocity! > 0 && index > 0) {
+                // Right swipe - show previous post
+                Navigator.pop(context);
+                _showPostOverlay(context, index - 1, isDarkMode);
+              } else if (details.primaryVelocity! < 0 && index < 5) {
+                // Assuming 6 posts total
+                // Left swipe - show next post
+                Navigator.pop(context);
+                _showPostOverlay(context, index + 1, isDarkMode);
+              }
+            },
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                // Close button
+                Positioned(
+                  top: size.height * 0.05,
+                  right: size.width * 0.05,
+                  child: IconButton(
+                    icon: const Icon(
+                      Icons.close,
+                      color: Colors.white,
+                      size: 30,
+                    ),
+                    onPressed: () => Navigator.pop(context),
+                  ),
+                ),
+
+                // Post Card with custom more button handler
+                SizedBox(
+                  width: size.width * 0.95,
+                  height: size.width * 1.4,
+                  child: PostCard(
+                    post: postData,
+                    isDarkMode: isDarkMode,
+                    onMoreTap: () => _showDeletePostDialog(context, index),
+                  ),
+                ),
+
+                // Navigation indicators (optional)
+                if (index > 0)
+                  Positioned(
+                    left: size.width * 0.02,
+                    child: Icon(
+                      Icons.arrow_back_ios,
+                      color: Colors.white.withAlpha(128),
+                      size: 24,
+                    ),
+                  ),
+                if (index < 5)
+                  Positioned(
+                    right: size.width * 0.02,
+                    child: Icon(
+                      Icons.arrow_forward_ios,
+                      color: Colors.white.withAlpha(128),
+                      size: 24,
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  // Add this new method to handle post deletion
+  void _showDeletePostDialog(BuildContext context, int index) {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: isDarkMode ? Colors.black : Colors.white,
+        title: Text(
+          'Delete Post?',
+          style: TextStyle(
+            color: isDarkMode ? Colors.white : Colors.black,
+          ),
+        ),
+        content: Text(
+          'Are you sure you want to delete this post? This action cannot be undone.',
+          style: TextStyle(
+            color: isDarkMode ? Colors.white : Colors.black,
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(
+              'Cancel',
+              style: TextStyle(
+                color: isDarkMode ? Colors.white70 : Colors.black54,
+              ),
+            ),
+          ),
+          TextButton(
+            onPressed: () {
+              // Handle post deletion here
+              // TODO: Implement actual deletion logic
+              Navigator.pop(context); // Close delete dialog
+              Navigator.pop(context); // Close post overlay
+            },
+            child: Text(
+              'Delete',
+              style: TextStyle(
+                color: Colors.red,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
   void _showReportSheet() {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
     final screenWidth = MediaQuery.of(context).size.width;
@@ -645,7 +1079,7 @@ class _UserProfileState extends State<UserProfile> {
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
-      builder: (context) => UserReportSheet(
+      builder: (context) => ContentReportSheet(
         isDarkMode: isDarkMode,
         screenWidth: screenWidth,
       ),

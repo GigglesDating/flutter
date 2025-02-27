@@ -1164,58 +1164,47 @@ class _ProfileState extends State<Profile> {
     showDialog(
       context: context,
       barrierDismissible: true,
-      barrierColor: Colors.black.withValues(alpha: 128),
+      barrierColor: Colors.black.withAlpha(100),
       builder: (context) {
         final size = MediaQuery.of(context).size;
         return Dialog(
           backgroundColor: Colors.transparent,
-          insetPadding: EdgeInsets.zero,
+          insetPadding: EdgeInsets.symmetric(
+            horizontal: size.width * 0.05,
+            vertical: size.height * 0.1,
+          ),
           child: Stack(
             alignment: Alignment.center,
             children: [
               // Video Container
               Container(
-                width: size.width,
+                width: size.width * 0.9,
                 height: size.height * 0.77,
-                color: Colors.black,
-                child: ReelCard(
-                  videoPath: videoAssets[index % 3],
-                  isDarkMode: isDarkMode,
-                  index: index,
-                  onNext: index < 5
-                      ? () {
-                          Navigator.pop(context);
-                          _showReelOverlay(context, index + 1, isDarkMode);
-                        }
-                      : null,
-                  onPrevious: index > 0
-                      ? () {
-                          Navigator.pop(context);
-                          _showReelOverlay(context, index - 1, isDarkMode);
-                        }
-                      : null,
+                decoration: BoxDecoration(
+                  color: Colors.black,
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(20),
+                  child: ReelCard(
+                    videoPath: videoAssets[index % 3],
+                    isDarkMode: isDarkMode,
+                    index: index,
+                    onNext: index < 5
+                        ? () {
+                            Navigator.pop(context);
+                            _showReelOverlay(context, index + 1, isDarkMode);
+                          }
+                        : null,
+                    onPrevious: index > 0
+                        ? () {
+                            Navigator.pop(context);
+                            _showReelOverlay(context, index - 1, isDarkMode);
+                          }
+                        : null,
+                  ),
                 ),
               ),
-
-              // Navigation indicators
-              if (index > 0)
-                Positioned(
-                  left: size.width * 0.02,
-                  child: Icon(
-                    Icons.arrow_back_ios,
-                    color: Colors.white.withValues(alpha: 128),
-                    size: 24,
-                  ),
-                ),
-              if (index < 5)
-                Positioned(
-                  right: size.width * 0.02,
-                  child: Icon(
-                    Icons.arrow_forward_ios,
-                    color: Colors.white.withValues(alpha: 128),
-                    size: 24,
-                  ),
-                ),
             ],
           ),
         );

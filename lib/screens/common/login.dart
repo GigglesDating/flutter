@@ -27,6 +27,13 @@ class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController _inputController = TextEditingController();
 
   Timer? _timer;
+  String? _overrideNumber;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchOverrideNumber();
+  }
 
   @override
   void dispose() {
@@ -50,30 +57,14 @@ class _LoginScreenState extends State<LoginScreen> {
     });
   }
 
-  Future requestOtp() async {
-    if (_phoneNumber.length != 10) {
-      setState(
-        () {
-          _errorMessage = 'Please enter a valid 10-digit phone number';
-        },
-      );
+  Future<void> _fetchOverrideNumber() async {
+    final thinkProvider = ThinkProvider();
+    final response = await thinkProvider.getOverrideNumber();
+    if (response['status'] == 'success') {
+      setState(() {
+        _overrideNumber = response['data']['number'];
+      });
     }
-
-    setState(() {
-      _isLoading = true;
-      _errorMessage = null;
-    });
-
-    await Future.delayed(const Duration(seconds: 2));
-
-    if (!mounted) return;
-
-    setState(() {
-      _isLoading = false;
-      _isOtpSent = true;
-      _inputController.clear();
-      _startResendTimer();
-    });
   }
 
   Future<void> _verifyOtp() async {
@@ -92,6 +83,26 @@ class _LoginScreenState extends State<LoginScreen> {
     try {
       final authProvider = Provider.of<AuthProvider>(context, listen: false);
 
+      // Check if this is the override number
+      if (_phoneNumber == _overrideNumber && _otp == '0000') {
+        // Skip normal OTP verification for override number
+        if (!mounted) return;
+
+        setState(() {
+          _isLoading = false;
+        });
+
+        // Navigate directly to home via navigation controller
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(
+            builder: (context) => const NavigationController(),
+          ),
+          (route) => false,
+        );
+        return;
+      }
+
+      // Normal OTP verification flow
       final response = await authProvider.verifyOtp(
         phoneNumber: '+91$_phoneNumber',
         otp: _otp,
@@ -256,6 +267,46 @@ class _LoginScreenState extends State<LoginScreen> {
         _errorMessage = 'Failed to verify OTP';
       });
     }
+  }
+
+  Future<void> requestOtp() async {
+    if (_phoneNumber.length != 10) {
+      setState(() {
+        _errorMessage = 'Please enter a valid 10-digit phone number';
+      });
+      return;
+    }
+
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+
+    // If this is the override number, skip actual OTP request
+    if (_phoneNumber == _overrideNumber) {
+      await Future.delayed(const Duration(seconds: 1));
+      if (!mounted) return;
+
+      setState(() {
+        _isLoading = false;
+        _isOtpSent = true;
+        _requestId = 'override';
+        _inputController.clear();
+        _startResendTimer();
+      });
+      return;
+    }
+
+    // Normal OTP request flow
+    await Future.delayed(const Duration(seconds: 2));
+    if (!mounted) return;
+
+    setState(() {
+      _isLoading = false;
+      _isOtpSent = true;
+      _inputController.clear();
+      _startResendTimer();
+    });
   }
 
   void _showEditNumberSheet() {

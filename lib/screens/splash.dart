@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'barrel.dart';
+import 'package:video_player/video_player.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -12,12 +12,15 @@ class _SplashScreenState extends State<SplashScreen>
     with SingleTickerProviderStateMixin {
   late AnimationController _fadeController;
   late Animation<double> _fadeAnimation;
+  VideoPlayerController? _videoController;
   bool _isNavigating = false;
+  bool _useImageFallback = false;
 
   @override
   void initState() {
     super.initState();
     _setupFadeAnimation();
+    _initializeVideo();
     _navigateToHome();
   }
 
@@ -30,27 +33,42 @@ class _SplashScreenState extends State<SplashScreen>
     _fadeController.forward();
   }
 
+  Future<void> _initializeVideo() async {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    final videoPath =
+        isDarkMode ? 'assets/dark/favicon.mp4' : 'assets/light/favicon.mp4';
+
+    try {
+      _videoController = VideoPlayerController.asset(videoPath);
+      await _videoController!.initialize();
+      if (mounted) {
+        _videoController!.play();
+        setState(() {});
+      }
+    } catch (e) {
+      debugPrint('Video initialization error: $e');
+      if (mounted) {
+        setState(() {
+          _useImageFallback = true;
+        });
+      }
+    }
+  }
+
   Future<void> _navigateToHome() async {
     if (_isNavigating) return;
     _isNavigating = true;
 
     try {
-      await Future.delayed(const Duration(seconds: 2));
+      await Future.delayed(const Duration(seconds: 3));
       if (!mounted) return;
 
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(
-          builder: (context) => const NavigationController(),
-        ),
-      );
+      // Always navigate to login first unless user is already authenticated
+      Navigator.of(context).pushReplacementNamed('/login');
     } catch (e) {
       debugPrint('Navigation error: $e');
       if (mounted) {
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(
-            builder: (context) => const NavigationController(),
-          ),
-        );
+        Navigator.of(context).pushReplacementNamed('/login');
       }
     }
   }
@@ -58,6 +76,7 @@ class _SplashScreenState extends State<SplashScreen>
   @override
   void dispose() {
     _fadeController.dispose();
+    _videoController?.dispose();
     super.dispose();
   }
 
@@ -73,13 +92,21 @@ class _SplashScreenState extends State<SplashScreen>
           opacity: _fadeAnimation,
           child: Hero(
             tag: 'app_logo',
-            child: Image.asset(
-              isDarkMode
-                  ? 'assets/dark/favicon.png'
-                  : 'assets/light/favicon.png',
-              width: size.width * 0.4,
-              height: size.width * 0.4,
-            ),
+            child: _useImageFallback ||
+                    _videoController == null ||
+                    !_videoController!.value.isInitialized
+                ? Image.asset(
+                    isDarkMode
+                        ? 'assets/dark/favicon.png'
+                        : 'assets/light/favicon.png',
+                    width: size.width * 0.4,
+                    height: size.width * 0.4,
+                  )
+                : SizedBox(
+                    width: size.width * 0.4,
+                    height: size.width * 0.4,
+                    child: VideoPlayer(_videoController!),
+                  ),
           ),
         ),
       ),

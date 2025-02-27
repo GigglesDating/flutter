@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'config.dart';
+import 'package:flutter/foundation.dart';
 
 class ThinkProvider {
   // Check app version
@@ -207,6 +208,72 @@ class ThinkProvider {
       return {
         'status': 'error',
         'message': 'Error fetching events: $e',
+      };
+    }
+  }
+
+  // Check member status
+  Future<Map<String, dynamic>> checkMemberStatus({
+    required String uuid,
+  }) async {
+    try {
+      final response = await _callFunction('check_member_status', {
+        'uuid': uuid,
+      });
+
+      if (response['status'] == 'success') {
+        return {
+          'status': 'success',
+          'data': {
+            'member': response['member'] ?? 'no',
+            'waitlist_position': response['waitlist_position'],
+            'total_waitlist': response['total_waitlist'],
+          }
+        };
+      } else {
+        return {
+          'status': 'error',
+          'message': response['message'] ?? 'Failed to check member status',
+          'data': {
+            'member': 'no',
+          }
+        };
+      }
+    } catch (e) {
+      debugPrint('Error in checkMemberStatus: $e');
+      return {
+        'status': 'error',
+        'message': 'Error checking member status: $e',
+        'data': {
+          'member': 'no',
+        }
+      };
+    }
+  }
+
+  // Get override number for app review
+  Future<Map<String, dynamic>> getOverrideNumber() async {
+    try {
+      final response = await _callFunction('get_override_number', {});
+
+      if (response['status'] == 'success') {
+        return {
+          'status': 'success',
+          'data': {
+            'number': response['number'],
+          }
+        };
+      } else {
+        return {
+          'status': 'error',
+          'message': response['message'] ?? 'Failed to get override number',
+        };
+      }
+    } catch (e) {
+      debugPrint('Error in getOverrideNumber: $e');
+      return {
+        'status': 'error',
+        'message': 'Error getting override number: $e',
       };
     }
   }

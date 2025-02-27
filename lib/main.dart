@@ -110,14 +110,14 @@ class MyApp extends StatelessWidget {
           brightness: Brightness.dark,
         ),
       ),
-      themeMode: ThemeMode.system, // Follows system theme
+      themeMode: ThemeMode.system,
       initialRoute: '/',
       routes: {
         '/': (context) => const SplashScreen(),
         '/login': (context) => const LoginScreen(),
         '/signup': (context) => const SignupScreen(),
         '/waitlist': (context) => const WaitlistScreen(),
-        // Add other routes as needed
+        '/navigation': (context) => const NavigationController(),
       },
     );
   }

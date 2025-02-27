@@ -4,6 +4,7 @@ import 'package:carousel_slider/carousel_slider.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'dart:math' show pi;
 import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:async';
 
 import '../barrel.dart';
 
@@ -20,6 +21,8 @@ class _WaitlistScreenState extends State<WaitlistScreen>
   late AnimationController _expandController;
   late Animation<double> _rotationAnimation;
   late Animation<double> _fadeAnimation;
+  Timer? _statusCheckTimer;
+  bool _isCheckingStatus = false;
 
   @override
   void initState() {
@@ -59,10 +62,65 @@ class _WaitlistScreenState extends State<WaitlistScreen>
         curve: const Interval(0.5, 1.0, curve: Curves.easeOut),
       ),
     );
+
+    _setupFadeAnimation();
+    _setupStatusCheck();
+  }
+
+  void _setupFadeAnimation() {
+    _fadeAnimation = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(
+      CurvedAnimation(
+        parent: _expandController,
+        curve: const Interval(0.5, 1.0, curve: Curves.easeOut),
+      ),
+    );
+  }
+
+  void _setupStatusCheck() {
+    _checkMemberStatus();
+
+    _statusCheckTimer = Timer.periodic(const Duration(seconds: 30), (_) {
+      _checkMemberStatus();
+    });
+  }
+
+  Future<void> _checkMemberStatus() async {
+    if (_isCheckingStatus) return;
+    _isCheckingStatus = true;
+
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final uuid = prefs.getString('user_uuid');
+
+      if (uuid == null) {
+        if (mounted) {
+          Navigator.of(context).pushReplacementNamed('/login');
+        }
+        return;
+      }
+
+      final thinkProvider = ThinkProvider();
+      final response = await thinkProvider.checkMemberStatus(uuid: uuid);
+
+      if (!mounted) return;
+
+      if (response['status'] == 'success' &&
+          response['data']['member'] == 'yes') {
+        Navigator.of(context).pushReplacementNamed('/navigation');
+      }
+    } catch (e) {
+      debugPrint('Error checking member status: $e');
+    } finally {
+      _isCheckingStatus = false;
+    }
   }
 
   @override
   void dispose() {
+    _statusCheckTimer?.cancel();
     _expandController.dispose();
     super.dispose();
   }

@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'dart:ui';
 import 'package:image_picker/image_picker.dart';
 import 'package:image_cropper/image_cropper.dart';
+import 'package:video_player/video_player.dart';
 
 class Profile extends StatefulWidget {
   const Profile({super.key});
@@ -790,23 +791,8 @@ class _ProfileState extends State<Profile> {
             padding: EdgeInsets.symmetric(horizontal: size.width * 0.04),
             scrollDirection: Axis.horizontal,
             itemCount: 6,
-            itemBuilder: (context, index) => Container(
-              margin: EdgeInsets.only(right: size.width * 0.04),
-              width: size.width * 0.55,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(20 - 1),
-                child: AspectRatio(
-                  aspectRatio: 9 / 16,
-                  child: Image.asset(
-                    'assets/tempImages/reels/reel${index + 1}.png',
-                    fit: BoxFit.cover,
-                  ),
-                ),
-              ),
-            ),
+            itemBuilder: (context, index) =>
+                _buildReelThumbnail(index, size, isDarkMode),
           ),
         ),
 
@@ -961,7 +947,7 @@ class _ProfileState extends State<Profile> {
 
     showDialog(
       context: context,
-      barrierColor: Colors.black.withAlpha(100),
+      barrierColor: Colors.black.withValues(alpha: 100),
       builder: (context) {
         final size = MediaQuery.of(context).size;
         return Dialog(
@@ -970,12 +956,9 @@ class _ProfileState extends State<Profile> {
           child: GestureDetector(
             onHorizontalDragEnd: (details) {
               if (details.primaryVelocity! > 0 && index > 0) {
-                // Right swipe - show previous post
                 Navigator.pop(context);
                 _showPostOverlay(context, index - 1, isDarkMode);
               } else if (details.primaryVelocity! < 0 && index < 5) {
-                // Assuming 6 posts total
-                // Left swipe - show next post
                 Navigator.pop(context);
                 _showPostOverlay(context, index + 1, isDarkMode);
               }
@@ -983,20 +966,6 @@ class _ProfileState extends State<Profile> {
             child: Stack(
               alignment: Alignment.center,
               children: [
-                // Close button
-                Positioned(
-                  top: size.height * 0.05,
-                  right: size.width * 0.05,
-                  child: IconButton(
-                    icon: const Icon(
-                      Icons.close,
-                      color: Colors.white,
-                      size: 30,
-                    ),
-                    onPressed: () => Navigator.pop(context),
-                  ),
-                ),
-
                 // Post Card with custom more button handler
                 SizedBox(
                   width: size.width * 0.95,
@@ -1008,13 +977,13 @@ class _ProfileState extends State<Profile> {
                   ),
                 ),
 
-                // Navigation indicators (optional)
+                // Navigation indicators
                 if (index > 0)
                   Positioned(
                     left: size.width * 0.02,
                     child: Icon(
                       Icons.arrow_back_ios,
-                      color: Colors.white.withAlpha(128),
+                      color: Colors.white.withValues(alpha: 128),
                       size: 24,
                     ),
                   ),
@@ -1023,7 +992,7 @@ class _ProfileState extends State<Profile> {
                     right: size.width * 0.02,
                     child: Icon(
                       Icons.arrow_forward_ios,
-                      color: Colors.white.withAlpha(128),
+                      color: Colors.white.withValues(alpha: 128),
                       size: 24,
                     ),
                   ),
@@ -1081,6 +1050,128 @@ class _ProfileState extends State<Profile> {
           ),
         ],
       ),
+    );
+  }
+
+  // Add this method to generate thumbnails
+  Future<String?> _getVideoThumbnail(String videoPath) async {
+    final controller = VideoPlayerController.asset(videoPath);
+    await controller.initialize();
+    // Get the first frame as thumbnail
+    await controller.seekTo(const Duration(milliseconds: 100));
+    await controller.pause();
+    controller.dispose();
+    return videoPath; // For now returning video path, later we can use actual thumbnails
+  }
+
+  // Update the reels section
+  Widget _buildReelThumbnail(int index, Size size, bool isDarkMode) {
+    final String videoPath = 'assets/video/${(index % 3) + 1}.mp4';
+
+    return FutureBuilder<String?>(
+      future: _getVideoThumbnail(videoPath),
+      builder: (context, snapshot) {
+        return GestureDetector(
+          onTap: () => _showReelOverlay(context, index, isDarkMode),
+          child: Container(
+            margin: EdgeInsets.only(right: size.width * 0.04),
+            width: size.width * 0.55,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(19),
+                  child: AspectRatio(
+                    aspectRatio: 9 / 16,
+                    child: snapshot.hasData
+                        ? VideoPlayer(
+                            VideoPlayerController.asset(snapshot.data!)
+                              ..initialize())
+                        : Container(color: Colors.black),
+                  ),
+                ),
+                Icon(
+                  Icons.play_circle_outline,
+                  color: Colors.white,
+                  size: size.width * 0.1,
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  void _showReelOverlay(BuildContext context, int index, bool isDarkMode) {
+    final videoAssets = [
+      'assets/video/1.mp4',
+      'assets/video/2.mp4',
+      'assets/video/3.mp4',
+    ];
+
+    showDialog(
+      context: context,
+      barrierDismissible: true,
+      barrierColor: Colors.black.withValues(alpha: 128),
+      builder: (context) {
+        final size = MediaQuery.of(context).size;
+        return Dialog(
+          backgroundColor: Colors.transparent,
+          insetPadding: EdgeInsets.zero,
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              // Video Container
+              Container(
+                width: size.width,
+                height: size.height * 0.77,
+                color: Colors.black,
+                child: ReelCard(
+                  videoPath: videoAssets[index % 3],
+                  isDarkMode: isDarkMode,
+                  index: index,
+                  onNext: index < 5
+                      ? () {
+                          Navigator.pop(context);
+                          _showReelOverlay(context, index + 1, isDarkMode);
+                        }
+                      : null,
+                  onPrevious: index > 0
+                      ? () {
+                          Navigator.pop(context);
+                          _showReelOverlay(context, index - 1, isDarkMode);
+                        }
+                      : null,
+                ),
+              ),
+
+              // Navigation indicators
+              if (index > 0)
+                Positioned(
+                  left: size.width * 0.02,
+                  child: Icon(
+                    Icons.arrow_back_ios,
+                    color: Colors.white.withValues(alpha: 128),
+                    size: 24,
+                  ),
+                ),
+              if (index < 5)
+                Positioned(
+                  right: size.width * 0.02,
+                  child: Icon(
+                    Icons.arrow_forward_ios,
+                    color: Colors.white.withValues(alpha: 128),
+                    size: 24,
+                  ),
+                ),
+            ],
+          ),
+        );
+      },
     );
   }
 }

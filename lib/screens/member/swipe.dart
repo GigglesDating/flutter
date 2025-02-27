@@ -16,6 +16,7 @@ class SwipeScreen extends StatefulWidget {
 
 class _SwipeScreenState extends State<SwipeScreen>
     with TickerProviderStateMixin {
+  // TODO: Replace with API data for user profiles
   final List<Map<String, dynamic>> _profiles = [
     {
       'name': 'Sarah Something',
@@ -60,6 +61,7 @@ class _SwipeScreenState extends State<SwipeScreen>
   @override
   void initState() {
     super.initState();
+    // TODO: Implement API call to fetch initial profiles
   }
 
   @override
@@ -94,11 +96,6 @@ class _SwipeScreenState extends State<SwipeScreen>
     });
   }
 
-  @override
-  void dispose() {
-    super.dispose();
-  }
-
   bool _onSwipe(
       int previousIndex, int? currentIndex, CardSwiperDirection direction) {
     setState(() {
@@ -106,16 +103,16 @@ class _SwipeScreenState extends State<SwipeScreen>
       _currentIndex = currentIndex ?? _currentIndex;
     });
 
+    // TODO: Implement API calls for match and profile actions
     switch (direction) {
       case CardSwiperDirection.top:
         Navigator.push(
           context,
-          MaterialPageRoute(
-            builder: (context) => UserProfile()
-          ),
+          MaterialPageRoute(builder: (context) => UserProfile()),
         );
         break;
       case CardSwiperDirection.right:
+        // TODO: Send match request to backend
         Navigator.push(
           context,
           MaterialPageRoute(
@@ -127,6 +124,7 @@ class _SwipeScreenState extends State<SwipeScreen>
         );
         break;
       default:
+        // TODO: Send skip/reject action to backend
         break;
     }
     return true;

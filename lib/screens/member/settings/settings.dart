@@ -30,22 +30,20 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 
   Future<void> initPrefs() async {
-    SharedPreferences.getInstance().then((prefs) {
-      setState(() {
-        preferences = prefs;
-      });
-    });
+    // TODO: Replace with proper API implementation for user preferences
+    preferences ??= await SharedPreferences.getInstance();
+    setState(() {});
   }
 
   Future<bool> clearUserData() async {
     try {
-      if (preferences == null) {
-        preferences = await SharedPreferences.getInstance();
-      }
+      // TODO: Implement API call to clear user data from backend
+      preferences ??= await SharedPreferences.getInstance();
       await preferences!.clear();
       return true;
     } catch (e) {
-      print('Error clearing user data: $e');
+      // Use logger instead of print
+      debugPrint('Error clearing user data: $e');
       return false;
     }
   }
@@ -58,34 +56,32 @@ class _SettingsPageState extends State<SettingsPage> {
 
   @override
   Widget build(BuildContext context) {
+    final size = MediaQuery.of(context).size;
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+
+    // Define responsive measurements
+    final containerHeight = size.height * 0.07;
+    final horizontalPadding = size.width * 0.04;
+    final iconSize = size.width * 0.06;
+    final arrowIconSize = size.width * 0.04;
+    final dividerIndent = size.width * 0.04;
 
     return Scaffold(
       appBar: AppBar(
         systemOverlayStyle: SystemUiOverlayStyle(
           statusBarColor: Colors.transparent,
           statusBarIconBrightness:
-              Theme.of(context).brightness == Brightness.dark
-                  ? Brightness.light
-                  : Brightness.dark,
-          // Light icons for dark theme
-          statusBarBrightness: Theme.of(context).brightness == Brightness.dark
-              ? Brightness.dark
-              : Brightness.light, // For iOS devices
+              isDarkMode ? Brightness.light : Brightness.dark,
+          statusBarBrightness: isDarkMode ? Brightness.dark : Brightness.light,
         ),
         title: Text(
           'Settings',
-          // style: AppFonts.titleMedium().copyWith(
-          //   color: Theme.of(context).colorScheme.tertiary,
-          // ),
+          style: TextStyle(
+              color: isDarkMode ? Colors.white : Colors.black,
+              fontSize: size.width * 0.05,
+              fontWeight: FontWeight.w700),
         ),
-        titleSpacing: 15,
-        // foregroundColor: Theme.of(context).scaffoldBackgroundColor,
-
-        titleTextStyle: TextStyle(
-            color: isDarkMode ? Colors.white : Colors.black,
-            fontSize: 20,
-            fontWeight: FontWeight.w700),
+        titleSpacing: horizontalPadding,
       ),
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SingleChildScrollView(
@@ -95,10 +91,12 @@ class _SettingsPageState extends State<SettingsPage> {
           mainAxisAlignment: MainAxisAlignment.start,
           children: [
             Divider(
-              indent: 15,
-              endIndent: 15,
+              indent: dividerIndent,
+              endIndent: dividerIndent,
               thickness: 0.5,
-              color: isDarkMode ? Colors.white : Colors.black,
+              color: isDarkMode
+                  ? Colors.white.withValues(alpha: 128)
+                  : Colors.black.withValues(alpha: 128),
             ),
             SizedBox(
               height: 12,
@@ -118,12 +116,12 @@ class _SettingsPageState extends State<SettingsPage> {
               },
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                height: 54,
+                height: containerHeight,
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     Icon(Icons.manage_accounts_rounded,
-                        size: 30,
+                        size: iconSize,
                         color: isDarkMode ? Colors.white : Colors.black),
                     SizedBox(
                       width: 8,
@@ -138,7 +136,7 @@ class _SettingsPageState extends State<SettingsPage> {
                     Spacer(),
                     Icon(Icons.arrow_forward_ios,
                         color: isDarkMode ? Colors.white : Colors.black,
-                        size: 18),
+                        size: arrowIconSize),
                   ],
                 ),
               ),
@@ -154,12 +152,12 @@ class _SettingsPageState extends State<SettingsPage> {
               },
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                height: 54,
+                height: containerHeight,
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     Icon(Icons.privacy_tip_rounded,
-                        size: 30,
+                        size: iconSize,
                         color: isDarkMode ? Colors.white : Colors.black),
                     SizedBox(
                       width: 8,
@@ -174,7 +172,7 @@ class _SettingsPageState extends State<SettingsPage> {
                     Spacer(),
                     Icon(Icons.arrow_forward_ios,
                         color: isDarkMode ? Colors.white : Colors.black,
-                        size: 18),
+                        size: arrowIconSize),
                   ],
                 ),
               ),
@@ -190,12 +188,12 @@ class _SettingsPageState extends State<SettingsPage> {
               },
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                height: 54,
+                height: containerHeight,
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     Icon(Icons.access_time_filled,
-                        size: 30,
+                        size: iconSize,
                         color: isDarkMode ? Colors.white : Colors.black),
                     SizedBox(
                       width: 8,
@@ -210,14 +208,14 @@ class _SettingsPageState extends State<SettingsPage> {
                     Spacer(),
                     Icon(Icons.arrow_forward_ios,
                         color: isDarkMode ? Colors.white : Colors.black,
-                        size: 18),
+                        size: arrowIconSize),
                   ],
                 ),
               ),
             ),
             Divider(
-              indent: 15,
-              endIndent: 15,
+              indent: dividerIndent,
+              endIndent: dividerIndent,
               thickness: 0.5,
               color: isDarkMode ? Colors.white : Colors.black,
             ),
@@ -239,12 +237,12 @@ class _SettingsPageState extends State<SettingsPage> {
               },
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                height: 54,
+                height: containerHeight,
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     Icon(Icons.notifications,
-                        size: 30,
+                        size: iconSize,
                         color: isDarkMode ? Colors.white : Colors.black),
                     SizedBox(
                       width: 8,
@@ -259,7 +257,7 @@ class _SettingsPageState extends State<SettingsPage> {
                     Spacer(),
                     Icon(Icons.arrow_forward_ios,
                         color: isDarkMode ? Colors.white : Colors.black,
-                        size: 18),
+                        size: arrowIconSize),
                   ],
                 ),
               ),
@@ -275,12 +273,12 @@ class _SettingsPageState extends State<SettingsPage> {
               },
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                height: 54,
+                height: containerHeight,
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     Icon(Icons.block,
-                        size: 30,
+                        size: iconSize,
                         color: isDarkMode ? Colors.white : Colors.black),
                     SizedBox(
                       width: 8,
@@ -295,14 +293,14 @@ class _SettingsPageState extends State<SettingsPage> {
                     Spacer(),
                     Icon(Icons.arrow_forward_ios,
                         color: isDarkMode ? Colors.white : Colors.black,
-                        size: 18),
+                        size: arrowIconSize),
                   ],
                 ),
               ),
             ),
             Divider(
-              indent: 15,
-              endIndent: 15,
+              indent: dividerIndent,
+              endIndent: dividerIndent,
               thickness: 0.5,
               color: isDarkMode ? Colors.white : Colors.black,
             ),
@@ -319,12 +317,12 @@ class _SettingsPageState extends State<SettingsPage> {
               },
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                height: 54,
+                height: containerHeight,
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     Icon(Icons.subscriptions,
-                        size: 30,
+                        size: iconSize,
                         color: isDarkMode ? Colors.white : Colors.black),
                     SizedBox(
                       width: 8,
@@ -339,7 +337,7 @@ class _SettingsPageState extends State<SettingsPage> {
                     Spacer(),
                     Icon(Icons.arrow_forward_ios,
                         color: isDarkMode ? Colors.white : Colors.black,
-                        size: 18),
+                        size: arrowIconSize),
                   ],
                 ),
               ),
@@ -351,12 +349,12 @@ class _SettingsPageState extends State<SettingsPage> {
               },
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                height: 54,
+                height: containerHeight,
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     Icon(Icons.share,
-                        size: 30,
+                        size: iconSize,
                         color: isDarkMode ? Colors.white : Colors.black),
                     SizedBox(
                       width: 8,
@@ -371,14 +369,14 @@ class _SettingsPageState extends State<SettingsPage> {
                     Spacer(),
                     Icon(Icons.arrow_forward_ios,
                         color: isDarkMode ? Colors.white : Colors.black,
-                        size: 18),
+                        size: arrowIconSize),
                   ],
                 ),
               ),
             ),
             Divider(
-              indent: 15,
-              endIndent: 15,
+              indent: dividerIndent,
+              endIndent: dividerIndent,
               thickness: 0.5,
               color: isDarkMode ? Colors.white : Colors.black,
             ),
@@ -400,12 +398,12 @@ class _SettingsPageState extends State<SettingsPage> {
               },
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                height: 54,
+                height: containerHeight,
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     Icon(Icons.star,
-                        size: 30,
+                        size: iconSize,
                         color: isDarkMode ? Colors.white : Colors.black),
                     SizedBox(
                       width: 8,
@@ -420,7 +418,7 @@ class _SettingsPageState extends State<SettingsPage> {
                     Spacer(),
                     Icon(Icons.arrow_forward_ios,
                         color: isDarkMode ? Colors.white : Colors.black,
-                        size: 18),
+                        size: arrowIconSize),
                   ],
                 ),
               ),
@@ -436,12 +434,12 @@ class _SettingsPageState extends State<SettingsPage> {
               },
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                height: 54,
+                height: containerHeight,
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     Icon(Icons.headset_mic,
-                        size: 30,
+                        size: iconSize,
                         color: isDarkMode ? Colors.white : Colors.black),
                     SizedBox(
                       width: 8,
@@ -454,7 +452,7 @@ class _SettingsPageState extends State<SettingsPage> {
                     Spacer(),
                     Icon(Icons.arrow_forward_ios,
                         color: isDarkMode ? Colors.white : Colors.black,
-                        size: 18),
+                        size: arrowIconSize),
                   ],
                 ),
               ),
@@ -476,12 +474,13 @@ class _SettingsPageState extends State<SettingsPage> {
               },
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                height: 54,
+                height: containerHeight,
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     Icon(Icons.logout,
-                        size: 28, color: const Color.fromARGB(255, 176, 0, 32)),
+                        size: iconSize,
+                        color: const Color.fromARGB(255, 176, 0, 32)),
                     SizedBox(
                       width: 8,
                     ),
@@ -494,7 +493,8 @@ class _SettingsPageState extends State<SettingsPage> {
                     ),
                     Spacer(),
                     Icon(Icons.arrow_forward_ios,
-                        color: const Color.fromARGB(255, 176, 0, 32), size: 18),
+                        color: const Color.fromARGB(255, 176, 0, 32),
+                        size: arrowIconSize),
                   ],
                 ),
               ),

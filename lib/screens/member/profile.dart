@@ -1082,6 +1082,7 @@ class _ProfileState extends State<Profile> {
         await fallbackController.initialize();
         return fallbackController;
       } catch (e) {
+        //temp
         debugPrint('Fallback video initialization error: $e');
 
         // Final attempt with basic settings

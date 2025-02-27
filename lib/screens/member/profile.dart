@@ -1053,15 +1053,40 @@ class _ProfileState extends State<Profile> {
     );
   }
 
-  // Add this method to generate thumbnails
-  Future<String?> _getVideoThumbnail(String videoPath) async {
+  // Add this method to handle video initialization with error catching
+  Future<VideoPlayerController> _initializeVideoController(
+      String videoPath) async {
     final controller = VideoPlayerController.asset(videoPath);
-    await controller.initialize();
-    // Get the first frame as thumbnail
-    await controller.seekTo(const Duration(milliseconds: 100));
-    await controller.pause();
-    controller.dispose();
-    return videoPath; // For now returning video path, later we can use actual thumbnails
+    try {
+      await controller.initialize();
+      return controller;
+    } catch (e) {
+      debugPrint('Video initialization error: $e');
+      // Create a fallback controller with lower quality settings
+      final fallbackController = VideoPlayerController.asset(
+        videoPath,
+        videoPlayerOptions: VideoPlayerOptions(
+          mixWithOthers: true,
+          allowBackgroundPlayback: false,
+        ),
+      );
+      await fallbackController.initialize();
+      return fallbackController;
+    }
+  }
+
+  // Update the _getVideoThumbnail method
+  Future<String?> _getVideoThumbnail(String videoPath) async {
+    try {
+      final controller = await _initializeVideoController(videoPath);
+      await controller.seekTo(const Duration(milliseconds: 100));
+      await controller.pause();
+      controller.dispose();
+      return videoPath;
+    } catch (e) {
+      debugPrint('Thumbnail generation error: $e');
+      return null;
+    }
   }
 
   // Update the reels section

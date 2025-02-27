@@ -30,29 +30,46 @@ class _ReelCardState extends State<ReelCard> {
   bool _isPlaying = true;
   String? _error;
 
+  Future<VideoPlayerController> _initializeVideoController(
+      String videoPath) async {
+    final controller = VideoPlayerController.asset(videoPath);
+    try {
+      await controller.initialize();
+      return controller;
+    } catch (e) {
+      debugPrint('Video initialization error: $e');
+      // Create a fallback controller with lower quality settings
+      final fallbackController = VideoPlayerController.asset(
+        videoPath,
+        videoPlayerOptions: VideoPlayerOptions(
+          mixWithOthers: true,
+          allowBackgroundPlayback: false,
+        ),
+      );
+      await fallbackController.initialize();
+      return fallbackController;
+    }
+  }
+
   @override
   void initState() {
     super.initState();
     _initializeController();
   }
 
-  void _initializeController() {
-    _controller = VideoPlayerController.asset(widget.videoPath)
-      ..initialize().then((_) {
-        if (mounted) {
-          setState(() {
-            _isInitialized = true;
-            _controller.play();
-            _controller.setLooping(true);
-          });
-        }
-      }).catchError((error) {
-        if (mounted) {
-          setState(() {
-            _error = error.toString();
-          });
-        }
+  Future<void> _initializeController() async {
+    try {
+      _controller = await _initializeVideoController(widget.videoPath);
+      setState(() {
+        _isInitialized = true;
       });
+      _controller.play();
+    } catch (e) {
+      setState(() {
+        _error = 'Unable to play video';
+      });
+      debugPrint('Video player error: $e');
+    }
   }
 
   void _handleLike() {

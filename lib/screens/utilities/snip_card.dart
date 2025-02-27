@@ -32,22 +32,43 @@ class _ReelCardState extends State<ReelCard> {
 
   Future<VideoPlayerController> _initializeVideoController(
       String videoPath) async {
-    final controller = VideoPlayerController.asset(videoPath);
     try {
-      await controller.initialize();
-      return controller;
-    } catch (e) {
-      debugPrint('Video initialization error: $e');
-      // Create a fallback controller with lower quality settings
-      final fallbackController = VideoPlayerController.asset(
+      // First attempt with default settings
+      final controller = VideoPlayerController.asset(
         videoPath,
         videoPlayerOptions: VideoPlayerOptions(
           mixWithOthers: true,
-          allowBackgroundPlayback: false,
         ),
       );
-      await fallbackController.initialize();
-      return fallbackController;
+      await controller.initialize();
+      return controller;
+    } catch (e) {
+      debugPrint('Initial video initialization error: $e');
+
+      // Second attempt with lower quality settings
+      try {
+        final fallbackController = VideoPlayerController.asset(
+          videoPath,
+          videoPlayerOptions: VideoPlayerOptions(
+            mixWithOthers: true,
+            allowBackgroundPlayback: false,
+          ),
+        );
+        await fallbackController.initialize();
+        return fallbackController;
+      } catch (e) {
+        debugPrint('Fallback video initialization error: $e');
+
+        // Final attempt with basic settings
+        final basicController = VideoPlayerController.asset(
+          videoPath,
+          videoPlayerOptions: VideoPlayerOptions(
+            mixWithOthers: false,
+          ),
+        );
+        await basicController.initialize();
+        return basicController;
+      }
     }
   }
 
@@ -60,14 +81,19 @@ class _ReelCardState extends State<ReelCard> {
   Future<void> _initializeController() async {
     try {
       _controller = await _initializeVideoController(widget.videoPath);
-      setState(() {
-        _isInitialized = true;
-      });
-      _controller.play();
+      if (mounted) {
+        setState(() {
+          _isInitialized = true;
+        });
+        _controller.play();
+        _controller.setLooping(true);
+      }
     } catch (e) {
-      setState(() {
-        _error = 'Unable to play video';
-      });
+      if (mounted) {
+        setState(() {
+          _error = 'Unable to play video';
+        });
+      }
       debugPrint('Video player error: $e');
     }
   }

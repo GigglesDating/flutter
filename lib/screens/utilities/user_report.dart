@@ -6,11 +6,13 @@ import 'package:fluttertoast/fluttertoast.dart';
 class UserReportSheet extends StatefulWidget {
   final bool isDarkMode;
   final double screenWidth;
+  final VoidCallback? onReportComplete;
 
   const UserReportSheet({
     super.key,
     required this.isDarkMode,
     required this.screenWidth,
+    this.onReportComplete,
   });
 
   @override
@@ -61,6 +63,28 @@ class _UserReportSheetState extends State<UserReportSheet> {
         sellingrestricteditems ||
         violenceorhate ||
         userunderage;
+  }
+
+  void _handleReport() {
+    if (widget.onReportComplete != null) {
+      widget.onReportComplete!();
+    }
+    Navigator.pop(context);
+  }
+
+  void _handleBlock() {
+    if (widget.onReportComplete != null) {
+      widget.onReportComplete!();
+    }
+    Navigator.pop(context);
+    Fluttertoast.showToast(
+        msg: "Blocked",
+        toastLength: Toast.LENGTH_SHORT,
+        gravity: ToastGravity.CENTER,
+        timeInSecForIosWeb: 1,
+        backgroundColor: Colors.black,
+        textColor: Colors.white,
+        fontSize: 16.0);
   }
 
   @override
@@ -533,15 +557,7 @@ class _UserReportSheetState extends State<UserReportSheet> {
                           ),
                           TextButton(
                             onPressed: () {
-                              Navigator.pop(context);
-                              Fluttertoast.showToast(
-                                  msg: "Blocked",
-                                  toastLength: Toast.LENGTH_SHORT,
-                                  gravity: ToastGravity.CENTER,
-                                  timeInSecForIosWeb: 1,
-                                  backgroundColor: Colors.black,
-                                  textColor: Colors.white,
-                                  fontSize: 16.0);
+                              _handleBlock();
                             },
                             style: ElevatedButton.styleFrom(
                               padding: EdgeInsets.only(left: 10, right: 10),
@@ -562,7 +578,7 @@ class _UserReportSheetState extends State<UserReportSheet> {
                           ElevatedButton(
                             onPressed: isAnyCheckboxSelected()
                                 ? () {
-                                    Navigator.pop(context);
+                                    _handleReport();
                                     Fluttertoast.showToast(
                                         msg:
                                             "Thank you for your valuable feedback, this will help us keep our community clean.",
@@ -584,25 +600,12 @@ class _UserReportSheetState extends State<UserReportSheet> {
                                             : Colors.white,
                                         elevation: 100,
                                         content: Text(
-                                            "Would you also preffer to block this account?"),
+                                            "Would you also prefer to block this account?"),
                                         actions: [
                                           TextButton(
                                             onPressed: () {
                                               Navigator.pop(context);
-                                              Fluttertoast.showToast(
-                                                  msg: "Blocked",
-                                                  toastLength:
-                                                      Toast.LENGTH_SHORT,
-                                                  gravity: ToastGravity.CENTER,
-                                                  timeInSecForIosWeb: 1,
-                                                  backgroundColor:
-                                                      widget.isDarkMode
-                                                          ? Colors.grey[100]
-                                                          : Colors.grey[900],
-                                                  textColor: widget.isDarkMode
-                                                      ? Colors.grey[900]
-                                                      : Colors.grey[100],
-                                                  fontSize: 16.0);
+                                              _handleBlock();
                                             },
                                             child: Text(
                                               "Yes",

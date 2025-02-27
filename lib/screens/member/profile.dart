@@ -1056,22 +1056,44 @@ class _ProfileState extends State<Profile> {
   // Add this method to handle video initialization with error catching
   Future<VideoPlayerController> _initializeVideoController(
       String videoPath) async {
-    final controller = VideoPlayerController.asset(videoPath);
     try {
-      await controller.initialize();
-      return controller;
-    } catch (e) {
-      debugPrint('Video initialization error: $e');
-      // Create a fallback controller with lower quality settings
-      final fallbackController = VideoPlayerController.asset(
+      // First attempt with default settings
+      final controller = VideoPlayerController.asset(
         videoPath,
         videoPlayerOptions: VideoPlayerOptions(
           mixWithOthers: true,
-          allowBackgroundPlayback: false,
         ),
       );
-      await fallbackController.initialize();
-      return fallbackController;
+      await controller.initialize();
+      return controller;
+    } catch (e) {
+      debugPrint('Initial video initialization error: $e');
+
+      // Second attempt with lower quality/different codec settings
+      // Second attempt with lower quality settings
+      try {
+        final fallbackController = VideoPlayerController.asset(
+          videoPath,
+          videoPlayerOptions: VideoPlayerOptions(
+            mixWithOthers: true,
+            allowBackgroundPlayback: false,
+          ),
+        );
+        await fallbackController.initialize();
+        return fallbackController;
+      } catch (e) {
+        debugPrint('Fallback video initialization error: $e');
+
+        // Final attempt with basic settings
+        final basicController = VideoPlayerController.asset(
+          videoPath,
+          videoPlayerOptions: VideoPlayerOptions(
+            mixWithOthers: false,
+          ),
+        );
+        await basicController.initialize();
+        return basicController;
+      }
     }
   }
 

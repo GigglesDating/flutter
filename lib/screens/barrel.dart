@@ -47,4 +47,5 @@ export 'utilities/user_profile.dart';
 export 'utilities/likes.dart';
 export 'member/profile.dart';
 export 'utilities/user_report.dart';
-export 'utilities/reel_card.dart';
+export 'utilities/snip_card.dart';
+export 'utilities/prompts.dart';

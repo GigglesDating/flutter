@@ -98,33 +98,71 @@ class _SwipeScreenState extends State<SwipeScreen>
 
   bool _onSwipe(
       int previousIndex, int? currentIndex, CardSwiperDirection direction) {
-    setState(() {
-      _showImageTiles = false;
-      _currentIndex = currentIndex ?? _currentIndex;
-    });
+    final swipedProfile = _profiles[previousIndex];
 
-    // TODO: Implement API calls for match and profile actions
     switch (direction) {
+      case CardSwiperDirection.left:
+        // Always load next profile on left swipe
+        setState(() {
+          _showImageTiles = false;
+          _currentIndex = currentIndex ?? _currentIndex;
+        });
+        break;
+
       case CardSwiperDirection.top:
         Navigator.push(
           context,
           MaterialPageRoute(builder: (context) => UserProfile()),
-        );
+        ).then((_) {
+          // Keep same profile when returning from profile view
+          setState(() {
+            _currentIndex = previousIndex;
+          });
+        });
         break;
+
       case CardSwiperDirection.right:
-        // TODO: Send match request to backend
-        Navigator.push(
+        Navigator.push<bool>(
           context,
           MaterialPageRoute(
-            builder: (context) => const PlaceholderScreen(
-              screenName: 'Match!',
-              message: 'Hayyy you got a match!',
+            builder: (context) => PromptsScreen(
+              profile: swipedProfile,
             ),
           ),
-        );
+        ).then((shouldChangeProfile) {
+          if (shouldChangeProfile == true) {
+            // Change profile if:
+            // 1. User selected a prompt
+            // 2. User sent custom message
+            // 3. User reported the profile
+            setState(() {
+              _showImageTiles = false;
+              _currentIndex = currentIndex ?? _currentIndex;
+            });
+          } else {
+            // Keep same profile if:
+            // 1. User hit back button
+            setState(() {
+              _currentIndex = previousIndex;
+              _showImageTiles = true; // Show tiles again for same profile
+            });
+          }
+        });
         break;
-      default:
-        // TODO: Send skip/reject action to backend
+
+      case CardSwiperDirection.bottom:
+        // Handle bottom swipe - for now, treat it like left swipe
+        setState(() {
+          _showImageTiles = false;
+          _currentIndex = currentIndex ?? _currentIndex;
+        });
+        break;
+
+      case CardSwiperDirection.none:
+        // Handle the none case
+        setState(() {
+          _currentIndex = previousIndex;
+        });
         break;
     }
     return true;
@@ -382,7 +420,7 @@ class _SwipeScreenState extends State<SwipeScreen>
                   context: context,
                   isScrollControlled: true,
                   backgroundColor: Colors.transparent,
-                  builder: (context) => ContentReportSheet(
+                  builder: (context) => UserReportSheet(
                     isDarkMode: Theme.of(context).brightness == Brightness.dark,
                     screenWidth: MediaQuery.of(context).size.width,
                   ),

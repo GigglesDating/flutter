@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_frontend/screens/barrel.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:flutter/services.dart'; // Add this import
-import 'dart:ui'; // Add this import for ImageFilter
+import 'package:flutter/services.dart';
+import 'dart:ui';
 import 'package:image_picker/image_picker.dart';
 import 'package:image_cropper/image_cropper.dart';
 
@@ -37,7 +37,7 @@ class _ProfileState extends State<Profile> {
     super.initState();
     userBio = userData['bio'];
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
-    SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
+    SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
       statusBarColor: Colors.transparent,
       systemNavigationBarColor: Colors.transparent,
       systemNavigationBarDividerColor: Colors.transparent,
@@ -137,8 +137,6 @@ class _ProfileState extends State<Profile> {
                 ),
                 // Rest of the content
                 _buildProfileHeader(isDarkMode, size),
-                _buildStats(isDarkMode, size),
-                _buildBioSection(isDarkMode, size),
                 _buildContentGrids(isDarkMode, size),
               ],
             ),
@@ -325,7 +323,6 @@ class _ProfileState extends State<Profile> {
         child: Container(
           margin: EdgeInsets.symmetric(
             horizontal: size.width * 0.04,
-            vertical: size.height * 0.02,
           ),
           padding: EdgeInsets.all(size.width * 0.04),
           decoration: BoxDecoration(
@@ -409,7 +406,6 @@ class _ProfileState extends State<Profile> {
         child: Container(
           margin: EdgeInsets.symmetric(
             horizontal: size.width * 0.04,
-            vertical: size.height * 0.02,
           ),
           padding: EdgeInsets.all(size.width * 0.04),
           decoration: BoxDecoration(
@@ -636,7 +632,6 @@ class _ProfileState extends State<Profile> {
         child: Container(
           margin: EdgeInsets.symmetric(
             horizontal: size.width * 0.04,
-            vertical: size.height * 0.02,
           ),
           padding: EdgeInsets.all(size.width * 0.04),
           decoration: BoxDecoration(
@@ -675,7 +670,7 @@ class _ProfileState extends State<Profile> {
               // Sound Wave
               Expanded(
                 child: Container(
-                  margin: EdgeInsets.symmetric(horizontal: size.width * 0.04),
+                  margin: EdgeInsets.symmetric(horizontal: size.width * 0.03),
                   child: SvgPicture.asset(
                     'assets/icons/profile/sound_wave.svg',
                     height: size.width * 0.04,
@@ -723,98 +718,101 @@ class _ProfileState extends State<Profile> {
 
   Widget _buildContentGrids(bool isDarkMode, Size size) {
     // Define consistent spacing values
-    final sectionSpacing = size.height * 0.01; // Space between major sections
+    final baseSpacing = size.height * 0.03;
+    final largerSpacing = baseSpacing * 1.5;
 
-    return Padding(
-      padding: EdgeInsets.symmetric(vertical: sectionSpacing),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Spotify Section
-          _buildSpotifyWidget(isDarkMode, size),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Stats Section (modify _buildStats to remove its vertical margin)
+        Container(
+          margin: EdgeInsets.symmetric(horizontal: size.width * 0.04),
+          child: _buildStats(isDarkMode, size),
+        ),
 
-          SizedBox(height: sectionSpacing), // Consistent spacing
+        SizedBox(height: baseSpacing),
 
-          // Posts Section
-          SizedBox(
-            height: size.width * 0.8,
-            child: ListView.builder(
-              padding: EdgeInsets.symmetric(
-                horizontal: size.width * 0.04,
-              ),
-              scrollDirection: Axis.horizontal,
-              itemCount: 6,
-              itemBuilder: (context, index) {
-                return GestureDetector(
-                  onTap: () => _showPostOverlay(context, index, isDarkMode),
-                  child: Hero(
-                    tag: 'post_profile_$index',
-                    child: Container(
-                      margin: EdgeInsets.only(right: size.width * 0.04),
-                      width: size.width * 0.55,
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: Stack(
-                        children: [
-                          ClipRRect(
-                            borderRadius: BorderRadius.circular(19),
-                            child: AspectRatio(
-                              aspectRatio: 4 / 5,
-                              child: Image.asset(
-                                'assets/tempImages/posts/post${index + 1}.png',
-                                fit: BoxFit.cover,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                );
-              },
-            ),
-          ),
+        // Bio Section (modify _buildBioSection to remove its vertical margin)
+        Container(
+          margin: EdgeInsets.symmetric(horizontal: size.width * 0.04),
+          child: _buildBioSection(isDarkMode, size),
+        ),
 
-          SizedBox(
-              height: sectionSpacing), // Consistent spacing_buildContentGrids
+        SizedBox(height: baseSpacing),
 
-          // Reels Section
-          SizedBox(
-            height: size.width * 1.0,
-            child: ListView.builder(
-              padding: EdgeInsets.symmetric(
-                horizontal: size.width * 0.04,
-              ),
-              scrollDirection: Axis.horizontal,
-              itemCount: 6,
-              itemBuilder: (context, index) {
-                return Container(
+        // Spotify Section (modify _buildSpotifyWidget to remove its vertical margin)
+        Container(
+          margin: EdgeInsets.symmetric(horizontal: size.width * 0.04),
+          child: _buildSpotifyWidget(isDarkMode, size),
+        ),
+
+        SizedBox(height: largerSpacing),
+
+        // Posts Section
+        SizedBox(
+          height: size.width * 0.8,
+          child: ListView.builder(
+            padding: EdgeInsets.symmetric(horizontal: size.width * 0.04),
+            scrollDirection: Axis.horizontal,
+            itemCount: 6,
+            itemBuilder: (context, index) => GestureDetector(
+              onTap: () => _showPostOverlay(context, index, isDarkMode),
+              child: Hero(
+                tag: 'post_profile_$index',
+                child: Container(
                   margin: EdgeInsets.only(right: size.width * 0.04),
-                  width: size.width * 0.45,
+                  width: size.width * 0.55,
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(20),
                   ),
-                  child: Stack(
-                    children: [
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(19),
-                        child: AspectRatio(
-                          aspectRatio: 9 / 16,
-                          child: Image.asset(
-                            'assets/tempImages/reels/reel${index + 1}.png',
-                            fit: BoxFit.cover,
-                          ),
-                        ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(19),
+                    child: AspectRatio(
+                      aspectRatio: 4 / 5,
+                      child: Image.asset(
+                        'assets/tempImages/posts/post${index + 1}.png',
+                        fit: BoxFit.cover,
                       ),
-                    ],
+                    ),
                   ),
-                );
-              },
+                ),
+              ),
             ),
           ),
-        ],
-      ),
+        ),
+
+        SizedBox(height: largerSpacing),
+
+        // Reels Section
+        SizedBox(
+          height: size.width * .9,
+          child: ListView.builder(
+            padding: EdgeInsets.symmetric(horizontal: size.width * 0.04),
+            scrollDirection: Axis.horizontal,
+            itemCount: 6,
+            itemBuilder: (context, index) => Container(
+              margin: EdgeInsets.only(right: size.width * 0.04),
+              width: size.width * 0.55,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(20 - 1),
+                child: AspectRatio(
+                  aspectRatio: 9 / 16,
+                  child: Image.asset(
+                    'assets/tempImages/reels/reel${index + 1}.png',
+                    fit: BoxFit.cover,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+
+        // Increase bottom padding to prevent cutoff
+        SizedBox(height: size.height * 0.12), // Increased from 0.02 to 0.12
+      ],
     );
   }
 

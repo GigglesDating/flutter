@@ -3,8 +3,7 @@ import 'package:flutter_frontend/screens/barrel.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter/services.dart'; // Add this import
 import 'dart:ui'; // Add this import for ImageFilter
-import 'package:image_picker/image_picker.dart';
-import 'package:image_cropper/image_cropper.dart';
+// import 'package:image_picker/image_picker.dart';
 
 class UserProfile extends StatefulWidget {
   const UserProfile({super.key});
@@ -30,7 +29,7 @@ class _UserProfileState extends State<UserProfile> {
   };
 
   late String userBio;
-  final ImagePicker _picker = ImagePicker();
+  // final ImagePicker _picker = ImagePicker();
 
   @override
   void initState() {
@@ -82,7 +81,6 @@ class _UserProfileState extends State<UserProfile> {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      
                       GestureDetector(
                         onTap: () {
                           Navigator.pop(context);
@@ -233,7 +231,7 @@ class _UserProfileState extends State<UserProfile> {
                     children: [
                       Icon(
                         Icons.favorite,
-                        color: Colors.red,
+                        color: const Color.fromARGB(255, 255, 255, 255),
                         size: size.width * 0.13, // Reduced size
                         shadows: [
                           Shadow(
@@ -245,7 +243,7 @@ class _UserProfileState extends State<UserProfile> {
                       Text(
                         '${userData['friendCount']}',
                         style: TextStyle(
-                          color: Colors.white,
+                          color: const Color.fromARGB(255, 0, 0, 0),
                           fontSize: size.width *
                               0.035, // Adjusted text size to match smaller heart
                           fontWeight: FontWeight.bold,
@@ -726,8 +724,10 @@ class _UserProfileState extends State<UserProfile> {
           SizedBox(
             height: size.width * 0.8,
             child: ListView.builder(
-              padding: EdgeInsets.symmetric(
-                horizontal: size.width * 0.04,
+              padding: EdgeInsets.only(
+                left: size.width * 0.04,
+                right: size.width * 0.04,
+                top: 0,
               ),
               scrollDirection: Axis.horizontal,
               itemCount: 6,
@@ -763,15 +763,16 @@ class _UserProfileState extends State<UserProfile> {
             ),
           ),
 
-          SizedBox(
-              height: sectionSpacing), // Consistent spacing_buildContentGrids
+          SizedBox(height: sectionSpacing), // Consistent spacing
 
           // Reels Section
           SizedBox(
             height: size.width * 1.0,
             child: ListView.builder(
-              padding: EdgeInsets.symmetric(
-                horizontal: size.width * 0.04,
+              padding: EdgeInsets.only(
+                left: size.width * 0.04,
+                right: size.width * 0.04,
+                top: 0,
               ),
               scrollDirection: Axis.horizontal,
               itemCount: 6,
@@ -1072,6 +1073,7 @@ class _UserProfileState extends State<UserProfile> {
       ),
     );
   }
+
   void _showReportSheet() {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
     final screenWidth = MediaQuery.of(context).size.width;

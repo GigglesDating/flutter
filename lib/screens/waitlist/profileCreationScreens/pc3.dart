@@ -252,17 +252,23 @@ class _ProfileCreation3State extends State<ProfileCreation3> {
       final uuid = prefs.getString('user_uuid') ?? '';
 
       // Convert selected interests to required format
-      final selectedInterests = _selectedDefaultInterests.map((interest) {
-        final interestData = _defaultInterests.firstWhere(
-          (i) => i['name'] == interest,
-          orElse: () => {'name': interest, 'icon': 'custom'},
-        );
+      final selectedInterests = _selectedInterests.map((interest) {
+        if (_customInterests.contains(interest)) {
+          // For custom interests
+          return {'name': interest, 'is_custom': true, 'added_by': uuid};
+        } else {
+          // For default interests
+          final defaultInterest = _defaultInterests.firstWhere(
+            (i) => i['name'] == interest,
+            orElse: () => {'id': '', 'name': interest},
+          );
 
-        return {
-          'name': interest,
-          'icon': interestData['icon'].toString(),
-          'is_custom': _customInterests.contains(interest),
-        };
+          return {
+            'id': defaultInterest['id'],
+            'name': interest,
+            'is_custom': false
+          };
+        }
       }).toList();
 
       final thinkProvider = ThinkProvider();

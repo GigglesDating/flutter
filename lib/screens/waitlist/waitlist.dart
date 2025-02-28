@@ -33,7 +33,10 @@ class _WaitlistScreenState extends State<WaitlistScreen>
         statusBarColor: Colors.transparent,
       ),
     );
-    SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+    SystemChrome.setEnabledSystemUIMode(
+      SystemUiMode.immersiveSticky,
+      overlays: [],
+    );
     SystemChrome.setPreferredOrientations([
       DeviceOrientation.portraitUp,
       DeviceOrientation.portraitDown,
@@ -504,6 +507,9 @@ class _WaitlistScreenState extends State<WaitlistScreen>
             isDarkMode ? const Color(0xFF121212) : Colors.white,
         systemNavigationBarIconBrightness:
             isDarkMode ? Brightness.light : Brightness.dark,
+        systemNavigationBarDividerColor: Colors.transparent,
+        systemNavigationBarContrastEnforced: false,
+        systemStatusBarContrastEnforced: false,
       ),
       child: Scaffold(
         backgroundColor: isDarkMode ? const Color(0xFF121212) : Colors.white,
@@ -612,9 +618,9 @@ class _WaitlistScreenState extends State<WaitlistScreen>
                 transform: Matrix4.translationValues(
                     0,
                     _selectedEventIndex != null
-                        ? -size.height * 0.02 // Height for expanded view
+                        ? 0 // Remove negative offset for expanded view
                         : -size.height *
-                            0.045, // Original height for waitlist view
+                            0.045, // Keep original offset for waitlist view
                     0),
                 decoration: BoxDecoration(
                   color: isDarkMode ? const Color(0xFF121212) : Colors.white,
@@ -624,89 +630,90 @@ class _WaitlistScreenState extends State<WaitlistScreen>
                 ),
                 child: _selectedEventIndex != null
                     ? _buildExpandedEventView(events[_selectedEventIndex!])
-                    : Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Padding(
-                            padding: EdgeInsets.fromLTRB(
-                              size.width * 0.06,
-                              size.height * 0.01,
-                              size.width * 0.06,
-                              padding.bottom +
-                                  (isIOS
-                                      ? size.width * 0.08
-                                      : size.width * 0.06),
-                            ),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'While you are waiting',
-                                  style: TextStyle(
-                                    fontSize: size.width * 0.07,
-                                    fontWeight: FontWeight.w600,
-                                    color: isDarkMode
-                                        ? Colors.white
-                                        : Colors.black,
-                                    height: 1.2,
-                                  ),
-                                ),
-                                SizedBox(height: size.height * 0.01),
-                                Text(
-                                  'Finding the one, but also the fun!',
-                                  style: TextStyle(
-                                    fontSize: size.width * 0.04,
-                                    fontWeight: FontWeight.w500,
-                                    color: isDarkMode
-                                        ? Colors.white
-                                        : Colors.black,
-                                    height: 1.2,
-                                  ),
-                                ),
-                                SizedBox(height: size.height * 0.015),
-                                Text(
-                                  'Participate in one of our free online / offline fun competitions,'
-                                  ' if you win, you can skip the waitlist instantly.',
-                                  textAlign: TextAlign.justify,
-                                  style: TextStyle(
-                                    fontSize: size.width * 0.035,
-                                    color: isDarkMode
-                                        ? Colors.white70
-                                        : Colors.grey[600],
-                                    height: 1.4,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          SizedBox(
-                            height: size.height *
-                                0.50, // Maintain original height for carousel
-                            child: CarouselSlider.builder(
-                              itemCount: events.length,
-                              options: CarouselOptions(
-                                height: size.height * 0.50,
-                                viewportFraction: 0.75,
-                                enlargeCenterPage: true,
-                                enableInfiniteScroll: true,
+                    : SingleChildScrollView(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Padding(
+                              padding: EdgeInsets.fromLTRB(
+                                size.width * 0.06,
+                                size.height * 0.01,
+                                size.width * 0.06,
+                                padding.bottom +
+                                    (isIOS
+                                        ? size.width * 0.08
+                                        : size.width * 0.06),
                               ),
-                              itemBuilder: (context, index, realIndex) {
-                                final event = events[index];
-                                return EventCard(
-                                  event: event,
-                                  index: index,
-                                  onLike: () {
-                                    setState(() {
-                                      event['isLiked'] = !event['isLiked'];
-                                    });
-                                    HapticFeedback.selectionClick();
-                                  },
-                                  onRegister: _handleEventRegistration,
-                                );
-                              },
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'While you are waiting',
+                                    style: TextStyle(
+                                      fontSize: size.width * 0.07,
+                                      fontWeight: FontWeight.w600,
+                                      color: isDarkMode
+                                          ? Colors.white
+                                          : Colors.black,
+                                      height: 1.2,
+                                    ),
+                                  ),
+                                  SizedBox(height: size.height * 0.01),
+                                  Text(
+                                    'Finding the one, but also the fun!',
+                                    style: TextStyle(
+                                      fontSize: size.width * 0.04,
+                                      fontWeight: FontWeight.w500,
+                                      color: isDarkMode
+                                          ? Colors.white
+                                          : Colors.black,
+                                      height: 1.2,
+                                    ),
+                                  ),
+                                  SizedBox(height: size.height * 0.015),
+                                  Text(
+                                    'Participate in one of our free online / offline fun competitions,'
+                                    ' if you win, you can skip the waitlist instantly.',
+                                    textAlign: TextAlign.justify,
+                                    style: TextStyle(
+                                      fontSize: size.width * 0.035,
+                                      color: isDarkMode
+                                          ? Colors.white70
+                                          : Colors.grey[600],
+                                      height: 1.4,
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
-                          ),
-                        ],
+                            SizedBox(
+                              height: size.height * 0.50,
+                              child: CarouselSlider.builder(
+                                itemCount: events.length,
+                                options: CarouselOptions(
+                                  height: size.height * 0.50,
+                                  viewportFraction: 0.75,
+                                  enlargeCenterPage: true,
+                                  enableInfiniteScroll: true,
+                                ),
+                                itemBuilder: (context, index, realIndex) {
+                                  final event = events[index];
+                                  return EventCard(
+                                    event: event,
+                                    index: index,
+                                    onLike: () {
+                                      setState(() {
+                                        event['isLiked'] = !event['isLiked'];
+                                      });
+                                      HapticFeedback.selectionClick();
+                                    },
+                                    onRegister: _handleEventRegistration,
+                                  );
+                                },
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
               ),
             ),

@@ -5,6 +5,8 @@ import 'dart:ui';
 import 'package:flutter_datetime_picker_plus/flutter_datetime_picker_plus.dart'
     as picker;
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:provider/provider.dart';
+import '../../network/auth_provider.dart';
 import '../barrel.dart';
 
 class SignupScreen extends StatefulWidget {
@@ -552,9 +554,8 @@ class _SignupScreenState extends State<SignupScreen> {
     setState(() => _isLoading = true);
 
     try {
-      // Get UUID from SharedPreferences
-      final prefs = await SharedPreferences.getInstance();
-      final uuid = prefs.getString('user_uuid');
+      final authProvider = Provider.of<AuthProvider>(context, listen: false);
+      final uuid = authProvider.uuid;
 
       if (uuid == null) {
         throw Exception('User ID not found. Please try logging in again.');
@@ -574,40 +575,18 @@ class _SignupScreenState extends State<SignupScreen> {
 
       if (!mounted) return;
 
+      setState(() =>
+          _isLoading = false); // Reset loading state regardless of response
+
       if (response['status'] == 'success') {
-        // Save registration status
+        final prefs = await SharedPreferences.getInstance();
         await prefs.setString('reg_process', 'reg_started');
 
         if (!mounted) return;
 
-        // Navigate to KYC screen with animation
         Navigator.pushReplacement(
           context,
-          PageRouteBuilder(
-            pageBuilder: (context, animation, secondaryAnimation) =>
-                const KycConsentScreen(),
-            transitionsBuilder:
-                (context, animation, secondaryAnimation, child) {
-              const begin = Offset(1.0, 0.0);
-              const end = Offset.zero;
-              const curve = Curves.easeInOutCubic;
-
-              var tween = Tween(begin: begin, end: end).chain(
-                CurveTween(curve: curve),
-              );
-
-              var offsetAnimation = animation.drive(tween);
-
-              return FadeTransition(
-                opacity: animation,
-                child: SlideTransition(
-                  position: offsetAnimation,
-                  child: child,
-                ),
-              );
-            },
-            transitionDuration: const Duration(milliseconds: 500),
-          ),
+          MaterialPageRoute(builder: (context) => const KycConsentScreen()),
         );
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -620,16 +599,14 @@ class _SignupScreenState extends State<SignupScreen> {
       }
     } catch (e) {
       if (!mounted) return;
+      setState(() =>
+          _isLoading = false); // Make sure to reset loading state on error
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Error during signup: $e'),
+          content: Text(e.toString()),
           duration: const Duration(seconds: 3),
         ),
       );
-    } finally {
-      if (mounted) {
-        setState(() => _isLoading = false);
-      }
     }
   }
 

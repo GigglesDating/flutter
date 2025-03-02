@@ -5,7 +5,8 @@ import 'package:url_launcher/url_launcher.dart';
 import 'dart:math' show pi;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:async';
-
+import 'package:provider/provider.dart';
+import '../../network/auth_provider.dart';
 import '../barrel.dart';
 
 class WaitlistScreen extends StatefulWidget {
@@ -23,6 +24,9 @@ class _WaitlistScreenState extends State<WaitlistScreen>
   late Animation<double> _fadeAnimation;
   Timer? _statusCheckTimer;
   bool _isCheckingStatus = false;
+  bool _isLoading = true;
+  List<Map<String, dynamic>> _events = [];
+  final Set<String> _likedEvents = {};
 
   @override
   void initState() {
@@ -68,6 +72,8 @@ class _WaitlistScreenState extends State<WaitlistScreen>
 
     _setupFadeAnimation();
     _setupStatusCheck();
+    _fetchEvents();
+    _checkLikedEvents();
   }
 
   void _setupFadeAnimation() {
@@ -132,64 +138,104 @@ class _WaitlistScreenState extends State<WaitlistScreen>
     if (!mounted) return;
 
     await precacheImage(
-      const AssetImage('assets/tempImages/waitlist_bg.jpg'),
+      const AssetImage(
+          'assets/tempImages/waitlist_bg.jpg'), // Keep only background
       context,
     );
-    await precacheImage(
-      const AssetImage('assets/tempImages/snooker.jpg'),
-      context,
-    );
-    await precacheImage(
-      const AssetImage('assets/tempImages/paintball.jpg'),
-      context,
-    );
-    await precacheImage(
-      const AssetImage('assets/tempImages/badminton.jpg'),
-      context,
-    );
+
     if (!mounted) return;
 
-    await Future.wait([
-      for (var event in events)
-        precacheImage(
-          AssetImage(event['image']),
-          context,
-        ),
-    ]);
+    // Precache network images from events
+    if (_events.isNotEmpty) {
+      await Future.wait([
+        for (var event in _events)
+          precacheImage(
+            NetworkImage(event['event_image']),
+            context,
+          ),
+      ]);
+    }
   }
 
-  final List<Map<String, dynamic>> events = [
-    {
-      'name': 'Team Mates',
-      'type': 'Paintball',
-      'date': 'Dec 16',
-      'time': '5 PM',
-      'price': '800',
-      'entries': '14/20',
-      'image': 'assets/tempImages/paintball.jpg',
-      'isLiked': false,
-    },
-    {
-      'name': 'Showdown',
-      'type': 'Badminton',
-      'date': 'Dec 28',
-      'time': '5 PM',
-      'price': '600',
-      'entries': '10/20',
-      'image': 'assets/tempImages/badminton.jpg',
-      'isLiked': false,
-    },
-    {
-      'name': 'Sneak Snooker',
-      'type': 'Snooker',
-      'date': 'Jan 19',
-      'time': '5 PM',
-      'price': '500',
-      'entries': '14/20',
-      'image': 'assets/tempImages/snooker.jpg',
-      'isLiked': false,
-    },
-  ];
+  Future<void> _fetchEvents() async {
+    try {
+      final thinkProvider = ThinkProvider();
+      final response = await thinkProvider.getEvents();
+
+      if (response['status'] == 'success') {
+        setState(() {
+          _events = List<Map<String, dynamic>>.from(response['data']['events']);
+          _isLoading = false;
+        });
+      } else {
+        throw Exception(response['message']);
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isLoading = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error loading events: $e')),
+        );
+      }
+    }
+  }
+
+  Future<void> _checkLikedEvents() async {
+    try {
+      final authProvider = Provider.of<AuthProvider>(context, listen: false);
+      final uuid = authProvider.uuid;
+      if (uuid == null) return;
+
+      final thinkProvider = ThinkProvider();
+      final response =
+          await thinkProvider.updateEventLike(uuid: uuid, action: 'check');
+
+      if (response['status'] == 'success') {
+        setState(() {
+          _likedEvents
+              .addAll(Set<String>.from(response['data']['liked_events']));
+        });
+      }
+    } catch (e) {
+      debugPrint('Error checking liked events: $e');
+    }
+  }
+
+  Future<void> _toggleLike(String eventId) async {
+    try {
+      final authProvider = Provider.of<AuthProvider>(context, listen: false);
+      final uuid = authProvider.uuid;
+      if (uuid == null) return;
+
+      final action = _likedEvents.contains(eventId) ? 'unlike' : 'like';
+
+      final thinkProvider = ThinkProvider();
+      final response = await thinkProvider.updateEventLike(
+          uuid: uuid, eventId: eventId, action: action);
+
+      if (response['status'] == 'success') {
+        setState(() {
+          if (action == 'like') {
+            _likedEvents.add(eventId);
+          } else {
+            _likedEvents.remove(eventId);
+          }
+
+          // Update likes count in events list
+          final eventIndex =
+              _events.indexWhere((e) => e['event_id'] == eventId);
+          if (eventIndex != -1) {
+            _events[eventIndex]['likes_count'] =
+                response['data']['likes_count'];
+          }
+        });
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error updating like: $e')),
+      );
+    }
+  }
 
   void _showDeleteConfirmation() {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
@@ -476,22 +522,25 @@ class _WaitlistScreenState extends State<WaitlistScreen>
     );
   }
 
-  void _handleEventRegistration(int index) {
-    try {
-      HapticFeedback.mediumImpact();
-      setState(() {
-        _selectedEventIndex = index;
-      });
-      _expandController.forward();
-    } catch (e) {
-      setState(() {
-        _selectedEventIndex = index;
-      });
-    }
-  }
+  // void _handleEventRegistration(int index) {
+  //   try {
+  //     HapticFeedback.mediumImpact();
+  //     setState(() {
+  //       _selectedEventIndex = index;
+  //     });
+  //     _expandController.forward();
+  //   } catch (e) {
+  //     setState(() {
+  //       _selectedEventIndex = index;
+  //     });
+  //   }
+  // }
 
   @override
   Widget build(BuildContext context) {
+    if (_isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
     final size = MediaQuery.of(context).size;
     final padding = MediaQuery.of(context).padding;
     final isIOS = Theme.of(context).platform == TargetPlatform.iOS;
@@ -629,7 +678,7 @@ class _WaitlistScreenState extends State<WaitlistScreen>
                   ),
                 ),
                 child: _selectedEventIndex != null
-                    ? _buildExpandedEventView(events[_selectedEventIndex!])
+                    ? _buildExpandedEventView(_events[_selectedEventIndex!])
                     : SingleChildScrollView(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -689,7 +738,7 @@ class _WaitlistScreenState extends State<WaitlistScreen>
                             SizedBox(
                               height: size.height * 0.50,
                               child: CarouselSlider.builder(
-                                itemCount: events.length,
+                                itemCount: _events.length,
                                 options: CarouselOptions(
                                   height: size.height * 0.50,
                                   viewportFraction: 0.75,
@@ -697,17 +746,11 @@ class _WaitlistScreenState extends State<WaitlistScreen>
                                   enableInfiniteScroll: true,
                                 ),
                                 itemBuilder: (context, index, realIndex) {
-                                  final event = events[index];
+                                  final event = _events[index];
                                   return EventCard(
                                     event: event,
-                                    index: index,
-                                    onLike: () {
-                                      setState(() {
-                                        event['isLiked'] = !event['isLiked'];
-                                      });
-                                      HapticFeedback.selectionClick();
-                                    },
-                                    onRegister: _handleEventRegistration,
+                                    likedEvents: _likedEvents,
+                                    onLikePressed: _toggleLike,
                                   );
                                 },
                               ),
@@ -841,8 +884,9 @@ class _WaitlistScreenState extends State<WaitlistScreen>
                         // Clickable Venue Row
                         GestureDetector(
                           onTap: () async {
+                            if (event['venue'] == null) return;
                             final Uri url = Uri.parse(
-                                'https://www.google.com/maps/search/?api=1&query=${event['venue'] ?? 'Koramangala'}');
+                                'https://www.google.com/maps/search/?api=1&query=${event['venue']}');
                             if (await canLaunchUrl(url)) {
                               await launchUrl(url,
                                   mode: LaunchMode.externalApplication);
@@ -861,7 +905,7 @@ class _WaitlistScreenState extends State<WaitlistScreen>
                               Row(
                                 children: [
                                   Text(
-                                    event['venue'] ?? 'Koramangala',
+                                    event['venue'] ?? '',
                                     style: TextStyle(
                                       color: Colors.white,
                                       fontSize: size.width * 0.045,
@@ -954,25 +998,22 @@ class _WaitlistScreenState extends State<WaitlistScreen>
                               children: [
                                 GestureDetector(
                                   onTap: () {
-                                    setState(() {
-                                      event['isLiked'] =
-                                          !(event['isLiked'] ?? false);
-                                    });
-                                    HapticFeedback.selectionClick();
+                                    _toggleLike(event['event_id']);
                                   },
                                   child: Icon(
-                                    event['isLiked'] ?? false
+                                    _likedEvents.contains(event['event_id'])
                                         ? Icons.favorite
                                         : Icons.favorite_border,
-                                    color: event['isLiked'] ?? false
-                                        ? Colors.red
-                                        : Colors.white,
+                                    color:
+                                        _likedEvents.contains(event['event_id'])
+                                            ? Colors.red
+                                            : Colors.white,
                                     size: size.width * 0.08,
                                   ),
                                 ),
                                 SizedBox(height: size.width * 0.01),
                                 Text(
-                                  '${event['likes'] ?? 312}',
+                                  '${event['likes_count'] ?? 312}',
                                   style: TextStyle(
                                     color: Colors.white,
                                     fontSize: size.width * 0.035,
@@ -1083,8 +1124,9 @@ class _WaitlistScreenState extends State<WaitlistScreen>
                         // Clickable Venue Row
                         GestureDetector(
                           onTap: () async {
+                            if (event['venue'] == null) return;
                             final Uri url = Uri.parse(
-                                'https://www.google.com/maps/search/?api=1&query=${event['venue'] ?? 'Koramangala'}');
+                                'https://www.google.com/maps/search/?api=1&query=${event['venue']}');
                             if (await canLaunchUrl(url)) {
                               await launchUrl(url,
                                   mode: LaunchMode.externalApplication);
@@ -1103,7 +1145,7 @@ class _WaitlistScreenState extends State<WaitlistScreen>
                               Row(
                                 children: [
                                   Text(
-                                    event['venue'] ?? 'Koramangala',
+                                    event['venue'] ?? '',
                                     style: TextStyle(
                                       color: Colors.white,
                                       fontSize: size.width * 0.045,
@@ -1196,25 +1238,22 @@ class _WaitlistScreenState extends State<WaitlistScreen>
                               children: [
                                 GestureDetector(
                                   onTap: () {
-                                    setState(() {
-                                      event['isLiked'] =
-                                          !(event['isLiked'] ?? false);
-                                    });
-                                    HapticFeedback.selectionClick();
+                                    _toggleLike(event['event_id']);
                                   },
                                   child: Icon(
-                                    event['isLiked'] ?? false
+                                    _likedEvents.contains(event['event_id'])
                                         ? Icons.favorite
                                         : Icons.favorite_border,
-                                    color: event['isLiked'] ?? false
-                                        ? Colors.red
-                                        : Colors.white,
+                                    color:
+                                        _likedEvents.contains(event['event_id'])
+                                            ? Colors.red
+                                            : Colors.white,
                                     size: size.width * 0.08,
                                   ),
                                 ),
                                 SizedBox(height: size.width * 0.01),
                                 Text(
-                                  '${event['likes'] ?? 312}',
+                                  '${event['likes_count'] ?? 312}',
                                   style: TextStyle(
                                     color: Colors.white,
                                     fontSize: size.width * 0.035,
@@ -1276,273 +1315,97 @@ class _WaitlistScreenState extends State<WaitlistScreen>
 
 class EventCard extends StatelessWidget {
   final Map<String, dynamic> event;
-  final VoidCallback onLike;
-  final Function(int) onRegister;
-  final int index;
+  final Set<String> likedEvents;
+  final Function(String) onLikePressed;
 
   const EventCard({
     super.key,
     required this.event,
-    required this.onLike,
-    required this.onRegister,
-    required this.index,
+    required this.likedEvents,
+    required this.onLikePressed,
   });
 
   @override
   Widget build(BuildContext context) {
-    final size = MediaQuery.of(context).size;
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    final isLiked = likedEvents.contains(event['event_id']);
 
     return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(24),
+        color: isDarkMode ? Colors.grey[900] : Colors.white,
+        borderRadius: BorderRadius.circular(15),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withAlpha(20),
+            color: Colors.black.withAlpha(10),
             blurRadius: 10,
             offset: const Offset(0, 5),
           ),
         ],
       ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(24),
-        child: Stack(
-          children: [
-            // Event Image
-            Image.asset(
-              event['image'],
-              fit: BoxFit.cover,
-              width: double.infinity,
-              height: double.infinity,
-            ),
-
-            // Gradient Overlay
-            Container(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [
-                    Colors.transparent,
-                    Colors.black.withAlpha(200),
-                  ],
-                ),
-              ),
-            ),
-
-            // Content
-            Padding(
-              padding: EdgeInsets.all(size.width * 0.04), // Responsive padding
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Top section with entries and heart
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Entries Left',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: size.width * 0.03,
-                            ),
-                          ),
-                          Text(
-                            event['entries'],
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: size.width * 0.035,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ],
-                      ),
-                      IconButton(
-                        onPressed: onLike,
-                        icon: Icon(
-                          event['isLiked']
-                              ? Icons.favorite
-                              : Icons.favorite_outline,
-                          color: event['isLiked'] ? Colors.red : Colors.white,
-                          size: size.width * 0.06,
-                        ),
-                        padding: EdgeInsets.zero,
-                        constraints: const BoxConstraints(),
-                      ),
-                    ],
-                  ),
-
-                  const Spacer(),
-
-                  // Event type
-                  Text(
-                    event['type'],
-                    style: TextStyle(
-                      color: Colors.white70,
-                      fontSize: size.width * 0.035,
-                    ),
-                  ),
-                  SizedBox(height: size.height * 0.005),
-
-                  // Event name
-                  Text(
-                    event['name'],
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: size.width * 0.055,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  SizedBox(height: size.height * 0.01),
-
-                  // Price section
-                  Row(
-                    children: [
-                      Text(
-                        '₹${event['price']}',
-                        style: TextStyle(
-                          color: Colors.white70,
-                          fontSize: size.width * 0.04,
-                          decoration: TextDecoration.lineThrough,
-                          decorationColor: Colors.red,
-                          decorationThickness: 2,
-                        ),
-                      ),
-                      SizedBox(width: size.width * 0.02),
-                      Text(
-                        '₹0',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: size.width * 0.04,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
-                  ),
-                  SizedBox(height: size.height * 0.015),
-
-                  // Pills row with horizontal scroll if needed
-                  SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    child: Row(
-                      children: [
-                        _buildPill(context, event['date']),
-                        SizedBox(width: size.width * 0.02),
-                        _buildPill(context, event['time']),
-                        SizedBox(width: size.width * 0.02),
-                        GestureDetector(
-                          onTap: () {
-                            HapticFeedback.selectionClick();
-                          },
-                          child: _buildPill(
-                            context,
-                            'Venue',
-                            isClickable: true,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  SizedBox(height: size.height * 0.015),
-
-                  // Register button
-                  _buildRegisterButton(context),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildPill(BuildContext context, String text,
-      {bool isClickable = false}) {
-    final size = MediaQuery.of(context).size;
-    return Container(
-      padding: EdgeInsets.symmetric(
-        horizontal: size.width * 0.03,
-        vertical: size.height * 0.008,
-      ),
-      decoration: BoxDecoration(
-        color: Colors.white.withAlpha(30),
-        borderRadius: BorderRadius.circular(size.width * 0.04),
-        border: isClickable ? Border.all(color: Colors.white30) : null,
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            text,
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: size.width * 0.035,
+          ClipRRect(
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(15)),
+            child: Image.network(
+              event['event_image'],
+              height: 200,
+              width: double.infinity,
+              fit: BoxFit.cover,
+              errorBuilder: (context, error, stackTrace) {
+                return Container(
+                  height: 200,
+                  color: Colors.grey[300],
+                  child: const Icon(Icons.error),
+                );
+              },
             ),
           ),
-          if (isClickable) ...[
-            SizedBox(width: size.width * 0.01),
-            Icon(
-              Icons.location_on_outlined,
-              color: Colors.white,
-              size: size.width * 0.035,
-            ),
-          ],
-        ],
-      ),
-    );
-  }
-
-  Widget _buildRegisterButton(BuildContext context) {
-    final size = MediaQuery.of(context).size;
-    return Container(
-      width: double.infinity,
-      height: size.height * 0.06,
-      decoration: BoxDecoration(
-        color: Colors.white.withAlpha(30),
-        borderRadius: BorderRadius.circular(size.width * 0.06),
-      ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: () {
-            HapticFeedback.mediumImpact();
-            onRegister(index);
-          },
-          borderRadius: BorderRadius.circular(size.width * 0.06),
-          child: Padding(
-            padding: EdgeInsets.symmetric(horizontal: size.width * 0.04),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          Padding(
+            padding: const EdgeInsets.all(15),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  'Register',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: size.width * 0.04,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                Container(
-                  width: size.width * 0.08,
-                  height: size.width * 0.08,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: Colors.white.withAlpha(30),
-                  ),
-                  child: Center(
-                    child: Icon(
-                      Icons.arrow_forward,
-                      color: Colors.white,
-                      size: size.width * 0.05,
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      event['event_name'],
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: isDarkMode ? Colors.white : Colors.black,
+                      ),
                     ),
-                  ),
+                    IconButton(
+                      icon: Icon(
+                        isLiked ? Icons.favorite : Icons.favorite_border,
+                        color: isLiked ? Colors.red : Colors.grey,
+                      ),
+                      onPressed: () => onLikePressed(event['event_id']),
+                    ),
+                  ],
                 ),
+                const SizedBox(height: 10),
+                Row(
+                  children: [
+                    Icon(Icons.sports,
+                        color: isDarkMode ? Colors.white70 : Colors.black54),
+                    const SizedBox(width: 5),
+                    Text(
+                      event['sport'],
+                      style: TextStyle(
+                        color: isDarkMode ? Colors.white70 : Colors.black54,
+                      ),
+                    ),
+                  ],
+                ),
+                // ... rest of your existing card UI with real data
               ],
             ),
           ),
-        ),
+        ],
       ),
     );
   }

@@ -84,18 +84,12 @@ class _LoginScreenState extends State<LoginScreen> {
 
       // Check if this is the override number
       if (_phoneNumber == _overrideNumber && _otp == '0000') {
-        // Skip normal OTP verification for override number
         if (!mounted) return;
-
         setState(() {
           _isLoading = false;
         });
-
-        // Navigate directly to home via navigation controller
         Navigator.of(context).pushAndRemoveUntil(
-          MaterialPageRoute(
-            builder: (context) => const NavigationController(),
-          ),
+          MaterialPageRoute(builder: (context) => const NavigationController()),
           (route) => false,
         );
         return;
@@ -116,141 +110,28 @@ class _LoginScreenState extends State<LoginScreen> {
         });
 
         // Navigate based on registration process status
-        if (mounted) {
-          // If reg_process is null or not in response, navigate to IntroVideo
-          if (response['reg_process'] == null) {
+        final regProcess = authProvider.regProcess;
+
+        switch (regProcess) {
+          case 'new_user':
             Navigator.of(context).pushAndRemoveUntil(
-              PageRouteBuilder(
-                pageBuilder: (context, animation, secondaryAnimation) =>
-                    SplashScreen(),
-                transitionsBuilder:
-                    (context, animation, secondaryAnimation, child) {
-                  const begin = Offset(1.0, 0.0); // Slide from right
-                  const end = Offset.zero;
-                  const curve = Curves.easeInOutCubic;
-
-                  var tween = Tween(begin: begin, end: end).chain(
-                    CurveTween(curve: curve),
-                  );
-
-                  var offsetAnimation = animation.drive(tween);
-
-                  // Fade transition combined with slide
-                  return FadeTransition(
-                    opacity: animation,
-                    child: SlideTransition(
-                      position: offsetAnimation,
-                      child: child,
-                    ),
-                  );
-                },
-                transitionDuration: const Duration(milliseconds: 500),
-              ),
+              MaterialPageRoute(builder: (context) => const SignupScreen()),
               (route) => false,
             );
-            return;
-          }
-
-          // Store the registration process status
-          _regProcess = response['reg_process'].toString();
-
-          switch (_regProcess) {
-            case 'new_user':
-              Navigator.of(context).pushAndRemoveUntil(
-                PageRouteBuilder(
-                  pageBuilder: (context, animation, secondaryAnimation) =>
-                      SignupScreen(),
-                  transitionsBuilder:
-                      (context, animation, secondaryAnimation, child) {
-                    const begin = Offset(1.0, 0.0); // Slide from right
-                    const end = Offset.zero;
-                    const curve = Curves.easeInOutCubic;
-
-                    var tween = Tween(begin: begin, end: end).chain(
-                      CurveTween(curve: curve),
-                    );
-
-                    var offsetAnimation = animation.drive(tween);
-
-                    // Fade transition combined with slide
-                    return FadeTransition(
-                      opacity: animation,
-                      child: SlideTransition(
-                        position: offsetAnimation,
-                        child: child,
-                      ),
-                    );
-                  },
-                  transitionDuration: const Duration(milliseconds: 500),
-                ),
-                (route) => false,
-              );
-              break;
-
-            case 'reg_started':
-              Navigator.of(context).pushAndRemoveUntil(
-                MaterialPageRoute(
-                  builder: (context) => const AadharStatusScreen(),
-                ),
-                (route) => false,
-              );
-              break;
-
-            case 'aadhar_failed':
-              Navigator.of(context).pushAndRemoveUntil(
-                MaterialPageRoute(
-                  builder: (context) => const AadharStatusScreen(),
-                ),
-                (route) => false,
-              );
-              break;
-
-            case 'aadhar_successful':
-              Navigator.of(context).pushAndRemoveUntil(
-                MaterialPageRoute(
-                  builder: (context) => const ProfileCreation1(),
-                ),
-                (route) => false,
-              );
-              break;
-
-            case 'profile_creation2':
-              Navigator.of(context).pushAndRemoveUntil(
-                MaterialPageRoute(
-                  builder: (context) => const ProfileCreation2(),
-                ),
-                (route) => false,
-              );
-              break;
-
-            case 'profile_creation3':
-              Navigator.of(context).pushAndRemoveUntil(
-                MaterialPageRoute(
-                  builder: (context) => const ProfileCreation3(),
-                ),
-                (route) => false,
-              );
-              break;
-
-            case 'waitlisted':
-              Navigator.of(context).pushAndRemoveUntil(
-                MaterialPageRoute(
-                  builder: (context) => const WaitlistScreen(),
-                ),
-                (route) => false,
-              );
-              break;
-
-            default:
-              // If reg_process is unknown, also start from beginning
-              Navigator.of(context).pushAndRemoveUntil(
-                MaterialPageRoute(
-                  builder: (context) => SplashScreen(),
-                ),
-                (route) => false,
-              );
-              break;
-          }
+            break;
+          case 'reg_started':
+            Navigator.of(context).pushAndRemoveUntil(
+              MaterialPageRoute(builder: (context) => const KycConsentScreen()),
+              (route) => false,
+            );
+            break;
+          default:
+            // User is fully registered, go to main app
+            Navigator.of(context).pushAndRemoveUntil(
+              MaterialPageRoute(
+                  builder: (context) => const NavigationController()),
+              (route) => false,
+            );
         }
       } else {
         setState(() {

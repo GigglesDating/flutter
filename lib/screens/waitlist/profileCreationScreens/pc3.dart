@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_frontend/screens/barrel.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:provider/provider.dart';
+import '/../network/auth_provider.dart';
 
 class ProfileCreation3 extends StatefulWidget {
   const ProfileCreation3({super.key});
@@ -248,21 +250,18 @@ class _ProfileCreation3State extends State<ProfileCreation3> {
 
   Future<void> _submitInterests() async {
     try {
-      final prefs = await SharedPreferences.getInstance();
-      final uuid = prefs.getString('user_uuid') ?? '';
+      final authProvider = Provider.of<AuthProvider>(context, listen: false);
+      final uuid = authProvider.uuid ?? '';
 
       // Convert selected interests to required format
       final selectedInterests = _selectedInterests.map((interest) {
         if (_customInterests.contains(interest)) {
-          // For custom interests
           return {'name': interest, 'is_custom': true, 'added_by': uuid};
         } else {
-          // For default interests
           final defaultInterest = _defaultInterests.firstWhere(
             (i) => i['name'] == interest,
             orElse: () => {'id': '', 'name': interest},
           );
-
           return {
             'id': defaultInterest['id'],
             'name': interest,
@@ -281,16 +280,18 @@ class _ProfileCreation3State extends State<ProfileCreation3> {
         throw Exception(response['message'] ?? 'Failed to submit interests');
       }
 
+      // Update registration status using AuthProvider
+      await authProvider.updateRegProcess('waitlisted');
+
       if (!mounted) return;
 
-      // Navigate to waitlist screen
-      Navigator.push(
-        context,
+      // Navigate to waitlist screen with replacement
+      Navigator.of(context).pushAndRemoveUntil(
         PageRouteBuilder(
           pageBuilder: (context, animation, secondaryAnimation) =>
               const WaitlistScreen(),
           transitionsBuilder: (context, animation, secondaryAnimation, child) {
-            const begin = Offset(1.0, 0.0); // Slide from right
+            const begin = Offset(1.0, 0.0);
             const end = Offset.zero;
             const curve = Curves.easeInOutCubic;
 
@@ -310,6 +311,7 @@ class _ProfileCreation3State extends State<ProfileCreation3> {
           },
           transitionDuration: const Duration(milliseconds: 500),
         ),
+        (route) => false,
       );
     } catch (e) {
       if (!mounted) return;

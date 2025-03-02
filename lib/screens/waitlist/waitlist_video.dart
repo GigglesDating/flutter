@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:video_player/video_player.dart';
-
 import '../barrel.dart';
+import 'dart:async';
 
 class WaitlistVideo extends StatefulWidget {
   final bool? value;
@@ -18,12 +18,12 @@ class WaitlistVideo extends StatefulWidget {
 class _WaitlistVideo extends State<WaitlistVideo> {
   late VideoPlayerController _videoPlayerController;
   bool _isInitialized = false;
-
-  // late Future<void> _initializeVideoPlayerFuture;
   bool isPlaying = false;
   bool _isFirstTimeCompleted = false;
-  // bool _isButtonVisible = false;
   bool _replay = false;
+  bool _isError = false;
+  String _errorMessage = '';
+  Timer? _urlRefreshTimer;
 
   void _enterFullPage() {
     SystemChrome.setEnabledSystemUIMode(
@@ -44,51 +44,92 @@ class _WaitlistVideo extends State<WaitlistVideo> {
     ]);
   }
 
-  @override
-  void dispose() {
-    super.dispose();
-    _videoPlayerController.dispose();
-    _exitFullPage();
+  Future<void> _refreshVideo() async {
+    try {
+      final thinkProvider = ThinkProvider();
+      final response = await thinkProvider.getIntroVideo();
+
+      if (response['status'] == 'success') {
+        String videoUrl = response['data']['intro_video_url'];
+        final oldController = _videoPlayerController;
+        final position = await oldController.position;
+
+        // Setup new controller with fresh URL
+        _videoPlayerController =
+            VideoPlayerController.networkUrl(Uri.parse(videoUrl));
+        await _videoPlayerController.initialize();
+        await _videoPlayerController.seekTo(position ?? Duration.zero);
+        if (oldController.value.isPlaying) {
+          _videoPlayerController.play();
+        }
+
+        // Dispose old controller after new one is ready
+        await oldController.dispose();
+
+        if (mounted) {
+          setState(() {
+            _isInitialized = true;
+          });
+        }
+      }
+    } catch (e) {
+      debugPrint('Error refreshing video: $e');
+    }
+  }
+
+  Future<void> _initializeVideo() async {
+    try {
+      final thinkProvider = ThinkProvider();
+      final response = await thinkProvider.getIntroVideo();
+
+      if (response['status'] == 'success') {
+        String videoUrl = response['data']['intro_video_url'];
+        _videoPlayerController =
+            VideoPlayerController.networkUrl(Uri.parse(videoUrl));
+
+        await _videoPlayerController.initialize();
+        if (mounted) {
+          setState(() {
+            _isInitialized = true;
+          });
+          _videoPlayerController.play();
+        }
+
+        _videoPlayerController.addListener(() {
+          if (_videoPlayerController.value.position ==
+              _videoPlayerController.value.duration) {
+            setState(() {
+              if (!_isFirstTimeCompleted) {
+                _isFirstTimeCompleted = true;
+              }
+              isPlaying = false;
+            });
+          }
+        });
+
+        // Setup refresh timer for pre-signed URL
+        _urlRefreshTimer = Timer.periodic(const Duration(minutes: 50), (_) {
+          _refreshVideo();
+        });
+      } else {
+        setState(() {
+          _isError = true;
+          _errorMessage = response['message'] ?? 'Failed to load video';
+        });
+      }
+    } catch (e) {
+      setState(() {
+        _isError = true;
+        _errorMessage = 'Error loading video: $e';
+      });
+    }
   }
 
   @override
   void initState() {
     super.initState();
     _enterFullPage();
-    _videoPlayerController =
-        VideoPlayerController.asset("assets/video/Intro_video.mp4");
-    // _videoPlayerController.setLooping(true);
-    _videoPlayerController.initialize().then((_) async {
-      setState(() {
-        _isInitialized = true;
-      });
-      _videoPlayerController.play();
-    });
-
-    SystemChrome.setPreferredOrientations([
-      DeviceOrientation.landscapeLeft,
-      DeviceOrientation.landscapeRight,
-    ]);
-
-    _videoPlayerController.addListener(() {
-      if (_videoPlayerController.value.position ==
-          _videoPlayerController.value.duration) {
-        // If the video is over, mark it as paused
-        setState(() {
-          if (!_isFirstTimeCompleted) {
-            // Show button only after the video completes
-            setState(() {
-              // _isButtonVisible = true;
-              _isFirstTimeCompleted = true;
-            });
-          }
-        });
-        setState(() {
-          isPlaying = false;
-        });
-      }
-    });
-    setState(() {});
+    _initializeVideo();
   }
 
   void _togglePlayPause() {
@@ -114,20 +155,23 @@ class _WaitlistVideo extends State<WaitlistVideo> {
         children: [
           Expanded(
             child: Center(
-              child: _isInitialized
-                  ? SizedBox(
-                      width: _videoPlayerController.value.size.width,
-                      height: _videoPlayerController.value.size.height,
-                      // aspectRatio: _videoPlayerController.value.aspectRatio,
-                      child: VideoPlayer(_videoPlayerController),
-                    )
-                  : Center(
-                      child: SizedBox(
-                          width: 48,
-                          height: 48,
-                          child: CircularProgressIndicator(
-                            color: const Color.fromARGB(255, 82, 113, 255),
-                          ))),
+              child: _isError
+                  ? Text(_errorMessage)
+                  : _isInitialized
+                      ? SizedBox(
+                          width: _videoPlayerController.value.size.width,
+                          height: _videoPlayerController.value.size.height,
+                          child: VideoPlayer(_videoPlayerController),
+                        )
+                      : const Center(
+                          child: SizedBox(
+                            width: 48,
+                            height: 48,
+                            child: CircularProgressIndicator(
+                              color: Color.fromARGB(255, 82, 113, 255),
+                            ),
+                          ),
+                        ),
             ),
           ),
           if (!_videoPlayerController.value.isPlaying)
@@ -142,7 +186,6 @@ class _WaitlistVideo extends State<WaitlistVideo> {
                   ),
                 ),
               ),
-          // if (_isButtonVisible)
           if (_isInitialized)
             Positioned(
                 bottom: 0,
@@ -176,5 +219,13 @@ class _WaitlistVideo extends State<WaitlistVideo> {
         ],
       ),
     );
+  }
+
+  @override
+  void dispose() {
+    _videoPlayerController.dispose();
+    _urlRefreshTimer?.cancel();
+    _exitFullPage();
+    super.dispose();
   }
 }

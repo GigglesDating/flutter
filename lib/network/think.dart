@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'config.dart';
 import 'package:flutter/foundation.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class ThinkProvider {
   // Check app version
@@ -42,16 +43,30 @@ class ThinkProvider {
     required String city,
     required bool consent,
   }) async {
-    return _callFunction('signup', {
-      'uuid': uuid,
-      'first_name': firstName,
-      'last_name': lastName,
-      'dob': dob,
-      'email': email,
-      'gender': gender,
-      'city': city,
-      'consent': consent,
-    });
+    // Get phone number from SharedPreferences
+    final prefs = await SharedPreferences.getInstance();
+    final phoneNumber = prefs.getString(
+        'phone_number'); // We need to store this during OTP verification
+
+    try {
+      final response = await _callFunction('signup', {
+        'uuid': uuid,
+        'phone_number': phoneNumber, // Add this
+        'firstName': firstName,
+        'lastName': lastName,
+        'dob': dob,
+        'email': email,
+        'gender': gender,
+        'city': city,
+        'consent': consent,
+      });
+      return response;
+    } catch (e) {
+      return {
+        'status': 'error',
+        'message': 'Error during signup: $e',
+      };
+    }
   }
 
   // Profile Creation Step 1
@@ -189,29 +204,6 @@ class ThinkProvider {
     }
   }
 
-  Future<Map<String, dynamic>> getEvents() async {
-    try {
-      final response = await _callFunction('get_events', {});
-
-      if (response['status'] == 'success') {
-        return {
-          'status': 'success',
-          'events': response['events'],
-        };
-      } else {
-        return {
-          'status': 'error',
-          'message': response['message'] ?? 'Failed to fetch events',
-        };
-      }
-    } catch (e) {
-      return {
-        'status': 'error',
-        'message': 'Error fetching events: $e',
-      };
-    }
-  }
-
   // Check member status
   Future<Map<String, dynamic>> checkMemberStatus({
     required String uuid,
@@ -274,6 +266,117 @@ class ThinkProvider {
       return {
         'status': 'error',
         'message': 'Error getting override number: $e',
+      };
+    }
+  }
+
+  // Get intro video
+  Future<Map<String, dynamic>> getIntroVideo() async {
+    try {
+      final response = await _callFunction('get_intro_video', {});
+
+      if (response['status'] == 'success') {
+        return {
+          'status': 'success',
+          'data': {
+            'intro_video_url': response['data']
+                ['intro_video_url'] // This is now a pre-signed URL
+          }
+        };
+      } else {
+        return {
+          'status': 'error',
+          'message': response['message'] ?? 'Failed to fetch intro video',
+        };
+      }
+    } catch (e) {
+      debugPrint('Error in getIntroVideo: $e');
+      return {
+        'status': 'error',
+        'message': 'Error fetching intro video: $e',
+      };
+    }
+  }
+
+  // Get events
+  Future<Map<String, dynamic>> getEvents() async {
+    try {
+      final response = await _callFunction('get_events', {});
+
+      if (response['status'] == 'success') {
+        return {
+          'status': 'success',
+          'data': {
+            'events': response['events']
+                .map((event) => {
+                      'event_id': event['event_id'],
+                      'event_name': event['event_name'],
+                      'sport': event['sport'],
+                      'event_image': event['event_image'],
+                      'entries_total': event['entries_total'],
+                      'entries_left': event['entries_left'],
+                      'likes_count': event['likes_count'],
+                      'price': event['price'],
+                      'date_time': event['date_time'],
+                      'venue': event['venue'],
+                      'description': event['description'],
+                      'created_by': event['created_by']
+                    })
+                .toList(),
+          }
+        };
+      } else {
+        return {
+          'status': 'error',
+          'message': response['message'] ?? 'Failed to fetch events',
+          'data': {'events': []}
+        };
+      }
+    } catch (e) {
+      debugPrint('Error in getEvents: $e');
+      return {
+        'status': 'error',
+        'message': 'Error fetching events: $e',
+        'data': {'events': []}
+      };
+    }
+  }
+
+  // Update event like
+  // Update or check event likes
+  Future<Map<String, dynamic>> updateEventLike({
+    required String uuid,
+    String? eventId,
+    String? action, // 'like', 'unlike', or 'check'
+  }) async {
+    try {
+      final response = await _callFunction('update_event_like', {
+        'uuid': uuid,
+        if (eventId != null) 'event_id': eventId,
+        if (action != null) 'action': action,
+      });
+
+      if (response['status'] == 'success') {
+        return {
+          'status': 'success',
+          'data': {
+            'event_id': response['data']['event_id'],
+            'likes_count': response['data']['likes_count'],
+            'liked_events': List<String>.from(response['data']['liked_events']),
+            'is_liked': response['data']['is_liked'],
+          }
+        };
+      } else {
+        return {
+          'status': 'error',
+          'message': response['message'] ?? 'Failed to update event like',
+        };
+      }
+    } catch (e) {
+      debugPrint('Error in updateEventLike: $e');
+      return {
+        'status': 'error',
+        'message': 'Error updating event like: $e',
       };
     }
   }

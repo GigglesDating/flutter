@@ -6,10 +6,29 @@ import 'config.dart';
 
 class AuthProvider extends ChangeNotifier {
   String? _requestId;
+  String? _uuid;
+  String? _phoneNumber;
+  String? _regProcess;
   bool _isLoading = false;
+  bool _isAuthenticated = false;
 
+  // Getters
   bool get isLoading => _isLoading;
   String? get requestId => _requestId;
+  String? get uuid => _uuid;
+  String? get phoneNumber => _phoneNumber;
+  String? get regProcess => _regProcess;
+  bool get isAuthenticated => _isAuthenticated;
+
+  // Initialize from SharedPreferences
+  Future<void> initializeAuth() async {
+    final prefs = await SharedPreferences.getInstance();
+    _uuid = prefs.getString('user_uuid');
+    _phoneNumber = prefs.getString('phone_number');
+    _regProcess = prefs.getString('reg_process');
+    _isAuthenticated = _uuid != null;
+    notifyListeners();
+  }
 
   // Request OTP
   Future<Map<String, dynamic>> requestOtp({
@@ -33,9 +52,9 @@ class AuthProvider extends ChangeNotifier {
 
       final decodedResponse = jsonDecode(response.body);
 
-      // Store requestId if available
       if (decodedResponse['requestId'] != null) {
         _requestId = decodedResponse['requestId'];
+        _phoneNumber = phoneNumber;
         decodedResponse['status'] = true;
       }
 
@@ -82,17 +101,13 @@ class AuthProvider extends ChangeNotifier {
 
       final decodedResponse = jsonDecode(response.body);
 
-      // If verification successful, store UUID in SharedPreferences
       if (response.statusCode == 200 || response.statusCode == 201) {
         if (decodedResponse['uuid'] != null) {
-          final prefs = await SharedPreferences.getInstance();
-          await prefs.setString('user_uuid', decodedResponse['uuid']);
-
-          // Also store registration status if needed
-          if (decodedResponse['reg_process'] != null) {
-            await prefs.setString(
-                'reg_process', decodedResponse['reg_process']);
-          }
+          await _saveAuthData(
+            uuid: decodedResponse['uuid'],
+            phoneNumber: phoneNumber,
+            regProcess: decodedResponse['reg_process'],
+          );
         }
         decodedResponse['status'] = true;
       }
@@ -103,14 +118,6 @@ class AuthProvider extends ChangeNotifier {
     } catch (e) {
       _isLoading = false;
       notifyListeners();
-
-      if (e.toString().contains('TimeoutException')) {
-        return {
-          'status': false,
-          'error': 'Connection timed out. Please try again.',
-        };
-      }
-
       return {
         'status': false,
         'error': 'Failed to connect to server',
@@ -118,22 +125,49 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
-  // Add method to get stored UUID
-  static Future<String?> getStoredUuid() async {
+  // Save authentication data
+  Future<void> _saveAuthData({
+    required String uuid,
+    required String phoneNumber,
+    String? regProcess,
+  }) async {
     final prefs = await SharedPreferences.getInstance();
-    return prefs.getString('user_uuid');
+
+    await prefs.setString('user_uuid', uuid);
+    await prefs.setString('phone_number', phoneNumber);
+    if (regProcess != null) {
+      await prefs.setString('reg_process', regProcess);
+    }
+
+    _uuid = uuid;
+    _phoneNumber = phoneNumber;
+    _regProcess = regProcess;
+    _isAuthenticated = true;
+
+    notifyListeners();
   }
 
-  // Add method to get registration status
-  static Future<String?> getRegProcess() async {
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.getString('reg_process');
-  }
-
-  // Add method to clear stored data (for logout)
-  static Future<void> clearStoredData() async {
+  // Logout
+  Future<void> logout() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('user_uuid');
+    await prefs.remove('phone_number');
     await prefs.remove('reg_process');
+
+    _uuid = null;
+    _phoneNumber = null;
+    _regProcess = null;
+    _isAuthenticated = false;
+    _requestId = null;
+
+    notifyListeners();
+  }
+
+  // Add this method after _saveAuthData
+  Future<void> updateRegProcess(String regProcess) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('reg_process', regProcess);
+    _regProcess = regProcess;
+    notifyListeners();
   }
 }

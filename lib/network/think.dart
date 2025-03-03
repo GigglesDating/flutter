@@ -304,32 +304,12 @@ class ThinkProvider {
       final response = await _callFunction('get_events', {});
 
       if (response['status'] == 'success') {
-        return {
-          'status': 'success',
-          'data': {
-            'events': response['events']
-                .map((event) => {
-                      'event_id': event['event_id'],
-                      'event_name': event['event_name'],
-                      'sport': event['sport'],
-                      'event_image': event['event_image'],
-                      'entries_total': event['entries_total'],
-                      'entries_left': event['entries_left'],
-                      'likes_count': event['likes_count'],
-                      'price': event['price'],
-                      'date_time': event['date_time'],
-                      'venue': event['venue'],
-                      'description': event['description'],
-                      'created_by': event['created_by']
-                    })
-                .toList(),
-          }
-        };
+        return {'status': 'success', 'data': response['events']};
       } else {
         return {
           'status': 'error',
           'message': response['message'] ?? 'Failed to fetch events',
-          'data': {'events': []}
+          'data': []
         };
       }
     } catch (e) {
@@ -337,12 +317,11 @@ class ThinkProvider {
       return {
         'status': 'error',
         'message': 'Error fetching events: $e',
-        'data': {'events': []}
+        'data': []
       };
     }
   }
 
-  // Update event like
   // Update or check event likes
   Future<Map<String, dynamic>> updateEventLike({
     required String uuid,

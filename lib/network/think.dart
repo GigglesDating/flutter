@@ -368,6 +368,54 @@ class ThinkProvider {
     }
   }
 
+  // Get feed posts with pagination
+  Future<Map<String, dynamic>> getFeed({
+    required String uuid,
+    int page = 1,
+  }) async {
+    try {
+      final response = await _callFunction('get_feed', {
+        'uuid': uuid,
+        'page': page,
+      });
+
+      if (response['status'] == 'success') {
+        return {
+          'status': 'success',
+          'data': {
+            'posts': List<Map<String, dynamic>>.from(response['data']['posts']),
+            'has_more': response['data']['has_more'],
+            'next_page': response['data']['next_page'],
+            'total_posts': response['data']['total_posts'],
+          }
+        };
+      } else {
+        return {
+          'status': 'error',
+          'message': response['message'] ?? 'Failed to fetch feed',
+          'data': {
+            'posts': [],
+            'has_more': false,
+            'next_page': null,
+            'total_posts': 0,
+          }
+        };
+      }
+    } catch (e) {
+      debugPrint('Error in getFeed: $e');
+      return {
+        'status': 'error',
+        'message': 'Error fetching feed: $e',
+        'data': {
+          'posts': [],
+          'has_more': false,
+          'next_page': null,
+          'total_posts': 0,
+        }
+      };
+    }
+  }
+
   // Generic function caller
   Future<Map<String, dynamic>> _callFunction(
     String function,

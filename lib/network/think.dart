@@ -304,32 +304,12 @@ class ThinkProvider {
       final response = await _callFunction('get_events', {});
 
       if (response['status'] == 'success') {
-        return {
-          'status': 'success',
-          'data': {
-            'events': response['events']
-                .map((event) => {
-                      'event_id': event['event_id'],
-                      'event_name': event['event_name'],
-                      'sport': event['sport'],
-                      'event_image': event['event_image'],
-                      'entries_total': event['entries_total'],
-                      'entries_left': event['entries_left'],
-                      'likes_count': event['likes_count'],
-                      'price': event['price'],
-                      'date_time': event['date_time'],
-                      'venue': event['venue'],
-                      'description': event['description'],
-                      'created_by': event['created_by']
-                    })
-                .toList(),
-          }
-        };
+        return {'status': 'success', 'data': response['events']};
       } else {
         return {
           'status': 'error',
           'message': response['message'] ?? 'Failed to fetch events',
-          'data': {'events': []}
+          'data': []
         };
       }
     } catch (e) {
@@ -337,35 +317,45 @@ class ThinkProvider {
       return {
         'status': 'error',
         'message': 'Error fetching events: $e',
-        'data': {'events': []}
+        'data': []
       };
     }
   }
 
-  // Update event like
   // Update or check event likes
   Future<Map<String, dynamic>> updateEventLike({
     required String uuid,
     String? eventId,
-    String? action, // 'like', 'unlike', or 'check'
+    String? action, // only 'like' or 'check' now
   }) async {
     try {
       final response = await _callFunction('update_event_like', {
         'uuid': uuid,
         if (eventId != null) 'event_id': eventId,
-        if (action != null) 'action': action,
+        'action': action ?? 'check', // default to 'check' if no action provided
       });
 
       if (response['status'] == 'success') {
-        return {
-          'status': 'success',
-          'data': {
-            'event_id': response['data']['event_id'],
-            'likes_count': response['data']['likes_count'],
-            'liked_events': List<String>.from(response['data']['liked_events']),
-            'is_liked': response['data']['is_liked'],
-          }
-        };
+        if (action == 'check') {
+          return {
+            'status': 'success',
+            'data': {
+              'liked_events':
+                  List<String>.from(response['data']['liked_events']),
+            }
+          };
+        } else {
+          return {
+            'status': 'success',
+            'data': {
+              'event_id': response['data']['event_id'],
+              'likes_count': response['data']['likes_count'],
+              'liked_events':
+                  List<String>.from(response['data']['liked_events']),
+              'is_liked': response['data']['is_liked'],
+            }
+          };
+        }
       } else {
         return {
           'status': 'error',

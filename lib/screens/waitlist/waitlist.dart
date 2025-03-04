@@ -5,8 +5,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'dart:math' show pi;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:async';
-import 'package:provider/provider.dart';
-import '../../network/auth_provider.dart';
+import 'package:intl/intl.dart';
 import '../barrel.dart';
 
 class WaitlistScreen extends StatefulWidget {
@@ -24,14 +23,12 @@ class _WaitlistScreenState extends State<WaitlistScreen>
   late Animation<double> _fadeAnimation;
   Timer? _statusCheckTimer;
   bool _isCheckingStatus = false;
-  bool _isLoading = true;
   List<Map<String, dynamic>> _events = [];
-  final Set<String> _likedEvents = {};
+  bool _isLoading = true;
 
   @override
   void initState() {
     super.initState();
-    _precacheImages();
     SystemChrome.setSystemUIOverlayStyle(
       const SystemUiOverlayStyle(
         statusBarColor: Colors.transparent,
@@ -73,7 +70,12 @@ class _WaitlistScreenState extends State<WaitlistScreen>
     _setupFadeAnimation();
     _setupStatusCheck();
     _fetchEvents();
-    _checkLikedEvents();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _precacheImages();
   }
 
   void _setupFadeAnimation() {
@@ -137,9 +139,9 @@ class _WaitlistScreenState extends State<WaitlistScreen>
   Future<void> _precacheImages() async {
     if (!mounted) return;
 
+    // Keep only the background image
     await precacheImage(
-      const AssetImage(
-          'assets/tempImages/waitlist_bg.jpg'), // Keep only background
+      const AssetImage('assets/tempImages/waitlist_bg.jpg'),
       context,
     );
 
@@ -150,7 +152,7 @@ class _WaitlistScreenState extends State<WaitlistScreen>
       await Future.wait([
         for (var event in _events)
           precacheImage(
-            NetworkImage(event['event_image']),
+            NetworkImage(event['image']),
             context,
           ),
       ]);
@@ -160,80 +162,84 @@ class _WaitlistScreenState extends State<WaitlistScreen>
   Future<void> _fetchEvents() async {
     try {
       final thinkProvider = ThinkProvider();
-      final response = await thinkProvider.getEvents();
+      final prefs = await SharedPreferences.getInstance();
+      final uuid = prefs.getString('user_uuid');
 
-      if (response['status'] == 'success') {
-        setState(() {
-          _events = List<Map<String, dynamic>>.from(response['data']['events']);
-          _isLoading = false;
-        });
+      // Fetch events and liked events in parallel
+      final results = await Future.wait([
+        thinkProvider.getEvents(),
+        if (uuid != null)
+          thinkProvider.updateEventLike(uuid: uuid, action: 'check')
+      ]);
+
+      final eventsResponse = results[0];
+      final likedEventsResponse = uuid != null ? results[1] : null;
+
+      if (eventsResponse['status'] == 'success') {
+        final eventsList =
+            List<Map<String, dynamic>>.from(eventsResponse['data']);
+        final likedEventIds = likedEventsResponse?['status'] == 'success'
+            ? Set<String>.from(likedEventsResponse!['data']['liked_events'])
+            : <String>{};
+
+        final events = eventsList
+            .map((event) {
+              // Parse date string (e.g., "17-03-2025")
+              final DateTime eventDate =
+                  DateFormat('dd-MM-yyyy').parse(event['date']);
+
+              // Parse time string and extract hour (e.g., "10:30:00" -> 10)
+              final timeString = event['time'];
+              final hour = int.parse(timeString.split(':')[0]);
+
+              // Convert 24-hour format to 12-hour format with AM/PM
+              final formattedHour =
+                  hour > 12 ? hour - 12 : (hour == 0 ? 12 : hour);
+              final amPm = hour >= 12 ? 'PM' : 'AM';
+
+              // Skip events in past or today
+              if (eventDate.isBefore(DateTime.now())) {
+                return null;
+              }
+
+              return {
+                'name': event['event_name'],
+                'type': event['sport'],
+                'entries_left': event['entries_left'],
+                'entries_total': event['entries_total'],
+                'image': event['event_image'],
+                'price': event['price'],
+                'venue': event['venue'],
+                'description': event['description'],
+                'likes_count': event['likes_count'],
+                'event_id': event['event_id'],
+                'date': DateFormat('MMM dd').format(eventDate),
+                'time': '$formattedHour $amPm',
+                'isLiked': likedEventIds.contains(event['event_id']),
+              };
+            })
+            .where((event) => event != null)
+            .toList();
+
+        if (mounted) {
+          setState(() {
+            _events = events.cast<Map<String, dynamic>>();
+            _isLoading = false;
+          });
+        }
       } else {
-        throw Exception(response['message']);
+        throw Exception(eventsResponse['message'] ?? 'Failed to fetch events');
       }
     } catch (e) {
       if (mounted) {
-        setState(() => _isLoading = false);
+        setState(() {
+          _events = [];
+          _isLoading = false;
+        });
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Error loading events: $e')),
         );
       }
-    }
-  }
-
-  Future<void> _checkLikedEvents() async {
-    try {
-      final authProvider = Provider.of<AuthProvider>(context, listen: false);
-      final uuid = authProvider.uuid;
-      if (uuid == null) return;
-
-      final thinkProvider = ThinkProvider();
-      final response =
-          await thinkProvider.updateEventLike(uuid: uuid, action: 'check');
-
-      if (response['status'] == 'success') {
-        setState(() {
-          _likedEvents
-              .addAll(Set<String>.from(response['data']['liked_events']));
-        });
-      }
-    } catch (e) {
-      debugPrint('Error checking liked events: $e');
-    }
-  }
-
-  Future<void> _toggleLike(String eventId) async {
-    try {
-      final authProvider = Provider.of<AuthProvider>(context, listen: false);
-      final uuid = authProvider.uuid;
-      if (uuid == null) return;
-
-      final action = _likedEvents.contains(eventId) ? 'unlike' : 'like';
-
-      final thinkProvider = ThinkProvider();
-      final response = await thinkProvider.updateEventLike(
-          uuid: uuid, eventId: eventId, action: action);
-
-      if (response['status'] == 'success') {
-        setState(() {
-          if (action == 'like') {
-            _likedEvents.add(eventId);
-          } else {
-            _likedEvents.remove(eventId);
-          }
-
-          // Update likes count in events list
-          final eventIndex =
-              _events.indexWhere((e) => e['event_id'] == eventId);
-          if (eventIndex != -1) {
-            _events[eventIndex]['likes_count'] =
-                response['data']['likes_count'];
-          }
-        });
-      }
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error updating like: $e')),
-      );
     }
   }
 
@@ -522,25 +528,31 @@ class _WaitlistScreenState extends State<WaitlistScreen>
     );
   }
 
-  // void _handleEventRegistration(int index) {
-  //   try {
-  //     HapticFeedback.mediumImpact();
-  //     setState(() {
-  //       _selectedEventIndex = index;
-  //     });
-  //     _expandController.forward();
-  //   } catch (e) {
-  //     setState(() {
-  //       _selectedEventIndex = index;
-  //     });
-  //   }
-  // }
+  void _handleEventRegistration(int index) {
+    if (!mounted) return;
+
+    HapticFeedback.mediumImpact();
+    setState(() {
+      if (_selectedEventIndex == index) {
+        _selectedEventIndex = null;
+        _expandController.reverse();
+      } else {
+        _selectedEventIndex = index;
+        _expandController.forward();
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
-      return const Center(child: CircularProgressIndicator());
+      return const Scaffold(
+        body: Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
     }
+
     final size = MediaQuery.of(context).size;
     final padding = MediaQuery.of(context).padding;
     final isIOS = Theme.of(context).platform == TargetPlatform.iOS;
@@ -738,19 +750,23 @@ class _WaitlistScreenState extends State<WaitlistScreen>
                             SizedBox(
                               height: size.height * 0.50,
                               child: CarouselSlider.builder(
-                                itemCount: _events.length,
+                                itemCount: _events.isEmpty ? 0 : _events.length,
                                 options: CarouselOptions(
                                   height: size.height * 0.50,
-                                  viewportFraction: 0.75,
+                                  viewportFraction: 0.85,
                                   enlargeCenterPage: true,
-                                  enableInfiniteScroll: true,
+                                  onPageChanged: (index, reason) {
+                                    HapticFeedback.selectionClick();
+                                  },
                                 ),
                                 itemBuilder: (context, index, realIndex) {
+                                  if (_events.isEmpty) return Container();
                                   final event = _events[index];
                                   return EventCard(
                                     event: event,
-                                    likedEvents: _likedEvents,
-                                    onLikePressed: _toggleLike,
+                                    onLike: () => _handleLike(index),
+                                    onRegister: _handleEventRegistration,
+                                    index: index,
                                   );
                                 },
                               ),
@@ -797,7 +813,7 @@ class _WaitlistScreenState extends State<WaitlistScreen>
               child: Container(
                 decoration: BoxDecoration(
                   image: DecorationImage(
-                    image: AssetImage(event['image']),
+                    image: NetworkImage(event['image']),
                     fit: BoxFit.cover,
                   ),
                   borderRadius: BorderRadius.vertical(
@@ -843,7 +859,7 @@ class _WaitlistScreenState extends State<WaitlistScreen>
                                   ),
                                 ),
                                 Text(
-                                  '${event['entries'] ?? '14/20'}',
+                                  "${event['entries_left']}/${event['entries_total']}",
                                   style: TextStyle(
                                     color: Colors.white,
                                     fontSize: size.width * 0.04,
@@ -862,7 +878,7 @@ class _WaitlistScreenState extends State<WaitlistScreen>
                                   ),
                                 ),
                                 Text(
-                                  event['title'] ?? 'The Exchange',
+                                  event['name'] ?? 'The Exchange',
                                   style: TextStyle(
                                     color: Colors.white,
                                     fontSize: size.width * 0.04,
@@ -884,9 +900,8 @@ class _WaitlistScreenState extends State<WaitlistScreen>
                         // Clickable Venue Row
                         GestureDetector(
                           onTap: () async {
-                            if (event['venue'] == null) return;
                             final Uri url = Uri.parse(
-                                'https://www.google.com/maps/search/?api=1&query=${event['venue']}');
+                                'https://www.google.com/maps/search/?api=1&query=${event['venue'] ?? 'Koramangala'}');
                             if (await canLaunchUrl(url)) {
                               await launchUrl(url,
                                   mode: LaunchMode.externalApplication);
@@ -905,7 +920,7 @@ class _WaitlistScreenState extends State<WaitlistScreen>
                               Row(
                                 children: [
                                   Text(
-                                    event['venue'] ?? '',
+                                    event['venue'] ?? 'Koramangala',
                                     style: TextStyle(
                                       color: Colors.white,
                                       fontSize: size.width * 0.045,
@@ -955,8 +970,11 @@ class _WaitlistScreenState extends State<WaitlistScreen>
                                 color: Colors.transparent,
                                 child: InkWell(
                                   onTap: () {
-                                    HapticFeedback.mediumImpact();
-                                    _handleUnregister();
+                                    if (_selectedEventIndex != null) {
+                                      HapticFeedback.mediumImpact();
+                                      _handleEventRegistration(
+                                          _selectedEventIndex!);
+                                    }
                                   },
                                   borderRadius:
                                       BorderRadius.circular(size.width * 0.13),
@@ -998,16 +1016,19 @@ class _WaitlistScreenState extends State<WaitlistScreen>
                               children: [
                                 GestureDetector(
                                   onTap: () {
-                                    _toggleLike(event['event_id']);
+                                    setState(() {
+                                      event['isLiked'] =
+                                          !(event['isLiked'] ?? false);
+                                    });
+                                    HapticFeedback.selectionClick();
                                   },
                                   child: Icon(
-                                    _likedEvents.contains(event['event_id'])
+                                    event['isLiked'] ?? false
                                         ? Icons.favorite
                                         : Icons.favorite_border,
-                                    color:
-                                        _likedEvents.contains(event['event_id'])
-                                            ? Colors.red
-                                            : Colors.white,
+                                    color: event['isLiked'] ?? false
+                                        ? Colors.red
+                                        : Colors.white,
                                     size: size.width * 0.08,
                                   ),
                                 ),
@@ -1042,7 +1063,7 @@ class _WaitlistScreenState extends State<WaitlistScreen>
               child: Container(
                 decoration: BoxDecoration(
                   image: DecorationImage(
-                    image: AssetImage(event['image']),
+                    image: NetworkImage(event['image']),
                     fit: BoxFit.cover,
                   ),
                   borderRadius: BorderRadius.vertical(
@@ -1083,7 +1104,7 @@ class _WaitlistScreenState extends State<WaitlistScreen>
                                   ),
                                 ),
                                 Text(
-                                  '${event['entries'] ?? '14/20'}',
+                                  "${event['entries_left']}/${event['entries_total']}",
                                   style: TextStyle(
                                     color: Colors.white,
                                     fontSize: size.width * 0.04,
@@ -1102,7 +1123,7 @@ class _WaitlistScreenState extends State<WaitlistScreen>
                                   ),
                                 ),
                                 Text(
-                                  event['title'] ?? 'The Exchange',
+                                  event['name'] ?? 'The Exchange',
                                   style: TextStyle(
                                     color: Colors.white,
                                     fontSize: size.width * 0.04,
@@ -1124,9 +1145,8 @@ class _WaitlistScreenState extends State<WaitlistScreen>
                         // Clickable Venue Row
                         GestureDetector(
                           onTap: () async {
-                            if (event['venue'] == null) return;
                             final Uri url = Uri.parse(
-                                'https://www.google.com/maps/search/?api=1&query=${event['venue']}');
+                                'https://www.google.com/maps/search/?api=1&query=${event['venue'] ?? 'Koramangala'}');
                             if (await canLaunchUrl(url)) {
                               await launchUrl(url,
                                   mode: LaunchMode.externalApplication);
@@ -1145,7 +1165,7 @@ class _WaitlistScreenState extends State<WaitlistScreen>
                               Row(
                                 children: [
                                   Text(
-                                    event['venue'] ?? '',
+                                    event['venue'] ?? 'Koramangala',
                                     style: TextStyle(
                                       color: Colors.white,
                                       fontSize: size.width * 0.045,
@@ -1195,8 +1215,11 @@ class _WaitlistScreenState extends State<WaitlistScreen>
                                 color: Colors.transparent,
                                 child: InkWell(
                                   onTap: () {
-                                    HapticFeedback.mediumImpact();
-                                    _handleUnregister();
+                                    if (_selectedEventIndex != null) {
+                                      HapticFeedback.mediumImpact();
+                                      _handleEventRegistration(
+                                          _selectedEventIndex!);
+                                    }
                                   },
                                   borderRadius:
                                       BorderRadius.circular(size.width * 0.13),
@@ -1238,16 +1261,19 @@ class _WaitlistScreenState extends State<WaitlistScreen>
                               children: [
                                 GestureDetector(
                                   onTap: () {
-                                    _toggleLike(event['event_id']);
+                                    setState(() {
+                                      event['isLiked'] =
+                                          !(event['isLiked'] ?? false);
+                                    });
+                                    HapticFeedback.selectionClick();
                                   },
                                   child: Icon(
-                                    _likedEvents.contains(event['event_id'])
+                                    event['isLiked'] ?? false
                                         ? Icons.favorite
                                         : Icons.favorite_border,
-                                    color:
-                                        _likedEvents.contains(event['event_id'])
-                                            ? Colors.red
-                                            : Colors.white,
+                                    color: event['isLiked'] ?? false
+                                        ? Colors.red
+                                        : Colors.white,
                                     size: size.width * 0.08,
                                   ),
                                 ),
@@ -1299,113 +1325,325 @@ class _WaitlistScreenState extends State<WaitlistScreen>
     );
   }
 
-  // Add this method to handle going back to the waitlist view
-  void _handleUnregister() {
+  // Add this method for handling likes
+  Future<void> _handleLike(int index) async {
     if (!mounted) return;
 
-    HapticFeedback.mediumImpact();
-    _expandController.reverse().then((_) {
-      if (!mounted) return;
-      setState(() {
-        _selectedEventIndex = null;
-      });
-    });
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final uuid = prefs.getString('user_uuid');
+      if (uuid == null) return;
+
+      final event = _events[index];
+      final thinkProvider = ThinkProvider();
+
+      final response = await thinkProvider.updateEventLike(
+          uuid: uuid, eventId: event['event_id'], action: 'like');
+
+      if (response['status'] == 'success') {
+        if (mounted) {
+          setState(() {
+            _events[index]['isLiked'] = response['data']['is_liked'];
+            _events[index]['likes_count'] = response['data']['likes_count'];
+          });
+        }
+      } else {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+                content: Text(response['message'] ?? 'Failed to update like')),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error updating like: $e')),
+        );
+      }
+    }
   }
 }
 
 class EventCard extends StatelessWidget {
   final Map<String, dynamic> event;
-  final Set<String> likedEvents;
-  final Function(String) onLikePressed;
+  final VoidCallback onLike;
+  final Function(int) onRegister;
+  final int index;
 
   const EventCard({
     super.key,
     required this.event,
-    required this.likedEvents,
-    required this.onLikePressed,
+    required this.onLike,
+    required this.onRegister,
+    required this.index,
   });
 
   @override
   Widget build(BuildContext context) {
-    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    final isLiked = likedEvents.contains(event['event_id']);
+    final size = MediaQuery.of(context).size;
 
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
       decoration: BoxDecoration(
-        color: isDarkMode ? Colors.grey[900] : Colors.white,
-        borderRadius: BorderRadius.circular(15),
+        borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withAlpha(10),
+            color: Colors.black.withAlpha(20),
             blurRadius: 10,
             offset: const Offset(0, 5),
           ),
         ],
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          ClipRRect(
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(15)),
-            child: Image.network(
-              event['event_image'],
-              height: 200,
-              width: double.infinity,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(24),
+        child: Stack(
+          children: [
+            // Event Image
+            Image.network(
+              event['image'],
               fit: BoxFit.cover,
+              width: double.infinity,
+              height: double.infinity,
+              loadingBuilder: (context, child, loadingProgress) {
+                if (loadingProgress == null) return child;
+                return Center(child: CircularProgressIndicator());
+              },
               errorBuilder: (context, error, stackTrace) {
                 return Container(
-                  height: 200,
                   color: Colors.grey[300],
                   child: const Icon(Icons.error),
                 );
               },
             ),
+
+            // Gradient Overlay
+            Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    Colors.transparent,
+                    Colors.black.withAlpha(200),
+                  ],
+                ),
+              ),
+            ),
+
+            // Content
+            Padding(
+              padding: EdgeInsets.all(size.width * 0.04), // Responsive padding
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Top section with entries and heart
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Entries Left',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: size.width * 0.03,
+                            ),
+                          ),
+                          Text(
+                            "${event['entries_left']}/${event['entries_total']}",
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: size.width * 0.035,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                      IconButton(
+                        onPressed: onLike,
+                        icon: Icon(
+                          event['isLiked']
+                              ? Icons.favorite
+                              : Icons.favorite_outline,
+                          color: event['isLiked'] ? Colors.red : Colors.white,
+                          size: size.width * 0.06,
+                        ),
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(),
+                      ),
+                    ],
+                  ),
+
+                  const Spacer(),
+
+                  // Event type
+                  Text(
+                    event['type'],
+                    style: TextStyle(
+                      color: Colors.white70,
+                      fontSize: size.width * 0.035,
+                    ),
+                  ),
+                  SizedBox(height: size.height * 0.005),
+
+                  // Event name
+                  Text(
+                    event['name'],
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: size.width * 0.055,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  SizedBox(height: size.height * 0.01),
+
+                  // Price section
+                  Row(
+                    children: [
+                      Text(
+                        '₹${event['price']}',
+                        style: TextStyle(
+                          color: Colors.white70,
+                          fontSize: size.width * 0.04,
+                          decoration: TextDecoration.lineThrough,
+                          decorationColor: Colors.red,
+                          decorationThickness: 2,
+                        ),
+                      ),
+                      SizedBox(width: size.width * 0.02),
+                      Text(
+                        '₹0',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: size.width * 0.04,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: size.height * 0.015),
+
+                  // Pills row with horizontal scroll if needed
+                  SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: Row(
+                      children: [
+                        _buildPill(context, event['date']),
+                        SizedBox(width: size.width * 0.02),
+                        _buildPill(context, event['time']),
+                        SizedBox(width: size.width * 0.02),
+                        GestureDetector(
+                          onTap: () {
+                            HapticFeedback.selectionClick();
+                          },
+                          child: _buildPill(
+                            context,
+                            'Venue',
+                            isClickable: true,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  SizedBox(height: size.height * 0.015),
+
+                  // Register button
+                  _buildRegisterButton(context),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPill(BuildContext context, String text,
+      {bool isClickable = false}) {
+    final size = MediaQuery.of(context).size;
+    return Container(
+      padding: EdgeInsets.symmetric(
+        horizontal: size.width * 0.03,
+        vertical: size.height * 0.008,
+      ),
+      decoration: BoxDecoration(
+        color: Colors.white.withAlpha(30),
+        borderRadius: BorderRadius.circular(size.width * 0.04),
+        border: isClickable ? Border.all(color: Colors.white30) : null,
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            text,
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: size.width * 0.035,
+            ),
           ),
-          Padding(
-            padding: const EdgeInsets.all(15),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+          if (isClickable) ...[
+            SizedBox(width: size.width * 0.01),
+            Icon(
+              Icons.location_on_outlined,
+              color: Colors.white,
+              size: size.width * 0.035,
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildRegisterButton(BuildContext context) {
+    final size = MediaQuery.of(context).size;
+    return Container(
+      width: double.infinity,
+      height: size.height * 0.06,
+      decoration: BoxDecoration(
+        color: Colors.white.withAlpha(30),
+        borderRadius: BorderRadius.circular(size.width * 0.06),
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: () {
+            HapticFeedback.mediumImpact();
+            onRegister(index);
+          },
+          borderRadius: BorderRadius.circular(size.width * 0.06),
+          child: Padding(
+            padding: EdgeInsets.symmetric(horizontal: size.width * 0.04),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      event['event_name'],
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                        color: isDarkMode ? Colors.white : Colors.black,
-                      ),
-                    ),
-                    IconButton(
-                      icon: Icon(
-                        isLiked ? Icons.favorite : Icons.favorite_border,
-                        color: isLiked ? Colors.red : Colors.grey,
-                      ),
-                      onPressed: () => onLikePressed(event['event_id']),
-                    ),
-                  ],
+                Text(
+                  'Register',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: size.width * 0.04,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
-                const SizedBox(height: 10),
-                Row(
-                  children: [
-                    Icon(Icons.sports,
-                        color: isDarkMode ? Colors.white70 : Colors.black54),
-                    const SizedBox(width: 5),
-                    Text(
-                      event['sport'],
-                      style: TextStyle(
-                        color: isDarkMode ? Colors.white70 : Colors.black54,
-                      ),
+                Container(
+                  width: size.width * 0.08,
+                  height: size.width * 0.08,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: Colors.white.withAlpha(30),
+                  ),
+                  child: Center(
+                    child: Icon(
+                      Icons.arrow_forward,
+                      color: Colors.white,
+                      size: size.width * 0.05,
                     ),
-                  ],
+                  ),
                 ),
-                // ... rest of your existing card UI with real data
               ],
             ),
           ),
-        ],
+        ),
       ),
     );
   }

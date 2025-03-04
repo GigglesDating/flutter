@@ -3,7 +3,6 @@ import 'package:video_player/video_player.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_frontend/network/auth_provider.dart';
 import 'barrel.dart';
-import '../network/auth_provider.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});

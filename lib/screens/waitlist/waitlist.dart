@@ -7,6 +7,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:async';
 import 'package:intl/intl.dart';
 import '../barrel.dart';
+import '../../network/auth_provider.dart';
+import 'package:provider/provider.dart';
 
 class WaitlistScreen extends StatefulWidget {
   const WaitlistScreen({super.key});
@@ -117,9 +119,20 @@ class _WaitlistScreenState extends State<WaitlistScreen>
 
       if (!mounted) return;
 
-      if (response['status'] == 'success' &&
-          response['data']['member'] == 'yes') {
-        Navigator.of(context).pushReplacementNamed('/navigation');
+      if (response['status'] == 'success') {
+        if (response['data']['member'] == 'yes') {
+          // Update the reg_process in SharedPreferences
+          await prefs.setString('reg_process', 'member_approved');
+
+          // Update AuthProvider
+          final authProvider =
+              Provider.of<AuthProvider>(context, listen: false);
+          await authProvider.updateRegProcess('member_approved');
+
+          if (!mounted) return;
+          // Navigate to subscription screen instead of navigation
+          Navigator.of(context).pushReplacementNamed('/subscription');
+        }
       }
     } catch (e) {
       debugPrint('Error checking member status: $e');

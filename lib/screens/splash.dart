@@ -67,16 +67,52 @@ class _SplashScreenState extends State<SplashScreen>
       final authProvider = Provider.of<AuthProvider>(context, listen: false);
       await authProvider.initializeAuth();
 
+      debugPrint(
+          'Initial reg_process from SharedPreferences: ${authProvider.regProcess}');
+
       // Wait for minimum splash duration
       await Future.delayed(const Duration(seconds: 3));
       if (!mounted) return;
 
       if (authProvider.isAuthenticated) {
-        // User is authenticated, check registration status
+        final uuid = authProvider.uuid;
+        debugPrint('User UUID: $uuid');
+
+        if (uuid != null) {
+          final thinkProvider = ThinkProvider();
+          final response = await thinkProvider.checkMemberStatus(uuid: uuid);
+          debugPrint('API Response: $response');
+
+          if (response['status'] == 'success' && response['data'] != null) {
+            final newRegProcess = response['data']['reg_process'];
+            final currentRegProcess = authProvider.regProcess;
+
+            debugPrint('Current reg_process: $currentRegProcess');
+            debugPrint('New reg_process from API: $newRegProcess');
+
+            if (newRegProcess != null && newRegProcess != currentRegProcess) {
+              debugPrint(
+                  'Updating reg_process from $currentRegProcess to $newRegProcess');
+              await authProvider.updateRegProcess(newRegProcess);
+
+              // Verify the update
+              debugPrint(
+                  'Updated reg_process in AuthProvider: ${authProvider.regProcess}');
+            }
+          } else {
+            debugPrint('Error or invalid response from API: $response');
+            // Keep existing reg_process if API call fails
+            debugPrint(
+                'Keeping existing reg_process: ${authProvider.regProcess}');
+          }
+        }
+
+        // Use the final reg_process for navigation
         final regProcess = authProvider.regProcess ?? 'new_user';
+        debugPrint('Final reg_process before navigation: $regProcess');
         _handleNavigation(regProcess);
       } else {
-        // Not authenticated, go to login
+        debugPrint('User not authenticated, navigating to login');
         Navigator.of(context).pushReplacementNamed('/login');
       }
     } catch (e) {

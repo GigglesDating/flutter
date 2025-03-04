@@ -209,21 +209,27 @@ class ThinkProvider {
     required String uuid,
   }) async {
     try {
-      final response = await _callFunction('check_member_status', {
+      debugPrint('Checking member status for UUID: $uuid');
+      final response = await _callFunction('check_registration_status', {
         'uuid': uuid,
       });
+      debugPrint('Raw API response: $response');
 
       if (response['status'] == 'success') {
+        final regStatus = response['reg_status'] ?? 'waitlisted';
+        debugPrint('Extracted reg_status: $regStatus');
+
         return {
           'status': 'success',
           'data': {
-            'member': response['member'] ?? 'no',
-            'reg_process': response['reg_process'] ?? 'waitlisted',
+            'member': regStatus == 'member' ? 'yes' : 'no',
+            'reg_process': regStatus,
             'waitlist_position': response['waitlist_position'],
             'total_waitlist': response['total_waitlist'],
           }
         };
       } else {
+        debugPrint('Error response from API: ${response['message']}');
         return {
           'status': 'error',
           'message': response['message'] ?? 'Failed to check member status',

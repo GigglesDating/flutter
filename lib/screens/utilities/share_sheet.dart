@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'dart:ui';
+import 'package:share_plus/share_plus.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'dart:ui';
 
 class ShareSheet extends StatelessWidget {
   final bool isDarkMode;
@@ -15,10 +16,53 @@ class ShareSheet extends StatelessWidget {
     required this.screenWidth,
   });
 
+  void _shareContent(BuildContext context, String platform) {
+    String shareText;
+    String shareUrl;
+
+    // Determine content type and create appropriate share text
+    if (post['type'] == 'reel' || post['type'] == 'snip') {
+      shareText = 'Check out this video on Giggles!';
+      shareUrl = post['url'] ?? 'https://gigglesdating.com';
+    } else {
+      shareText = 'Check out this post on Giggles!';
+      shareUrl = 'https://gigglesdating.com/post/${post['id']}';
+    }
+
+    final String fullShareText = '$shareText\n$shareUrl';
+
+    switch (platform) {
+      case 'whatsapp':
+        Share.share(fullShareText, subject: 'Share via WhatsApp');
+        break;
+      case 'discord':
+        Share.share(fullShareText, subject: 'Share via Discord');
+        break;
+      case 'copy_link':
+        // Store the context in a final variable
+        final currentContext = context;
+        Clipboard.setData(ClipboardData(text: shareUrl)).then((_) {
+          if (Navigator.canPop(currentContext)) {
+            Navigator.pop(currentContext);
+            ScaffoldMessenger.of(currentContext).showSnackBar(
+              const SnackBar(
+                content: Text('Link copied to clipboard'),
+                duration: Duration(seconds: 2),
+              ),
+            );
+          }
+        });
+        break;
+      case 'more':
+        Share.share(fullShareText, subject: 'Share from Giggles');
+        break;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      height: MediaQuery.of(context).size.height * 0.25,
+      height: MediaQuery.of(context).size.height * 0.35,
       child: ClipRRect(
         borderRadius: const BorderRadius.vertical(top: Radius.circular(25)),
         child: BackdropFilter(
@@ -61,45 +105,38 @@ class ShareSheet extends StatelessWidget {
                   ),
                 ),
                 SizedBox(height: screenWidth * 0.04),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
-                    _buildShareOption(
-                      context,
-                      icon: Icons.message_outlined,
-                      label: 'Message',
-                      onTap: () {
-                        // TODO: Implement in-app messaging
-                        Navigator.pop(context);
-                      },
-                    ),
-                    _buildShareOption(
-                      context,
-                      icon: FontAwesomeIcons.whatsapp,
-                      label: 'WhatsApp',
-                      onTap: () {
-                        // TODO: Implement WhatsApp sharing
-                        Navigator.pop(context);
-                      },
-                    ),
-                    _buildShareOption(
-                      context,
-                      icon: Icons.link_rounded,
-                      label: 'Copy Link',
-                      onTap: () {
-                        Clipboard.setData(ClipboardData(
-                          text: 'https://yourapp.com/post/${post['id']}',
-                        ));
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Link copied to clipboard'),
-                            duration: Duration(seconds: 2),
-                          ),
-                        );
-                        Navigator.pop(context);
-                      },
-                    ),
-                  ],
+                Expanded(
+                  child: GridView.count(
+                    crossAxisCount: 4,
+                    padding:
+                        EdgeInsets.symmetric(horizontal: screenWidth * 0.04),
+                    children: [
+                      _buildShareOption(
+                        context,
+                        icon: FontAwesomeIcons.whatsapp,
+                        label: 'WhatsApp',
+                        onTap: () => _shareContent(context, 'whatsapp'),
+                      ),
+                      _buildShareOption(
+                        context,
+                        icon: FontAwesomeIcons.discord,
+                        label: 'Discord',
+                        onTap: () => _shareContent(context, 'discord'),
+                      ),
+                      _buildShareOption(
+                        context,
+                        icon: Icons.link_rounded,
+                        label: 'Copy Link',
+                        onTap: () => _shareContent(context, 'copy_link'),
+                      ),
+                      _buildShareOption(
+                        context,
+                        icon: Icons.share,
+                        label: 'More',
+                        onTap: () => _shareContent(context, 'more'),
+                      ),
+                    ],
+                  ),
                 ),
               ],
             ),
@@ -118,6 +155,7 @@ class ShareSheet extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Column(
+        mainAxisSize: MainAxisSize.min,
         children: [
           Container(
             padding: EdgeInsets.all(screenWidth * 0.04),

@@ -3,9 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/services.dart';
 import 'package:flutter_frontend/screens/barrel.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class HomeTab extends StatefulWidget {
   const HomeTab({super.key});
@@ -15,36 +15,17 @@ class HomeTab extends StatefulWidget {
 }
 
 class _HomeTabState extends State<HomeTab> {
+  final List<Map<String, dynamic>> _posts = [];
+  bool _isLoading = false;
+  bool _hasMore = true;
+  int _currentPage = 1;
+
+  // Keep the temp profile images for now
   final List<String> _tempUserProfiles = [
     'assets/tempImages/users/user1.jpg',
     'assets/tempImages/users/user2.jpg',
     'assets/tempImages/users/user3.jpg',
     'assets/tempImages/users/user4.jpg',
-  ];
-
-  final List<Map<String, dynamic>> _tempPosts = [
-    {
-      'image': 'assets/tempImages/posts/post1.png',
-      'isVideo': false,
-      'caption': 'Beautiful day!',
-      'likes': 123,
-      'comments': 45,
-      'timeAgo': '3h ago',
-      'userImage': 'assets/tempImages/users/user2.jpg',
-      'userName': 'Sarah Parker',
-      'location': 'New York, USA',
-    },
-    {
-      'image': 'assets/tempImages/posts/post3.png',
-      'isVideo': true,
-      'caption': 'Amazing sunset at the beach! 🌅 #sunset #beach #vibes',
-      'likes': 456,
-      'comments': 89,
-      'timeAgo': '5h ago',
-      'userImage': 'assets/tempImages/users/user3.jpg',
-      'userName': 'Mike Johnson',
-      'location': 'Miami Beach, FL',
-    },
   ];
 
   final ScrollController _scrollController = ScrollController();
@@ -56,9 +37,7 @@ class _HomeTabState extends State<HomeTab> {
   void initState() {
     super.initState();
     _scrollController.addListener(_onScroll);
-    if (kDebugMode) {
-      print("InitState: _tempPosts length: ${_tempPosts.length}");
-    }
+    _loadInitialPosts();
   }
 
   @override
@@ -67,11 +46,163 @@ class _HomeTabState extends State<HomeTab> {
     super.dispose();
   }
 
+  Future<void> _loadInitialPosts() async {
+    if (_isLoading) return;
+    setState(() {
+      _isLoading = true;
+      _posts.clear(); // Clear existing posts when reloading
+    });
+
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final uuid = prefs.getString('user_uuid');
+      debugPrint('Loading initial posts for UUID: $uuid');
+
+      if (uuid == null) {
+        debugPrint('No UUID found, cannot load posts');
+        setState(() => _isLoading = false);
+        return;
+      }
+
+      final thinkProvider = ThinkProvider();
+      final response = await thinkProvider.getFeed(uuid: uuid);
+      debugPrint('Initial feed response: $response');
+
+      if (response['status'] == 'success' && response['data'] != null) {
+        final feedData = response['data'];
+        final posts = feedData['posts'] as List<dynamic>;
+        debugPrint('Received ${posts.length} posts');
+
+        setState(() {
+          _posts.addAll(_formatPosts(posts));
+          _hasMore = feedData['has_more'] ?? false;
+          _currentPage = (feedData['next_page'] ?? 2) - 1;
+          _isLoading = false;
+        });
+      } else {
+        debugPrint('Error in response: ${response['message']}');
+        setState(() => _isLoading = false);
+      }
+    } catch (e) {
+      debugPrint('Error loading posts: $e');
+      setState(() => _isLoading = false);
+    }
+  }
+
+  Future<void> _loadMorePosts() async {
+    if (_isLoading || !_hasMore) return;
+    setState(() => _isLoading = true);
+
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final uuid = prefs.getString('user_uuid');
+      debugPrint('Loading more posts for page: ${_currentPage + 1}');
+
+      if (uuid == null) {
+        debugPrint('No UUID found, cannot load more posts');
+        setState(() => _isLoading = false);
+        return;
+      }
+
+      final thinkProvider = ThinkProvider();
+      final response = await thinkProvider.getFeed(
+        uuid: uuid,
+        page: _currentPage + 1,
+      );
+      debugPrint('More posts response: $response');
+
+      if (response['status'] == 'success' && response['data'] != null) {
+        final feedData = response['data'];
+        final posts = feedData['posts'] as List<dynamic>;
+        debugPrint('Received ${posts.length} more posts');
+
+        setState(() {
+          _posts.addAll(_formatPosts(posts));
+          _hasMore = feedData['has_more'] ?? false;
+          _currentPage = (feedData['next_page'] ?? (_currentPage + 2)) - 1;
+          _isLoading = false;
+        });
+      } else {
+        debugPrint('Error in response: ${response['message']}');
+        setState(() => _isLoading = false);
+      }
+    } catch (e) {
+      debugPrint('Error loading more posts: $e');
+      setState(() => _isLoading = false);
+    }
+  }
+
+  List<Map<String, dynamic>> _formatPosts(List<dynamic> posts) {
+    debugPrint('Formatting posts: ${posts.length} posts received');
+    return posts.map((post) {
+      try {
+        // Format timestamp for display
+        final timestamp = DateTime.parse(post['timestamp']);
+        final timeAgo = _getTimeAgo(timestamp);
+
+        // Randomly select a profile picture from local assets for now
+        final randomProfilePic = _tempUserProfiles[
+            DateTime.now().millisecondsSinceEpoch % _tempUserProfiles.length];
+
+        final formattedPost = {
+          'image': post['s3 image url'],
+          'isVideo': false, // Default to false for now
+          'caption': post['description'] ?? '',
+          'likes': post['likes_count'] ?? 0,
+          'comments': post['comments_count'] ?? 0,
+          'timeAgo': timeAgo,
+          'userImage': randomProfilePic,
+          'location': 'Bangalore', // Hardcoded for now
+        };
+        debugPrint('Formatted post: $formattedPost');
+        return formattedPost;
+      } catch (e) {
+        debugPrint('Error formatting post: $e');
+        // Return a default post structure if there's an error
+        return {
+          'image': '',
+          'isVideo': false,
+          'caption': 'Error loading post',
+          'likes': 0,
+          'comments': 0,
+          'timeAgo': 'now',
+          'userImage': _tempUserProfiles[0],
+          'location': 'Unknown',
+        };
+      }
+    }).toList();
+  }
+
+  String _getTimeAgo(DateTime timestamp) {
+    final now = DateTime.now();
+    final difference = now.difference(timestamp);
+
+    if (difference.inDays > 0) {
+      return '${difference.inDays}d ago';
+    } else if (difference.inHours > 0) {
+      return '${difference.inHours}h ago';
+    } else if (difference.inMinutes > 0) {
+      return '${difference.inMinutes}m ago';
+    } else {
+      return 'just now';
+    }
+  }
+
   void _onScroll() {
+    // Handle story section visibility
     if (_scrollController.offset > 20 && _showStories) {
       setState(() => _showStories = false);
     } else if (_scrollController.offset <= 20 && !_showStories) {
       setState(() => _showStories = true);
+    }
+
+    // Handle infinite scroll
+    if (!_isLoading &&
+        _hasMore &&
+        _scrollController.position.pixels >=
+            _scrollController.position.maxScrollExtent * 0.8) {
+      debugPrint('Triggering load more posts');
+      _loadMorePosts();
     }
   }
 
@@ -275,21 +406,53 @@ class _HomeTabState extends State<HomeTab> {
   }
 
   Widget _buildFeedSection(bool isDarkMode) {
-    if (kDebugMode) {
-      print("Building feed section with ${_tempPosts.length} posts");
+    if (_isLoading && _posts.isEmpty) {
+      return const Center(child: CircularProgressIndicator());
     }
-    return ListView.builder(
-      controller: _scrollController,
-      itemCount: _tempPosts.length,
-      itemBuilder: (context, index) {
-        if (kDebugMode) {
-          print("Building post card at index $index");
-        }
-        return PostCard(
-          post: _tempPosts[index],
-          isDarkMode: isDarkMode,
-        );
-      },
+
+    if (_posts.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              'No posts available',
+              style: TextStyle(
+                color: isDarkMode ? Colors.white : Colors.black,
+              ),
+            ),
+            TextButton(
+              onPressed: _loadInitialPosts,
+              child: const Text('Refresh'),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return RefreshIndicator(
+      onRefresh: _loadInitialPosts,
+      child: ListView.builder(
+        controller: _scrollController,
+        itemCount: _posts.length + (_hasMore ? 1 : 0),
+        itemBuilder: (context, index) {
+          if (index == _posts.length) {
+            return _buildLoadingIndicator();
+          }
+          return PostCard(
+            post: _posts[index],
+            isDarkMode: isDarkMode,
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildLoadingIndicator() {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      alignment: Alignment.center,
+      child: const CircularProgressIndicator(),
     );
   }
 

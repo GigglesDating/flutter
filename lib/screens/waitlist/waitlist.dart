@@ -92,7 +92,6 @@ class _WaitlistScreenState extends State<WaitlistScreen>
 
   void _setupStatusCheck() {
     _checkMemberStatus();
-
     _statusCheckTimer = Timer.periodic(const Duration(seconds: 30), (_) {
       _checkMemberStatus();
     });

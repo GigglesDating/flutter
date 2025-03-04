@@ -218,6 +218,7 @@ class ThinkProvider {
           'status': 'success',
           'data': {
             'member': response['member'] ?? 'no',
+            'reg_process': response['reg_process'] ?? 'waitlisted',
             'waitlist_position': response['waitlist_position'],
             'total_waitlist': response['total_waitlist'],
           }
@@ -226,9 +227,7 @@ class ThinkProvider {
         return {
           'status': 'error',
           'message': response['message'] ?? 'Failed to check member status',
-          'data': {
-            'member': 'no',
-          }
+          'data': {'member': 'no', 'reg_process': 'waitlisted'}
         };
       }
     } catch (e) {
@@ -236,9 +235,7 @@ class ThinkProvider {
       return {
         'status': 'error',
         'message': 'Error checking member status: $e',
-        'data': {
-          'member': 'no',
-        }
+        'data': {'member': 'no', 'reg_process': 'waitlisted'}
       };
     }
   }

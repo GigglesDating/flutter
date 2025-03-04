@@ -162,10 +162,25 @@ class _WaitlistScreenState extends State<WaitlistScreen>
   Future<void> _fetchEvents() async {
     try {
       final thinkProvider = ThinkProvider();
-      final response = await thinkProvider.getEvents();
+      final prefs = await SharedPreferences.getInstance();
+      final uuid = prefs.getString('user_uuid');
 
-      if (response['status'] == 'success') {
-        final eventsList = List<Map<String, dynamic>>.from(response['data']);
+      // Fetch events and liked events in parallel
+      final results = await Future.wait([
+        thinkProvider.getEvents(),
+        if (uuid != null)
+          thinkProvider.updateEventLike(uuid: uuid, action: 'check')
+      ]);
+
+      final eventsResponse = results[0];
+      final likedEventsResponse = uuid != null ? results[1] : null;
+
+      if (eventsResponse['status'] == 'success') {
+        final eventsList =
+            List<Map<String, dynamic>>.from(eventsResponse['data']);
+        final likedEventIds = likedEventsResponse?['status'] == 'success'
+            ? Set<String>.from(likedEventsResponse!['data']['liked_events'])
+            : <String>{};
 
         final events = eventsList
             .map((event) {
@@ -178,7 +193,8 @@ class _WaitlistScreenState extends State<WaitlistScreen>
               final hour = int.parse(timeString.split(':')[0]);
 
               // Convert 24-hour format to 12-hour format with AM/PM
-              final formattedHour = hour > 12 ? hour - 12 : hour;
+              final formattedHour =
+                  hour > 12 ? hour - 12 : (hour == 0 ? 12 : hour);
               final amPm = hour >= 12 ? 'PM' : 'AM';
 
               // Skip events in past or today
@@ -196,9 +212,10 @@ class _WaitlistScreenState extends State<WaitlistScreen>
                 'venue': event['venue'],
                 'description': event['description'],
                 'likes_count': event['likes_count'],
+                'event_id': event['event_id'],
                 'date': DateFormat('MMM dd').format(eventDate),
-                'time': '$formattedHour $amPm', // Format: "10 AM" or "5 PM"
-                'isLiked': false,
+                'time': '$formattedHour $amPm',
+                'isLiked': likedEventIds.contains(event['event_id']),
               };
             })
             .where((event) => event != null)
@@ -211,7 +228,7 @@ class _WaitlistScreenState extends State<WaitlistScreen>
           });
         }
       } else {
-        throw Exception(response['message'] ?? 'Failed to fetch events');
+        throw Exception(eventsResponse['message'] ?? 'Failed to fetch events');
       }
     } catch (e) {
       if (mounted) {
@@ -1309,12 +1326,42 @@ class _WaitlistScreenState extends State<WaitlistScreen>
   }
 
   // Add this method for handling likes
-  void _handleLike(int index) {
+  Future<void> _handleLike(int index) async {
     if (!mounted) return;
-    setState(() {
-      _events[index]['isLiked'] = !_events[index]['isLiked'];
-    });
-    HapticFeedback.selectionClick();
+
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final uuid = prefs.getString('user_uuid');
+      if (uuid == null) return;
+
+      final event = _events[index];
+      final thinkProvider = ThinkProvider();
+
+      final response = await thinkProvider.updateEventLike(
+          uuid: uuid, eventId: event['event_id'], action: 'like');
+
+      if (response['status'] == 'success') {
+        if (mounted) {
+          setState(() {
+            _events[index]['isLiked'] = response['data']['is_liked'];
+            _events[index]['likes_count'] = response['data']['likes_count'];
+          });
+        }
+      } else {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+                content: Text(response['message'] ?? 'Failed to update like')),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error updating like: $e')),
+        );
+      }
+    }
   }
 }
 

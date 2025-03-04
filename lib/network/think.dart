@@ -326,25 +326,36 @@ class ThinkProvider {
   Future<Map<String, dynamic>> updateEventLike({
     required String uuid,
     String? eventId,
-    String? action, // 'like', 'unlike', or 'check'
+    String? action, // only 'like' or 'check' now
   }) async {
     try {
       final response = await _callFunction('update_event_like', {
         'uuid': uuid,
         if (eventId != null) 'event_id': eventId,
-        if (action != null) 'action': action,
+        'action': action ?? 'check', // default to 'check' if no action provided
       });
 
       if (response['status'] == 'success') {
-        return {
-          'status': 'success',
-          'data': {
-            'event_id': response['data']['event_id'],
-            'likes_count': response['data']['likes_count'],
-            'liked_events': List<String>.from(response['data']['liked_events']),
-            'is_liked': response['data']['is_liked'],
-          }
-        };
+        if (action == 'check') {
+          return {
+            'status': 'success',
+            'data': {
+              'liked_events':
+                  List<String>.from(response['data']['liked_events']),
+            }
+          };
+        } else {
+          return {
+            'status': 'success',
+            'data': {
+              'event_id': response['data']['event_id'],
+              'likes_count': response['data']['likes_count'],
+              'liked_events':
+                  List<String>.from(response['data']['liked_events']),
+              'is_liked': response['data']['is_liked'],
+            }
+          };
+        }
       } else {
         return {
           'status': 'error',

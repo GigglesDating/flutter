@@ -1,0 +1,2 @@
+C:/Users/skris/Desktop/Giggles/flutter/android/app/.cxx/Debug/3z2m3y6b/x86_64/CMakeFiles/edit_cache.dir
+C:/Users/skris/Desktop/Giggles/flutter/android/app/.cxx/Debug/3z2m3y6b/x86_64/CMakeFiles/rebuild_cache.dir

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import '../barrel.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
 class PostCard extends StatefulWidget {
   final Map<String, dynamic> post;
@@ -82,7 +83,7 @@ class _PostCardState extends State<PostCard>
         ],
       ),
       width: screenWidth * 0.95,
-      height: screenWidth * 1.4,
+      height: screenWidth * 1.4, // Current ratio (approximately 1:1.47)
       child: Stack(
         clipBehavior: Clip.none,
         children: [
@@ -108,36 +109,14 @@ class _PostCardState extends State<PostCard>
                 },
                 child: Container(
                   width: screenWidth * 0.95,
-                  height: screenWidth * 1.4,
+                  height:
+                      screenWidth * 1.4, // Current ratio (approximately 1:1.47)
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(15),
                   ),
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(15),
-                    child: Image(
-                      image: NetworkImage(widget.post['image']),
-                      fit: BoxFit.cover,
-                      loadingBuilder: (context, child, loadingProgress) {
-                        if (loadingProgress == null) return child;
-                        return Center(
-                          child: CircularProgressIndicator(
-                            value: loadingProgress.expectedTotalBytes != null
-                                ? loadingProgress.cumulativeBytesLoaded /
-                                    loadingProgress.expectedTotalBytes!
-                                : null,
-                          ),
-                        );
-                      },
-                      errorBuilder: (context, error, stackTrace) {
-                        debugPrint('Error loading image: $error');
-                        return Container(
-                          color: Colors.grey[300],
-                          child: const Center(
-                            child: Icon(Icons.error_outline, size: 40),
-                          ),
-                        );
-                      },
-                    ),
+                    child: _buildMediaContent(),
                   ),
                 ),
               ),
@@ -157,30 +136,7 @@ class _PostCardState extends State<PostCard>
                     child: Row(
                       children: [
                         // Profile Picture
-                        Container(
-                          padding: EdgeInsets.all(2),
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: widget.isDarkMode
-                                ? Colors.black.withAlpha(230)
-                                : Colors.white.withAlpha(230),
-                            border: Border.all(
-                              color: widget.isDarkMode
-                                  ? Colors.white.withAlpha(38)
-                                  : Colors.black.withAlpha(26),
-                              width: 1,
-                            ),
-                          ),
-                          child: ClipRRect(
-                            borderRadius: BorderRadius.circular(50),
-                            child: Image.asset(
-                              widget.post['userImage'],
-                              width: screenWidth * 0.12,
-                              height: screenWidth * 0.12,
-                              fit: BoxFit.cover,
-                            ),
-                          ),
-                        ),
+                        _buildProfileImage(),
                         SizedBox(width: screenWidth * 0.03),
                         // Post Stats
                         Container(
@@ -359,6 +315,121 @@ class _PostCardState extends State<PostCard>
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildMediaContent() {
+    final mediaUrl = widget.post['media']['source'] ?? '';
+    final thumbnailUrl = widget.post['media']['thumbnail'];
+    final isVideo = widget.post['media']['type'] == 'video';
+
+    debugPrint('Building media content:');
+    debugPrint('Media URL: $mediaUrl');
+    debugPrint('Thumbnail URL: $thumbnailUrl');
+    debugPrint('Is Video: $isVideo');
+
+    if (isVideo) {
+      return VideoLoader(
+        videoUrl: mediaUrl,
+        thumbnailUrl: thumbnailUrl,
+        width: MediaQuery.of(context).size.width * 0.95,
+        height: MediaQuery.of(context).size.width * 1.4,
+        fit: BoxFit.cover,
+        autoPlay: false,
+        looping: true,
+        showControls: true,
+        loadingWidget: Center(
+          child: CircularProgressIndicator(
+            color: widget.isDarkMode ? Colors.white : Colors.black,
+          ),
+        ),
+        errorWidget: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                Icons.error_outline,
+                color: widget.isDarkMode ? Colors.white70 : Colors.black54,
+                size: 40,
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Failed to load video',
+                style: TextStyle(
+                  color: widget.isDarkMode ? Colors.white70 : Colors.black54,
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    return ImageLoader(
+      imageUrl: mediaUrl,
+      width: MediaQuery.of(context).size.width * 0.95,
+      height: MediaQuery.of(context).size.width * 1.4,
+      fit: BoxFit.cover,
+      loadingWidget: Center(
+        child: CircularProgressIndicator(
+          color: widget.isDarkMode ? Colors.white : Colors.black,
+        ),
+      ),
+      errorWidget: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.error_outline,
+              color: widget.isDarkMode ? Colors.white70 : Colors.black54,
+              size: 40,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Failed to load image',
+              style: TextStyle(
+                color: widget.isDarkMode ? Colors.white70 : Colors.black54,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildProfileImage() {
+    debugPrint(
+        'Building profile image with data: ${widget.post['author_profile']}');
+    final authorProfile =
+        widget.post['author_profile'] as Map<String, dynamic>?;
+    final String? profileImageUrl = authorProfile?['profile_image'];
+
+    if (profileImageUrl == null || profileImageUrl.isEmpty) {
+      debugPrint('No profile image URL found');
+      return const CircleAvatar(
+        radius: 20,
+        child: Icon(Icons.person),
+      );
+    }
+
+    debugPrint('Loading profile image from: $profileImageUrl');
+    return CachedNetworkImage(
+      imageUrl: profileImageUrl,
+      imageBuilder: (context, imageProvider) => CircleAvatar(
+        backgroundImage: imageProvider,
+        radius: 20,
+      ),
+      placeholder: (context, url) => const CircleAvatar(
+        radius: 20,
+        child: CircularProgressIndicator(strokeWidth: 2),
+      ),
+      errorWidget: (context, url, error) {
+        debugPrint('Error loading profile image: $error');
+        return const CircleAvatar(
+          radius: 20,
+          child: Icon(Icons.person),
+        );
+      },
     );
   }
 

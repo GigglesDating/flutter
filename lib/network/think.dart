@@ -422,6 +422,54 @@ class ThinkProvider {
     }
   }
 
+  // Get snips/reels with pagination
+  Future<Map<String, dynamic>> getSnips({
+    required String uuid,
+    int page = 1,
+  }) async {
+    try {
+      final response = await _callFunction('get_snips', {
+        'uuid': uuid,
+        'page': page,
+      });
+
+      if (response['status'] == 'success') {
+        return {
+          'status': 'success',
+          'data': {
+            'snips': List<Map<String, dynamic>>.from(response['data']['snips']),
+            'has_more': response['data']['has_more'],
+            'next_page': response['data']['next_page'],
+            'total_snips': response['data']['total_snips'],
+          }
+        };
+      } else {
+        return {
+          'status': 'error',
+          'message': response['message'] ?? 'Failed to fetch snips',
+          'data': {
+            'snips': [],
+            'has_more': false,
+            'next_page': null,
+            'total_snips': 0,
+          }
+        };
+      }
+    } catch (e) {
+      debugPrint('Error in getSnips: $e');
+      return {
+        'status': 'error',
+        'message': 'Error fetching snips: $e',
+        'data': {
+          'snips': [],
+          'has_more': false,
+          'next_page': null,
+          'total_snips': 0,
+        }
+      };
+    }
+  }
+
   // Generic function caller
   Future<Map<String, dynamic>> _callFunction(
     String function,

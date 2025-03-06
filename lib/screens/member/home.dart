@@ -50,7 +50,7 @@ class _HomeTabState extends State<HomeTab> {
     if (_isLoading) return;
     setState(() {
       _isLoading = true;
-      _posts.clear(); // Clear existing posts when reloading
+      _posts.clear();
     });
 
     try {
@@ -64,14 +64,33 @@ class _HomeTabState extends State<HomeTab> {
         return;
       }
 
+      debugPrint('Making API call to getFeed...');
       final thinkProvider = ThinkProvider();
-      final response = await thinkProvider.getFeed(uuid: uuid);
-      debugPrint('Initial feed response: $response');
+
+      // Add timeout to the API call
+      final response = await thinkProvider.getFeed(uuid: uuid).timeout(
+        const Duration(seconds: 30),
+        onTimeout: () {
+          debugPrint('API call timed out after 30 seconds');
+          return {
+            'status': 'error',
+            'message': 'Request timed out',
+            'data': null
+          };
+        },
+      );
+
+      debugPrint('API call completed. Response status: ${response['status']}');
+      debugPrint('Raw API Response: ${response.toString()}');
 
       if (response['status'] == 'success' && response['data'] != null) {
         final feedData = response['data'];
         final posts = feedData['posts'] as List<dynamic>;
-        debugPrint('Received ${posts.length} posts');
+        debugPrint('Number of posts received: ${posts.length}');
+
+        if (posts.isNotEmpty) {
+          debugPrint('First post structure: ${posts[0].toString()}');
+        }
 
         setState(() {
           _posts.addAll(_formatPosts(posts));
@@ -83,8 +102,9 @@ class _HomeTabState extends State<HomeTab> {
         debugPrint('Error in response: ${response['message']}');
         setState(() => _isLoading = false);
       }
-    } catch (e) {
+    } catch (e, stackTrace) {
       debugPrint('Error loading posts: $e');
+      debugPrint('Stack trace: $stackTrace');
       setState(() => _isLoading = false);
     }
   }
@@ -133,43 +153,69 @@ class _HomeTabState extends State<HomeTab> {
   }
 
   List<Map<String, dynamic>> _formatPosts(List<dynamic> posts) {
-    debugPrint('Formatting posts: ${posts.length} posts received');
+    debugPrint('Formatting ${posts.length} posts');
     return posts.map((post) {
-      try {
-        // Format timestamp for display
-        final timestamp = DateTime.parse(post['timestamp']);
-        final timeAgo = _getTimeAgo(timestamp);
+      final mediaData = post['media'] as Map<String, dynamic>;
+      final authorProfile = post['author_profile'] as Map<String, dynamic>;
 
-        // Randomly select a profile picture from local assets for now
-        final randomProfilePic = _tempUserProfiles[
-            DateTime.now().millisecondsSinceEpoch % _tempUserProfiles.length];
+      // Debug log for media data
+      debugPrint('Processing media data: ${mediaData.toString()}');
 
-        final formattedPost = {
-          'image': post['s3 image url'],
-          'isVideo': false, // Default to false for now
-          'caption': post['description'] ?? '',
-          'likes': post['likes_count'] ?? 0,
-          'comments': post['comments_count'] ?? 0,
-          'timeAgo': timeAgo,
-          'userImage': randomProfilePic,
-          'location': 'Bangalore', // Hardcoded for now
-        };
-        debugPrint('Formatted post: $formattedPost');
-        return formattedPost;
-      } catch (e) {
-        debugPrint('Error formatting post: $e');
-        // Return a default post structure if there's an error
-        return {
-          'image': '',
-          'isVideo': false,
-          'caption': 'Error loading post',
-          'likes': 0,
-          'comments': 0,
-          'timeAgo': 'now',
-          'userImage': _tempUserProfiles[0],
-          'location': 'Unknown',
-        };
-      }
+      return {
+        'post_id': post['post_id'],
+        'media': {
+          'type': mediaData['type'],
+          'source': mediaData['source'],
+          'thumbnail': mediaData['thumbnail'],
+        },
+        'media_url': mediaData['source'], // Direct access for VideoLoader
+        'thumbnail_url': mediaData['thumbnail'], // For video thumbnails
+        'isVideo': mediaData['type'] == 'video',
+        'caption': post['description'] ?? '',
+        'likes': post['likes_count'] ?? 0,
+        'comments_count': post['comments_count'] ?? 0,
+        'timeAgo': _getTimeAgo(DateTime.parse(post['timestamp'])),
+        'author_profile': {
+          'profile_id': authorProfile['profile_id'],
+          'profile_image': authorProfile['profile_image'],
+        },
+        'location': 'Bangalore',
+        'posted_by': post['author_profile_id'],
+        'comments': (post['comments'] as List<dynamic>?)?.map((comment) {
+              final commentAuthorProfile =
+                  comment['author_profile'] as Map<String, dynamic>;
+              return {
+                'comment_id': comment['comment_id'],
+                'comment_text': comment['text'],
+                'comment_by': comment['author_profile_id'],
+                'timestamp': _getTimeAgo(DateTime.parse(comment['timestamp'])),
+                'likes_count': comment['likes_count'],
+                'author_profile': {
+                  'profile_id': commentAuthorProfile['profile_id'],
+                  'profile_image': commentAuthorProfile['profile_image'],
+                }
+              };
+            }).toList() ??
+            [],
+        'replies': (post['replies'] as List<dynamic>?)?.map((reply) {
+              final replyAuthorProfile =
+                  reply['author_profile'] as Map<String, dynamic>;
+              return {
+                'reply_id': reply['reply_id'],
+                'reply_text': reply['text'],
+                'reply_by': reply['author_profile_id'],
+                'comment_id': reply['replytocomment_id'],
+                'timestamp': _getTimeAgo(DateTime.parse(reply['timestamp'])),
+                'likes_count': reply['likes_count'],
+                'author_profile': {
+                  'profile_id': replyAuthorProfile['profile_id'],
+                  'profile_image': replyAuthorProfile['profile_image'],
+                }
+              };
+            }).toList() ??
+            [],
+        'category': post['category'] ?? 'General'
+      };
     }).toList();
   }
 
@@ -287,30 +333,8 @@ class _HomeTabState extends State<HomeTab> {
               ),
             ),
           ),
-          IconButton(
-            onPressed: () {},
-            icon: Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: isDarkMode
-                    ? Colors.white.withAlpha(38)
-                    : Colors.black.withAlpha(26),
-              ),
-              child: Center(
-                child: SvgPicture.asset(
-                  'assets/icons/feed/messenger.svg',
-                  width: 22,
-                  height: 22,
-                  colorFilter: ColorFilter.mode(
-                    isDarkMode ? Colors.white : Colors.black,
-                    BlendMode.srcIn,
-                  ),
-                ),
-              ),
-            ),
-          ),
+          SizedBox(
+              width: 8), // Add some padding to replace the messenger button
         ],
       ),
       body: Column(

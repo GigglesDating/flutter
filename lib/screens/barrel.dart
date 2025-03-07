@@ -51,3 +51,4 @@ export 'utilities/snip_card.dart';
 export 'utilities/prompts.dart';
 export 'utilities/image_loader.dart';
 export 'utilities/video_loader.dart';
+export 'utilities/error_boundary.dart';

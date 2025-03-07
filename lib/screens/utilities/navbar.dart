@@ -8,6 +8,19 @@ import '../barrel.dart';
 class NavigationController extends StatefulWidget {
   const NavigationController({super.key});
 
+  // Add static method to handle navigation from child screens
+  static void navigateToTab(BuildContext context, int index) {
+    final navState =
+        context.findAncestorStateOfType<NavigationControllerState>();
+    if (navState != null) {
+      navState._pageController.animateToPage(
+        index,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeInOut,
+      );
+    }
+  }
+
   @override
   State<NavigationController> createState() => NavigationControllerState();
 }
@@ -20,12 +33,16 @@ class NavigationControllerState extends State<NavigationController>
   late Size size;
   double _rotationValue = 0.0;
   Timer? _rotationTimer;
+  late PageController _pageController;
+  final List<bool> _loadedTabs = List.generate(5, (index) => false);
 
   int get currentIndex => _currentIndex;
 
   @override
   void initState() {
     super.initState();
+    _pageController = PageController(initialPage: 0);
+    _loadedTabs[0] = true; // Mark first tab as loaded
     _hideSystemBars();
     _startRotationTimer();
   }
@@ -55,6 +72,7 @@ class NavigationControllerState extends State<NavigationController>
   @override
   void dispose() {
     _rotationTimer?.cancel();
+    _pageController.dispose();
     // Restore system UI when disposing
     SystemChrome.setEnabledSystemUIMode(
       SystemUiMode.manual,
@@ -63,14 +81,28 @@ class NavigationControllerState extends State<NavigationController>
     super.dispose();
   }
 
+  void _onPageChanged(int index) {
+    if (_currentIndex != index) {
+      setState(() {
+        _currentIndex = index;
+        _showNavBar = index != 1; // Hide nav bar for SwipeScreen
+        _loadedTabs[index] = true; // Mark tab as loaded
+        _rotationValue = _rotationValue + 1;
+      });
+
+      // Ensure immersive mode is maintained
+      SystemChrome.setEnabledSystemUIMode(
+        SystemUiMode.immersiveSticky,
+        overlays: [],
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     size = MediaQuery.of(context).size;
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
     final bottomPadding = MediaQuery.of(context).padding.bottom;
-
-    // Only show nav bar if not on SwipeScreen
-    _showNavBar = _currentIndex != 1; // 1 is the index for SwipeScreen
 
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: const SystemUiOverlayStyle(
@@ -84,16 +116,19 @@ class NavigationControllerState extends State<NavigationController>
         backgroundColor: isDarkMode ? Colors.black : Colors.white,
         body: Stack(
           children: [
-            // Main content
-            IndexedStack(
-              index: _currentIndex,
-              children: List.generate(_navigationItems.length, (index) {
-                return KeepAliveWidget(
-                  key: ValueKey(index),
-                  active: _currentIndex == index,
-                  child: _navigationItems[index].builder(),
-                );
-              }),
+            // Main content with PageView
+            PageView.builder(
+              controller: _pageController,
+              onPageChanged: _onPageChanged,
+              physics: const NeverScrollableScrollPhysics(), // Disable swipe
+              itemCount: _navigationItems.length,
+              itemBuilder: (context, index) {
+                // Only build the widget if the tab has been loaded
+                if (!_loadedTabs[index]) {
+                  return const SizedBox.shrink();
+                }
+                return _navigationItems[index].builder();
+              },
             ),
 
             // Navigation bar with SOS button
@@ -145,8 +180,7 @@ class NavigationControllerState extends State<NavigationController>
 
                     // Floating SOS button
                     Positioned(
-                      top: -(size.height *
-                          0.02), // Adjust this value to move the button up/down
+                      top: -(size.height * 0.02),
                       child: _buildSOSButton(),
                     ),
                   ],
@@ -187,27 +221,11 @@ class NavigationControllerState extends State<NavigationController>
       child: GestureDetector(
         onTap: () {
           if (_currentIndex != index) {
-            setState(() {
-              _rotationValue = _rotationValue + 1;
-              _currentIndex = index;
-            });
-
-            // Ensure system bars remain hidden
-            SystemChrome.setEnabledSystemUIMode(
-              SystemUiMode.immersiveSticky,
-              overlays: [],
+            _pageController.animateToPage(
+              index,
+              duration: const Duration(milliseconds: 300),
+              curve: Curves.easeInOut,
             );
-            SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
-              statusBarColor: Colors.transparent,
-              systemNavigationBarColor: Colors.transparent,
-              systemNavigationBarDividerColor: Colors.transparent,
-            ));
-
-            Future.delayed(const Duration(milliseconds: 500), () {
-              if (mounted && _currentIndex == index) {
-                setState(() => _rotationValue = 0);
-              }
-            });
           }
         },
         child: Container(
@@ -246,10 +264,11 @@ class NavigationControllerState extends State<NavigationController>
     return GestureDetector(
       onTap: () {
         if (_currentIndex != index) {
-          setState(() {
-            _currentIndex = index;
-            _showNavBar = true;
-          });
+          _pageController.animateToPage(
+            index,
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeInOut,
+          );
         }
       },
       child: Container(
@@ -336,31 +355,6 @@ class NavigationControllerState extends State<NavigationController>
       builder: () => const Profile(),
     ),
   ];
-
-  void setCurrentIndex(int index) {
-    setState(() {
-      _currentIndex = index;
-      _showNavBar = index != 1;
-
-      // Ensure immersive mode is maintained
-      SystemChrome.setEnabledSystemUIMode(
-        SystemUiMode.immersiveSticky,
-        overlays: [],
-      );
-    });
-  }
-
-  void hideNavBar() {
-    setState(() {
-      _showNavBar = false;
-    });
-  }
-
-  void showNavBar() {
-    setState(() {
-      _showNavBar = true;
-    });
-  }
 
   void _handleSOSPress() {
     if (_isSOSActive) {

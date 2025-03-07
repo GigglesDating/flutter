@@ -6,6 +6,8 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_frontend/screens/barrel.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flutter/foundation.dart';
 
 class HomeTab extends StatefulWidget {
   const HomeTab({super.key});
@@ -19,6 +21,12 @@ class _HomeTabState extends State<HomeTab> {
   bool _isLoading = false;
   bool _hasMore = true;
   int _currentPage = 1;
+  final int _preloadDistance = 2; // Number of posts to preload
+  bool _isError = false;
+  String _errorMessage = '';
+
+  // Keep track of posts being preloaded
+  final Set<String> _preloadedImages = {};
 
   // Keep the temp profile images for now
   final List<String> _tempUserProfiles = [
@@ -33,6 +41,13 @@ class _HomeTabState extends State<HomeTab> {
   File? _croppedImage;
   final ImagePicker _picker = ImagePicker();
 
+  // Track loading states
+  bool _isInitialLoading = true;
+  bool _isLoadingMore = false;
+
+  // Add memory cache for formatted posts
+  static final Map<String, Map<String, dynamic>> _postCache = {};
+
   @override
   void initState() {
     super.initState();
@@ -43,194 +58,161 @@ class _HomeTabState extends State<HomeTab> {
   @override
   void dispose() {
     _scrollController.dispose();
+    // Clear preloaded images and post cache
+    _preloadedImages.clear();
+    _postCache.clear();
     super.dispose();
+  }
+
+  void _preloadNextPosts() {
+    if (_posts.isEmpty || !_scrollController.hasClients) return;
+
+    try {
+      final int currentIndex = (_scrollController.position.pixels /
+              (_scrollController.position.maxScrollExtent / _posts.length))
+          .floor();
+
+      // Preload next few posts
+      for (var i = 1; i <= _preloadDistance; i++) {
+        final nextIndex = currentIndex + i;
+        if (nextIndex < _posts.length) {
+          final post = _posts[nextIndex];
+          final imageUrl = post['media']['source'];
+          final profileImageUrl = post['author_profile']['profile_image'];
+
+          if (!_preloadedImages.contains(imageUrl)) {
+            _preloadedImages.add(imageUrl);
+            precacheImage(
+              CachedNetworkImageProvider(imageUrl),
+              context,
+            );
+          }
+
+          if (!_preloadedImages.contains(profileImageUrl)) {
+            _preloadedImages.add(profileImageUrl);
+            precacheImage(
+              CachedNetworkImageProvider(profileImageUrl),
+              context,
+            );
+          }
+        }
+      }
+    } catch (e) {
+      debugPrint('Error in _preloadNextPosts: $e');
+    }
   }
 
   Future<void> _loadInitialPosts() async {
     if (_isLoading) return;
+
     setState(() {
       _isLoading = true;
+      _isInitialLoading = true;
+      _isError = false;
+      _errorMessage = '';
       _posts.clear();
     });
 
     try {
       final prefs = await SharedPreferences.getInstance();
       final uuid = prefs.getString('user_uuid');
-      debugPrint('Loading initial posts for UUID: $uuid');
 
       if (uuid == null) {
-        debugPrint('No UUID found, cannot load posts');
-        setState(() => _isLoading = false);
-        return;
+        throw Exception('No UUID found');
       }
 
-      debugPrint('Making API call to getFeed...');
-      final thinkProvider = ThinkProvider();
+      Future<Map<String, dynamic>> fetchFeedInBackground(String uuid) async {
+        return await ThinkProvider().getFeed(uuid: uuid);
+      }
 
-      // Add timeout to the API call
-      final response = await thinkProvider.getFeed(uuid: uuid).timeout(
-        const Duration(seconds: 30),
-        onTimeout: () {
-          debugPrint('API call timed out after 30 seconds');
-          return {
-            'status': 'error',
-            'message': 'Request timed out',
-            'data': null
-          };
-        },
-      );
+      final response = await compute(fetchFeedInBackground, uuid);
+      debugPrint('API Response: $response');
 
-      debugPrint('API call completed. Response status: ${response['status']}');
-      debugPrint('Raw API Response: ${response.toString()}');
+      if (!mounted) return;
 
       if (response['status'] == 'success' && response['data'] != null) {
         final feedData = response['data'];
-        final posts = feedData['posts'] as List<dynamic>;
-        debugPrint('Number of posts received: ${posts.length}');
-
-        if (posts.isNotEmpty) {
-          debugPrint('First post structure: ${posts[0].toString()}');
-        }
+        final posts = (feedData['posts'] as List).cast<Map<String, dynamic>>();
 
         setState(() {
-          _posts.addAll(_formatPosts(posts));
+          _posts.addAll(posts);
           _hasMore = feedData['has_more'] ?? false;
-          _currentPage = (feedData['next_page'] ?? 2) - 1;
+          _currentPage = 1;
           _isLoading = false;
+          _isInitialLoading = false;
         });
       } else {
-        debugPrint('Error in response: ${response['message']}');
-        setState(() => _isLoading = false);
+        throw Exception(response['message'] ?? 'Failed to load posts');
       }
-    } catch (e, stackTrace) {
+    } catch (e) {
       debugPrint('Error loading posts: $e');
-      debugPrint('Stack trace: $stackTrace');
-      setState(() => _isLoading = false);
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+          _isInitialLoading = false;
+          _isError = true;
+          _errorMessage = 'Failed to load posts. Please try again.';
+        });
+      }
     }
   }
 
   Future<void> _loadMorePosts() async {
-    if (_isLoading || !_hasMore) return;
-    setState(() => _isLoading = true);
+    if (_isLoading || !_hasMore || _isLoadingMore) return;
+
+    setState(() {
+      _isLoading = true;
+      _isLoadingMore = true;
+    });
 
     try {
       final prefs = await SharedPreferences.getInstance();
       final uuid = prefs.getString('user_uuid');
-      debugPrint('Loading more posts for page: ${_currentPage + 1}');
 
       if (uuid == null) {
-        debugPrint('No UUID found, cannot load more posts');
-        setState(() => _isLoading = false);
-        return;
+        throw Exception('No UUID found');
       }
 
-      final thinkProvider = ThinkProvider();
-      final response = await thinkProvider.getFeed(
+      final response = await ThinkProvider().getFeed(
         uuid: uuid,
         page: _currentPage + 1,
       );
-      debugPrint('More posts response: $response');
+
+      if (!mounted) return;
 
       if (response['status'] == 'success' && response['data'] != null) {
         final feedData = response['data'];
-        final posts = feedData['posts'] as List<dynamic>;
-        debugPrint('Received ${posts.length} more posts');
+        final posts = (feedData['posts'] as List).cast<Map<String, dynamic>>();
 
         setState(() {
-          _posts.addAll(_formatPosts(posts));
-          _hasMore = feedData['has_more'] ?? false;
-          _currentPage = (feedData['next_page'] ?? (_currentPage + 2)) - 1;
+          // If no new posts were returned, we've reached the end
+          if (posts.isEmpty) {
+            _hasMore = false;
+          } else {
+            _posts.addAll(posts);
+            _hasMore = feedData['has_more'] ??
+                true; // Default to true if not specified
+            _currentPage += 1;
+          }
           _isLoading = false;
+          _isLoadingMore = false;
         });
       } else {
-        debugPrint('Error in response: ${response['message']}');
-        setState(() => _isLoading = false);
+        throw Exception(response['message'] ?? 'Failed to load more posts');
       }
     } catch (e) {
       debugPrint('Error loading more posts: $e');
-      setState(() => _isLoading = false);
-    }
-  }
-
-  List<Map<String, dynamic>> _formatPosts(List<dynamic> posts) {
-    debugPrint('Formatting ${posts.length} posts');
-    return posts.map((post) {
-      final mediaData = post['media'] as Map<String, dynamic>;
-      final authorProfile = post['author_profile'] as Map<String, dynamic>;
-
-      // Debug log for media data
-      debugPrint('Processing media data: ${mediaData.toString()}');
-
-      return {
-        'post_id': post['post_id'],
-        'media': {
-          'type': mediaData['type'],
-          'source': mediaData['source'],
-          'thumbnail': mediaData['thumbnail'],
-        },
-        'media_url': mediaData['source'], // Direct access for VideoLoader
-        'thumbnail_url': mediaData['thumbnail'], // For video thumbnails
-        'isVideo': mediaData['type'] == 'video',
-        'caption': post['description'] ?? '',
-        'likes': post['likes_count'] ?? 0,
-        'comments_count': post['comments_count'] ?? 0,
-        'timeAgo': _getTimeAgo(DateTime.parse(post['timestamp'])),
-        'author_profile': {
-          'profile_id': authorProfile['profile_id'],
-          'profile_image': authorProfile['profile_image'],
-        },
-        'location': 'Bangalore',
-        'posted_by': post['author_profile_id'],
-        'comments': (post['comments'] as List<dynamic>?)?.map((comment) {
-              final commentAuthorProfile =
-                  comment['author_profile'] as Map<String, dynamic>;
-              return {
-                'comment_id': comment['comment_id'],
-                'comment_text': comment['text'],
-                'comment_by': comment['author_profile_id'],
-                'timestamp': _getTimeAgo(DateTime.parse(comment['timestamp'])),
-                'likes_count': comment['likes_count'],
-                'author_profile': {
-                  'profile_id': commentAuthorProfile['profile_id'],
-                  'profile_image': commentAuthorProfile['profile_image'],
-                }
-              };
-            }).toList() ??
-            [],
-        'replies': (post['replies'] as List<dynamic>?)?.map((reply) {
-              final replyAuthorProfile =
-                  reply['author_profile'] as Map<String, dynamic>;
-              return {
-                'reply_id': reply['reply_id'],
-                'reply_text': reply['text'],
-                'reply_by': reply['author_profile_id'],
-                'comment_id': reply['replytocomment_id'],
-                'timestamp': _getTimeAgo(DateTime.parse(reply['timestamp'])),
-                'likes_count': reply['likes_count'],
-                'author_profile': {
-                  'profile_id': replyAuthorProfile['profile_id'],
-                  'profile_image': replyAuthorProfile['profile_image'],
-                }
-              };
-            }).toList() ??
-            [],
-        'category': post['category'] ?? 'General'
-      };
-    }).toList();
-  }
-
-  String _getTimeAgo(DateTime timestamp) {
-    final now = DateTime.now();
-    final difference = now.difference(timestamp);
-
-    if (difference.inDays > 0) {
-      return '${difference.inDays}d ago';
-    } else if (difference.inHours > 0) {
-      return '${difference.inHours}h ago';
-    } else if (difference.inMinutes > 0) {
-      return '${difference.inMinutes}m ago';
-    } else {
-      return 'just now';
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+          _isLoadingMore = false;
+          // Only set hasMore to false if we got an empty response
+          // Otherwise keep current value to allow retrying
+          if (e.toString().contains('No more posts')) {
+            _hasMore = false;
+          }
+        });
+      }
     }
   }
 
@@ -242,13 +224,32 @@ class _HomeTabState extends State<HomeTab> {
       setState(() => _showStories = true);
     }
 
-    // Handle infinite scroll
+    // Trigger preloading
+    _preloadNextPosts();
+
+    // Debug prints
+    debugPrint('Scroll position: ${_scrollController.position.pixels}');
+    debugPrint(
+        'Max scroll extent: ${_scrollController.position.maxScrollExtent}');
+    debugPrint('hasMore: $_hasMore');
+    debugPrint('isLoading: $_isLoading');
+    debugPrint('Posts length: ${_posts.length}');
+
+    // Handle infinite scroll with better threshold
     if (!_isLoading &&
         _hasMore &&
         _scrollController.position.pixels >=
-            _scrollController.position.maxScrollExtent * 0.8) {
+            _scrollController.position.maxScrollExtent * 0.85) {
       debugPrint('Triggering load more posts');
       _loadMorePosts();
+    }
+
+    // Check if we've reached the end
+    if (_scrollController.position.pixels >=
+            _scrollController.position.maxScrollExtent &&
+        !_hasMore &&
+        !_isLoading) {
+      debugPrint('Reached end of feed!');
     }
   }
 
@@ -333,8 +334,30 @@ class _HomeTabState extends State<HomeTab> {
               ),
             ),
           ),
-          SizedBox(
-              width: 8), // Add some padding to replace the messenger button
+          IconButton(
+            onPressed: () {},
+            icon: Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: isDarkMode
+                    ? Colors.white.withAlpha(38)
+                    : Colors.black.withAlpha(26),
+              ),
+              child: Center(
+                child: SvgPicture.asset(
+                  'assets/icons/feed/messenger.svg',
+                  width: 22,
+                  height: 22,
+                  colorFilter: ColorFilter.mode(
+                    isDarkMode ? Colors.white : Colors.black,
+                    BlendMode.srcIn,
+                  ),
+                ),
+              ),
+            ),
+          ),
         ],
       ),
       body: Column(
@@ -430,24 +453,34 @@ class _HomeTabState extends State<HomeTab> {
   }
 
   Widget _buildFeedSection(bool isDarkMode) {
-    if (_isLoading && _posts.isEmpty) {
-      return const Center(child: CircularProgressIndicator());
+    if (_isInitialLoading) {
+      return const Center(
+        child: CircularProgressIndicator(),
+      );
     }
 
-    if (_posts.isEmpty) {
+    if (_isError) {
       return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
+            Icon(
+              Icons.error_outline,
+              size: 48,
+              color: isDarkMode ? Colors.white : Colors.black,
+            ),
+            const SizedBox(height: 16),
             Text(
-              'No posts available',
+              _errorMessage,
+              textAlign: TextAlign.center,
               style: TextStyle(
-                color: isDarkMode ? Colors.white : Colors.black,
+                color: isDarkMode ? Colors.white70 : Colors.black54,
               ),
             ),
-            TextButton(
+            const SizedBox(height: 16),
+            ElevatedButton(
               onPressed: _loadInitialPosts,
-              child: const Text('Refresh'),
+              child: const Text('Try Again'),
             ),
           ],
         ),
@@ -458,12 +491,18 @@ class _HomeTabState extends State<HomeTab> {
       onRefresh: _loadInitialPosts,
       child: ListView.builder(
         controller: _scrollController,
-        itemCount: _posts.length + (_hasMore ? 1 : 0),
+        itemCount: _posts.length +
+            1, // Always add one more item for either loading or end indicator
         itemBuilder: (context, index) {
           if (index == _posts.length) {
-            return _buildLoadingIndicator();
+            debugPrint('Rendering last item. hasMore: $_hasMore');
+            return _hasMore
+                ? _buildLoadingIndicator()
+                : _buildEndOfFeedIndicator(isDarkMode);
           }
+
           return PostCard(
+            key: ValueKey('post_${_posts[index]['post_id']}'),
             post: _posts[index],
             isDarkMode: isDarkMode,
           );
@@ -476,7 +515,53 @@ class _HomeTabState extends State<HomeTab> {
     return Container(
       padding: const EdgeInsets.all(16),
       alignment: Alignment.center,
-      child: const CircularProgressIndicator(),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const CircularProgressIndicator(),
+          if (_isLoadingMore)
+            Padding(
+              padding: const EdgeInsets.only(top: 8),
+              child: Text(
+                'Loading more posts...',
+                style: TextStyle(
+                  color: Theme.of(context).brightness == Brightness.dark
+                      ? Colors.white70
+                      : Colors.black54,
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildEndOfFeedIndicator(bool isDarkMode) {
+    debugPrint('Building end of feed indicator');
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(vertical: 40.0, horizontal: 20.0),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Image.asset(
+            'assets/app/posts_exhaustion.png',
+            width: 200,
+            height: 200,
+            fit: BoxFit.contain,
+          ),
+          const SizedBox(height: 24),
+          Text(
+            'You\'re all caught up!',
+            style: TextStyle(
+              color: isDarkMode ? Colors.white70 : Colors.black54,
+              fontSize: 18,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          const SizedBox(height: 40),
+        ],
+      ),
     );
   }
 

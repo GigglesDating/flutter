@@ -235,11 +235,8 @@ class _SwipeScreenState extends State<SwipeScreen>
                 // Back Button
                 GestureDetector(
                   onTap: () {
-                    final navState = context
-                        .findAncestorStateOfType<NavigationControllerState>();
-                    if (navState != null) {
-                      navState.setCurrentIndex(0);
-                    }
+                    // Use the new navigation method
+                    NavigationController.navigateToTab(context, 0);
                   },
                   child: Container(
                     padding: EdgeInsets.all(size.width * 0.01),

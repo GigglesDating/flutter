@@ -470,6 +470,51 @@ class ThinkProvider {
     }
   }
 
+  // Fetch profile information
+  Future<Map<String, dynamic>> fetchProfile({
+    required String uuid,
+    required String profileId,
+  }) async {
+    try {
+      final response = await _callFunction('fetch_profile', {
+        'uuid': uuid,
+        'profile_id': profileId,
+      });
+
+      if (response['status'] == 'success') {
+        return {
+          'status': 'success',
+          'data': {
+            'profile': Map<String, dynamic>.from(response['data']['profile']),
+            'posts_count': response['data']['posts_count'],
+            'snips_count': response['data']['snips_count'],
+          }
+        };
+      } else {
+        return {
+          'status': 'error',
+          'message': response['message'] ?? 'Failed to fetch profile',
+          'data': {
+            'profile': {},
+            'posts_count': 0,
+            'snips_count': 0,
+          }
+        };
+      }
+    } catch (e) {
+      debugPrint('Error in fetchProfile: $e');
+      return {
+        'status': 'error',
+        'message': 'Error fetching profile: $e',
+        'data': {
+          'profile': {},
+          'posts_count': 0,
+          'snips_count': 0,
+        }
+      };
+    }
+  }
+
   // Generic function caller
   Future<Map<String, dynamic>> _callFunction(
     String function,

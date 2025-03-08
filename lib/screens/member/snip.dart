@@ -590,14 +590,6 @@ class _SnipTabState extends State<SnipTab>
     });
   }
 
-// alright, lets remove the whole code in this file... we'll implement a new login... this login will have a container with a video player, the size of it will be potrait and cover approx 77% of the screen center alligned adn width till the edges of the phone...
-
-// the action_bar dart must be called here adn we will implement it the same way as we have done in post_card dart... we will place the action bar slightly lower than middle to the right corner on the video player container, it must be overlayed on the video...
-
-// finally we'll have a 3 dots button with a small round container in the same color, contrast adn dark / light mode settings as as the icons in actions bar ...
-
-// we will place this 3 dots button on the video .. at the top right corner...
-
   void _showReportSheet() {
     // Pause *before* showing the sheet.
     _controllers[_currentVideoIndex]?.pause();
@@ -613,9 +605,11 @@ class _SnipTabState extends State<SnipTab>
       backgroundColor: Colors.transparent,
       barrierColor:
           Colors.black.withValues(alpha: 128, red: 0, green: 0, blue: 0),
-      builder: (context) => ContentReportSheet(
+      builder: (context) => ReportSheet(
         isDarkMode: isDarkMode,
         screenWidth: screenWidth,
+        reportType: ReportType.content,
+        contentType: 'snip',
       ),
     ).then((_) {
       // Resume *after* the sheet is closed.

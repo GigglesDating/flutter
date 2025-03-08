@@ -347,7 +347,7 @@ class _CommentsSheetState extends State<CommentsSheet>
                       ],
                     ),
                     Container(
-                      padding: EdgeInsets.all(widget.screenWidth * 0.025),
+                      padding: EdgeInsets.all(widget.screenWidth * 0.015),
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
                         color: widget.isDarkMode
@@ -356,7 +356,7 @@ class _CommentsSheetState extends State<CommentsSheet>
                       ),
                       child: Icon(
                         Icons.more_vert,
-                        size: widget.screenWidth * 0.055,
+                        size: widget.screenWidth * 0.045,
                         color: widget.isDarkMode
                             ? Colors.white.withAlpha(204)
                             : Colors.black.withAlpha(204),
@@ -475,7 +475,7 @@ class _CommentsSheetState extends State<CommentsSheet>
                       ],
                     ),
                     Container(
-                      padding: EdgeInsets.all(widget.screenWidth * 0.025),
+                      padding: EdgeInsets.all(widget.screenWidth * 0.015),
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
                         color: widget.isDarkMode
@@ -484,7 +484,7 @@ class _CommentsSheetState extends State<CommentsSheet>
                       ),
                       child: Icon(
                         Icons.more_vert,
-                        size: widget.screenWidth * 0.055,
+                        size: widget.screenWidth * 0.045,
                         color: widget.isDarkMode
                             ? Colors.white.withAlpha(204)
                             : Colors.black.withAlpha(204),

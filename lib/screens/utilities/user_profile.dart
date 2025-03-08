@@ -1081,9 +1081,10 @@ class _UserProfileState extends State<UserProfile> {
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
-      builder: (context) => ContentReportSheet(
+      builder: (context) => ReportSheet(
         isDarkMode: isDarkMode,
         screenWidth: screenWidth,
+        reportType: ReportType.user,
       ),
     );
   }

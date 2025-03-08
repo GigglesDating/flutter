@@ -4,6 +4,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../barrel.dart';
 import 'dart:async';
+import 'dart:ui';
 
 class PostCard extends StatefulWidget {
   final Map<String, dynamic> post;
@@ -440,18 +441,35 @@ class _PostCardState extends State<PostCard>
                   _showReportSheet();
                 }
               },
-              child: Container(
-                padding: EdgeInsets.all(screenWidth * 0.025),
-                decoration: BoxDecoration(
-                  color: widget.isDarkMode
-                      ? Colors.white.withAlpha(38)
-                      : Colors.black.withAlpha(26),
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(
-                  Icons.more_vert,
-                  size: screenWidth * 0.055,
-                  color: widget.isDarkMode ? Colors.white : Colors.black,
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(50),
+                child: BackdropFilter(
+                  filter: ImageFilter.blur(sigmaX: 10.0, sigmaY: 10.0),
+                  child: Container(
+                    padding: EdgeInsets.all(screenWidth * 0.015),
+                    decoration: BoxDecoration(
+                      color: widget.isDarkMode
+                          ? Colors.white.withAlpha(38)
+                          : Colors.black.withAlpha(38),
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: Colors.white.withAlpha(50),
+                        width: 0.5,
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withAlpha(20),
+                          blurRadius: 10,
+                          spreadRadius: 2,
+                        ),
+                      ],
+                    ),
+                    child: Icon(
+                      Icons.more_vert,
+                      size: screenWidth * 0.045,
+                      color: Colors.white.withAlpha(230),
+                    ),
+                  ),
                 ),
               ),
             ),
@@ -557,9 +575,11 @@ class _PostCardState extends State<PostCard>
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
-      builder: (context) => ContentReportSheet(
+      builder: (context) => ReportSheet(
         isDarkMode: isDarkMode,
         screenWidth: screenWidth,
+        reportType: ReportType.content,
+        contentType: 'post',
       ),
     );
   }

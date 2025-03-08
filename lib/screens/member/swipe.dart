@@ -97,7 +97,10 @@ class _SwipeScreenState extends State<SwipeScreen>
   }
 
   bool _onSwipe(
-      int previousIndex, int? currentIndex, CardSwiperDirection direction) {
+    int previousIndex,
+    int? currentIndex,
+    CardSwiperDirection direction,
+  ) {
     final swipedProfile = _profiles[previousIndex];
 
     switch (direction) {
@@ -125,9 +128,7 @@ class _SwipeScreenState extends State<SwipeScreen>
         Navigator.push<bool>(
           context,
           MaterialPageRoute(
-            builder: (context) => PromptsScreen(
-              profile: swipedProfile,
-            ),
+            builder: (context) => PromptsScreen(profile: swipedProfile),
           ),
         ).then((shouldChangeProfile) {
           if (shouldChangeProfile == true) {
@@ -168,6 +169,12 @@ class _SwipeScreenState extends State<SwipeScreen>
     return true;
   }
 
+  void _handleReportComplete() {
+    // Close report sheet and move to next profile
+    Navigator.pop(context);
+    _cardSwiperController.swipe(CardSwiperDirection.left);
+  }
+
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
@@ -181,11 +188,18 @@ class _SwipeScreenState extends State<SwipeScreen>
             controller: _cardSwiperController,
             cardsCount: _profiles.length,
             padding: EdgeInsets.zero,
-            allowedSwipeDirection:
-                AllowedSwipeDirection.only(up: true, right: true, left: true),
+            allowedSwipeDirection: AllowedSwipeDirection.only(
+              up: true,
+              right: true,
+              left: true,
+            ),
             onSwipe: _onSwipe,
-            cardBuilder:
-                (context, index, percentThresholdX, percentThresholdY) {
+            cardBuilder: (
+              context,
+              index,
+              percentThresholdX,
+              percentThresholdY,
+            ) {
               return GestureDetector(
                 onTap: () {
                   setState(() {
@@ -271,17 +285,22 @@ class _SwipeScreenState extends State<SwipeScreen>
                             maxHeight: MediaQuery.of(context).size.height * 0.9,
                           ),
                           child: ClipRRect(
-                            borderRadius:
-                                BorderRadius.vertical(top: Radius.circular(20)),
+                            borderRadius: BorderRadius.vertical(
+                              top: Radius.circular(20),
+                            ),
                             child: BackdropFilter(
-                              filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
+                              filter: ImageFilter.blur(
+                                sigmaX: 15,
+                                sigmaY: 15,
+                              ),
                               child: Container(
                                 decoration: BoxDecoration(
-                                  color: Theme.of(context)
-                                      .scaffoldBackgroundColor
-                                      .withAlpha(128),
+                                  color: Theme.of(
+                                    context,
+                                  ).scaffoldBackgroundColor.withAlpha(128),
                                   borderRadius: BorderRadius.vertical(
-                                      top: Radius.circular(20)),
+                                    top: Radius.circular(20),
+                                  ),
                                 ),
                                 child: SwipeFilterPage(),
                               ),
@@ -325,8 +344,9 @@ class _SwipeScreenState extends State<SwipeScreen>
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(10),
               image: DecorationImage(
-                image:
-                    AssetImage(_profiles[_currentIndex]['images'][index + 1]),
+                image: AssetImage(
+                  _profiles[_currentIndex]['images'][index + 1],
+                ),
                 fit: BoxFit.cover,
               ),
               boxShadow: [
@@ -346,8 +366,9 @@ class _SwipeScreenState extends State<SwipeScreen>
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(10),
                 image: DecorationImage(
-                  image:
-                      AssetImage(_profiles[_currentIndex]['images'][index + 1]),
+                  image: AssetImage(
+                    _profiles[_currentIndex]['images'][index + 1],
+                  ),
                   fit: BoxFit.cover,
                 ),
               ),
@@ -377,8 +398,9 @@ class _SwipeScreenState extends State<SwipeScreen>
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(10),
                 image: DecorationImage(
-                  image:
-                      AssetImage(_profiles[_currentIndex]['images'][index + 1]),
+                  image: AssetImage(
+                    _profiles[_currentIndex]['images'][index + 1],
+                  ),
                   fit: BoxFit.cover,
                 ),
                 boxShadow: [
@@ -417,9 +439,11 @@ class _SwipeScreenState extends State<SwipeScreen>
                   context: context,
                   isScrollControlled: true,
                   backgroundColor: Colors.transparent,
-                  builder: (context) => UserReportSheet(
+                  builder: (context) => ReportSheet(
                     isDarkMode: Theme.of(context).brightness == Brightness.dark,
-                    screenWidth: MediaQuery.of(context).size.width,
+                    screenWidth: size.width,
+                    reportType: ReportType.user,
+                    onReportComplete: _handleReportComplete,
                   ),
                 );
               },
@@ -449,13 +473,15 @@ class _SwipeScreenState extends State<SwipeScreen>
           ],
         ),
         SizedBox(height: size.height * 0.01), //0.007
-
         // Location
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.location_on,
-                color: Colors.white, size: size.width * 0.05),
+            Icon(
+              Icons.location_on,
+              color: Colors.white,
+              size: size.width * 0.05,
+            ),
             SizedBox(width: size.width * 0.02),
             Text(
               _profiles[index]['location'],

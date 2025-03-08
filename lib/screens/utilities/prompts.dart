@@ -119,9 +119,10 @@ class _PromptsScreenState extends State<PromptsScreen> {
                   context: context,
                   isScrollControlled: true,
                   backgroundColor: Colors.transparent,
-                  builder: (context) => UserReportSheet(
+                  builder: (context) => ReportSheet(
                     isDarkMode: isDarkMode,
                     screenWidth: size.width,
+                    reportType: ReportType.user,
                     onReportComplete: _handleReportComplete,
                   ),
                 );

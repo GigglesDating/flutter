@@ -515,6 +515,51 @@ class ThinkProvider {
     }
   }
 
+  // Fetch comments for a specific content (post/snip/story)
+  Future<Map<String, dynamic>> fetchComments({
+    required String uuid,
+    required String contentType,
+    required String contentId,
+  }) async {
+    try {
+      final response = await _callFunction('fetch_comments', {
+        'uuid': uuid,
+        'content_type': contentType,
+        'content_id': contentId,
+      });
+
+      if (response['status'] == 'success') {
+        return {
+          'status': 'success',
+          'data': {
+            'comments':
+                List<Map<String, dynamic>>.from(response['data']['comments']),
+            'total_comments': response['data']['total_comments'],
+          }
+        };
+      } else {
+        return {
+          'status': 'error',
+          'message': response['message'] ?? 'Failed to fetch comments',
+          'data': {
+            'comments': [],
+            'total_comments': 0,
+          }
+        };
+      }
+    } catch (e) {
+      debugPrint('Error in fetchComments: $e');
+      return {
+        'status': 'error',
+        'message': 'Error fetching comments: $e',
+        'data': {
+          'comments': [],
+          'total_comments': 0,
+        }
+      };
+    }
+  }
+
   // Generic function caller
   Future<Map<String, dynamic>> _callFunction(
     String function,

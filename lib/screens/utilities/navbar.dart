@@ -221,16 +221,11 @@ class NavigationControllerState extends State<NavigationController>
       child: GestureDetector(
         onTap: () {
           if (_currentIndex != index) {
-            // Use jump for non-adjacent pages, animate for adjacent ones
-            if ((index - _currentIndex).abs() > 1) {
-              _pageController.jumpToPage(index);
-            } else {
-              _pageController.animateToPage(
-                index,
-                duration: const Duration(milliseconds: 300),
-                curve: Curves.easeInOut,
-              );
-            }
+            _pageController.animateToPage(
+              index,
+              duration: const Duration(milliseconds: 300),
+              curve: Curves.easeInOut,
+            );
           }
         },
         child: Container(
@@ -269,16 +264,11 @@ class NavigationControllerState extends State<NavigationController>
     return GestureDetector(
       onTap: () {
         if (_currentIndex != index) {
-          // Use jump for non-adjacent pages, animate for adjacent ones
-          if ((index - _currentIndex).abs() > 1) {
-            _pageController.jumpToPage(index);
-          } else {
-            _pageController.animateToPage(
-              index,
-              duration: const Duration(milliseconds: 300),
-              curve: Curves.easeInOut,
-            );
-          }
+          _pageController.animateToPage(
+            index,
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeInOut,
+          );
         }
       },
       child: Container(

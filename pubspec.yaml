@@ -37,6 +37,7 @@ dependencies:
   visibility_detector: ^0.4.0+2
   svg_path_parser: ^1.1.2
   cached_network_image: ^3.4.1
+  hive_flutter: ^1.1.0
 
 dev_dependencies:
   flutter_test:

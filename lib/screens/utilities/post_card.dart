@@ -33,6 +33,8 @@ class _PostCardState extends State<PostCard>
   late Animation<double> _animation;
   bool _showHeart = false;
   Timer? _heartTimer;
+  bool _isImageLoaded = false;
+  CancellationToken? _imageCancellationToken;
 
   @override
   void initState() {
@@ -45,44 +47,86 @@ class _PostCardState extends State<PostCard>
       parent: _animationController,
       curve: Curves.easeOutCubic,
     );
-  }
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
     _preloadImages();
   }
 
-  void _preloadImages() {
-    if (!mounted || widget.post.media.source.isEmpty) {
-      return;
+  @override
+  void didUpdateWidget(PostCard oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.post.media.source != widget.post.media.source ||
+        oldWidget.post.authorProfile.profileImage !=
+            widget.post.authorProfile.profileImage) {
+      _preloadImages();
     }
+  }
 
-    precacheImage(
-      CachedNetworkImageProvider(widget.post.media.source),
-      context,
-    );
+  Future<void> _preloadImages() async {
+    if (!mounted) return;
 
-    if (widget.showProfileImage &&
-        widget.post.authorProfile.profileImage.isNotEmpty) {
-      precacheImage(
-        CachedNetworkImageProvider(widget.post.authorProfile.profileImage),
-        context,
-      );
+    // Cancel any ongoing preload
+    _imageCancellationToken?.cancel();
+    _imageCancellationToken = CancellationToken();
+
+    setState(() => _isImageLoaded = false);
+
+    try {
+      // Preload main post image
+      if (widget.post.media.source.isNotEmpty) {
+        await CachedNetworkImage.evictFromCache(widget.post.media.source);
+        await precacheImage(
+          CachedNetworkImageProvider(
+            widget.post.media.source,
+            cacheKey: '${widget.post.media.source}_post_main',
+          ),
+          context,
+          onError: (e, stackTrace) {
+            debugPrint('Error preloading post image: $e');
+          },
+        );
+      }
+
+      // Preload profile image if needed
+      if (widget.showProfileImage &&
+          widget.post.authorProfile.profileImage.isNotEmpty) {
+        await precacheImage(
+          CachedNetworkImageProvider(
+            widget.post.authorProfile.profileImage,
+            cacheKey: '${widget.post.authorProfile.profileImage}_post_profile',
+          ),
+          context,
+          onError: (e, stackTrace) {
+            debugPrint('Error preloading profile image: $e');
+          },
+        );
+      }
+
+      if (mounted && !_imageCancellationToken!.isCancelled) {
+        setState(() => _isImageLoaded = true);
+      }
+    } catch (e) {
+      debugPrint('Error in preloading images: $e');
     }
   }
 
   @override
   void dispose() {
+    _imageCancellationToken?.cancel();
     _animationController.dispose();
     _heartTimer?.cancel();
-    // Clear cached images
+
+    // Clear cached images with specific cache keys
     if (widget.post.media.source.isNotEmpty) {
-      CachedNetworkImage.evictFromCache(widget.post.media.source);
+      CachedNetworkImage.evictFromCache(
+        widget.post.media.source,
+        cacheKey: '${widget.post.media.source}_post_main',
+      );
     }
     if (widget.showProfileImage &&
         widget.post.authorProfile.profileImage.isNotEmpty) {
-      CachedNetworkImage.evictFromCache(widget.post.authorProfile.profileImage);
+      CachedNetworkImage.evictFromCache(
+        widget.post.authorProfile.profileImage,
+        cacheKey: '${widget.post.authorProfile.profileImage}_post_profile',
+      );
     }
     super.dispose();
   }
@@ -206,6 +250,9 @@ class _PostCardState extends State<PostCard>
                       },
                       memCacheWidth: (screenWidth * 0.95).toInt(),
                       memCacheHeight: (screenWidth * 1.4).toInt(),
+                      maxWidthDiskCache: 1080,
+                      maxHeightDiskCache: 1920,
+                      cacheKey: '${widget.post.media.source}_post_main',
                     ),
                   ),
                 ),
@@ -247,16 +294,25 @@ class _PostCardState extends State<PostCard>
                                 width: screenWidth * 0.12,
                                 height: screenWidth * 0.12,
                                 fit: BoxFit.cover,
+                                memCacheWidth: (screenWidth * 0.24).toInt(),
+                                memCacheHeight: (screenWidth * 0.24).toInt(),
+                                maxWidthDiskCache: 300,
+                                maxHeightDiskCache: 300,
+                                cacheKey:
+                                    '${widget.post.authorProfile.profileImage}_post_profile',
                                 placeholder: (context, url) =>
                                     CircularProgressIndicator(
                                   color: widget.isDarkMode
                                       ? Colors.white
                                       : Colors.black,
+                                  strokeWidth: 2,
                                 ),
                                 errorWidget: (context, url, error) =>
                                     const Icon(Icons.person),
-                                memCacheWidth: (screenWidth * 0.12).toInt(),
-                                memCacheHeight: (screenWidth * 0.12).toInt(),
+                                httpHeaders: const {
+                                  'Accept': 'image/*',
+                                  'Cache-Control': 'max-age=3600',
+                                },
                               ),
                             ),
                           ),
@@ -479,7 +535,6 @@ class _PostCardState extends State<PostCard>
     Color color = Colors.white,
   }) {
     final screenWidth = MediaQuery.of(context).size.width;
-    final isLikeButton = iconPath.contains('like.svg');
 
     return GestureDetector(
       onTap: onTap,
@@ -495,12 +550,10 @@ class _PostCardState extends State<PostCard>
           iconPath,
           width: screenWidth * 0.055,
           height: screenWidth * 0.055,
-          colorFilter: isLikeButton
-              ? ColorFilter.mode(
-                  color,
-                  BlendMode.srcIn,
-                )
-              : null,
+          colorFilter: ColorFilter.mode(
+            color,
+            BlendMode.srcIn,
+          ),
         ),
       ),
     );
@@ -569,5 +622,14 @@ class _PostCardState extends State<PostCard>
     } else {
       return 'just now';
     }
+  }
+}
+
+class CancellationToken {
+  bool _isCancelled = false;
+  bool get isCancelled => _isCancelled;
+
+  void cancel() {
+    _isCancelled = true;
   }
 }

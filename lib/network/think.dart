@@ -520,12 +520,16 @@ class ThinkProvider {
     required String uuid,
     required String contentType,
     required String contentId,
+    int page = 1,
+    int pageSize = 20,
   }) async {
     try {
       final response = await _callFunction('fetch_comments', {
         'uuid': uuid,
         'content_type': contentType,
         'content_id': contentId,
+        'page': page,
+        'page_size': pageSize,
       });
 
       if (response['status'] == 'success') {
@@ -535,6 +539,8 @@ class ThinkProvider {
             'comments':
                 List<Map<String, dynamic>>.from(response['data']['comments']),
             'total_comments': response['data']['total_comments'],
+            'has_more': response['data']['has_more'] ?? false,
+            'next_page': response['data']['next_page'],
           }
         };
       } else {
@@ -544,6 +550,8 @@ class ThinkProvider {
           'data': {
             'comments': [],
             'total_comments': 0,
+            'has_more': false,
+            'next_page': null,
           }
         };
       }
@@ -555,6 +563,8 @@ class ThinkProvider {
         'data': {
           'comments': [],
           'total_comments': 0,
+          'has_more': false,
+          'next_page': null,
         }
       };
     }

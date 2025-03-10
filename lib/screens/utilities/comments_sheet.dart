@@ -1,17 +1,27 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import '../../models/user_model.dart';
+import '../../models/utils/comments_parser.dart';
+import '../../network/think.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class CommentsSheet extends StatefulWidget {
   final bool isDarkMode;
-  final Map<String, dynamic> post;
+  final String contentId;
+  final String contentType;
+  final List<String> commentIds;
+  final UserModel authorProfile;
   final double screenHeight;
   final double screenWidth;
 
   const CommentsSheet({
     super.key,
     required this.isDarkMode,
-    required this.post,
+    required this.contentId,
+    required this.contentType,
+    required this.commentIds,
+    required this.authorProfile,
     required this.screenHeight,
     required this.screenWidth,
   });
@@ -32,6 +42,12 @@ class _CommentsSheetState extends State<CommentsSheet>
   AnimationController? _animationController;
   Animation<double>? _animation;
 
+  // State variables for comments
+  List<Comment> _comments = [];
+  bool _isLoading = true;
+  bool _hasError = false;
+  String _errorMessage = '';
+
   @override
   void initState() {
     super.initState();
@@ -41,6 +57,51 @@ class _CommentsSheetState extends State<CommentsSheet>
     );
     _animation =
         Tween<double>(begin: 0.0, end: 1.0).animate(_animationController!);
+    _loadComments();
+  }
+
+  Future<void> _loadComments() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final uuid = prefs.getString('user_uuid');
+
+      if (uuid == null) {
+        throw Exception('No UUID found');
+      }
+
+      debugPrint('CommentsSheet - Loading comments with:');
+      debugPrint('  UUID: $uuid');
+      debugPrint('  Content ID: ${widget.contentId}');
+      debugPrint('  Content Type: ${widget.contentType}');
+      debugPrint('  Comment IDs available: ${widget.commentIds}');
+
+      final response = await ThinkProvider().fetchComments(
+        uuid: uuid,
+        contentId: widget.contentId,
+        contentType: widget.contentType,
+      );
+
+      debugPrint('CommentsSheet - API Response:');
+      debugPrint(response.toString());
+
+      if (!mounted) return;
+
+      final parsedData = Comment.parseFromApi(response);
+      setState(() {
+        _comments = parsedData['data']['comments'] as List<Comment>;
+        _isLoading = false;
+      });
+    } catch (e, stackTrace) {
+      debugPrint('Error loading comments: $e');
+      debugPrint('Stack trace: $stackTrace');
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+          _hasError = true;
+          _errorMessage = 'Error: ${e.toString()}';
+        });
+      }
+    }
   }
 
   @override
@@ -60,10 +121,6 @@ class _CommentsSheetState extends State<CommentsSheet>
 
   @override
   Widget build(BuildContext context) {
-    final comments = widget.post['comments'] as List<dynamic>? ?? [];
-    final replies = widget.post['replies'] as List<dynamic>? ?? [];
-    final commentsCount = widget.post['comments_count'] ?? 0;
-
     return GestureDetector(
       onTap: () {
         // Close keyboard when tapping outside input
@@ -92,7 +149,7 @@ class _CommentsSheetState extends State<CommentsSheet>
                     ),
                   ),
                   Text(
-                    '$commentsCount',
+                    '${_comments.length}',
                     style: TextStyle(
                       fontSize: widget.screenWidth * 0.045,
                       fontWeight: FontWeight.bold,
@@ -106,116 +163,137 @@ class _CommentsSheetState extends State<CommentsSheet>
 
             // Comments list
             Expanded(
-              child: comments.isEmpty
-                  ? Center(
-                      child: Text(
-                        'No comments yet.\nBe the first to comment!',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          color: widget.isDarkMode
-                              ? Colors.white54
-                              : Colors.black54,
-                          fontSize: widget.screenWidth * 0.04,
-                        ),
-                      ),
-                    )
-                  : ListView.builder(
-                      itemCount: comments.length,
-                      padding: EdgeInsets.symmetric(
-                          horizontal: widget.screenWidth * 0.04),
-                      itemBuilder: (context, index) {
-                        final comment = comments[index];
-                        final commentReplies = replies
-                            .where((reply) =>
-                                reply['replytocomment_id'] ==
-                                comment['comment_id'])
-                            .toList();
-
-                        return Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            // Comment with swipe actions
-                            GestureDetector(
-                              onHorizontalDragUpdate: (details) {
-                                if (details.primaryDelta! > 0 &&
-                                    details.primaryDelta! < 20) {
-                                  // Right swipe to start reply
-                                  setState(() {
-                                    _replyingToCommentId =
-                                        comment['comment_id'];
-                                    _replyingToUsername =
-                                        comment['author_profile']['name'];
-                                  });
-                                } else if (details.primaryDelta! < 0 &&
-                                    _replyingToCommentId ==
-                                        comment['comment_id']) {
-                                  // Left swipe to cancel reply if we're replying to this comment
-                                  _cancelReply();
-                                }
-                              },
-                              onDoubleTap: () {
-                                HapticFeedback.mediumImpact();
-                                setState(() {
-                                  final commentId = comment['comment_id'];
-                                  _likedComments[commentId] =
-                                      !(_likedComments[commentId] ?? false);
-                                  if (_likedComments[commentId] ?? false) {
-                                    _showHeartAnimation();
-                                  }
-                                });
-                              },
-                              child: _buildCommentItem(comment),
-                            ),
-                            // Replies
-                            if (commentReplies.isNotEmpty)
-                              Padding(
-                                padding: EdgeInsets.only(
-                                    left: widget.screenWidth * 0.12),
-                                child: Column(
-                                  children: commentReplies
-                                      .map((reply) => GestureDetector(
-                                            onHorizontalDragUpdate: (details) {
-                                              if (details.primaryDelta! > 0 &&
-                                                  details.primaryDelta! < 20) {
-                                                // Right swipe on reply - start replying to parent comment
-                                                setState(() {
-                                                  _replyingToCommentId =
-                                                      comment['comment_id'];
-                                                  _replyingToUsername =
-                                                      comment['author_profile']
-                                                          ['name'];
-                                                });
-                                              } else if (details.primaryDelta! <
-                                                      0 &&
-                                                  _replyingToCommentId ==
-                                                      comment['comment_id']) {
-                                                // Left swipe on reply - cancel if replying to parent comment
-                                                _cancelReply();
-                                              }
-                                            },
-                                            onDoubleTap: () {
-                                              HapticFeedback.mediumImpact();
-                                              setState(() {
-                                                final replyId =
-                                                    reply['reply_id'];
-                                                _likedReplies[replyId] =
-                                                    !(_likedReplies[replyId] ??
-                                                        false);
-                                                if (_likedReplies[replyId] ??
-                                                    false) {
-                                                  _showHeartAnimation();
-                                                }
-                                              });
-                                            },
-                                            child: _buildReplyItem(reply),
-                                          ))
-                                      .toList(),
+              child: _isLoading
+                  ? const Center(child: CircularProgressIndicator())
+                  : _hasError
+                      ? Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(
+                                _errorMessage,
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  color: widget.isDarkMode
+                                      ? Colors.white54
+                                      : Colors.black54,
                                 ),
                               ),
-                          ],
-                        );
-                      },
-                    ),
+                              TextButton(
+                                onPressed: _loadComments,
+                                child: const Text('Try Again'),
+                              ),
+                            ],
+                          ),
+                        )
+                      : _comments.isEmpty
+                          ? Center(
+                              child: Text(
+                                'No comments yet.\nBe the first to comment!',
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  color: widget.isDarkMode
+                                      ? Colors.white54
+                                      : Colors.black54,
+                                  fontSize: widget.screenWidth * 0.04,
+                                ),
+                              ),
+                            )
+                          : ListView.builder(
+                              itemCount: _comments.length,
+                              padding: EdgeInsets.symmetric(
+                                  horizontal: widget.screenWidth * 0.04),
+                              itemBuilder: (context, index) {
+                                final comment = _comments[index];
+                                return Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    // Comment with swipe actions
+                                    GestureDetector(
+                                      onHorizontalDragUpdate: (details) {
+                                        if (details.primaryDelta! > 0 &&
+                                            details.primaryDelta! < 20) {
+                                          setState(() {
+                                            _replyingToCommentId = comment.id;
+                                            _replyingToUsername =
+                                                comment.authorProfile.name;
+                                          });
+                                        } else if (details.primaryDelta! < 0 &&
+                                            _replyingToCommentId ==
+                                                comment.id) {
+                                          _cancelReply();
+                                        }
+                                      },
+                                      onDoubleTap: () {
+                                        HapticFeedback.mediumImpact();
+                                        setState(() {
+                                          _likedComments[comment.id] =
+                                              !(_likedComments[comment.id] ??
+                                                  false);
+                                          if (_likedComments[comment.id] ??
+                                              false) {
+                                            _showHeartAnimation();
+                                          }
+                                        });
+                                      },
+                                      child: _buildCommentItem(comment),
+                                    ),
+                                    // Replies
+                                    if (comment.replies.isNotEmpty)
+                                      Padding(
+                                        padding: EdgeInsets.only(
+                                            left: widget.screenWidth * 0.12),
+                                        child: Column(
+                                          children: comment.replies
+                                              .map((reply) => GestureDetector(
+                                                    onHorizontalDragUpdate:
+                                                        (details) {
+                                                      if (details.primaryDelta! >
+                                                              0 &&
+                                                          details.primaryDelta! <
+                                                              20) {
+                                                        setState(() {
+                                                          _replyingToCommentId =
+                                                              comment.id;
+                                                          _replyingToUsername =
+                                                              comment
+                                                                  .authorProfile
+                                                                  .name;
+                                                        });
+                                                      } else if (details
+                                                                  .primaryDelta! <
+                                                              0 &&
+                                                          _replyingToCommentId ==
+                                                              comment.id) {
+                                                        _cancelReply();
+                                                      }
+                                                    },
+                                                    onDoubleTap: () {
+                                                      HapticFeedback
+                                                          .mediumImpact();
+                                                      setState(() {
+                                                        _likedReplies[
+                                                                reply.id] =
+                                                            !(_likedReplies[
+                                                                    reply.id] ??
+                                                                false);
+                                                        if (_likedReplies[
+                                                                reply.id] ??
+                                                            false) {
+                                                          _showHeartAnimation();
+                                                        }
+                                                      });
+                                                    },
+                                                    child:
+                                                        _buildReplyItem(reply),
+                                                  ))
+                                              .toList(),
+                                        ),
+                                      ),
+                                  ],
+                                );
+                              },
+                            ),
             ),
 
             // Replying to indicator
@@ -282,14 +360,14 @@ class _CommentsSheetState extends State<CommentsSheet>
     );
   }
 
-  Widget _buildCommentItem(Map<String, dynamic> comment) {
-    final authorProfile = comment['author_profile'];
-    final profileImage = authorProfile['profile_image'];
-    final name = authorProfile['name'];
-    final text = comment['text'] ?? '';
-    final timestamp = comment['timestamp'];
-    final likesCount = comment['likes_count'];
-    final commentId = comment['comment_id'];
+  Widget _buildCommentItem(Comment comment) {
+    final authorProfile = comment.authorProfile;
+    final profileImage = authorProfile.profileImage;
+    final name = authorProfile.name;
+    final text = comment.text;
+    final timestamp = comment.timestamp;
+    final likesCount = comment.likesCount;
+    final commentId = comment.id;
     final isLiked = _likedComments[commentId] ?? false;
 
     return Padding(
@@ -301,19 +379,20 @@ class _CommentsSheetState extends State<CommentsSheet>
             radius: widget.screenWidth * 0.04,
             child: ClipRRect(
               borderRadius: BorderRadius.circular(50),
-              child: profileImage != null
-                  ? CachedNetworkImage(
-                      imageUrl: profileImage,
-                      width: widget.screenWidth * 0.08,
-                      height: widget.screenWidth * 0.08,
-                      fit: BoxFit.cover,
-                      placeholder: (context, url) => CircularProgressIndicator(
-                        color: widget.isDarkMode ? Colors.white : Colors.black,
-                      ),
-                      errorWidget: (context, url, error) =>
-                          const Icon(Icons.person),
-                    )
-                  : const Icon(Icons.person),
+              child: CachedNetworkImage(
+                imageUrl: profileImage,
+                width: widget.screenWidth * 0.08,
+                height: widget.screenWidth * 0.08,
+                fit: BoxFit.cover,
+                placeholder: (context, url) => CircularProgressIndicator(
+                  color: widget.isDarkMode ? Colors.white : Colors.black,
+                ),
+                errorWidget: (context, url, error) => Icon(
+                  Icons.person,
+                  size: widget.screenWidth * 0.05,
+                  color: widget.isDarkMode ? Colors.white54 : Colors.black54,
+                ),
+              ),
             ),
           ),
           SizedBox(width: widget.screenWidth * 0.03),
@@ -336,7 +415,7 @@ class _CommentsSheetState extends State<CommentsSheet>
                         ),
                         const SizedBox(width: 8),
                         Text(
-                          '• ${_getTimeAgo(DateTime.parse(timestamp))}',
+                          '• ${_getTimeAgo(timestamp)}',
                           style: TextStyle(
                             fontSize: 12,
                             color: widget.isDarkMode
@@ -410,14 +489,14 @@ class _CommentsSheetState extends State<CommentsSheet>
     );
   }
 
-  Widget _buildReplyItem(Map<String, dynamic> reply) {
-    final authorProfile = reply['author_profile'];
-    final profileImage = authorProfile['profile_image'];
-    final name = authorProfile['name'];
-    final text = reply['text'] ?? '';
-    final timestamp = reply['timestamp'];
-    final likesCount = reply['likes_count'];
-    final replyId = reply['reply_id'];
+  Widget _buildReplyItem(Comment reply) {
+    final authorProfile = reply.authorProfile;
+    final profileImage = authorProfile.profileImage;
+    final name = authorProfile.name;
+    final text = reply.text;
+    final timestamp = reply.timestamp;
+    final likesCount = reply.likesCount;
+    final replyId = reply.id;
     final isLiked = _likedReplies[replyId] ?? false;
 
     return Padding(
@@ -429,19 +508,20 @@ class _CommentsSheetState extends State<CommentsSheet>
             radius: widget.screenWidth * 0.035,
             child: ClipRRect(
               borderRadius: BorderRadius.circular(50),
-              child: profileImage != null
-                  ? CachedNetworkImage(
-                      imageUrl: profileImage,
-                      width: widget.screenWidth * 0.07,
-                      height: widget.screenWidth * 0.07,
-                      fit: BoxFit.cover,
-                      placeholder: (context, url) => CircularProgressIndicator(
-                        color: widget.isDarkMode ? Colors.white : Colors.black,
-                      ),
-                      errorWidget: (context, url, error) =>
-                          const Icon(Icons.person),
-                    )
-                  : const Icon(Icons.person),
+              child: CachedNetworkImage(
+                imageUrl: profileImage,
+                width: widget.screenWidth * 0.07,
+                height: widget.screenWidth * 0.07,
+                fit: BoxFit.cover,
+                placeholder: (context, url) => CircularProgressIndicator(
+                  color: widget.isDarkMode ? Colors.white : Colors.black,
+                ),
+                errorWidget: (context, url, error) => Icon(
+                  Icons.person,
+                  size: widget.screenWidth * 0.045,
+                  color: widget.isDarkMode ? Colors.white54 : Colors.black54,
+                ),
+              ),
             ),
           ),
           SizedBox(width: widget.screenWidth * 0.03),
@@ -464,7 +544,7 @@ class _CommentsSheetState extends State<CommentsSheet>
                         ),
                         const SizedBox(width: 8),
                         Text(
-                          '• ${_getTimeAgo(DateTime.parse(timestamp))}',
+                          '• ${_getTimeAgo(timestamp)}',
                           style: TextStyle(
                             fontSize: 12,
                             color: widget.isDarkMode

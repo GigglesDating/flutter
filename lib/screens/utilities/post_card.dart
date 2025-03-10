@@ -5,9 +5,10 @@ import 'package:cached_network_image/cached_network_image.dart';
 import '../barrel.dart';
 import 'dart:async';
 import 'dart:ui';
+import '../../models/post_model.dart';
 
 class PostCard extends StatefulWidget {
-  final Map<String, dynamic> post;
+  final PostModel post;
   final bool isDarkMode;
   final VoidCallback? onMoreTap;
   final bool showProfileImage;
@@ -53,23 +54,19 @@ class _PostCardState extends State<PostCard>
   }
 
   void _preloadImages() {
-    if (!mounted ||
-        widget.post['media'] == null ||
-        widget.post['media']['source'] == null) {
+    if (!mounted || widget.post.media.source.isEmpty) {
       return;
     }
 
     precacheImage(
-      CachedNetworkImageProvider(widget.post['media']['source']),
+      CachedNetworkImageProvider(widget.post.media.source),
       context,
     );
 
     if (widget.showProfileImage &&
-        widget.post['author_profile'] != null &&
-        widget.post['author_profile']['profile_image'] != null) {
+        widget.post.authorProfile.profileImage.isNotEmpty) {
       precacheImage(
-        CachedNetworkImageProvider(
-            widget.post['author_profile']['profile_image']),
+        CachedNetworkImageProvider(widget.post.authorProfile.profileImage),
         context,
       );
     }
@@ -80,21 +77,18 @@ class _PostCardState extends State<PostCard>
     _animationController.dispose();
     _heartTimer?.cancel();
     // Clear cached images
-    if (widget.post['media'] != null &&
-        widget.post['media']['source'] != null) {
-      CachedNetworkImage.evictFromCache(widget.post['media']['source']);
+    if (widget.post.media.source.isNotEmpty) {
+      CachedNetworkImage.evictFromCache(widget.post.media.source);
     }
     if (widget.showProfileImage &&
-        widget.post['author_profile'] != null &&
-        widget.post['author_profile']['profile_image'] != null) {
-      CachedNetworkImage.evictFromCache(
-          widget.post['author_profile']['profile_image']);
+        widget.post.authorProfile.profileImage.isNotEmpty) {
+      CachedNetworkImage.evictFromCache(widget.post.authorProfile.profileImage);
     }
     super.dispose();
   }
 
   bool get _hasContent {
-    return widget.post['description']?.isNotEmpty == true;
+    return widget.post.description.isNotEmpty;
   }
 
   void _handleDoubleTap() {
@@ -157,7 +151,7 @@ class _PostCardState extends State<PostCard>
           // Center the main post container
           Center(
             child: Hero(
-              tag: 'post_${widget.post['post_id']}',
+              tag: 'post_${widget.post.postId}',
               child: GestureDetector(
                 behavior: HitTestBehavior.opaque,
                 onTap: () =>
@@ -172,7 +166,7 @@ class _PostCardState extends State<PostCard>
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(15),
                     child: CachedNetworkImage(
-                      imageUrl: widget.post['media']['source'],
+                      imageUrl: widget.post.media.source,
                       fit: BoxFit.cover,
                       placeholder: (context, url) => const Center(
                         child: CircularProgressIndicator(),
@@ -248,8 +242,8 @@ class _PostCardState extends State<PostCard>
                             child: ClipRRect(
                               borderRadius: BorderRadius.circular(50),
                               child: CachedNetworkImage(
-                                imageUrl: widget.post['author_profile']
-                                    ['profile_image'],
+                                imageUrl:
+                                    widget.post.authorProfile.profileImage,
                                 width: screenWidth * 0.12,
                                 height: screenWidth * 0.12,
                                 fit: BoxFit.cover,
@@ -287,7 +281,7 @@ class _PostCardState extends State<PostCard>
                             child: Row(
                               children: [
                                 Text(
-                                  '${widget.post['likes_count']} likes',
+                                  '${widget.post.likesCount} likes',
                                   style: TextStyle(
                                     color: widget.isDarkMode
                                         ? Colors.white
@@ -297,13 +291,12 @@ class _PostCardState extends State<PostCard>
                                 ),
                                 SizedBox(width: screenWidth * 0.02),
                                 Text(
-                                  _getTimeAgo(
-                                      DateTime.parse(widget.post['timestamp'])),
+                                  _getTimeAgo(widget.post.timestamp),
                                   style: TextStyle(
                                     color: widget.isDarkMode
-                                        ? Colors.white.withAlpha(179)
-                                        : Colors.black.withAlpha(179),
-                                    fontSize: screenWidth * 0.035,
+                                        ? Colors.white70
+                                        : Colors.black54,
+                                    fontSize: 14,
                                   ),
                                 ),
                               ],
@@ -337,7 +330,7 @@ class _PostCardState extends State<PostCard>
                           borderRadius: BorderRadius.circular(15),
                         ),
                         child: Text(
-                          widget.post['description'],
+                          widget.post.description,
                           style: TextStyle(
                             color: Colors.white,
                             fontSize: screenWidth * 0.04,
@@ -514,42 +507,20 @@ class _PostCardState extends State<PostCard>
   }
 
   void _showCommentsSheet() {
-    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    final screenHeight = MediaQuery.of(context).size.height;
-    final screenWidth = MediaQuery.of(context).size.width;
-
-    // Prepare comments data structure
-    final Map<String, dynamic> postWithComments = {
-      ...widget.post,
-      'comments': widget.post['comments'] ?? [],
-      'replies': widget.post['replies'] ?? [],
-      'id': widget.post['post_id'],
-      'type': 'post',
-      'url': widget.post['media']?['source'],
-      'author_profile': {
-        'username': widget.post['author_profile']?['name'] ?? 'Unknown',
-        'profile_image': widget.post['author_profile']?['profile_image'],
-      },
-    };
-
+    debugPrint('Opening comments for Post ID: ${widget.post.postId}');
+    debugPrint('Post Comment IDs: ${widget.post.commentIds}');
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      barrierColor: Colors.black.withAlpha(128),
-      enableDrag: true,
-      isDismissible: true,
-      useSafeArea: true,
-      builder: (context) => Padding(
-        padding: EdgeInsets.only(
-          bottom: MediaQuery.of(context).viewInsets.bottom,
-        ),
-        child: CommentsSheet(
-          isDarkMode: isDarkMode,
-          post: postWithComments,
-          screenHeight: screenHeight,
-          screenWidth: screenWidth,
-        ),
+      builder: (context) => CommentsSheet(
+        isDarkMode: widget.isDarkMode,
+        contentId: widget.post.postId,
+        contentType: 'post',
+        commentIds: widget.post.commentIds,
+        authorProfile: widget.post.authorProfile,
+        screenHeight: MediaQuery.of(context).size.height,
+        screenWidth: MediaQuery.of(context).size.width,
       ),
     );
   }
@@ -562,7 +533,7 @@ class _PostCardState extends State<PostCard>
       barrierColor: Colors.black.withAlpha(128),
       builder: (context) => ShareSheet(
         isDarkMode: widget.isDarkMode,
-        post: widget.post,
+        post: widget.post.toJson(),
         screenWidth: MediaQuery.of(context).size.width,
       ),
     );

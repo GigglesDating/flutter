@@ -1,16 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart';
+import 'package:cached_network_image/cached_network_image.dart';
+import '../../models/snip_model.dart';
 import '../barrel.dart';
 
 class ReelCard extends StatefulWidget {
-  final String videoPath;
+  final SnipModel snip;
   final bool isDarkMode;
   final Function()? onNext;
   final Function()? onPrevious;
   final int index;
 
   const ReelCard({
-    required this.videoPath,
+    required this.snip,
     required this.isDarkMode,
     required this.index,
     this.onNext,
@@ -30,12 +32,11 @@ class _ReelCardState extends State<ReelCard> {
   bool _isPlaying = true;
   String? _error;
 
-  Future<VideoPlayerController> _initializeVideoController(
-      String videoPath) async {
+  Future<VideoPlayerController> _initializeVideoController() async {
     try {
       // First attempt with default settings
-      final controller = VideoPlayerController.asset(
-        videoPath,
+      final controller = VideoPlayerController.networkUrl(
+        Uri.parse(widget.snip.video.url),
         videoPlayerOptions: VideoPlayerOptions(
           mixWithOthers: true,
         ),
@@ -47,8 +48,8 @@ class _ReelCardState extends State<ReelCard> {
 
       // Second attempt with lower quality settings
       try {
-        final fallbackController = VideoPlayerController.asset(
-          videoPath,
+        final fallbackController = VideoPlayerController.networkUrl(
+          Uri.parse(widget.snip.video.url),
           videoPlayerOptions: VideoPlayerOptions(
             mixWithOthers: true,
             allowBackgroundPlayback: false,
@@ -60,8 +61,8 @@ class _ReelCardState extends State<ReelCard> {
         debugPrint('Fallback video initialization error: $e');
 
         // Final attempt with basic settings
-        final basicController = VideoPlayerController.asset(
-          videoPath,
+        final basicController = VideoPlayerController.networkUrl(
+          Uri.parse(widget.snip.video.url),
           videoPlayerOptions: VideoPlayerOptions(
             mixWithOthers: false,
           ),
@@ -80,7 +81,7 @@ class _ReelCardState extends State<ReelCard> {
 
   Future<void> _initializeController() async {
     try {
-      _controller = await _initializeVideoController(widget.videoPath);
+      _controller = await _initializeVideoController();
       if (mounted) {
         setState(() {
           _isInitialized = true;
@@ -104,65 +105,38 @@ class _ReelCardState extends State<ReelCard> {
     });
   }
 
-  void _handleComment() {
-    // Pause video before showing comments
-    _controller.pause();
-
+  void _showCommentsSheet() {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      barrierColor:
-          Colors.black.withValues(alpha: 128, red: 0, green: 0, blue: 0),
-      enableDrag: true,
-      isDismissible: true,
-      useSafeArea: true,
-      builder: (context) => Padding(
-        padding: EdgeInsets.only(
-          bottom: MediaQuery.of(context).viewInsets.bottom,
-        ),
-        child: CommentsSheet(
-          isDarkMode: widget.isDarkMode,
-          post: {
-            'id': widget.index.toString(),
-            'type': 'reel',
-            'url': widget.videoPath,
-          },
-          screenHeight: MediaQuery.of(context).size.height,
-          screenWidth: MediaQuery.of(context).size.width,
-        ),
+      builder: (context) => CommentsSheet(
+        isDarkMode: widget.isDarkMode,
+        contentId: widget.snip.snipId,
+        contentType: 'snip',
+        commentIds: widget.snip.commentIds,
+        authorProfile: widget.snip.authorProfile,
+        screenHeight: MediaQuery.of(context).size.height,
+        screenWidth: MediaQuery.of(context).size.width,
       ),
-    ).then((_) {
-      if (mounted) {
-        // Resume video after comments are closed
-        _controller.play();
-      }
-    });
+    );
   }
 
-  void _handleShare() {
-    // Pause video before showing share sheet
-    _controller.pause();
-
+  void _showShareSheet() {
     showModalBottomSheet(
       context: context,
+      isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      barrierColor:
-          Colors.black.withValues(alpha: 128, red: 0, green: 0, blue: 0),
+      barrierColor: Colors.black.withAlpha(128),
       builder: (context) => ShareSheet(
         isDarkMode: widget.isDarkMode,
         post: {
-          'type': 'reel',
-          'url': widget.videoPath,
+          'type': 'snip',
+          'url': widget.snip.video.url,
         },
         screenWidth: MediaQuery.of(context).size.width,
       ),
-    ).then((_) {
-      if (mounted) {
-        // Resume video after share sheet is closed
-        _controller.play();
-      }
-    });
+    );
   }
 
   void _toggleMute() {
@@ -203,13 +177,38 @@ class _ReelCardState extends State<ReelCard> {
   Widget build(BuildContext context) {
     if (_error != null) {
       return Center(
-          child: Text('Error: $_error',
-              style: const TextStyle(color: Colors.white)));
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            CachedNetworkImage(
+              imageUrl: widget.snip.video.thumbnailUrl,
+              fit: BoxFit.cover,
+              placeholder: (context, url) =>
+                  const CircularProgressIndicator(color: Colors.white),
+              errorWidget: (context, url, error) =>
+                  const Icon(Icons.error, color: Colors.white),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'Error: $_error',
+              style: const TextStyle(color: Colors.white),
+            ),
+          ],
+        ),
+      );
     }
 
     if (!_isInitialized) {
-      return const Center(
-          child: CircularProgressIndicator(color: Colors.white));
+      return Center(
+        child: CachedNetworkImage(
+          imageUrl: widget.snip.video.thumbnailUrl,
+          fit: BoxFit.cover,
+          placeholder: (context, url) =>
+              const CircularProgressIndicator(color: Colors.white),
+          errorWidget: (context, url, error) =>
+              const CircularProgressIndicator(color: Colors.white),
+        ),
+      );
     }
 
     return GestureDetector(
@@ -258,8 +257,8 @@ class _ReelCardState extends State<ReelCard> {
                 isDarkMode: widget.isDarkMode,
                 isLiked: _isLiked,
                 onLikeTap: _handleLike,
-                onCommentTap: _handleComment,
-                onShareTap: _handleShare,
+                onCommentTap: _showCommentsSheet,
+                onShareTap: _showShareSheet,
                 orientation: ActionBarOrientation.vertical,
                 backgroundColor: widget.isDarkMode
                     ? Colors.black.withValues(alpha: 230)

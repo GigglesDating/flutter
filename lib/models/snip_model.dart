@@ -1,8 +1,8 @@
 import 'user_model.dart';
 
-class PostModel {
-  final String postId;
-  final MediaContent media;
+class SnipModel {
+  final String snipId;
+  final VideoContent video;
   final String description;
   final DateTime timestamp;
   final int likesCount;
@@ -11,9 +11,9 @@ class PostModel {
   final UserModel authorProfile;
   final List<String> commentIds;
 
-  PostModel({
-    required this.postId,
-    required this.media,
+  SnipModel({
+    required this.snipId,
+    required this.video,
     required this.description,
     required this.timestamp,
     required this.likesCount,
@@ -23,10 +23,10 @@ class PostModel {
     this.commentIds = const [],
   });
 
-  factory PostModel.fromJson(Map<String, dynamic> json) {
-    return PostModel(
-      postId: json['post_id'] as String,
-      media: MediaContent.fromJson(json['media'] as Map<String, dynamic>),
+  factory SnipModel.fromJson(Map<String, dynamic> json) {
+    return SnipModel(
+      snipId: json['snip_id'] as String,
+      video: VideoContent.fromJson(json['video'] as Map<String, dynamic>),
       description: json['description'] as String,
       timestamp: DateTime.parse(json['timestamp'] as String),
       likesCount: json['likes_count'] as int? ?? 0,
@@ -40,8 +40,8 @@ class PostModel {
 
   Map<String, dynamic> toJson() {
     return {
-      'post_id': postId,
-      'media': media.toJson(),
+      'snip_id': snipId,
+      'video': video.toJson(),
       'description': description,
       'timestamp': timestamp.toIso8601String(),
       'likes_count': likesCount,
@@ -52,35 +52,43 @@ class PostModel {
     };
   }
 
-  // Parse posts list from API response
-  static List<PostModel> fromApiResponse(Map<String, dynamic> apiResponse) {
-    final postsJson = apiResponse['data']['posts'] as List<dynamic>;
-    return postsJson
-        .map((json) => PostModel.fromJson(json as Map<String, dynamic>))
+  // Parse snips list from API response
+  static List<SnipModel> fromApiResponse(Map<String, dynamic> apiResponse) {
+    final snipsJson = apiResponse['data']['snips'] as List<dynamic>;
+    return snipsJson
+        .map((json) => SnipModel.fromJson(json as Map<String, dynamic>))
         .toList();
   }
 }
 
-class MediaContent {
-  final String type;
-  final String source;
+class VideoContent {
+  final String url;
+  final String thumbnailUrl;
+  final int duration;
+  final String quality;
 
-  MediaContent({
-    required this.type,
-    required this.source,
+  VideoContent({
+    required this.url,
+    required this.thumbnailUrl,
+    required this.duration,
+    required this.quality,
   });
 
-  factory MediaContent.fromJson(Map<String, dynamic> json) {
-    return MediaContent(
-      type: json['type'] as String,
-      source: json['source'] as String,
+  factory VideoContent.fromJson(Map<String, dynamic> json) {
+    return VideoContent(
+      url: json['url'] as String,
+      thumbnailUrl: json['thumbnail_url'] as String,
+      duration: json['duration'] as int? ?? 0,
+      quality: json['quality'] as String? ?? 'HD',
     );
   }
 
   Map<String, dynamic> toJson() {
     return {
-      'type': type,
-      'source': source,
+      'url': url,
+      'thumbnail_url': thumbnailUrl,
+      'duration': duration,
+      'quality': quality,
     };
   }
 }

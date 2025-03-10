@@ -5,7 +5,9 @@ import 'package:flutter/services.dart';
 import 'dart:ui';
 import 'package:image_picker/image_picker.dart';
 import 'package:image_cropper/image_cropper.dart';
-import 'package:video_player/video_player.dart';
+import '../../models/post_model.dart';
+import '../../models/snip_model.dart';
+import '../../models/user_model.dart';
 
 class Profile extends StatefulWidget {
   const Profile({super.key});
@@ -971,9 +973,9 @@ class _ProfileState extends State<Profile> {
                   width: size.width * 0.95,
                   height: size.width * 1.4,
                   child: PostCard(
-                    post: postData,
+                    key: ValueKey('post_${postData['post_id']}'),
+                    post: PostModel.fromJson(postData),
                     isDarkMode: isDarkMode,
-                    onMoreTap: () => _showDeletePostDialog(context, index),
                   ),
                 ),
 
@@ -1004,162 +1006,115 @@ class _ProfileState extends State<Profile> {
     );
   }
 
-  // Add this new method to handle post deletion
-  void _showDeletePostDialog(BuildContext context, int index) {
-    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: isDarkMode ? Colors.black : Colors.white,
-        title: Text(
-          'Delete Post?',
-          style: TextStyle(
-            color: isDarkMode ? Colors.white : Colors.black,
-          ),
-        ),
-        content: Text(
-          'Are you sure you want to delete this post? This action cannot be undone.',
-          style: TextStyle(
-            color: isDarkMode ? Colors.white : Colors.black,
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(
-              'Cancel',
-              style: TextStyle(
-                color: isDarkMode ? Colors.white70 : Colors.black54,
-              ),
-            ),
-          ),
-          TextButton(
-            onPressed: () {
-              // Handle post deletion here
-              // TODO: Implement actual deletion logic
-              Navigator.pop(context); // Close delete dialog
-              Navigator.pop(context); // Close post overlay
-            },
-            child: Text(
-              'Delete',
-              style: TextStyle(
-                color: Colors.red,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // Add this method to handle video initialization with error catching
-  Future<VideoPlayerController> _initializeVideoController(
-      String videoPath) async {
-    try {
-      // First attempt with default settings
-      final controller = VideoPlayerController.asset(
-        videoPath,
-        videoPlayerOptions: VideoPlayerOptions(
-          mixWithOthers: true,
-        ),
-      );
-      await controller.initialize();
-      return controller;
-    } catch (e) {
-      debugPrint('Initial video initialization error: $e');
-
-      // Second attempt with lower quality/different codec settings
-      // Second attempt with lower quality settings
-      try {
-        final fallbackController = VideoPlayerController.asset(
-          videoPath,
-          videoPlayerOptions: VideoPlayerOptions(
-            mixWithOthers: true,
-            allowBackgroundPlayback: false,
-          ),
-        );
-        await fallbackController.initialize();
-        return fallbackController;
-      } catch (e) {
-        //temp
-        debugPrint('Fallback video initialization error: $e');
-
-        // Final attempt with basic settings
-        final basicController = VideoPlayerController.asset(
-          videoPath,
-          videoPlayerOptions: VideoPlayerOptions(
-            mixWithOthers: false,
-          ),
-        );
-        await basicController.initialize();
-        return basicController;
-      }
-    }
-  }
-
-  // Update the _getVideoThumbnail method
-  Future<String?> _getVideoThumbnail(String videoPath) async {
-    try {
-      final controller = await _initializeVideoController(videoPath);
-      await controller.seekTo(const Duration(milliseconds: 100));
-      await controller.pause();
-      controller.dispose();
-      return videoPath;
-    } catch (e) {
-      debugPrint('Thumbnail generation error: $e');
-      return null;
-    }
-  }
-
   // Update the reels section
   Widget _buildReelThumbnail(int index, Size size, bool isDarkMode) {
     final String videoPath = 'assets/video/${(index % 3) + 1}.mp4';
 
-    return FutureBuilder<String?>(
-      future: _getVideoThumbnail(videoPath),
-      builder: (context, snapshot) {
-        return GestureDetector(
-          onTap: () => _showReelOverlay(context, index, isDarkMode),
-          child: Container(
-            margin: EdgeInsets.only(right: size.width * 0.04),
-            width: size.width * 0.55,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: Stack(
-              alignment: Alignment.center,
-              children: [
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(19),
-                  child: AspectRatio(
-                    aspectRatio: 9 / 16,
-                    child: snapshot.hasData
-                        ? VideoPlayer(
-                            VideoPlayerController.asset(snapshot.data!)
-                              ..initialize())
-                        : Container(color: Colors.black),
-                  ),
+    // Create a temporary SnipModel for demonstration
+    final snip = SnipModel(
+      snipId: 'snip_$index',
+      video: VideoContent(
+        url: videoPath,
+        thumbnailUrl: 'assets/tempImages/reels/reel${index + 1}.png',
+        duration: 30,
+        quality: 'HD',
+      ),
+      description: '',
+      timestamp: DateTime.now(),
+      likesCount: 0,
+      commentsCount: 0,
+      authorProfileId: userData['profileId'] ?? '',
+      authorProfile: UserModel(
+        profileId: userData['profileId'] ?? '',
+        name: userData['name'],
+        profileImage: userData['profileImage'],
+      ),
+    );
+
+    return GestureDetector(
+      onTap: () => _showReelOverlay(context, index, isDarkMode),
+      child: Container(
+        margin: EdgeInsets.only(right: size.width * 0.04),
+        width: size.width * 0.55,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Stack(
+          children: [
+            // Thumbnail
+            ClipRRect(
+              borderRadius: BorderRadius.circular(19),
+              child: AspectRatio(
+                aspectRatio: 9 / 16,
+                child: Image.asset(
+                  snip.video.thumbnailUrl,
+                  fit: BoxFit.cover,
                 ),
-                Icon(
+              ),
+            ),
+            // Play icon overlay
+            Center(
+              child: Container(
+                padding: EdgeInsets.all(size.width * 0.02),
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Colors.black.withAlpha(100),
+                ),
+                child: Icon(
                   Icons.play_circle_outline,
                   color: Colors.white,
                   size: size.width * 0.1,
                 ),
-              ],
+              ),
             ),
-          ),
-        );
-      },
+            // Duration overlay
+            Positioned(
+              bottom: 10,
+              right: 10,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: Colors.black.withAlpha(150),
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                child: Text(
+                  '${snip.video.duration}s',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 12,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
   void _showReelOverlay(BuildContext context, int index, bool isDarkMode) {
-    final videoAssets = [
-      'assets/video/1.mp4',
-      'assets/video/2.mp4',
-      'assets/video/3.mp4',
-    ];
+    final String videoPath = 'assets/video/${(index % 3) + 1}.mp4';
+
+    // Create a temporary SnipModel for demonstration
+    final snip = SnipModel(
+      snipId: 'snip_$index',
+      video: VideoContent(
+        url: videoPath,
+        thumbnailUrl: 'assets/tempImages/reels/reel${index + 1}.png',
+        duration: 30,
+        quality: 'HD',
+      ),
+      description: '',
+      timestamp: DateTime.now(),
+      likesCount: 0,
+      commentsCount: 0,
+      authorProfileId: userData['profileId'] ?? '',
+      authorProfile: UserModel(
+        profileId: userData['profileId'] ?? '',
+        name: userData['name'],
+        profileImage: userData['profileImage'],
+      ),
+    );
 
     showDialog(
       context: context,
@@ -1187,7 +1142,7 @@ class _ProfileState extends State<Profile> {
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(20),
                   child: ReelCard(
-                    videoPath: videoAssets[index % 3],
+                    snip: snip,
                     isDarkMode: isDarkMode,
                     index: index,
                     onNext: index < 5
@@ -1205,6 +1160,38 @@ class _ProfileState extends State<Profile> {
                   ),
                 ),
               ),
+              // Close button
+              Positioned(
+                top: 10,
+                right: 10,
+                child: IconButton(
+                  icon: const Icon(
+                    Icons.close,
+                    color: Colors.white,
+                    size: 30,
+                  ),
+                  onPressed: () => Navigator.pop(context),
+                ),
+              ),
+              // Navigation indicators
+              if (index > 0)
+                Positioned(
+                  left: size.width * 0.02,
+                  child: Icon(
+                    Icons.arrow_back_ios,
+                    color: Colors.white.withAlpha(128),
+                    size: 24,
+                  ),
+                ),
+              if (index < 5)
+                Positioned(
+                  right: size.width * 0.02,
+                  child: Icon(
+                    Icons.arrow_forward_ios,
+                    color: Colors.white.withAlpha(128),
+                    size: 24,
+                  ),
+                ),
             ],
           ),
         );

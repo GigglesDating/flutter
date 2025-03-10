@@ -1,4 +1,5 @@
 import '../user_model.dart';
+import 'package:flutter/foundation.dart';
 
 class Comment {
   final String id;
@@ -36,17 +37,18 @@ class Comment {
             const [];
 
     return Comment(
-      id: isReply ? json['reply_id'] as String : json['comment_id'] as String,
-      text: json['text'] as String,
-      timestamp: DateTime.parse(json['timestamp'] as String),
-      likesCount: json['likes_count'] as int? ?? 0,
-      authorProfileId: json['author_profile_id'] as String,
+      id: isReply ? json['reply_id'].toString() : json['comment_id'].toString(),
+      text: json['text']?.toString() ?? '',
+      timestamp: DateTime.parse(
+          json['timestamp']?.toString() ?? DateTime.now().toIso8601String()),
+      likesCount: (json['likes_count'] as num?)?.toInt() ?? 0,
+      authorProfileId: json['author_profile_id']?.toString() ?? '',
       authorProfile:
           UserModel.fromJson(json['author_profile'] as Map<String, dynamic>),
-      replyToCommentId: isReply ? json['replytocomment_id'] as String : null,
+      replyToCommentId: isReply ? json['replytocomment_id']?.toString() : null,
       replies: replies,
-      contentId: json['content_id'] as String,
-      contentType: json['content_type'] as String,
+      contentId: json['content_id']?.toString() ?? '',
+      contentType: json['content_type']?.toString() ?? '',
     );
   }
 
@@ -77,18 +79,32 @@ class Comment {
 
   // Parse the complete comments API response
   static Map<String, dynamic> parseFromApi(Map<String, dynamic> apiResponse) {
-    if (apiResponse['status'] != 'success' || apiResponse['data'] == null) {
-      throw Exception(apiResponse['message'] ?? 'Failed to parse comments');
-    }
-
-    final data = apiResponse['data'];
-
-    return {
-      'status': 'success',
-      'data': {
-        'comments': parseCommentsList(data['comments'] as List? ?? []),
-        'total_comments': data['total_comments'] as int? ?? 0,
+    try {
+      if (apiResponse['status'] != 'success' || apiResponse['data'] == null) {
+        debugPrint('Invalid API response format: $apiResponse');
+        throw Exception('Invalid API response format');
       }
-    };
+
+      final data = apiResponse['data'] as Map<String, dynamic>;
+      if (data['comments'] == null) {
+        debugPrint('No comments found in data: $data');
+        throw Exception('No comments data found in response');
+      }
+
+      final commentsList = data['comments'] as List;
+      return {
+        'status': 'success',
+        'data': {
+          'comments': parseCommentsList(commentsList),
+          'total_comments':
+              (data['total_comments'] as num?)?.toInt() ?? commentsList.length,
+        }
+      };
+    } catch (e, stackTrace) {
+      debugPrint('Error parsing API response: $e');
+      debugPrint('Stack trace: $stackTrace');
+      debugPrint('API Response: $apiResponse');
+      rethrow;
+    }
   }
 }

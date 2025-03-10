@@ -7,6 +7,7 @@ import 'package:video_player/video_player.dart';
 import 'package:visibility_detector/visibility_detector.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import '../barrel.dart';
+import '../../models/snip_model.dart';
 
 class SnipTab extends StatefulWidget {
   const SnipTab({super.key});
@@ -36,6 +37,9 @@ class _SnipTabState extends State<SnipTab>
     'assets/video/2.mp4',
     'assets/video/3.mp4',
   ];
+
+  // Update the snips list to use SnipModel
+  final List<SnipModel> _snips = [];
 
   @override
   void initState() {
@@ -372,7 +376,7 @@ class _SnipTabState extends State<SnipTab>
                               isLiked: _isLiked,
                               onLikeTap: onDoubleTap,
                               onCommentTap: () =>
-                                  showCommentBottomSheet(context),
+                                  _showCommentsSheet(_snips[index]),
                               onShareTap: _showShareSheet,
                               orientation: ActionBarOrientation.vertical,
                               backgroundColor: isDarkMode
@@ -393,47 +397,22 @@ class _SnipTabState extends State<SnipTab>
     );
   }
 
-  void showCommentBottomSheet(BuildContext context) {
-    // Pause video and store current position
-    _controllers[_currentVideoIndex]?.pause();
-
+  void _showCommentsSheet(SnipModel snip) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    final screenHeight = MediaQuery.of(context).size.height;
-    final screenWidth = MediaQuery.of(context).size.width;
-
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      barrierColor:
-          Colors.black.withValues(alpha: 128, red: 0, green: 0, blue: 0),
-      enableDrag: true,
-      isDismissible: true,
-      useSafeArea: true,
-      builder: (context) => Padding(
-        padding: EdgeInsets.only(
-          bottom: MediaQuery.of(context).viewInsets.bottom,
-        ),
-        child: CommentsSheet(
-          isDarkMode: isDarkMode,
-          post: {
-            'id': _currentVideoIndex.toString(),
-            'type': 'snip',
-            'url': videoAssets[_currentVideoIndex],
-          },
-          screenHeight: screenHeight,
-          screenWidth: screenWidth,
-        ),
+      builder: (context) => CommentsSheet(
+        isDarkMode: isDarkMode,
+        contentId: snip.snipId,
+        contentType: 'snip',
+        commentIds: snip.commentIds,
+        authorProfile: snip.authorProfile,
+        screenHeight: MediaQuery.of(context).size.height,
+        screenWidth: MediaQuery.of(context).size.width,
       ),
-    ).then((_) {
-      if (mounted) {
-        // Resume from stored position
-        _controllers[_currentVideoIndex]?.play();
-        setState(() {
-          isPlaying = true;
-        });
-      }
-    });
+    );
   }
 
   void showPopupMenu() {

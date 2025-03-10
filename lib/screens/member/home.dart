@@ -8,6 +8,7 @@ import 'package:flutter_frontend/screens/barrel.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/foundation.dart';
+import '../../models/post_model.dart';
 
 class HomeTab extends StatefulWidget {
   const HomeTab({super.key});
@@ -17,7 +18,7 @@ class HomeTab extends StatefulWidget {
 }
 
 class _HomeTabState extends State<HomeTab> {
-  final List<Map<String, dynamic>> _posts = [];
+  final List<PostModel> _posts = [];
   bool _isLoading = false;
   bool _hasMore = true;
   int _currentPage = 1;
@@ -77,8 +78,8 @@ class _HomeTabState extends State<HomeTab> {
         final nextIndex = currentIndex + i;
         if (nextIndex < _posts.length) {
           final post = _posts[nextIndex];
-          final imageUrl = post['media']['source'];
-          final profileImageUrl = post['author_profile']['profile_image'];
+          final imageUrl = post.media.source;
+          final profileImageUrl = post.authorProfile.profileImage;
 
           if (!_preloadedImages.contains(imageUrl)) {
             _preloadedImages.add(imageUrl);
@@ -131,12 +132,9 @@ class _HomeTabState extends State<HomeTab> {
       if (!mounted) return;
 
       if (response['status'] == 'success' && response['data'] != null) {
-        final feedData = response['data'];
-        final posts = (feedData['posts'] as List).cast<Map<String, dynamic>>();
-
         setState(() {
-          _posts.addAll(posts);
-          _hasMore = feedData['has_more'] ?? false;
+          _posts.addAll(PostModel.fromApiResponse(response));
+          _hasMore = response['data']['has_more'] ?? false;
           _currentPage = 1;
           _isLoading = false;
           _isInitialLoading = false;
@@ -181,17 +179,14 @@ class _HomeTabState extends State<HomeTab> {
       if (!mounted) return;
 
       if (response['status'] == 'success' && response['data'] != null) {
-        final feedData = response['data'];
-        final posts = (feedData['posts'] as List).cast<Map<String, dynamic>>();
+        final newPosts = PostModel.fromApiResponse(response);
 
         setState(() {
-          // If no new posts were returned, we've reached the end
-          if (posts.isEmpty) {
+          if (newPosts.isEmpty) {
             _hasMore = false;
           } else {
-            _posts.addAll(posts);
-            _hasMore = feedData['has_more'] ??
-                true; // Default to true if not specified
+            _posts.addAll(newPosts);
+            _hasMore = response['data']['has_more'] ?? true;
             _currentPage += 1;
           }
           _isLoading = false;
@@ -206,8 +201,6 @@ class _HomeTabState extends State<HomeTab> {
         setState(() {
           _isLoading = false;
           _isLoadingMore = false;
-          // Only set hasMore to false if we got an empty response
-          // Otherwise keep current value to allow retrying
           if (e.toString().contains('No more posts')) {
             _hasMore = false;
           }
@@ -502,7 +495,7 @@ class _HomeTabState extends State<HomeTab> {
           }
 
           return PostCard(
-            key: ValueKey('post_${_posts[index]['post_id']}'),
+            key: ValueKey('post_${_posts[index].postId}'),
             post: _posts[index],
             isDarkMode: isDarkMode,
           );

@@ -3,6 +3,7 @@ import 'package:flutter_frontend/screens/barrel.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter/services.dart'; // Add this import
 import 'dart:ui'; // Add this import for ImageFilter
+import '../../models/post_model.dart';
 // import 'package:image_picker/image_picker.dart';
 
 class UserProfile extends StatefulWidget {
@@ -992,7 +993,8 @@ class _UserProfileState extends State<UserProfile> {
                   width: size.width * 0.95,
                   height: size.width * 1.4,
                   child: PostCard(
-                    post: postData,
+                    key: ValueKey('post_${postData['post_id']}'),
+                    post: PostModel.fromJson(postData),
                     isDarkMode: isDarkMode,
                     onMoreTap: () => _showDeletePostDialog(context, index),
                   ),

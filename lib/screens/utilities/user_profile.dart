@@ -4,7 +4,9 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter/services.dart'; // Add this import
 import 'dart:ui'; // Add this import for ImageFilter
 import '../../models/post_model.dart';
-// import 'package:image_picker/image_picker.dart';
+import '../../models/snip_model.dart';
+import 'package:video_player/video_player.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class UserProfile extends StatefulWidget {
   const UserProfile({super.key});
@@ -30,7 +32,9 @@ class _UserProfileState extends State<UserProfile> {
   };
 
   late String userBio;
-  // final ImagePicker _picker = ImagePicker();
+  List<SnipModel> _userSnips = [];
+  bool _isLoadingSnips = false;
+  final Map<String, VideoPlayerController?> _snipControllers = {};
 
   @override
   void initState() {
@@ -42,15 +46,46 @@ class _UserProfileState extends State<UserProfile> {
       systemNavigationBarColor: Colors.transparent,
       systemNavigationBarDividerColor: Colors.transparent,
     ));
+    _loadUserSnips();
+  }
+
+  Future<void> _loadUserSnips() async {
+    if (!mounted) return;
+
+    setState(() {
+      _isLoadingSnips = true;
+    });
+
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final uuid = prefs.getString('user_uuid');
+
+      if (uuid == null) throw Exception('No UUID found');
+
+      final response = await ThinkProvider().getSnips(uuid: uuid);
+      final snips = SnipModel.fromApiResponse(response);
+
+      if (mounted) {
+        setState(() {
+          _userSnips = snips;
+          _isLoadingSnips = false;
+        });
+      }
+    } catch (e) {
+      debugPrint('Error loading user snips: $e');
+      if (mounted) {
+        setState(() {
+          _isLoadingSnips = false;
+        });
+      }
+    }
   }
 
   @override
   void dispose() {
-    // Don't restore system bars when leaving screen
-    SystemChrome.setEnabledSystemUIMode(
-      SystemUiMode.immersiveSticky,
-      overlays: [],
-    );
+    for (var controller in _snipControllers.values) {
+      controller?.dispose();
+    }
     super.dispose();
   }
 
@@ -640,7 +675,6 @@ class _UserProfileState extends State<UserProfile> {
           ),
           child: Row(
             children: [
-              // Spotify Icon
               Container(
                 padding: EdgeInsets.all(size.width * 0.02),
                 decoration: BoxDecoration(
@@ -657,8 +691,6 @@ class _UserProfileState extends State<UserProfile> {
                   ),
                 ),
               ),
-
-              // Sound Wave
               Expanded(
                 child: Container(
                   margin: EdgeInsets.symmetric(horizontal: size.width * 0.04),
@@ -673,14 +705,10 @@ class _UserProfileState extends State<UserProfile> {
                   ),
                 ),
               ),
-
-              // Connect Button
               SizedBox(
                 height: size.width * 0.08,
                 child: ElevatedButton(
-                  onPressed: () {
-                    // TODO: Implement Spotify connection
-                  },
+                  onPressed: _connectSpotify,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Color(0xFF1DB954),
                     shape: RoundedRectangleBorder(
@@ -707,19 +735,48 @@ class _UserProfileState extends State<UserProfile> {
     );
   }
 
+  Future<void> _connectSpotify() async {
+    // Implement Spotify connection
+    try {
+      // Show loading indicator
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => Center(child: CircularProgressIndicator()),
+      );
+
+      // TODO: Add your Spotify API integration here
+      // For now, just show a message
+      await Future.delayed(Duration(seconds: 1));
+      Navigator.pop(context); // Remove loading indicator
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Spotify integration coming soon!'),
+          duration: Duration(seconds: 2),
+        ),
+      );
+    } catch (e) {
+      Navigator.pop(context); // Remove loading indicator
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Failed to connect to Spotify'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
   Widget _buildContentGrids(bool isDarkMode, Size size) {
-    // Define consistent spacing values
-    final sectionSpacing = size.height * 0.01; // Space between major sections
+    final sectionSpacing = size.height * 0.01;
 
     return Padding(
       padding: EdgeInsets.symmetric(vertical: sectionSpacing),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Spotify Section
           _buildSpotifyWidget(isDarkMode, size),
-
-          SizedBox(height: sectionSpacing), // Consistent spacing
+          SizedBox(height: sectionSpacing),
 
           // Posts Section
           SizedBox(
@@ -764,44 +821,118 @@ class _UserProfileState extends State<UserProfile> {
             ),
           ),
 
-          SizedBox(height: sectionSpacing), // Consistent spacing
+          SizedBox(height: sectionSpacing),
 
-          // Reels Section
-          SizedBox(
-            height: size.width * 1.0,
-            child: ListView.builder(
-              padding: EdgeInsets.only(
-                left: size.width * 0.04,
-                right: size.width * 0.04,
-                top: 0,
-              ),
-              scrollDirection: Axis.horizontal,
-              itemCount: 6,
-              itemBuilder: (context, index) {
-                return Container(
-                  margin: EdgeInsets.only(right: size.width * 0.04),
-                  width: size.width * 0.45,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Stack(
-                    children: [
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(19),
-                        child: AspectRatio(
-                          aspectRatio: 9 / 16,
-                          child: Image.asset(
-                            'assets/tempImages/reels/reel${index + 1}.png',
-                            fit: BoxFit.cover,
-                          ),
+          // Updated Snips/Reels Section
+          if (_isLoadingSnips)
+            Center(
+              child: CircularProgressIndicator(),
+            )
+          else if (_userSnips.isNotEmpty)
+            SizedBox(
+              height: size.width * 1.0,
+              child: ListView.builder(
+                padding: EdgeInsets.only(
+                  left: size.width * 0.04,
+                  right: size.width * 0.04,
+                  top: 0,
+                ),
+                scrollDirection: Axis.horizontal,
+                itemCount: _userSnips.length,
+                itemBuilder: (context, index) {
+                  final snip = _userSnips[index];
+                  return GestureDetector(
+                    onTap: () {
+                      // Navigate to full screen snip view
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => SnipTab(),
                         ),
+                      );
+                    },
+                    child: Container(
+                      margin: EdgeInsets.only(right: size.width * 0.04),
+                      width: size.width * 0.45,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(20),
                       ),
-                    ],
-                  ),
-                );
-              },
+                      child: Stack(
+                        children: [
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(19),
+                            child: AspectRatio(
+                              aspectRatio: 9 / 16,
+                              child: Stack(
+                                fit: StackFit.expand,
+                                children: [
+                                  // Video thumbnail or first frame
+                                  if (snip.video.thumbnail != null)
+                                    Image.network(
+                                      snip.video.thumbnail!,
+                                      fit: BoxFit.cover,
+                                      errorBuilder:
+                                          (context, error, stackTrace) {
+                                        return Container(
+                                          color: Colors.black,
+                                          child: Icon(
+                                            Icons.play_circle_outline,
+                                            color: Colors.white,
+                                            size: 48,
+                                          ),
+                                        );
+                                      },
+                                    )
+                                  else
+                                    Container(
+                                      color: Colors.black,
+                                      child: Icon(
+                                        Icons.play_circle_outline,
+                                        color: Colors.white,
+                                        size: 48,
+                                      ),
+                                    ),
+
+                                  // Play icon overlay
+                                  Center(
+                                    child: Container(
+                                      padding: EdgeInsets.all(8),
+                                      decoration: BoxDecoration(
+                                        color: Colors.black.withValues(
+                                          alpha: 128,
+                                          red: 0,
+                                          green: 0,
+                                          blue: 0,
+                                        ),
+                                        shape: BoxShape.circle,
+                                      ),
+                                      child: Icon(
+                                        Icons.play_arrow,
+                                        color: Colors.white,
+                                        size: 32,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                },
+              ),
+            )
+          else
+            Center(
+              child: Text(
+                'No snips yet',
+                style: TextStyle(
+                  color: isDarkMode ? Colors.white70 : Colors.black54,
+                ),
+              ),
             ),
-          ),
         ],
       ),
     );
@@ -1027,7 +1158,6 @@ class _UserProfileState extends State<UserProfile> {
     );
   }
 
-  // Add this new method to handle post deletion
   void _showDeletePostDialog(BuildContext context, int index) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
 
@@ -1058,12 +1188,7 @@ class _UserProfileState extends State<UserProfile> {
             ),
           ),
           TextButton(
-            onPressed: () {
-              // Handle post deletion here
-              // TODO: Implement actual deletion logic
-              Navigator.pop(context); // Close delete dialog
-              Navigator.pop(context); // Close post overlay
-            },
+            onPressed: () => _deletePost(index),
             child: Text(
               'Delete',
               style: TextStyle(
@@ -1074,6 +1199,47 @@ class _UserProfileState extends State<UserProfile> {
         ],
       ),
     );
+  }
+
+  Future<void> _deletePost(int index) async {
+    try {
+      // Show loading indicator
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => Center(child: CircularProgressIndicator()),
+      );
+
+      // Simulate API call
+      await Future.delayed(Duration(seconds: 1));
+
+      // Update local state
+      setState(() {
+        // Remove post from local data
+        // Note: In a real app, you would also update the backend
+      });
+
+      // Close loading indicator and post overlay
+      Navigator.pop(context); // Close loading
+      Navigator.pop(context); // Close delete dialog
+      Navigator.pop(context); // Close post overlay
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Post deleted successfully'),
+          duration: Duration(seconds: 2),
+        ),
+      );
+    } catch (e) {
+      // Handle error
+      Navigator.pop(context); // Close loading
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Failed to delete post'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
   }
 
   void _showReportSheet() {

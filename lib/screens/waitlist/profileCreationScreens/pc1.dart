@@ -171,13 +171,13 @@ class _ProfileCreation1State extends State<ProfileCreation1> {
               ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
-                children: [
+                children: const [
                   Icon(
                     Icons.star,
                     color: Colors.amber,
                     size: 14,
                   ),
-                  const SizedBox(width: 4),
+                  SizedBox(width: 4),
                   Text(
                     'Required',
                     style: TextStyle(

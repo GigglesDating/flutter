@@ -17,7 +17,7 @@ class _ActivityScreenState extends State<ActivityScreen> {
         appBar: AppBar(
           title: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
+            children: const [
               Text(
                 'Your Activity',
                 style: TextStyle(
@@ -70,11 +70,11 @@ class _ActivityScreenState extends State<ActivityScreen> {
                   indicator: BoxDecoration(
                     borderRadius: BorderRadius.circular(25),
                     color: Colors.white,
-                    boxShadow: [
+                    boxShadow: const [
                       BoxShadow(
-                        color: const Color.fromARGB(255, 51, 51, 51),
+                        color: Color.fromARGB(255, 51, 51, 51),
                         blurRadius: 4,
-                        offset: const Offset(0, 2),
+                        offset: Offset(0, 2),
                       ),
                     ],
                   ),

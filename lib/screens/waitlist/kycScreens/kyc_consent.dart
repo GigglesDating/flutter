@@ -39,7 +39,7 @@ class _KycConsentScreenState extends State<KycConsentScreen>
 
   String generateTransactionId() {
     final rnd = Random();
-    final digits = '0123456789';
+    const digits = '0123456789';
 
     String getRandomDigits(int length) =>
         String.fromCharCodes(Iterable.generate(

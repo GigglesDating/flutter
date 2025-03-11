@@ -290,7 +290,7 @@ class _SwipeFilterPage extends State<SwipeFilterPage> {
                       ? Colors.white
                       : Colors.black,
                   unselectedLabelColor: Colors.black,
-                  tabs: [
+                  tabs: const [
                     Tab(text: "Basic Filters"),
                     Tab(text: "Advance Filters"),
                   ],

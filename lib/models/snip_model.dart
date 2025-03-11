@@ -34,7 +34,10 @@ class SnipModel {
       authorProfileId: json['author_profile_id'] as String,
       authorProfile:
           UserModel.fromJson(json['author_profile'] as Map<String, dynamic>),
-      commentIds: (json['comment_ids'] as List?)?.cast<String>() ?? [],
+      commentIds: (json['comment_ids'] as List<dynamic>?)
+              ?.map((e) => e as String)
+              .toList() ??
+          [],
     );
   }
 
@@ -59,36 +62,38 @@ class SnipModel {
         .map((json) => SnipModel.fromJson(json as Map<String, dynamic>))
         .toList();
   }
+
+  // Helper method to check if there are more snips to load
+  static bool hasMoreSnips(Map<String, dynamic> apiResponse) {
+    return apiResponse['data']['has_more'] as bool? ?? false;
+  }
+
+  // Helper method to get the next page token
+  static String? getNextPage(Map<String, dynamic> apiResponse) {
+    return apiResponse['data']['next_page'] as String?;
+  }
 }
 
 class VideoContent {
-  final String url;
-  final String thumbnailUrl;
-  final int duration;
-  final String quality;
+  final String source;
+  final String? thumbnail;
 
   VideoContent({
-    required this.url,
-    required this.thumbnailUrl,
-    required this.duration,
-    required this.quality,
+    required this.source,
+    this.thumbnail,
   });
 
   factory VideoContent.fromJson(Map<String, dynamic> json) {
     return VideoContent(
-      url: json['url'] as String,
-      thumbnailUrl: json['thumbnail_url'] as String,
-      duration: json['duration'] as int? ?? 0,
-      quality: json['quality'] as String? ?? 'HD',
+      source: json['source'] as String,
+      thumbnail: json['thumbnail'] as String?,
     );
   }
 
   Map<String, dynamic> toJson() {
     return {
-      'url': url,
-      'thumbnail_url': thumbnailUrl,
-      'duration': duration,
-      'quality': quality,
+      'source': source,
+      'thumbnail': thumbnail,
     };
   }
 }

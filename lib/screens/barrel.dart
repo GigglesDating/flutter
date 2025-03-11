@@ -45,7 +45,14 @@ export 'utilities/filters.dart';
 export 'utilities/user_profile.dart';
 export 'utilities/likes.dart';
 export 'member/profile.dart';
-export 'utilities/snip_card.dart';
 export 'utilities/prompts.dart';
 export 'utilities/error_boundary.dart';
 export 'utilities/report_sheet.dart';
+
+// New Snip Implementation import files
+export 'utilities/snip_card.dart';
+export 'member/snips.dart';
+export '../models/snips_model.dart';
+export '../models/utils/snip_cache_manager.dart';
+export '../models/utils/video_service.dart';
+export '../models/utils/snip_parser.dart';

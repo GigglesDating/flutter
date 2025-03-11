@@ -120,9 +120,9 @@ class AccountCenterScreen extends StatelessWidget {
               height: 54,
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
+                children: const [
                   Icon(Icons.delete,
-                      size: 24, color: const Color.fromARGB(255, 176, 0, 32)),
+                      size: 24, color: Color.fromARGB(255, 176, 0, 32)),
                   SizedBox(
                     width: 8,
                   ),
@@ -131,11 +131,11 @@ class AccountCenterScreen extends StatelessWidget {
                     style: TextStyle(
                         fontWeight: FontWeight.w700,
                         fontSize: 16,
-                        color: const Color.fromARGB(255, 176, 0, 32)),
+                        color: Color.fromARGB(255, 176, 0, 32)),
                   ),
                   Spacer(),
                   Icon(Icons.arrow_forward_ios,
-                      color: const Color.fromARGB(255, 176, 0, 32), size: 15),
+                      color: Color.fromARGB(255, 176, 0, 32), size: 15),
                 ],
               ),
             ),

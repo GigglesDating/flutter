@@ -297,8 +297,8 @@ class _LoginScreenState extends State<LoginScreen> {
     final bottomInset = MediaQuery.of(context).viewInsets.bottom;
 
     final logoSize = size.width * 0.4;
-    final minLogoSize = 160.0;
-    final maxLogoSize = 240.0;
+    const minLogoSize = 160.0;
+    const maxLogoSize = 240.0;
 
     final adaptiveLogoSize = logoSize.clamp(minLogoSize, maxLogoSize);
 

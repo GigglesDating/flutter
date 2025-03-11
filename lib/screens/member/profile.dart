@@ -8,6 +8,8 @@ import 'package:image_cropper/image_cropper.dart';
 import '../../models/post_model.dart';
 import '../../models/snip_model.dart';
 import '../../models/user_model.dart';
+import '../../widgets/reel_card.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class Profile extends StatefulWidget {
   const Profile({super.key});
@@ -34,6 +36,9 @@ class _ProfileState extends State<Profile> {
 
   late String userBio;
   final ImagePicker _picker = ImagePicker();
+  List<SnipModel> _userSnips = [];
+  bool _isLoadingSnips = false;
+  bool _hasError = false;
 
   @override
   void initState() {
@@ -45,6 +50,7 @@ class _ProfileState extends State<Profile> {
       systemNavigationBarColor: Colors.transparent,
       systemNavigationBarDividerColor: Colors.transparent,
     ));
+    _loadUserSnips();
   }
 
   @override
@@ -55,6 +61,40 @@ class _ProfileState extends State<Profile> {
       overlays: [],
     );
     super.dispose();
+  }
+
+  Future<void> _loadUserSnips() async {
+    if (!mounted) return;
+
+    setState(() {
+      _isLoadingSnips = true;
+      _hasError = false;
+    });
+
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final uuid = prefs.getString('user_uuid');
+
+      if (uuid == null) throw Exception('No UUID found');
+
+      final response = await ThinkProvider().getSnips(uuid: uuid);
+      final snips = SnipModel.fromApiResponse(response);
+
+      if (mounted) {
+        setState(() {
+          _userSnips = snips;
+          _isLoadingSnips = false;
+        });
+      }
+    } catch (e) {
+      debugPrint('Error loading user snips: $e');
+      if (mounted) {
+        setState(() {
+          _isLoadingSnips = false;
+          _hasError = true;
+        });
+      }
+    }
   }
 
   @override
@@ -99,8 +139,8 @@ class _ProfileState extends State<Profile> {
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
                             color: isDarkMode
-                                ? Colors.white.withAlpha(38)
-                                : Colors.black.withAlpha(26),
+                                ? Colors.white.withValues(alpha: 38)
+                                : Colors.black.withValues(alpha: 26),
                           ),
                           child: SvgPicture.asset(
                             'assets/icons/profile/settings.svg',
@@ -121,8 +161,8 @@ class _ProfileState extends State<Profile> {
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
                             color: isDarkMode
-                                ? Colors.white.withAlpha(38)
-                                : Colors.black.withAlpha(26),
+                                ? Colors.white.withValues(alpha: 38)
+                                : Colors.black.withValues(alpha: 26),
                           ),
                           child: SvgPicture.asset(
                             'assets/icons/profile/upload.svg',
@@ -163,7 +203,7 @@ class _ProfileState extends State<Profile> {
           BackdropFilter(
             filter: ImageFilter.blur(sigmaX: 80, sigmaY: 80),
             child: Container(
-              color: Colors.black.withAlpha(128),
+              color: Colors.black.withValues(alpha: 128),
             ),
           ),
         ],
@@ -205,8 +245,8 @@ class _ProfileState extends State<Profile> {
                   // Border styling
                   border: Border.all(
                     color: isDarkMode
-                        ? Colors.white.withAlpha(80)
-                        : Colors.black.withAlpha(26),
+                        ? Colors.white.withValues(alpha: 80)
+                        : Colors.black.withValues(alpha: 26),
                     width: 2,
                   ),
                 ),
@@ -251,7 +291,7 @@ class _ProfileState extends State<Profile> {
                         size: size.width * 0.13, // Reduced size
                         shadows: [
                           Shadow(
-                            color: Colors.black.withAlpha(50),
+                            color: Colors.black.withValues(alpha: 50),
                             blurRadius: 10,
                           ),
                         ],
@@ -265,7 +305,7 @@ class _ProfileState extends State<Profile> {
                           fontWeight: FontWeight.bold,
                           shadows: [
                             Shadow(
-                              color: Colors.black.withAlpha(100),
+                              color: Colors.black.withValues(alpha: 100),
                               blurRadius: 4,
                             ),
                           ],
@@ -313,11 +353,13 @@ class _ProfileState extends State<Profile> {
   }
 
   Widget _buildStats(bool isDarkMode, Size size) {
-    final glassColor =
-        isDarkMode ? Colors.white.withAlpha(30) : Colors.white.withAlpha(150);
+    final glassColor = isDarkMode
+        ? Colors.white.withValues(alpha: 30)
+        : Colors.white.withValues(alpha: 150);
 
-    final borderColor =
-        isDarkMode ? Colors.white.withAlpha(51) : Colors.black.withAlpha(51);
+    final borderColor = isDarkMode
+        ? Colors.white.withValues(alpha: 51)
+        : Colors.black.withValues(alpha: 51);
 
     return ClipRRect(
       borderRadius: BorderRadius.circular(30),
@@ -381,8 +423,8 @@ class _ProfileState extends State<Profile> {
           label,
           style: TextStyle(
             color: isDarkMode
-                ? Colors.white.withAlpha(180)
-                : Colors.black.withAlpha(180),
+                ? Colors.white.withValues(alpha: 180)
+                : Colors.black.withValues(alpha: 180),
             fontSize: size.width * 0.035,
           ),
         ),
@@ -391,16 +433,19 @@ class _ProfileState extends State<Profile> {
   }
 
   Widget _buildBioSection(bool isDarkMode, Size size) {
-    final glassColor =
-        isDarkMode ? Colors.white.withAlpha(30) : Colors.white.withAlpha(150);
+    final glassColor = isDarkMode
+        ? Colors.white.withValues(alpha: 30)
+        : Colors.white.withValues(alpha: 150);
 
-    final borderColor =
-        isDarkMode ? Colors.white.withAlpha(51) : Colors.black.withAlpha(51);
+    final borderColor = isDarkMode
+        ? Colors.white.withValues(alpha: 51)
+        : Colors.black.withValues(alpha: 51);
 
     final textColor = isDarkMode ? Colors.white : Colors.black;
 
-    final secondaryTextColor =
-        isDarkMode ? Colors.white.withAlpha(180) : Colors.black.withAlpha(180);
+    final secondaryTextColor = isDarkMode
+        ? Colors.white.withValues(alpha: 180)
+        : Colors.black.withValues(alpha: 180);
 
     return ClipRRect(
       borderRadius: BorderRadius.circular(30),
@@ -480,13 +525,13 @@ class _ProfileState extends State<Profile> {
             ),
             decoration: BoxDecoration(
               color: isDarkMode
-                  ? Colors.black.withAlpha(230)
-                  : Colors.white.withAlpha(230),
+                  ? Colors.black.withValues(alpha: 230)
+                  : Colors.white.withValues(alpha: 230),
               borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
               border: Border.all(
                 color: isDarkMode
-                    ? Colors.white.withAlpha(51)
-                    : Colors.black.withAlpha(51),
+                    ? Colors.white.withValues(alpha: 51)
+                    : Colors.black.withValues(alpha: 51),
               ),
             ),
             child: Column(
@@ -498,8 +543,8 @@ class _ProfileState extends State<Profile> {
                   margin: EdgeInsets.only(bottom: size.width * 0.04),
                   decoration: BoxDecoration(
                     color: isDarkMode
-                        ? Colors.white.withAlpha(38)
-                        : Colors.black.withAlpha(26),
+                        ? Colors.white.withValues(alpha: 38)
+                        : Colors.black.withValues(alpha: 26),
                     borderRadius: BorderRadius.circular(2),
                   ),
                 ),
@@ -515,23 +560,23 @@ class _ProfileState extends State<Profile> {
                     hintText: 'Write about yourself...',
                     hintStyle: TextStyle(
                       color: isDarkMode
-                          ? Colors.white.withAlpha(128)
-                          : Colors.black.withAlpha(128),
+                          ? Colors.white.withValues(alpha: 128)
+                          : Colors.black.withValues(alpha: 128),
                     ),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(15),
                       borderSide: BorderSide(
                         color: isDarkMode
-                            ? Colors.white.withAlpha(51)
-                            : Colors.black.withAlpha(51),
+                            ? Colors.white.withValues(alpha: 51)
+                            : Colors.black.withValues(alpha: 51),
                       ),
                     ),
                     enabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(15),
                       borderSide: BorderSide(
                         color: isDarkMode
-                            ? Colors.white.withAlpha(51)
-                            : Colors.black.withAlpha(51),
+                            ? Colors.white.withValues(alpha: 51)
+                            : Colors.black.withValues(alpha: 51),
                       ),
                     ),
                     focusedBorder: OutlineInputBorder(
@@ -615,11 +660,13 @@ class _ProfileState extends State<Profile> {
   }
 
   Widget _buildSpotifyWidget(bool isDarkMode, Size size) {
-    final glassColor =
-        isDarkMode ? Colors.white.withAlpha(30) : Colors.white.withAlpha(150);
+    final glassColor = isDarkMode
+        ? Colors.white.withValues(alpha: 30)
+        : Colors.white.withValues(alpha: 150);
 
-    final borderColor =
-        isDarkMode ? Colors.white.withAlpha(51) : Colors.black.withAlpha(51);
+    final borderColor = isDarkMode
+        ? Colors.white.withValues(alpha: 51)
+        : Colors.black.withValues(alpha: 51);
 
     final textColor = isDarkMode ? Colors.white : Colors.black;
 
@@ -798,6 +845,10 @@ class _ProfileState extends State<Profile> {
           ),
         ),
 
+        // Snips Section
+        SizedBox(height: largerSpacing),
+        _buildSnipsSection(isDarkMode, size),
+
         // Increase bottom padding to prevent cutoff
         SizedBox(height: size.height * 0.12), // Increased from 0.02 to 0.12
       ],
@@ -875,8 +926,8 @@ class _ProfileState extends State<Profile> {
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               color: isDarkMode
-                  ? Colors.white.withAlpha(38)
-                  : Colors.black.withAlpha(26),
+                  ? Colors.white.withValues(alpha: 38)
+                  : Colors.black.withValues(alpha: 26),
             ),
             child: Icon(
               icon,
@@ -1014,10 +1065,8 @@ class _ProfileState extends State<Profile> {
     final snip = SnipModel(
       snipId: 'snip_$index',
       video: VideoContent(
-        url: videoPath,
-        thumbnailUrl: 'assets/tempImages/reels/reel${index + 1}.png',
-        duration: 30,
-        quality: 'HD',
+        source: videoPath,
+        thumbnail: 'assets/tempImages/reels/reel${index + 1}.png',
       ),
       description: '',
       timestamp: DateTime.now(),
@@ -1047,7 +1096,7 @@ class _ProfileState extends State<Profile> {
               child: AspectRatio(
                 aspectRatio: 9 / 16,
                 child: Image.asset(
-                  snip.video.thumbnailUrl,
+                  snip.video.thumbnail ?? 'assets/images/placeholder.png',
                   fit: BoxFit.cover,
                 ),
               ),
@@ -1058,7 +1107,7 @@ class _ProfileState extends State<Profile> {
                 padding: EdgeInsets.all(size.width * 0.02),
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: Colors.black.withAlpha(100),
+                  color: Colors.black.withValues(alpha: 100),
                 ),
                 child: Icon(
                   Icons.play_circle_outline,
@@ -1074,11 +1123,11 @@ class _ProfileState extends State<Profile> {
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
-                  color: Colors.black.withAlpha(150),
+                  color: Colors.black.withValues(alpha: 150),
                   borderRadius: BorderRadius.circular(4),
                 ),
                 child: Text(
-                  '${snip.video.duration}s',
+                  '${snip.video.source}s',
                   style: const TextStyle(
                     color: Colors.white,
                     fontSize: 12,
@@ -1099,10 +1148,8 @@ class _ProfileState extends State<Profile> {
     final snip = SnipModel(
       snipId: 'snip_$index',
       video: VideoContent(
-        url: videoPath,
-        thumbnailUrl: 'assets/tempImages/reels/reel${index + 1}.png',
-        duration: 30,
-        quality: 'HD',
+        source: videoPath,
+        thumbnail: 'assets/tempImages/reels/reel${index + 1}.png',
       ),
       description: '',
       timestamp: DateTime.now(),
@@ -1119,7 +1166,7 @@ class _ProfileState extends State<Profile> {
     showDialog(
       context: context,
       barrierDismissible: true,
-      barrierColor: Colors.black.withAlpha(100),
+      barrierColor: Colors.black.withValues(alpha: 100),
       builder: (context) {
         final size = MediaQuery.of(context).size;
         return Dialog(
@@ -1179,7 +1226,7 @@ class _ProfileState extends State<Profile> {
                   left: size.width * 0.02,
                   child: Icon(
                     Icons.arrow_back_ios,
-                    color: Colors.white.withAlpha(128),
+                    color: Colors.white.withValues(alpha: 128),
                     size: 24,
                   ),
                 ),
@@ -1188,7 +1235,7 @@ class _ProfileState extends State<Profile> {
                   right: size.width * 0.02,
                   child: Icon(
                     Icons.arrow_forward_ios,
-                    color: Colors.white.withAlpha(128),
+                    color: Colors.white.withValues(alpha: 128),
                     size: 24,
                   ),
                 ),
@@ -1196,6 +1243,207 @@ class _ProfileState extends State<Profile> {
           ),
         );
       },
+    );
+  }
+
+  Widget _buildSnipsSection(bool isDarkMode, Size size) {
+    if (_isLoadingSnips) {
+      return Center(
+        child: CircularProgressIndicator(
+          color: isDarkMode ? Colors.white : Colors.black,
+        ),
+      );
+    }
+
+    if (_hasError) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              'Failed to load snips',
+              style: TextStyle(
+                color: isDarkMode ? Colors.white70 : Colors.black54,
+              ),
+            ),
+            SizedBox(height: 8),
+            TextButton(
+              onPressed: _loadUserSnips,
+              child: Text('Retry'),
+            ),
+          ],
+        ),
+      );
+    }
+
+    if (_userSnips.isEmpty) {
+      return Center(
+        child: Text(
+          'No snips yet',
+          style: TextStyle(
+            color: isDarkMode ? Colors.white70 : Colors.black54,
+          ),
+        ),
+      );
+    }
+
+    return SizedBox(
+      height: size.width * 1.0,
+      child: ListView.builder(
+        padding: EdgeInsets.only(
+          left: size.width * 0.04,
+          right: size.width * 0.04,
+          top: 0,
+        ),
+        scrollDirection: Axis.horizontal,
+        itemCount: _userSnips.length,
+        itemBuilder: (context, index) {
+          final snip = _userSnips[index];
+          return GestureDetector(
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => SnipTab(
+                      // initialSnipId: snip.snipId,
+                      ),
+                ),
+              );
+            },
+            child: Container(
+              margin: EdgeInsets.only(right: size.width * 0.04),
+              width: size.width * 0.45,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(
+                  color: isDarkMode
+                      ? Colors.white.withValues(alpha: 51)
+                      : Colors.black.withValues(alpha: 51),
+                  width: 1,
+                ),
+              ),
+              child: Stack(
+                children: [
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(19),
+                    child: AspectRatio(
+                      aspectRatio: 9 / 16,
+                      child: Stack(
+                        fit: StackFit.expand,
+                        children: [
+                          if (snip.video.thumbnail != null)
+                            Image.network(
+                              snip.video.thumbnail!,
+                              fit: BoxFit.cover,
+                              errorBuilder: (context, error, stackTrace) {
+                                return Container(
+                                  color: Colors.black,
+                                  child: Icon(
+                                    Icons.play_circle_outline,
+                                    color: Colors.white,
+                                    size: 48,
+                                  ),
+                                );
+                              },
+                            )
+                          else
+                            Container(
+                              color: Colors.black,
+                              child: Icon(
+                                Icons.play_circle_outline,
+                                color: Colors.white,
+                                size: 48,
+                              ),
+                            ),
+
+                          // Play icon overlay
+                          Center(
+                            child: Container(
+                              padding: EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                color: Colors.black.withValues(alpha: 50),
+                                shape: BoxShape.circle,
+                              ),
+                              child: Icon(
+                                Icons.play_arrow,
+                                color: Colors.white,
+                                size: 32,
+                              ),
+                            ),
+                          ),
+
+                          // Stats overlay at bottom
+                          Positioned(
+                            bottom: 0,
+                            left: 0,
+                            right: 0,
+                            child: Container(
+                              padding: EdgeInsets.symmetric(
+                                vertical: 8,
+                                horizontal: 12,
+                              ),
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  begin: Alignment.bottomCenter,
+                                  end: Alignment.topCenter,
+                                  colors: [
+                                    Colors.black.withValues(alpha: 80),
+                                    Colors.transparent,
+                                  ],
+                                ),
+                              ),
+                              child: Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceEvenly,
+                                children: [
+                                  Row(
+                                    children: [
+                                      Icon(
+                                        Icons.favorite,
+                                        color: Colors.white,
+                                        size: 16,
+                                      ),
+                                      SizedBox(width: 4),
+                                      Text(
+                                        '${snip.likesCount}',
+                                        style: TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 12,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  Row(
+                                    children: [
+                                      Icon(
+                                        Icons.comment,
+                                        color: Colors.white,
+                                        size: 16,
+                                      ),
+                                      SizedBox(width: 4),
+                                      Text(
+                                        '${snip.commentsCount}',
+                                        style: TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 12,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
     );
   }
 }

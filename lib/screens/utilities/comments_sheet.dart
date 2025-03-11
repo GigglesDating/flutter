@@ -9,6 +9,52 @@ import 'package:flutter/foundation.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'dart:convert';
 
+class _GlobalCommentsCache {
+  static final Map<String, List<Comment>> _commentsCache = {};
+  static final Map<String, DateTime> _commentsCacheTimestamp = {};
+  static const Duration _cacheDuration = Duration(minutes: 15);
+
+  static void cacheComments(String key, List<Comment> comments) {
+    _commentsCache[key] = comments;
+    _commentsCacheTimestamp[key] = DateTime.now();
+  }
+
+  static List<Comment>? getComments(String key) {
+    final timestamp = _commentsCacheTimestamp[key];
+    if (timestamp == null) return null;
+
+    if (DateTime.now().difference(timestamp) > _cacheDuration) {
+      // Cache expired
+      _commentsCache.remove(key);
+      _commentsCacheTimestamp.remove(key);
+      return null;
+    }
+
+    return _commentsCache[key];
+  }
+
+  static void _clear() {
+    _commentsCache.clear();
+    _commentsCacheTimestamp.clear();
+  }
+}
+
+// Move _getTimeAgo to be a top-level utility function
+String _getTimeAgo(DateTime timestamp) {
+  final now = DateTime.now();
+  final difference = now.difference(timestamp);
+
+  if (difference.inDays > 0) {
+    return '${difference.inDays}d';
+  } else if (difference.inHours > 0) {
+    return '${difference.inHours}h';
+  } else if (difference.inMinutes > 0) {
+    return '${difference.inMinutes}m';
+  } else {
+    return 'now';
+  }
+}
+
 class CommentsSheet extends StatefulWidget {
   final bool isDarkMode;
   final String contentId;
@@ -40,7 +86,6 @@ class _CommentsSheetState extends State<CommentsSheet>
   String? _replyingToCommentId;
   String? _replyingToUsername;
   final Map<String, bool> _likedComments = {};
-  final Map<String, bool> _likedReplies = {};
   bool _showHeart = false;
   AnimationController? _animationController;
   Animation<double>? _animation;
@@ -72,17 +117,23 @@ class _CommentsSheetState extends State<CommentsSheet>
     );
     _animation =
         Tween<double>(begin: 0.0, end: 1.0).animate(_animationController!);
-    _initializeCache();
+    _initializeCache().then((_) => _loadComments());
     _scrollController.addListener(_onScroll);
-    _loadComments();
   }
 
   Future<void> _initializeCache() async {
-    if (!Hive.isBoxOpen(_cacheBoxName)) {
-      await Hive.openBox<String>(_cacheBoxName);
-      // Clean up expired cache entries and enforce limits
-      await _cleanExpiredCache();
-      await _enforceCacheLimits();
+    try {
+      await Hive.initFlutter();
+
+      if (!Hive.isBoxOpen(_cacheBoxName)) {
+        await Hive.openBox<String>(_cacheBoxName);
+        // Clean up expired cache entries and enforce limits
+        await _cleanExpiredCache();
+        await _enforceCacheLimits();
+      }
+    } catch (e) {
+      debugPrint('Error initializing cache: $e');
+      // Fallback to no caching if initialization fails
     }
   }
 
@@ -196,11 +247,24 @@ class _CommentsSheetState extends State<CommentsSheet>
     setState(() => _isLoading = true);
 
     try {
-      // Check cache first with pagination metadata
-      final cachedResponse = await _getCachedResponse('${_cacheKey}_page_1');
+      // Check memory cache first
+      final memoryCachedComments = _GlobalCommentsCache.getComments(_cacheKey);
+      if (memoryCachedComments != null) {
+        if (mounted) {
+          setState(() {
+            _comments = memoryCachedComments;
+            _isLoading = false;
+            _currentPage = 1;
+            // Still fetch fresh data in background
+            _fetchFreshComments();
+          });
+          return;
+        }
+      }
 
+      // Check disk cache
+      final cachedResponse = await _getCachedResponse('${_cacheKey}_page_1');
       if (cachedResponse != null) {
-        // Use cached data while fetching fresh data
         final cachedComments =
             await compute(_parseCommentsInBackground, cachedResponse);
         if (mounted) {
@@ -210,10 +274,30 @@ class _CommentsSheetState extends State<CommentsSheet>
             _currentPage = 1;
             _hasMoreComments = cachedResponse['data']['has_more'] ?? false;
           });
+          // Cache in memory for faster access next time
+          _GlobalCommentsCache.cacheComments(_cacheKey, cachedComments);
         }
       }
 
-      // Fetch fresh data
+      await _fetchFreshComments();
+    } catch (e, stackTrace) {
+      debugPrint('Error loading comments: $e');
+      if (kDebugMode) {
+        print('Stack trace: $stackTrace');
+      }
+
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+          _hasError = true;
+          _errorMessage = e.toString();
+        });
+      }
+    }
+  }
+
+  Future<void> _fetchFreshComments() async {
+    try {
       final prefs = await SharedPreferences.getInstance();
       final uuid = prefs.getString('user_uuid');
 
@@ -230,8 +314,9 @@ class _CommentsSheetState extends State<CommentsSheet>
       // Parse in background
       final freshComments = await compute(_parseCommentsInBackground, response);
 
-      // Cache the new response with pagination metadata
+      // Cache the new response
       await _cacheResponse('${_cacheKey}_page_1', response);
+      _GlobalCommentsCache.cacheComments(_cacheKey, freshComments);
 
       if (mounted) {
         setState(() {
@@ -242,19 +327,8 @@ class _CommentsSheetState extends State<CommentsSheet>
           _currentPage = 1;
         });
       }
-    } catch (e, stackTrace) {
-      debugPrint('Error loading comments: $e');
-      if (kDebugMode) {
-        print('Stack trace: $stackTrace');
-      }
-
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-          _hasError = true;
-          _errorMessage = e.toString();
-        });
-      }
+    } catch (e) {
+      debugPrint('Error fetching fresh comments: $e');
     }
   }
 
@@ -335,20 +409,8 @@ class _CommentsSheetState extends State<CommentsSheet>
     _commentFocusNode.dispose();
     _animationController?.dispose();
     // Clean up cache when disposing
-    _cleanupOldCache();
+    _GlobalCommentsCache._clear();
     super.dispose();
-  }
-
-  Future<void> _cleanupOldCache() async {
-    try {
-      final cache = await Hive.openBox<String>(_cacheBoxName);
-      final keysToDelete = cache.keys
-          .where((key) => key.toString().startsWith(_cacheKey))
-          .toList();
-      await cache.deleteAll(keysToDelete);
-    } catch (e) {
-      debugPrint('Error cleaning up cache: $e');
-    }
   }
 
   void _cancelReply() {
@@ -562,7 +624,6 @@ class _CommentsSheetState extends State<CommentsSheet>
 
         final comment = _comments[index];
         return _CommentItem(
-          key: ValueKey(comment.id),
           comment: comment,
           isDarkMode: widget.isDarkMode,
           screenWidth: widget.screenWidth,
@@ -572,250 +633,6 @@ class _CommentsSheetState extends State<CommentsSheet>
           onDoubleTap: () => _handleCommentDoubleTap(comment.id),
         );
       },
-    );
-  }
-
-  Widget _buildCommentItem(Comment comment) {
-    final authorProfile = comment.authorProfile;
-    final profileImage = authorProfile.profileImage;
-    final name = authorProfile.name;
-    final text = comment.text;
-    final timestamp = comment.timestamp;
-    final likesCount = comment.likesCount;
-    final commentId = comment.id;
-    final isLiked = _likedComments[commentId] ?? false;
-
-    return Padding(
-      padding: EdgeInsets.symmetric(vertical: widget.screenWidth * 0.02),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          CircleAvatar(
-            radius: widget.screenWidth * 0.04,
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(50),
-              child: CachedNetworkImage(
-                imageUrl: profileImage,
-                width: widget.screenWidth * 0.08,
-                height: widget.screenWidth * 0.08,
-                fit: BoxFit.cover,
-                memCacheWidth: (widget.screenWidth * 0.16).toInt(),
-                memCacheHeight: (widget.screenWidth * 0.16).toInt(),
-                maxWidthDiskCache: 200,
-                maxHeightDiskCache: 200,
-                cacheKey: '${profileImage}_thumb',
-                placeholder: (context, url) => CircularProgressIndicator(
-                  color: widget.isDarkMode ? Colors.white : Colors.black,
-                  strokeWidth: 2,
-                ),
-                errorWidget: (context, url, error) => Icon(
-                  Icons.person,
-                  size: widget.screenWidth * 0.05,
-                  color: widget.isDarkMode ? Colors.white54 : Colors.black54,
-                ),
-              ),
-            ),
-          ),
-          SizedBox(width: widget.screenWidth * 0.03),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Row(
-                      children: [
-                        Text(
-                          name,
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            color:
-                                widget.isDarkMode ? Colors.white : Colors.black,
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        Text(
-                          '• ${_getTimeAgo(timestamp)}',
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: widget.isDarkMode
-                                ? Colors.white70
-                                : Colors.black54,
-                          ),
-                        ),
-                      ],
-                    ),
-                    Container(
-                      padding: EdgeInsets.all(widget.screenWidth * 0.015),
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: widget.isDarkMode
-                            ? Colors.white.withAlpha(38)
-                            : Colors.black.withAlpha(26),
-                      ),
-                      child: Icon(
-                        Icons.more_vert,
-                        size: widget.screenWidth * 0.045,
-                        color: widget.isDarkMode
-                            ? Colors.white.withAlpha(204)
-                            : Colors.black.withAlpha(204),
-                      ),
-                    ),
-                  ],
-                ),
-                Text(
-                  text,
-                  style: TextStyle(
-                    color: widget.isDarkMode ? Colors.white : Colors.black,
-                  ),
-                ),
-                SizedBox(height: widget.screenWidth * 0.01),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      '$likesCount likes',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color:
-                            widget.isDarkMode ? Colors.white70 : Colors.black54,
-                      ),
-                    ),
-                    _LikeButton(
-                      isDarkMode: widget.isDarkMode,
-                      initialLiked: isLiked,
-                      onLike: () => _handleCommentLike(commentId),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildReplyItem(Comment reply) {
-    final authorProfile = reply.authorProfile;
-    final profileImage = authorProfile.profileImage;
-    final name = authorProfile.name;
-    final text = reply.text;
-    final timestamp = reply.timestamp;
-    final likesCount = reply.likesCount;
-    final replyId = reply.id;
-    final isLiked = _likedReplies[replyId] ?? false;
-
-    return Padding(
-      padding: EdgeInsets.symmetric(vertical: widget.screenWidth * 0.02),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          CircleAvatar(
-            radius: widget.screenWidth * 0.035,
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(50),
-              child: CachedNetworkImage(
-                imageUrl: profileImage,
-                width: widget.screenWidth * 0.07,
-                height: widget.screenWidth * 0.07,
-                fit: BoxFit.cover,
-                memCacheWidth: (widget.screenWidth * 0.14).toInt(),
-                memCacheHeight: (widget.screenWidth * 0.14).toInt(),
-                maxWidthDiskCache: 150,
-                maxHeightDiskCache: 150,
-                cacheKey: '${profileImage}_reply_thumb',
-                placeholder: (context, url) => CircularProgressIndicator(
-                  color: widget.isDarkMode ? Colors.white : Colors.black,
-                  strokeWidth: 2,
-                ),
-                errorWidget: (context, url, error) => Icon(
-                  Icons.person,
-                  size: widget.screenWidth * 0.045,
-                  color: widget.isDarkMode ? Colors.white54 : Colors.black54,
-                ),
-              ),
-            ),
-          ),
-          SizedBox(width: widget.screenWidth * 0.03),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Row(
-                      children: [
-                        Text(
-                          name,
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            color:
-                                widget.isDarkMode ? Colors.white : Colors.black,
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        Text(
-                          '• ${_getTimeAgo(timestamp)}',
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: widget.isDarkMode
-                                ? Colors.white70
-                                : Colors.black54,
-                          ),
-                        ),
-                      ],
-                    ),
-                    Container(
-                      padding: EdgeInsets.all(widget.screenWidth * 0.015),
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: widget.isDarkMode
-                            ? Colors.white.withAlpha(38)
-                            : Colors.black.withAlpha(26),
-                      ),
-                      child: Icon(
-                        Icons.more_vert,
-                        size: widget.screenWidth * 0.045,
-                        color: widget.isDarkMode
-                            ? Colors.white.withAlpha(204)
-                            : Colors.black.withAlpha(204),
-                      ),
-                    ),
-                  ],
-                ),
-                Text(
-                  text,
-                  style: TextStyle(
-                    color: widget.isDarkMode ? Colors.white : Colors.black,
-                  ),
-                ),
-                SizedBox(height: widget.screenWidth * 0.01),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      '$likesCount likes',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color:
-                            widget.isDarkMode ? Colors.white70 : Colors.black54,
-                      ),
-                    ),
-                    _LikeButton(
-                      isDarkMode: widget.isDarkMode,
-                      initialLiked: isLiked,
-                      onLike: () => _handleCommentLike(replyId),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
     );
   }
 
@@ -867,21 +684,6 @@ class _CommentsSheetState extends State<CommentsSheet>
         ],
       ),
     );
-  }
-
-  String _getTimeAgo(DateTime timestamp) {
-    final now = DateTime.now();
-    final difference = now.difference(timestamp);
-
-    if (difference.inDays > 0) {
-      return '${difference.inDays}d';
-    } else if (difference.inHours > 0) {
-      return '${difference.inHours}h';
-    } else if (difference.inMinutes > 0) {
-      return '${difference.inMinutes}m';
-    } else {
-      return 'now';
-    }
   }
 
   void _showHeartAnimation() {
@@ -946,7 +748,6 @@ class _CommentItem extends StatelessWidget {
   final VoidCallback onDoubleTap;
 
   const _CommentItem({
-    Key? key,
     required this.comment,
     required this.isDarkMode,
     required this.screenWidth,
@@ -954,7 +755,7 @@ class _CommentItem extends StatelessWidget {
     required this.isLiked,
     required this.onLike,
     required this.onDoubleTap,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -1008,14 +809,31 @@ class _CommentItem extends StatelessWidget {
                 maxWidthDiskCache: 200,
                 maxHeightDiskCache: 200,
                 cacheKey: '${comment.authorProfile.profileImage}_thumb',
-                placeholder: (context, url) => CircularProgressIndicator(
-                  color: isDarkMode ? Colors.white : Colors.black,
-                  strokeWidth: 2,
+                fadeInDuration: const Duration(milliseconds: 150),
+                placeholderFadeInDuration: const Duration(milliseconds: 150),
+                imageBuilder: (context, imageProvider) => Container(
+                  decoration: BoxDecoration(
+                    image: DecorationImage(
+                      image: imageProvider,
+                      fit: BoxFit.cover,
+                    ),
+                  ),
                 ),
-                errorWidget: (context, url, error) => Icon(
-                  Icons.person,
-                  size: screenWidth * 0.05,
-                  color: isDarkMode ? Colors.white54 : Colors.black54,
+                placeholder: (context, url) => Container(
+                  color: isDarkMode ? Colors.white12 : Colors.black12,
+                  child: Icon(
+                    Icons.person,
+                    size: screenWidth * 0.05,
+                    color: isDarkMode ? Colors.white30 : Colors.black26,
+                  ),
+                ),
+                errorWidget: (context, url, error) => Container(
+                  color: isDarkMode ? Colors.white12 : Colors.black12,
+                  child: Icon(
+                    Icons.person,
+                    size: screenWidth * 0.05,
+                    color: isDarkMode ? Colors.white30 : Colors.black26,
+                  ),
                 ),
               ),
             ),
@@ -1028,12 +846,24 @@ class _CommentItem extends StatelessWidget {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(
-                      comment.authorProfile.name,
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        color: isDarkMode ? Colors.white : Colors.black,
-                      ),
+                    Row(
+                      children: [
+                        Text(
+                          comment.authorProfile.name,
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: isDarkMode ? Colors.white : Colors.black,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          '• ${_getTimeAgo(comment.timestamp)}',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: isDarkMode ? Colors.white70 : Colors.black54,
+                          ),
+                        ),
+                      ],
                     ),
                     _LikeButton(
                       isDarkMode: isDarkMode,
@@ -1064,12 +894,11 @@ class _ReplyItem extends StatelessWidget {
   final VoidCallback onReply;
 
   const _ReplyItem({
-    Key? key,
     required this.reply,
     required this.isDarkMode,
     required this.screenWidth,
     required this.onReply,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -1142,13 +971,11 @@ class _LikeButton extends StatefulWidget {
   final bool isDarkMode;
   final bool initialLiked;
   final VoidCallback onLike;
-  final double size;
 
   const _LikeButton({
     required this.isDarkMode,
     required this.initialLiked,
     required this.onLike,
-    this.size = 16,
   });
 
   @override
@@ -1200,7 +1027,7 @@ class _LikeButtonState extends State<_LikeButton>
         scale: _scaleAnimation,
         child: Icon(
           isLiked ? Icons.favorite : Icons.favorite_border,
-          size: widget.size,
+          size: 16,
           color: isLiked
               ? Colors.red
               : (widget.isDarkMode ? Colors.white70 : Colors.black54),

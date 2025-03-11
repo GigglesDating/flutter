@@ -184,7 +184,7 @@ class _SwipeFilterPage extends State<LikedAccounts> {
                       ? Colors.white
                       : Colors.black,
                   unselectedLabelColor: Colors.black,
-                  tabs: [
+                  tabs: const [
                     Tab(text: "Liked You"),
                     Tab(text: "Liked By You"),
                   ],

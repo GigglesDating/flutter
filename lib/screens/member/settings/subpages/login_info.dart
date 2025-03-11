@@ -38,7 +38,8 @@ class LoginInfoScreen extends StatelessWidget {
                     children: [
                       Text(
                         'Phone Number',
-                        style: TextStyle(fontWeight: FontWeight.w500,
+                        style: TextStyle(
+                          fontWeight: FontWeight.w500,
                           color: const Color.fromARGB(255, 158, 158, 158),
                           fontSize: 14,
                         ),
@@ -46,10 +47,10 @@ class LoginInfoScreen extends StatelessWidget {
                       SizedBox(height: 4),
                       Text(
                         '9007848474',
-                        style: TextStyle(fontWeight: FontWeight.w700,
-                          fontSize: 18,
-                          color: isDarkMode ? Colors.white : Colors.black
-                        ),
+                        style: TextStyle(
+                            fontWeight: FontWeight.w700,
+                            fontSize: 18,
+                            color: isDarkMode ? Colors.white : Colors.black),
                       ),
                     ],
                   ),
@@ -60,11 +61,13 @@ class LoginInfoScreen extends StatelessWidget {
                     child: Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       mainAxisAlignment: MainAxisAlignment.start,
-                      children: [
+                      children: const [
                         Text(
                           'Edit',
-                          style: TextStyle(fontWeight: FontWeight.w700,
-                              color: const Color.fromARGB(255, 82, 113, 255), fontSize: 15),
+                          style: TextStyle(
+                              fontWeight: FontWeight.w700,
+                              color: Color.fromARGB(255, 82, 113, 255),
+                              fontSize: 15),
                         ),
                         SizedBox(width: 4),
                         Icon(Icons.edit, size: 14),
@@ -163,7 +166,8 @@ class _EditPhoneBottomSheetState extends State<EditPhoneBottomSheet> {
         children: [
           Text(
             'Edit Phone Number',
-            style: TextStyle(fontWeight: FontWeight.w700,
+            style: TextStyle(
+              fontWeight: FontWeight.w700,
               fontSize: 18,
               color: const Color.fromARGB(255, 82, 113, 255),
             ),
@@ -171,28 +175,33 @@ class _EditPhoneBottomSheetState extends State<EditPhoneBottomSheet> {
           TextField(
             controller: _phoneController,
             keyboardType: TextInputType.number,
-            style: TextStyle(fontSize: 16,fontWeight: FontWeight.w700,
-                color:
-                isDarkMode ? Colors.white : Colors.black),
+            style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w700,
+                color: isDarkMode ? Colors.white : Colors.black),
             maxLength: 10,
             inputFormatters: [
               FilteringTextInputFormatter.digitsOnly,
             ],
             decoration: InputDecoration(
               labelText: '+91| xxxxx xxxxx',
-              labelStyle: TextStyle(fontSize: 16,fontWeight: FontWeight.w700,
-                  color:
-                  isDarkMode ? Colors.white : Colors.black),
+              labelStyle: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                  color: isDarkMode ? Colors.white : Colors.black),
               counterText: '',
               border: OutlineInputBorder(
                   borderRadius: BorderRadius.all(Radius.circular(12)),
-                  borderSide: BorderSide(color: const Color.fromARGB(255, 82, 113, 255))),
+                  borderSide: BorderSide(
+                      color: const Color.fromARGB(255, 82, 113, 255))),
               focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.all(Radius.circular(12)),
-                  borderSide: BorderSide(color: const Color.fromARGB(255, 82, 113, 255))),
+                  borderSide: BorderSide(
+                      color: const Color.fromARGB(255, 82, 113, 255))),
               enabledBorder: const OutlineInputBorder(
                 // Border when enabled
-                borderSide: BorderSide(color: Color.fromARGB(255, 82, 113, 255)),
+                borderSide:
+                    BorderSide(color: Color.fromARGB(255, 82, 113, 255)),
                 borderRadius: BorderRadius.all(Radius.circular(12)),
               ),
               errorBorder: const OutlineInputBorder(
@@ -208,26 +217,34 @@ class _EditPhoneBottomSheetState extends State<EditPhoneBottomSheet> {
                 TextField(
                   controller: _otpController,
                   keyboardType: TextInputType.number,
-                  style: TextStyle(fontSize: 16,fontWeight: FontWeight.w700,
+                  style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
                       color: isDarkMode ? Colors.white : Colors.black),
                   decoration: InputDecoration(
                     labelText: 'Enter OTP',
-                    labelStyle: TextStyle(fontSize: 16,fontWeight: FontWeight.w700,
+                    labelStyle: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
                         color: Theme.of(context).colorScheme.tertiary),
                     border: OutlineInputBorder(
                         borderRadius: BorderRadius.all(Radius.circular(12)),
-                        borderSide: BorderSide(color: const Color.fromARGB(255, 82, 113, 255))),
+                        borderSide: BorderSide(
+                            color: const Color.fromARGB(255, 82, 113, 255))),
                     focusedBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.all(Radius.circular(12)),
-                        borderSide: BorderSide(color: const Color.fromARGB(255, 82, 113, 255))),
+                        borderSide: BorderSide(
+                            color: const Color.fromARGB(255, 82, 113, 255))),
                     enabledBorder: const OutlineInputBorder(
                       // Border when enabled
-                      borderSide: BorderSide(color: Color.fromARGB(255, 82, 113, 255)),
+                      borderSide:
+                          BorderSide(color: Color.fromARGB(255, 82, 113, 255)),
                       borderRadius: BorderRadius.all(Radius.circular(12)),
                     ),
                     errorBorder: const OutlineInputBorder(
                       borderRadius: BorderRadius.all(Radius.circular(12)),
-                      borderSide: BorderSide(color: Color.fromARGB(255, 176, 0, 32)),
+                      borderSide:
+                          BorderSide(color: Color.fromARGB(255, 176, 0, 32)),
                     ),
                   ),
                 ),
@@ -239,8 +256,10 @@ class _EditPhoneBottomSheetState extends State<EditPhoneBottomSheet> {
                     },
                     child: Text(
                       'Resend',
-                      style: TextStyle(fontWeight: FontWeight.w700,
-                          color: const Color.fromARGB(255, 82, 113, 255), fontSize: 15),
+                      style: TextStyle(
+                          fontWeight: FontWeight.w700,
+                          color: const Color.fromARGB(255, 82, 113, 255),
+                          fontSize: 15),
                     ),
                   ),
                 ),
@@ -267,7 +286,10 @@ class _EditPhoneBottomSheetState extends State<EditPhoneBottomSheet> {
             ),
             child: Text(
               _showOtpField ? 'Verify' : 'Send OTP',
-              style: TextStyle(color: Colors.white,fontSize: 16,fontWeight: FontWeight.w700),
+              style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700),
             ),
           ),
           const SizedBox(height: 16),

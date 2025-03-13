@@ -4,7 +4,6 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter/services.dart'; // Add this import
 import 'dart:ui'; // Add this import for ImageFilter
 import '../../models/post_model.dart';
-import '../../models/snip_model.dart';
 import 'package:video_player/video_player.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 

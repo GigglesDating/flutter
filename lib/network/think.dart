@@ -378,12 +378,21 @@ class ThinkProvider {
   Future<Map<String, dynamic>> getFeed({
     required String uuid,
     int page = 1,
+    String? profile_id, // New optional parameter
   }) async {
     try {
-      final response = await _callFunction('get_feed', {
+      // Create request body with optional profile_id
+      final Map<String, dynamic> requestBody = {
         'uuid': uuid,
         'page': page,
-      });
+      };
+
+      // Add profile_id to request only if it's provided
+      if (profile_id != null) {
+        requestBody['profile_id'] = profile_id;
+      }
+
+      final response = await _callFunction('get_feed', requestBody);
 
       if (response['status'] == 'success') {
         return {
@@ -422,16 +431,25 @@ class ThinkProvider {
     }
   }
 
-  // Get snips/reels with pagination
+// Get snips/reels with pagination
   Future<Map<String, dynamic>> getSnips({
     required String uuid,
     int page = 1,
+    String? profile_id, // New optional parameter
   }) async {
     try {
-      final response = await _callFunction('get_snips', {
+      // Create request body with optional profile_id
+      final Map<String, dynamic> requestBody = {
         'uuid': uuid,
         'page': page,
-      });
+      };
+
+      // Add profile_id to request only if it's provided
+      if (profile_id != null) {
+        requestBody['profile_id'] = profile_id;
+      }
+
+      final response = await _callFunction('get_snips', requestBody);
 
       if (response['status'] == 'success') {
         return {

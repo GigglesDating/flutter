@@ -349,7 +349,7 @@ class NavigationControllerState extends State<NavigationController>
       builder: () =>
           const PlaceholderScreen(screenName: 'SOS', message: 'SOS Screen'),
     ),
-    (label: 'Snips', builder: () => const SnipTab()),
+    (label: 'Snips', builder: () => const SnipsScreen()),
     (
       label: 'Profile',
       builder: () => const Profile(),

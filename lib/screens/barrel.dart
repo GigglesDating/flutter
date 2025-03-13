@@ -56,3 +56,4 @@ export '../models/snips_model.dart';
 export '../models/utils/snip_cache_manager.dart';
 export '../models/utils/video_service.dart';
 export '../models/utils/snip_parser.dart';
+export 'utilities/icon_mapping.dart';

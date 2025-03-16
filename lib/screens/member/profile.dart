@@ -5,10 +5,6 @@ import 'package:flutter/services.dart';
 import 'dart:ui';
 import 'package:image_picker/image_picker.dart';
 import 'package:image_cropper/image_cropper.dart';
-import '../../models/post_model.dart';
-import '../../models/snip_model.dart';
-import '../../models/user_model.dart';
-import '../../widgets/reel_card.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class Profile extends StatefulWidget {
@@ -19,38 +15,42 @@ class Profile extends StatefulWidget {
 }
 
 class _ProfileState extends State<Profile> {
-  // Temporary user data - later will come from backend
+  // Initialize empty user data map - will be populated from API
   final Map<String, dynamic> userData = {
-    'name': 'Anna Joseph',
-    'location': 'Bangalore',
-    'profileImage': 'assets/tempImages/users/user1.jpg',
-    'friendCount': 27,
+    'name': '',
+    'location': '',
+    'profileImage': '',
+    'friendCount': 0,
     'stats': {
-      'posts': 250,
-      'dates': 32,
-      'rating': 4.5,
+      'posts': 0,
+      'dates': 0,
+      'rating': 0.0,
     },
-    'bio':
-        'I can make your coffee healthier. Will probably beat you at go-carting and prefer sunset over sunrise anytime',
+    'bio': '',
   };
 
   late String userBio;
   final ImagePicker _picker = ImagePicker();
   List<SnipModel> _userSnips = [];
   bool _isLoadingSnips = false;
-  bool _hasError = false;
+  bool _hasSnipsError = false;
+  List<PostModel> _userPosts = [];
+  bool _isLoadingPosts = false;
+  bool _hasPostsError = false;
 
   @override
   void initState() {
     super.initState();
-    userBio = userData['bio'];
+    userBio = ''; // Will be updated from API
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
     SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
       statusBarColor: Colors.transparent,
       systemNavigationBarColor: Colors.transparent,
       systemNavigationBarDividerColor: Colors.transparent,
     ));
+    _loadProfileData();
     _loadUserSnips();
+    _loadUserPosts(); // Load posts
   }
 
   @override
@@ -63,12 +63,48 @@ class _ProfileState extends State<Profile> {
     super.dispose();
   }
 
+  Future<void> _loadProfileData() async {
+    if (!mounted) return;
+
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final uuid = prefs.getString('user_uuid');
+
+      if (uuid == null) throw Exception('No UUID found');
+
+      final response =
+          await ThinkProvider().fetchProfile(uuid: uuid, profileId: '000');
+      final profile = await ProfileModel.parseUserProfile(response);
+
+      if (mounted) {
+        setState(() {
+          userData['name'] = profile.name;
+          userData['age'] = profile.age;
+          userData['location'] = profile.location;
+          userData['bio'] = profile.bio;
+          userBio = profile.bio; // Update userBio from API
+          userData['friendCount'] = profile.friendsCount;
+          userData['profileImage'] = profile.images.profile;
+          userData['interests'] = profile.interests;
+          userData['gender'] = profile.gender;
+          userData['stats'] = {
+            'posts': profile.postsCount,
+            'dates': profile.datesCount,
+            'rating': profile.rating,
+          };
+        });
+      }
+    } catch (e) {
+      debugPrint('Error loading profile data: $e');
+    }
+  }
+
   Future<void> _loadUserSnips() async {
     if (!mounted) return;
 
     setState(() {
       _isLoadingSnips = true;
-      _hasError = false;
+      _hasSnipsError = false;
     });
 
     try {
@@ -77,12 +113,13 @@ class _ProfileState extends State<Profile> {
 
       if (uuid == null) throw Exception('No UUID found');
 
-      final response = await ThinkProvider().getSnips(uuid: uuid);
-      final snips = SnipModel.fromApiResponse(response);
+      final response =
+          await ThinkProvider().getSnips(uuid: uuid, profileId: '000');
+      final snipsResponse = SnipsResponse.fromApiResponse(response);
 
       if (mounted) {
         setState(() {
-          _userSnips = snips;
+          _userSnips = snipsResponse.snips;
           _isLoadingSnips = false;
         });
       }
@@ -91,7 +128,45 @@ class _ProfileState extends State<Profile> {
       if (mounted) {
         setState(() {
           _isLoadingSnips = false;
-          _hasError = true;
+          _hasSnipsError = true;
+        });
+      }
+    }
+  }
+
+  Future<void> _loadUserPosts() async {
+    if (!mounted) return;
+
+    setState(() {
+      _isLoadingPosts = true;
+      _hasPostsError = false;
+    });
+
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final uuid = prefs.getString('user_uuid');
+
+      if (uuid == null) throw Exception('No UUID found');
+
+      final response =
+          await ThinkProvider().getFeed(uuid: uuid, profileId: '000');
+
+      // Parse posts from response
+      final List<dynamic> postsJson = response['data']['posts'];
+      final posts = postsJson.map((json) => PostModel.fromJson(json)).toList();
+
+      if (mounted) {
+        setState(() {
+          _userPosts = posts;
+          _isLoadingPosts = false;
+        });
+      }
+    } catch (e) {
+      debugPrint('Error loading user posts: $e');
+      if (mounted) {
+        setState(() {
+          _isLoadingPosts = false;
+          _hasPostsError = true;
         });
       }
     }
@@ -196,10 +271,20 @@ class _ProfileState extends State<Profile> {
       child: Stack(
         fit: StackFit.expand,
         children: [
-          Image.asset(
-            userData['profileImage'],
-            fit: BoxFit.cover,
-          ),
+          // Use network image from API with fallback to placeholder
+          userData['profileImage'].isNotEmpty
+              ? Image.network(
+                  userData['profileImage'],
+                  fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) => Image.asset(
+                    'assets/images/placeholder.jpg',
+                    fit: BoxFit.cover,
+                  ),
+                )
+              : Image.asset(
+                  'assets/images/placeholder.jpg',
+                  fit: BoxFit.cover,
+                ),
           BackdropFilter(
             filter: ImageFilter.blur(sigmaX: 80, sigmaY: 80),
             child: Container(
@@ -219,30 +304,19 @@ class _ProfileState extends State<Profile> {
       ),
       child: Column(
         children: [
-          // Main Container - Controls the overall frame size
           Stack(
             alignment: Alignment.center,
             children: [
               Container(
-                width: size.width * .7, // Controls width of oval
-                height: size.width * 0.9, // Controls height of oval
+                width: size.width * .7,
+                height: size.width * 0.9,
                 decoration: BoxDecoration(
                   color: Colors.transparent,
-                  // This BorderRadius controls the oval shape of the container
                   borderRadius: BorderRadius.vertical(
-                    // Top curve of the oval - adjust multipliers to change shape
-                    top: Radius.elliptical(
-                      size.width * 0.8, // Horizontal curve at top
-                      size.width * 0.8, // Vertical curve at top
-                    ),
-                    // Bottom curve of the oval - adjust multipliers to change shape
-                    bottom: Radius.elliptical(
-                      size.width * 0.8, // Horizontal curve at bottom
-                      size.width *
-                          0.8, // Vertical curve at bottom - larger value makes it more elongated
-                    ),
+                    top: Radius.elliptical(size.width * 0.8, size.width * 0.8),
+                    bottom:
+                        Radius.elliptical(size.width * 0.8, size.width * 0.8),
                   ),
-                  // Border styling
                   border: Border.all(
                     color: isDarkMode
                         ? Colors.white.withValues(alpha: 80)
@@ -250,29 +324,27 @@ class _ProfileState extends State<Profile> {
                     width: 2,
                   ),
                 ),
-                // ClipRRect ensures the image follows the same shape as the container
                 child: ClipRRect(
-                  // This must match the container's BorderRadius exactly
                   borderRadius: BorderRadius.vertical(
                     top: Radius.elliptical(size.width * 0.8, size.width * 0.8),
                     bottom:
                         Radius.elliptical(size.width * 0.8, size.width * 0.8),
                   ),
-                  child: Image.asset(
+                  child: Image.network(
                     userData['profileImage'],
-                    fit: BoxFit.cover, // Controls how image fills the space
-                    // You can adjust alignment to control which part of image is visible
-                    // alignment: Alignment.topCenter,  // Uncomment to focus on top of image
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) => Image.asset(
+                      'assets/images/placeholder.jpg',
+                      fit: BoxFit.cover,
+                    ),
                   ),
                 ),
               ),
 
-              // Heart icon with friend count overlay - positioned half in/out of profile picture
+              // Heart icon with friend count overlay
               Positioned(
-                top: size.width *
-                    0.76, // Moved up to overlay profile picture edge
-                right: size.width *
-                    0.1, // Moved right to overlay profile picture edge
+                top: size.width * 0.76,
+                right: size.width * 0.1,
                 child: GestureDetector(
                   onTap: () {
                     Navigator.push(
@@ -288,7 +360,7 @@ class _ProfileState extends State<Profile> {
                       Icon(
                         Icons.favorite,
                         color: Colors.red,
-                        size: size.width * 0.13, // Reduced size
+                        size: size.width * 0.13,
                         shadows: [
                           Shadow(
                             color: Colors.black.withValues(alpha: 50),
@@ -300,8 +372,7 @@ class _ProfileState extends State<Profile> {
                         '${userData['friendCount']}',
                         style: TextStyle(
                           color: Colors.white,
-                          fontSize: size.width *
-                              0.035, // Adjusted text size to match smaller heart
+                          fontSize: size.width * 0.035,
                           fontWeight: FontWeight.bold,
                           shadows: [
                             Shadow(
@@ -320,13 +391,36 @@ class _ProfileState extends State<Profile> {
 
           // Name and Location
           SizedBox(height: size.height * 0.02),
-          Text(
-            userData['name'],
-            style: TextStyle(
-              color: isDarkMode ? Colors.white : Colors.black,
-              fontSize: size.width * 0.05,
-              fontWeight: FontWeight.w600,
-            ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              // Gender icon
+              Icon(
+                IconMapper.getGenderIcon(userData['gender'] ?? 'unknown'),
+                color: isDarkMode ? Colors.white : Colors.black,
+                size: size.width * 0.05,
+              ),
+              SizedBox(width: size.width * 0.01),
+              // Name
+              Text(
+                userData['name'] ?? 'Unknown',
+                style: TextStyle(
+                  color: isDarkMode ? Colors.white : Colors.black,
+                  fontSize: size.width * 0.05,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              SizedBox(width: size.width * 0.01),
+              // Age
+              Text(
+                userData['age'] != null ? ", ${userData['age']}" : "",
+                style: TextStyle(
+                  color: isDarkMode ? Colors.white : Colors.black,
+                  fontSize: size.width * 0.05,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
           ),
           SizedBox(height: size.height * 0.01),
           Row(
@@ -339,7 +433,7 @@ class _ProfileState extends State<Profile> {
               ),
               SizedBox(width: size.width * 0.01),
               Text(
-                userData['location'],
+                userData['location'] ?? 'Unknown location',
                 style: TextStyle(
                   color: isDarkMode ? Colors.white70 : Colors.black54,
                   fontSize: size.width * 0.035,
@@ -477,12 +571,24 @@ class _ProfileState extends State<Profile> {
                 child: ListView(
                   scrollDirection: Axis.horizontal,
                   children: [
-                    _buildInterestChip('Female', '😊', textColor, size),
-                    _buildInterestChip('Non-smoker', '🚭', textColor, size),
-                    _buildInterestChip('Social drinker', '🍷', textColor, size),
-                    _buildInterestChip('Foodie', '🍕', textColor, size),
-                    _buildInterestChip('Travel', '✈️', textColor, size),
-                    _buildInterestChip('Music', '🎵', textColor, size),
+                    // Add gender chip first
+                    if (userData['gender'] != null)
+                      _buildInterestChip(
+                        userData['gender'],
+                        IconMapper.getGenderIcon(userData['gender']),
+                        textColor,
+                        size,
+                      ),
+                    // Add interests from API
+                    if (userData['interests'] != null)
+                      ...(userData['interests'] as List<String>).map(
+                        (interest) => _buildInterestChip(
+                          interest,
+                          IconMapper.getIconForInterest(interest),
+                          textColor,
+                          size,
+                        ),
+                      ),
                   ],
                 ),
               ),
@@ -636,15 +742,16 @@ class _ProfileState extends State<Profile> {
   }
 
   Widget _buildInterestChip(
-      String label, String emoji, Color textColor, Size size) {
+      String label, IconData icon, Color textColor, Size size) {
     return Padding(
       padding: EdgeInsets.only(right: size.width * 0.04),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text(
-            emoji,
-            style: TextStyle(fontSize: size.width * 0.04),
+          Icon(
+            icon,
+            size: size.width * 0.04,
+            color: textColor,
           ),
           SizedBox(width: size.width * 0.02),
           Text(
@@ -738,7 +845,7 @@ class _ProfileState extends State<Profile> {
                 height: size.width * 0.08,
                 child: ElevatedButton(
                   onPressed: () {
-                    // TODO: Implement Spotify connection
+                    // TODO: Implement Spotify API integration for user music preferences
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Color(0xFF1DB954),
@@ -774,7 +881,7 @@ class _ProfileState extends State<Profile> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Stats Section (modify _buildStats to remove its vertical margin)
+        // Stats Section
         Container(
           margin: EdgeInsets.symmetric(horizontal: size.width * 0.04),
           child: _buildStats(isDarkMode, size),
@@ -782,7 +889,7 @@ class _ProfileState extends State<Profile> {
 
         SizedBox(height: baseSpacing),
 
-        // Bio Section (modify _buildBioSection to remove its vertical margin)
+        // Bio Section
         Container(
           margin: EdgeInsets.symmetric(horizontal: size.width * 0.04),
           child: _buildBioSection(isDarkMode, size),
@@ -790,7 +897,7 @@ class _ProfileState extends State<Profile> {
 
         SizedBox(height: baseSpacing),
 
-        // Spotify Section (modify _buildSpotifyWidget to remove its vertical margin)
+        // Spotify Section
         Container(
           margin: EdgeInsets.symmetric(horizontal: size.width * 0.04),
           child: _buildSpotifyWidget(isDarkMode, size),
@@ -799,59 +906,434 @@ class _ProfileState extends State<Profile> {
         SizedBox(height: largerSpacing),
 
         // Posts Section
-        SizedBox(
-          height: size.width * 0.8,
-          child: ListView.builder(
-            padding: EdgeInsets.symmetric(horizontal: size.width * 0.04),
-            scrollDirection: Axis.horizontal,
-            itemCount: 6,
-            itemBuilder: (context, index) => GestureDetector(
-              onTap: () => _showPostOverlay(context, index, isDarkMode),
-              child: Hero(
-                tag: 'post_profile_$index',
-                child: Container(
-                  margin: EdgeInsets.only(right: size.width * 0.04),
-                  width: size.width * 0.55,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(20),
+        Padding(
+          padding: EdgeInsets.symmetric(horizontal: size.width * 0.04),
+          child: Text(
+            'Posts',
+            style: TextStyle(
+              color: isDarkMode ? Colors.white : Colors.black,
+              fontSize: size.width * 0.05,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ),
+        SizedBox(height: size.height * 0.01),
+        _buildPostsSection(isDarkMode, size),
+
+        SizedBox(height: largerSpacing),
+
+        // Snips Section
+        Padding(
+          padding: EdgeInsets.symmetric(horizontal: size.width * 0.04),
+          child: Text(
+            'Snips',
+            style: TextStyle(
+              color: isDarkMode ? Colors.white : Colors.black,
+              fontSize: size.width * 0.05,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ),
+        SizedBox(height: size.height * 0.01),
+        _buildSnipsSection(isDarkMode, size),
+
+        // Increase bottom padding to prevent cutoff
+        SizedBox(height: size.height * 0.12),
+      ],
+    );
+  }
+
+  Widget _buildPostsSection(bool isDarkMode, Size size) {
+    if (_isLoadingPosts) {
+      return Center(
+        child: Padding(
+          padding: EdgeInsets.symmetric(vertical: size.height * 0.05),
+          child: CircularProgressIndicator(
+            color: isDarkMode ? Colors.white : Colors.black,
+          ),
+        ),
+      );
+    }
+
+    if (_hasPostsError) {
+      return Center(
+        child: Padding(
+          padding: EdgeInsets.symmetric(vertical: size.height * 0.05),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                'Failed to load posts',
+                style: TextStyle(
+                  color: isDarkMode ? Colors.white70 : Colors.black54,
+                ),
+              ),
+              SizedBox(height: 8),
+              TextButton(
+                onPressed: _loadUserPosts,
+                child: Text('Retry'),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    if (_userPosts.isEmpty) {
+      return Center(
+        child: Padding(
+          padding: EdgeInsets.symmetric(vertical: size.height * 0.05),
+          child: Text(
+            'No posts yet',
+            style: TextStyle(
+              color: isDarkMode ? Colors.white70 : Colors.black54,
+            ),
+          ),
+        ),
+      );
+    }
+
+    // Calculate dimensions for horizontal scroll
+    final postWidth = size.width * 0.6;
+    final postHeight = postWidth * 1.2; // Slightly taller than wide for posts
+    final postSpacing = size.width * 0.04;
+
+    return SizedBox(
+      height: postHeight,
+      child: ListView.builder(
+        padding: EdgeInsets.only(
+          left: size.width * 0.04,
+          right: size.width * 0.04,
+        ),
+        scrollDirection: Axis.horizontal,
+        itemCount: _userPosts.length,
+        itemBuilder: (context, index) {
+          final post = _userPosts[index];
+          return Container(
+            margin: EdgeInsets.only(right: postSpacing),
+            width: postWidth,
+            child: _buildPostTile(
+              context: context,
+              post: post,
+              index: index,
+              isDarkMode: isDarkMode,
+              width: postWidth,
+              height: postHeight,
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildPostTile({
+    required BuildContext context,
+    required PostModel post,
+    required int index,
+    required bool isDarkMode,
+    required double width,
+    required double height,
+  }) {
+    return GestureDetector(
+      onTap: () => _showExpandedPostView(context, index),
+      child: Hero(
+        tag: 'post_${post.postId}',
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(16),
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              // Post image
+              Image.network(
+                post.media.source,
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) => Container(
+                  color: Colors.grey[800],
+                  child: const Icon(
+                    Icons.image_not_supported,
+                    color: Colors.white54,
                   ),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(19),
-                    child: AspectRatio(
-                      aspectRatio: 4 / 5,
-                      child: Image.asset(
-                        'assets/tempImages/posts/post${index + 1}.png',
-                        fit: BoxFit.cover,
-                      ),
+                ),
+              ),
+
+              // Gradient overlay for better visibility of icons
+              Positioned(
+                bottom: 0,
+                left: 0,
+                right: 0,
+                child: Container(
+                  height: height * 0.15,
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.bottomCenter,
+                      end: Alignment.topCenter,
+                      colors: [
+                        Colors.black.withValues(alpha: 179),
+                        Colors.transparent,
+                      ],
                     ),
                   ),
                 ),
               ),
+
+              // Like and comment counts
+              Positioned(
+                bottom: 8,
+                left: 8,
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.favorite,
+                      color: Colors.white,
+                      size: width * 0.06,
+                    ),
+                    SizedBox(width: 4),
+                    Text(
+                      post.likesCount.toString(),
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: width * 0.04,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    SizedBox(width: 12),
+                    Icon(
+                      Icons.chat_bubble,
+                      color: Colors.white,
+                      size: width * 0.06,
+                    ),
+                    SizedBox(width: 4),
+                    Text(
+                      post.commentsCount.toString(),
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: width * 0.04,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              // Post author name
+              Positioned(
+                top: 8,
+                left: 8,
+                child: Container(
+                  padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: Colors.black.withValues(alpha: 128),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Text(
+                    post.authorProfile.name,
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: width * 0.04,
+                      fontWeight: FontWeight.bold,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showExpandedPostView(BuildContext context, int initialIndex) {
+    showDialog(
+      context: context,
+      useSafeArea: true,
+      barrierColor: Colors.black87,
+      builder: (context) => ExpandedPostView(
+        posts: _userPosts,
+        initialIndex: initialIndex,
+        isDarkMode: Theme.of(context).brightness == Brightness.dark,
+      ),
+    );
+  }
+
+  Widget _buildSnipsSection(bool isDarkMode, Size size) {
+    if (_isLoadingSnips) {
+      return Center(
+        child: CircularProgressIndicator(
+          color: isDarkMode ? Colors.white : Colors.black,
+        ),
+      );
+    }
+
+    if (_hasSnipsError) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              'Failed to load snips',
+              style: TextStyle(
+                color: isDarkMode ? Colors.white70 : Colors.black54,
+              ),
+            ),
+            SizedBox(height: 8),
+            TextButton(
+              onPressed: _loadUserSnips,
+              child: Text('Retry'),
+            ),
+          ],
+        ),
+      );
+    }
+
+    if (_userSnips.isEmpty) {
+      return Center(
+        child: Padding(
+          padding: EdgeInsets.all(size.width * 0.04),
+          child: Text(
+            'No snips yet',
+            style: TextStyle(
+              color: isDarkMode ? Colors.white70 : Colors.black54,
             ),
           ),
         ),
+      );
+    }
 
-        SizedBox(height: largerSpacing),
+    // Calculate aspect ratio based on the SnipsScreen implementation
+    const aspectRatio = 9 / 16; // Standard vertical video aspect ratio
+    final snipWidth = size.width * 0.45;
+    final snipHeight = snipWidth / aspectRatio;
 
-        // Reels Section
-        SizedBox(
-          height: size.width * .9,
-          child: ListView.builder(
-            padding: EdgeInsets.symmetric(horizontal: size.width * 0.04),
-            scrollDirection: Axis.horizontal,
-            itemCount: 6,
-            itemBuilder: (context, index) =>
-                _buildReelThumbnail(index, size, isDarkMode),
-          ),
+    return SizedBox(
+      height: snipHeight + 20, // Add some padding
+      child: ListView.builder(
+        padding: EdgeInsets.only(
+          left: size.width * 0.04,
+          right: size.width * 0.04,
+          top: 0,
         ),
+        scrollDirection: Axis.horizontal,
+        itemCount: _userSnips.length,
+        itemBuilder: (context, index) {
+          final snip = _userSnips[index];
+          return _buildSnipTile(
+            context: context,
+            snip: snip,
+            index: index,
+            isDarkMode: isDarkMode,
+            width: snipWidth,
+            height: snipHeight,
+          );
+        },
+      ),
+    );
+  }
 
-        // Snips Section
-        SizedBox(height: largerSpacing),
-        _buildSnipsSection(isDarkMode, size),
+  // Custom SnipTile widget for profile view
+  Widget _buildSnipTile({
+    required BuildContext context,
+    required SnipModel snip,
+    required int index,
+    required bool isDarkMode,
+    required double width,
+    required double height,
+  }) {
+    return GestureDetector(
+      onTap: () => _showExpandedSnipView(context, index),
+      onDoubleTap: () => _toggleLike(snip),
+      child: Container(
+        margin: EdgeInsets.only(right: width * 0.1),
+        width: width,
+        height: height,
+        child: Stack(
+          children: [
+            // Hero widget for animation
+            Hero(
+              tag: 'snip_${snip.snipId}',
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(12),
+                child: SnipCard(
+                  snip: snip,
+                  isProfileView: true,
+                  customWidth: width,
+                  customHeight: height,
+                  isVisible: false, // Don't autoplay in profile view
+                  autoPlay: false, // Ensure videos don't play in small view
+                ),
+              ),
+            ),
 
-        // Increase bottom padding to prevent cutoff
-        SizedBox(height: size.height * 0.12), // Increased from 0.02 to 0.12
-      ],
+            // Like count overlay
+            Positioned(
+              top: 8,
+              right: 8,
+              child: Container(
+                padding: const EdgeInsets.all(6),
+                decoration: BoxDecoration(
+                  color: Colors.black.withValues(alpha: 128),
+                  shape: BoxShape.circle,
+                ),
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    Icon(
+                      Icons.favorite,
+                      color: _isSnipLiked(snip) ? Colors.red : Colors.white,
+                      size: width * 0.1,
+                    ),
+                    if (snip.likesCount > 0)
+                      Text(
+                        snip.likesCount.toString(),
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: width * 0.05,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // Track liked snips
+  final Set<String> _likedSnipIds = {};
+
+  bool _isSnipLiked(SnipModel snip) {
+    return _likedSnipIds.contains(snip.snipId);
+  }
+
+  void _toggleLike(SnipModel snip) {
+    // Add haptic feedback for like/unlike action
+    HapticFeedback.mediumImpact();
+
+    setState(() {
+      if (_isSnipLiked(snip)) {
+        _likedSnipIds.remove(snip.snipId);
+      } else {
+        _likedSnipIds.add(snip.snipId);
+      }
+    });
+    // TODO: Implement API call to like/unlike snip
+  }
+
+  void _showExpandedSnipView(BuildContext context, int initialIndex) {
+    showDialog(
+      context: context,
+      useSafeArea: true,
+      barrierColor: Colors.black87,
+      builder: (context) => ExpandedSnipView(
+        snips: _userSnips,
+        initialIndex: initialIndex,
+        onLikeToggle: _toggleLike,
+        likedSnipIds: _likedSnipIds,
+      ),
     );
   }
 
@@ -984,465 +1466,312 @@ class _ProfileState extends State<Profile> {
       debugPrint('Error picking/cropping image: $error');
     }
   }
+}
 
-  void _showPostOverlay(BuildContext context, int index, bool isDarkMode) {
-    final Map<String, dynamic> postData = {
-      'image': 'assets/tempImages/posts/post${index + 1}.png',
-      'isVideo': false,
-      'caption': '',
-      'likes': 0,
-      'comments': 0,
-      'timeAgo': '',
-      'userImage': userData['profileImage'],
-      'userName': userData['name'],
-      'location': userData['location'],
-    };
+// New widget for expanded snip view with horizontal swiping
+class ExpandedSnipView extends StatefulWidget {
+  final List<SnipModel> snips;
+  final int initialIndex;
+  final Function(SnipModel) onLikeToggle;
+  final Set<String> likedSnipIds;
 
-    showDialog(
-      context: context,
-      barrierColor: Colors.black.withValues(alpha: 100),
-      builder: (context) {
-        final size = MediaQuery.of(context).size;
-        return Dialog(
-          backgroundColor: Colors.transparent,
-          insetPadding: EdgeInsets.zero,
-          child: GestureDetector(
-            onHorizontalDragEnd: (details) {
-              if (details.primaryVelocity! > 0 && index > 0) {
-                Navigator.pop(context);
-                _showPostOverlay(context, index - 1, isDarkMode);
-              } else if (details.primaryVelocity! < 0 && index < 5) {
-                Navigator.pop(context);
-                _showPostOverlay(context, index + 1, isDarkMode);
-              }
-            },
-            child: Stack(
-              alignment: Alignment.center,
-              children: [
-                // Post Card with custom more button handler
-                SizedBox(
-                  width: size.width * 0.95,
-                  height: size.width * 1.4,
-                  child: PostCard(
-                    key: ValueKey('post_${postData['post_id']}'),
-                    post: PostModel.fromJson(postData),
-                    isDarkMode: isDarkMode,
-                  ),
-                ),
+  const ExpandedSnipView({
+    Key? key,
+    required this.snips,
+    required this.initialIndex,
+    required this.onLikeToggle,
+    required this.likedSnipIds,
+  }) : super(key: key);
 
-                // Navigation indicators
-                if (index > 0)
-                  Positioned(
-                    left: size.width * 0.02,
-                    child: Icon(
-                      Icons.arrow_back_ios,
-                      color: Colors.white.withValues(alpha: 128),
-                      size: 24,
-                    ),
-                  ),
-                if (index < 5)
-                  Positioned(
-                    right: size.width * 0.02,
-                    child: Icon(
-                      Icons.arrow_forward_ios,
-                      color: Colors.white.withValues(alpha: 128),
-                      size: 24,
-                    ),
-                  ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
+  @override
+  State<ExpandedSnipView> createState() => _ExpandedSnipViewState();
+}
+
+class _ExpandedSnipViewState extends State<ExpandedSnipView> {
+  late PageController _pageController;
+  late int _currentIndex;
+
+  @override
+  void initState() {
+    super.initState();
+    _currentIndex = widget.initialIndex;
+    _pageController = PageController(initialPage: _currentIndex);
   }
 
-  // Update the reels section
-  Widget _buildReelThumbnail(int index, Size size, bool isDarkMode) {
-    final String videoPath = 'assets/video/${(index % 3) + 1}.mp4';
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+  }
 
-    // Create a temporary SnipModel for demonstration
-    final snip = SnipModel(
-      snipId: 'snip_$index',
-      video: VideoContent(
-        source: videoPath,
-        thumbnail: 'assets/tempImages/reels/reel${index + 1}.png',
-      ),
-      description: '',
-      timestamp: DateTime.now(),
-      likesCount: 0,
-      commentsCount: 0,
-      authorProfileId: userData['profileId'] ?? '',
-      authorProfile: UserModel(
-        profileId: userData['profileId'] ?? '',
-        name: userData['name'],
-        profileImage: userData['profileImage'],
-      ),
-    );
+  void _handleLike(SnipModel snip) {
+    // Add haptic feedback for like/unlike action in expanded view
+    HapticFeedback.mediumImpact();
+    widget.onLikeToggle(snip);
+  }
 
-    return GestureDetector(
-      onTap: () => _showReelOverlay(context, index, isDarkMode),
-      child: Container(
-        margin: EdgeInsets.only(right: size.width * 0.04),
-        width: size.width * 0.55,
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(20),
-        ),
+  @override
+  Widget build(BuildContext context) {
+    final size = MediaQuery.of(context).size;
+    const aspectRatio = 9 / 16;
+
+    // Calculate dimensions that maintain aspect ratio but don't exceed screen
+    double dialogWidth = size.width * 0.9;
+    double dialogHeight = dialogWidth / aspectRatio;
+
+    // Ensure dialog doesn't exceed screen height
+    if (dialogHeight > size.height * 0.8) {
+      dialogHeight = size.height * 0.8;
+      dialogWidth = dialogHeight * aspectRatio;
+    }
+
+    return Dialog(
+      backgroundColor: Colors.transparent,
+      insetPadding: EdgeInsets.symmetric(
+        horizontal: (size.width - dialogWidth) / 2,
+        vertical: (size.height - dialogHeight) / 2,
+      ),
+      child: SizedBox(
+        width: dialogWidth,
+        height: dialogHeight,
         child: Stack(
           children: [
-            // Thumbnail
-            ClipRRect(
-              borderRadius: BorderRadius.circular(19),
-              child: AspectRatio(
-                aspectRatio: 9 / 16,
-                child: Image.asset(
-                  snip.video.thumbnail ?? 'assets/images/placeholder.png',
-                  fit: BoxFit.cover,
-                ),
-              ),
+            // PageView for horizontal swiping
+            PageView.builder(
+              controller: _pageController,
+              onPageChanged: (index) {
+                setState(() => _currentIndex = index);
+              },
+              itemCount: widget.snips.length,
+              itemBuilder: (context, index) {
+                final snip = widget.snips[index];
+                return Hero(
+                  tag: 'snip_${snip.snipId}',
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(16),
+                    child: SnipCard(
+                      snip: snip,
+                      isProfileView: false,
+                      isVisible:
+                          _currentIndex == index, // Only visible when current
+                      autoPlay: _currentIndex == index, // Autoplay when current
+                      onLike: () => _handleLike(snip),
+                      onComment: () => _showCommentsSheet(context, snip),
+                      onShare: () => _showShareSheet(context, snip),
+                    ),
+                  ),
+                );
+              },
             ),
-            // Play icon overlay
-            Center(
-              child: Container(
-                padding: EdgeInsets.all(size.width * 0.02),
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: Colors.black.withValues(alpha: 100),
-                ),
-                child: Icon(
-                  Icons.play_circle_outline,
-                  color: Colors.white,
-                  size: size.width * 0.1,
-                ),
-              ),
-            ),
-            // Duration overlay
+
+            // Close button
             Positioned(
-              bottom: 10,
+              top: 10,
               right: 10,
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: Colors.black.withValues(alpha: 150),
-                  borderRadius: BorderRadius.circular(4),
-                ),
-                child: Text(
-                  '${snip.video.source}s',
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 12,
+              child: GestureDetector(
+                onTap: () => Navigator.pop(context),
+                child: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Colors.black.withValues(alpha: 128),
+                    shape: BoxShape.circle,
                   ),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  void _showReelOverlay(BuildContext context, int index, bool isDarkMode) {
-    final String videoPath = 'assets/video/${(index % 3) + 1}.mp4';
-
-    // Create a temporary SnipModel for demonstration
-    final snip = SnipModel(
-      snipId: 'snip_$index',
-      video: VideoContent(
-        source: videoPath,
-        thumbnail: 'assets/tempImages/reels/reel${index + 1}.png',
-      ),
-      description: '',
-      timestamp: DateTime.now(),
-      likesCount: 0,
-      commentsCount: 0,
-      authorProfileId: userData['profileId'] ?? '',
-      authorProfile: UserModel(
-        profileId: userData['profileId'] ?? '',
-        name: userData['name'],
-        profileImage: userData['profileImage'],
-      ),
-    );
-
-    showDialog(
-      context: context,
-      barrierDismissible: true,
-      barrierColor: Colors.black.withValues(alpha: 100),
-      builder: (context) {
-        final size = MediaQuery.of(context).size;
-        return Dialog(
-          backgroundColor: Colors.transparent,
-          insetPadding: EdgeInsets.symmetric(
-            horizontal: size.width * 0.05,
-            vertical: size.height * 0.1,
-          ),
-          child: Stack(
-            alignment: Alignment.center,
-            children: [
-              // Video Container
-              Container(
-                width: size.width * 0.9,
-                height: size.height * 0.77,
-                decoration: BoxDecoration(
-                  color: Colors.black,
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(20),
-                  child: ReelCard(
-                    snip: snip,
-                    isDarkMode: isDarkMode,
-                    index: index,
-                    onNext: index < 5
-                        ? () {
-                            Navigator.pop(context);
-                            _showReelOverlay(context, index + 1, isDarkMode);
-                          }
-                        : null,
-                    onPrevious: index > 0
-                        ? () {
-                            Navigator.pop(context);
-                            _showReelOverlay(context, index - 1, isDarkMode);
-                          }
-                        : null,
-                  ),
-                ),
-              ),
-              // Close button
-              Positioned(
-                top: 10,
-                right: 10,
-                child: IconButton(
-                  icon: const Icon(
+                  child: const Icon(
                     Icons.close,
                     color: Colors.white,
-                    size: 30,
-                  ),
-                  onPressed: () => Navigator.pop(context),
-                ),
-              ),
-              // Navigation indicators
-              if (index > 0)
-                Positioned(
-                  left: size.width * 0.02,
-                  child: Icon(
-                    Icons.arrow_back_ios,
-                    color: Colors.white.withValues(alpha: 128),
                     size: 24,
                   ),
                 ),
-              if (index < 5)
-                Positioned(
-                  right: size.width * 0.02,
-                  child: Icon(
-                    Icons.arrow_forward_ios,
-                    color: Colors.white.withValues(alpha: 128),
-                    size: 24,
-                  ),
-                ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _buildSnipsSection(bool isDarkMode, Size size) {
-    if (_isLoadingSnips) {
-      return Center(
-        child: CircularProgressIndicator(
-          color: isDarkMode ? Colors.white : Colors.black,
-        ),
-      );
-    }
-
-    if (_hasError) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(
-              'Failed to load snips',
-              style: TextStyle(
-                color: isDarkMode ? Colors.white70 : Colors.black54,
               ),
             ),
-            SizedBox(height: 8),
-            TextButton(
-              onPressed: _loadUserSnips,
-              child: Text('Retry'),
-            ),
-          ],
-        ),
-      );
-    }
 
-    if (_userSnips.isEmpty) {
-      return Center(
-        child: Text(
-          'No snips yet',
-          style: TextStyle(
-            color: isDarkMode ? Colors.white70 : Colors.black54,
-          ),
-        ),
-      );
-    }
-
-    return SizedBox(
-      height: size.width * 1.0,
-      child: ListView.builder(
-        padding: EdgeInsets.only(
-          left: size.width * 0.04,
-          right: size.width * 0.04,
-          top: 0,
-        ),
-        scrollDirection: Axis.horizontal,
-        itemCount: _userSnips.length,
-        itemBuilder: (context, index) {
-          final snip = _userSnips[index];
-          return GestureDetector(
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => SnipTab(
-                      // initialSnipId: snip.snipId,
-                      ),
-                ),
-              );
-            },
-            child: Container(
-              margin: EdgeInsets.only(right: size.width * 0.04),
-              width: size.width * 0.45,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(
-                  color: isDarkMode
-                      ? Colors.white.withValues(alpha: 51)
-                      : Colors.black.withValues(alpha: 51),
-                  width: 1,
-                ),
-              ),
-              child: Stack(
-                children: [
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(19),
-                    child: AspectRatio(
-                      aspectRatio: 9 / 16,
-                      child: Stack(
-                        fit: StackFit.expand,
-                        children: [
-                          if (snip.video.thumbnail != null)
-                            Image.network(
-                              snip.video.thumbnail!,
-                              fit: BoxFit.cover,
-                              errorBuilder: (context, error, stackTrace) {
-                                return Container(
-                                  color: Colors.black,
-                                  child: Icon(
-                                    Icons.play_circle_outline,
-                                    color: Colors.white,
-                                    size: 48,
-                                  ),
-                                );
-                              },
-                            )
-                          else
-                            Container(
-                              color: Colors.black,
-                              child: Icon(
-                                Icons.play_circle_outline,
-                                color: Colors.white,
-                                size: 48,
-                              ),
-                            ),
-
-                          // Play icon overlay
-                          Center(
-                            child: Container(
-                              padding: EdgeInsets.all(8),
-                              decoration: BoxDecoration(
-                                color: Colors.black.withValues(alpha: 50),
-                                shape: BoxShape.circle,
-                              ),
-                              child: Icon(
-                                Icons.play_arrow,
-                                color: Colors.white,
-                                size: 32,
-                              ),
-                            ),
-                          ),
-
-                          // Stats overlay at bottom
-                          Positioned(
-                            bottom: 0,
-                            left: 0,
-                            right: 0,
-                            child: Container(
-                              padding: EdgeInsets.symmetric(
-                                vertical: 8,
-                                horizontal: 12,
-                              ),
-                              decoration: BoxDecoration(
-                                gradient: LinearGradient(
-                                  begin: Alignment.bottomCenter,
-                                  end: Alignment.topCenter,
-                                  colors: [
-                                    Colors.black.withValues(alpha: 80),
-                                    Colors.transparent,
-                                  ],
-                                ),
-                              ),
-                              child: Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceEvenly,
-                                children: [
-                                  Row(
-                                    children: [
-                                      Icon(
-                                        Icons.favorite,
-                                        color: Colors.white,
-                                        size: 16,
-                                      ),
-                                      SizedBox(width: 4),
-                                      Text(
-                                        '${snip.likesCount}',
-                                        style: TextStyle(
-                                          color: Colors.white,
-                                          fontSize: 12,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                  Row(
-                                    children: [
-                                      Icon(
-                                        Icons.comment,
-                                        color: Colors.white,
-                                        size: 16,
-                                      ),
-                                      SizedBox(width: 4),
-                                      Text(
-                                        '${snip.commentsCount}',
-                                        style: TextStyle(
-                                          color: Colors.white,
-                                          fontSize: 12,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ],
+            // Navigation indicators
+            if (widget.snips.length > 1)
+              Positioned(
+                bottom: 10,
+                left: 0,
+                right: 0,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: List.generate(
+                    widget.snips.length,
+                    (index) => Container(
+                      width: 8,
+                      height: 8,
+                      margin: const EdgeInsets.symmetric(horizontal: 4),
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: _currentIndex == index
+                            ? Colors.white
+                            : Colors.white.withValues(alpha: 128),
                       ),
                     ),
                   ),
-                ],
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showCommentsSheet(BuildContext context, SnipModel snip) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => CommentsSheet(
+        isDarkMode: Theme.of(context).brightness == Brightness.dark,
+        contentId: snip.snipId,
+        contentType: 'snip',
+        commentIds: snip.commentIds,
+        authorProfile: snip.authorProfile,
+        screenHeight: MediaQuery.of(context).size.height,
+        screenWidth: MediaQuery.of(context).size.width,
+      ),
+    );
+  }
+
+  void _showShareSheet(BuildContext context, SnipModel snip) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => ShareSheet(
+        isDarkMode: Theme.of(context).brightness == Brightness.dark,
+        post: snip.toJson(),
+        screenWidth: MediaQuery.of(context).size.width,
+      ),
+    );
+  }
+}
+
+// New widget for expanded post view with horizontal swiping
+class ExpandedPostView extends StatefulWidget {
+  final List<PostModel> posts;
+  final int initialIndex;
+  final bool isDarkMode;
+
+  const ExpandedPostView({
+    Key? key,
+    required this.posts,
+    required this.initialIndex,
+    required this.isDarkMode,
+  }) : super(key: key);
+
+  @override
+  State<ExpandedPostView> createState() => _ExpandedPostViewState();
+}
+
+class _ExpandedPostViewState extends State<ExpandedPostView> {
+  late PageController _pageController;
+  late int _currentIndex;
+
+  @override
+  void initState() {
+    super.initState();
+    _currentIndex = widget.initialIndex;
+    _pageController = PageController(initialPage: _currentIndex);
+  }
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final size = MediaQuery.of(context).size;
+
+    // Calculate dimensions that maintain aspect ratio but don't exceed screen
+    double dialogWidth = size.width * 0.9;
+    double dialogHeight = size.height * 0.8;
+
+    return Dialog(
+      backgroundColor: Colors.transparent,
+      insetPadding: EdgeInsets.symmetric(
+        horizontal: (size.width - dialogWidth) / 2,
+        vertical: (size.height - dialogHeight) / 2,
+      ),
+      child: SizedBox(
+        width: dialogWidth,
+        height: dialogHeight,
+        child: Stack(
+          children: [
+            // PageView for horizontal swiping
+            PageView.builder(
+              controller: _pageController,
+              onPageChanged: (index) {
+                setState(() => _currentIndex = index);
+              },
+              itemCount: widget.posts.length,
+              itemBuilder: (context, index) {
+                final post = widget.posts[index];
+                return Hero(
+                  tag: 'post_${post.postId}',
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(16),
+                    child: PostCard(
+                      post: post,
+                      isDarkMode: widget.isDarkMode,
+                      isProfileView: false,
+                      showProfileImage: true,
+                      onPostTap:
+                          () {}, // No action needed when tapping in expanded view
+                    ),
+                  ),
+                );
+              },
+            ),
+
+            // Close button
+            Positioned(
+              top: 10,
+              right: 10,
+              child: GestureDetector(
+                onTap: () => Navigator.pop(context),
+                child: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Colors.black.withValues(alpha: 128),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.close,
+                    color: Colors.white,
+                    size: 24,
+                  ),
+                ),
               ),
             ),
-          );
-        },
+
+            // Navigation indicators
+            if (widget.posts.length > 1)
+              Positioned(
+                bottom: 10,
+                left: 0,
+                right: 0,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: List.generate(
+                    widget.posts.length,
+                    (index) => Container(
+                      width: 8,
+                      height: 8,
+                      margin: const EdgeInsets.symmetric(horizontal: 4),
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: _currentIndex == index
+                            ? Colors.white
+                            : Colors.white.withValues(alpha: 128),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+          ],
+        ),
       ),
     );
   }

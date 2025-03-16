@@ -178,7 +178,7 @@ class NavigationControllerState extends State<NavigationController>
                       ),
                     ),
 
-                    // Floating SOS button
+                    // Floating SOS buttonr
                     Positioned(
                       top: -(size.height * 0.02),
                       child: _buildSOSButton(),

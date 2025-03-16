@@ -115,7 +115,7 @@ class _SwipeScreenState extends State<SwipeScreen>
       case CardSwiperDirection.top:
         Navigator.push(
           context,
-          MaterialPageRoute(builder: (context) => UserProfile()),
+          MaterialPageRoute(builder: (context) => Profile()), //UserProfile
         ).then((_) {
           // Keep same profile when returning from profile view
           setState(() {

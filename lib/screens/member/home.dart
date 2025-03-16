@@ -8,7 +8,6 @@ import 'package:flutter_frontend/screens/barrel.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/foundation.dart';
-import '../../models/post_model.dart';
 
 class HomeTab extends StatefulWidget {
   const HomeTab({super.key});
@@ -54,6 +53,7 @@ class _HomeTabState extends State<HomeTab> {
     super.initState();
     _scrollController.addListener(_onScroll);
     _loadInitialPosts();
+    _checkAuthentication();
   }
 
   @override
@@ -595,6 +595,20 @@ class _HomeTabState extends State<HomeTab> {
       }
     } catch (error) {
       debugPrint('Error picking/cropping image: $error');
+    }
+  }
+
+  Future<void> _checkAuthentication() async {
+    final prefs = await SharedPreferences.getInstance();
+    final uuid = prefs.getString('user_uuid');
+    if (uuid == null) {
+      debugPrint('User not authenticated, navigating to login');
+      if (mounted) {
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(builder: (context) => const LoginScreen()),
+          (route) => false,
+        );
+      }
     }
   }
 }

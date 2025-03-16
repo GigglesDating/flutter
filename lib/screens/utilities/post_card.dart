@@ -5,13 +5,16 @@ import 'package:cached_network_image/cached_network_image.dart';
 import '../barrel.dart';
 import 'dart:async';
 import 'dart:ui';
-import '../../models/post_model.dart';
 
 class PostCard extends StatefulWidget {
   final PostModel post;
   final bool isDarkMode;
   final VoidCallback? onMoreTap;
   final bool showProfileImage;
+  final bool isProfileView;
+  final VoidCallback? onPostTap;
+  final double? customWidth;
+  final double? customHeight;
 
   const PostCard({
     super.key,
@@ -19,6 +22,10 @@ class PostCard extends StatefulWidget {
     required this.isDarkMode,
     this.onMoreTap,
     this.showProfileImage = true,
+    this.isProfileView = false,
+    this.onPostTap,
+    this.customWidth,
+    this.customHeight,
   });
 
   @override
@@ -33,7 +40,6 @@ class _PostCardState extends State<PostCard>
   late Animation<double> _animation;
   bool _showHeart = false;
   Timer? _heartTimer;
-  bool _isImageLoaded = false;
   CancellationToken? _imageCancellationToken;
 
   @override
@@ -67,8 +73,6 @@ class _PostCardState extends State<PostCard>
     _imageCancellationToken?.cancel();
     _imageCancellationToken = CancellationToken();
 
-    setState(() => _isImageLoaded = false);
-
     try {
       // Preload main post image
       if (widget.post.media.source.isNotEmpty) {
@@ -98,10 +102,6 @@ class _PostCardState extends State<PostCard>
             debugPrint('Error preloading profile image: $e');
           },
         );
-      }
-
-      if (mounted && !_imageCancellationToken!.isCancelled) {
-        setState(() => _isImageLoaded = true);
       }
     } catch (e) {
       debugPrint('Error in preloading images: $e');
@@ -162,11 +162,16 @@ class _PostCardState extends State<PostCard>
     final screenWidth = MediaQuery.of(context).size.width;
     final screenHeight = MediaQuery.of(context).size.height;
 
+    // Use custom dimensions if provided, otherwise use default
+    final cardWidth = widget.customWidth ?? screenWidth * 0.95;
+    final cardHeight = widget.customHeight ?? screenWidth * 1.4;
+
     return AnimatedContainer(
       duration: const Duration(milliseconds: 300),
       margin: EdgeInsets.only(
-        bottom: screenHeight * 0.02,
-        top: screenHeight * 0.02,
+        bottom: widget.isProfileView ? 0 : screenHeight * 0.02,
+        top: widget.isProfileView ? 0 : screenHeight * 0.02,
+        right: widget.isProfileView ? screenWidth * 0.05 : 0,
       ),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(15),
@@ -187,343 +192,350 @@ class _PostCardState extends State<PostCard>
           ),
         ],
       ),
-      width: screenWidth * 0.95,
-      height: screenWidth * 1.4,
-      child: Stack(
-        clipBehavior: Clip.none,
-        children: [
-          // Center the main post container
-          Center(
-            child: Hero(
-              tag: 'post_${widget.post.postId}',
-              child: GestureDetector(
-                behavior: HitTestBehavior.opaque,
-                onTap: () =>
-                    setState(() => _showTextOverlay = !_showTextOverlay),
-                onDoubleTap: _handleDoubleTap,
-                child: Container(
-                  width: screenWidth * 0.95,
-                  height: screenWidth * 1.4,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(15),
-                  ),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(15),
-                    child: CachedNetworkImage(
-                      imageUrl: widget.post.media.source,
-                      fit: BoxFit.cover,
-                      placeholder: (context, url) => const Center(
-                        child: CircularProgressIndicator(),
-                      ),
-                      errorWidget: (context, url, error) {
-                        debugPrint('Error loading image: $error');
-                        return Container(
-                          color: Colors.grey[300],
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              const Icon(Icons.error_outline, size: 40),
-                              const SizedBox(height: 8),
-                              Text(
-                                'Failed to load image',
-                                style: TextStyle(
-                                  color: widget.isDarkMode
-                                      ? Colors.white
-                                      : Colors.black,
-                                ),
-                              ),
-                              TextButton(
-                                onPressed: () {
-                                  // Force image reload
-                                  CachedNetworkImage.evictFromCache(url);
-                                  setState(() {});
-                                },
-                                child: const Text('Retry'),
-                              ),
-                            ],
-                          ),
-                        );
-                      },
-                      httpHeaders: const {
-                        'Accept': 'image/*',
-                        'Cache-Control': 'max-age=3600',
-                      },
-                      memCacheWidth: (screenWidth * 0.95).toInt(),
-                      memCacheHeight: (screenWidth * 1.4).toInt(),
-                      maxWidthDiskCache: 1080,
-                      maxHeightDiskCache: 1920,
-                      cacheKey: '${widget.post.media.source}_post_main',
+      width: cardWidth,
+      height: cardHeight,
+      child: GestureDetector(
+        onTap: widget.onPostTap,
+        child: Stack(
+          clipBehavior: Clip.none,
+          children: [
+            // Center the main post container
+            Center(
+              child: Hero(
+                tag: 'post_${widget.post.postId}',
+                child: GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  onTap: widget.isProfileView
+                      ? widget.onPostTap
+                      : () =>
+                          setState(() => _showTextOverlay = !_showTextOverlay),
+                  onDoubleTap: _handleDoubleTap,
+                  child: Container(
+                    width: cardWidth,
+                    height: cardHeight,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(15),
                     ),
-                  ),
-                ),
-              ),
-            ),
-          ),
-
-          // Overlays with RepaintBoundary for better performance
-          if (_showTextOverlay)
-            RepaintBoundary(
-              child: Stack(
-                children: [
-                  // Profile Picture and Stats Overlay
-                  if (widget.showProfileImage)
-                    Positioned(
-                      top: screenWidth * 0.04,
-                      left: screenWidth * 0.06,
-                      child: Row(
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.all(2),
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: widget.isDarkMode
-                                  ? Colors.black.withAlpha(230)
-                                  : Colors.white.withAlpha(230),
-                              border: Border.all(
-                                color: widget.isDarkMode
-                                    ? Colors.white.withAlpha(38)
-                                    : Colors.black.withAlpha(26),
-                                width: 1,
-                              ),
-                            ),
-                            child: ClipRRect(
-                              borderRadius: BorderRadius.circular(50),
-                              child: CachedNetworkImage(
-                                imageUrl:
-                                    widget.post.authorProfile.profileImage,
-                                width: screenWidth * 0.12,
-                                height: screenWidth * 0.12,
-                                fit: BoxFit.cover,
-                                memCacheWidth: (screenWidth * 0.24).toInt(),
-                                memCacheHeight: (screenWidth * 0.24).toInt(),
-                                maxWidthDiskCache: 300,
-                                maxHeightDiskCache: 300,
-                                cacheKey:
-                                    '${widget.post.authorProfile.profileImage}_post_profile',
-                                placeholder: (context, url) =>
-                                    CircularProgressIndicator(
-                                  color: widget.isDarkMode
-                                      ? Colors.white
-                                      : Colors.black,
-                                  strokeWidth: 2,
-                                ),
-                                errorWidget: (context, url, error) =>
-                                    const Icon(Icons.person),
-                                httpHeaders: const {
-                                  'Accept': 'image/*',
-                                  'Cache-Control': 'max-age=3600',
-                                },
-                              ),
-                            ),
-                          ),
-                          SizedBox(width: screenWidth * 0.03),
-                          Container(
-                            padding: EdgeInsets.symmetric(
-                              horizontal: screenWidth * 0.03,
-                              vertical: screenWidth * 0.015,
-                            ),
-                            decoration: BoxDecoration(
-                              color: widget.isDarkMode
-                                  ? Colors.black.withAlpha(230)
-                                  : Colors.white.withAlpha(230),
-                              borderRadius: BorderRadius.circular(20),
-                              border: Border.all(
-                                color: widget.isDarkMode
-                                    ? Colors.white.withAlpha(38)
-                                    : Colors.black.withAlpha(26),
-                                width: 1,
-                              ),
-                            ),
-                            child: Row(
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(15),
+                      child: CachedNetworkImage(
+                        imageUrl: widget.post.media.source,
+                        fit: BoxFit.cover,
+                        placeholder: (context, url) => const Center(
+                          child: CircularProgressIndicator(),
+                        ),
+                        errorWidget: (context, url, error) {
+                          debugPrint('Error loading image: $error');
+                          return Container(
+                            color: Colors.grey[300],
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
                               children: [
+                                const Icon(Icons.error_outline, size: 40),
+                                const SizedBox(height: 8),
                                 Text(
-                                  '${widget.post.likesCount} likes',
+                                  'Failed to load image',
                                   style: TextStyle(
                                     color: widget.isDarkMode
                                         ? Colors.white
                                         : Colors.black,
-                                    fontSize: screenWidth * 0.035,
                                   ),
                                 ),
-                                SizedBox(width: screenWidth * 0.02),
-                                Text(
-                                  _getTimeAgo(widget.post.timestamp),
-                                  style: TextStyle(
-                                    color: widget.isDarkMode
-                                        ? Colors.white70
-                                        : Colors.black54,
-                                    fontSize: 14,
-                                  ),
+                                TextButton(
+                                  onPressed: () {
+                                    // Force image reload
+                                    CachedNetworkImage.evictFromCache(url);
+                                    setState(() {});
+                                  },
+                                  child: const Text('Retry'),
                                 ),
                               ],
                             ),
-                          ),
-                        ],
+                          );
+                        },
+                        httpHeaders: const {
+                          'Accept': 'image/*',
+                          'Cache-Control': 'max-age=3600',
+                        },
+                        memCacheWidth: (cardWidth).toInt(),
+                        memCacheHeight: (cardHeight).toInt(),
+                        maxWidthDiskCache: 1080,
+                        maxHeightDiskCache: 1920,
+                        cacheKey: '${widget.post.media.source}_post_main',
                       ),
                     ),
-
-                  // Description Overlay (at bottom)
-                  if (_showTextOverlay && _hasContent)
-                    Positioned(
-                      bottom: 0,
-                      left: 0,
-                      right: 0,
-                      child: Container(
-                        padding: EdgeInsets.symmetric(
-                          horizontal: screenWidth * 0.04,
-                          vertical: screenWidth * 0.03,
-                        ),
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            begin: Alignment.topCenter,
-                            end: Alignment.bottomCenter,
-                            colors: [
-                              Colors.transparent,
-                              Colors.black.withAlpha(77),
-                              Colors.black.withAlpha(179),
-                            ],
-                          ),
-                          borderRadius: BorderRadius.circular(15),
-                        ),
-                        child: Text(
-                          widget.post.description,
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: screenWidth * 0.04,
-                          ),
-                        ),
-                      ),
-                    ),
-                ],
+                  ),
+                ),
               ),
             ),
 
-          // Action buttons with RepaintBoundary
-          Positioned(
-            right: screenWidth * 0.04,
-            bottom: screenWidth * 0.15,
-            child: RepaintBoundary(
-              child: Container(
-                padding: EdgeInsets.symmetric(
-                  horizontal: screenWidth * 0.018,
-                  vertical: screenWidth * 0.025,
-                ),
-                decoration: BoxDecoration(
-                  color: widget.isDarkMode
-                      ? Colors.black.withAlpha(230)
-                      : Colors.white.withAlpha(230),
-                  borderRadius: BorderRadius.circular(25),
-                  border: Border.all(
-                    color: widget.isDarkMode
-                        ? Colors.white.withAlpha(38)
-                        : Colors.black.withAlpha(26),
-                    width: 1,
-                  ),
-                ),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
+            // Overlays with RepaintBoundary for better performance
+            if (_showTextOverlay)
+              RepaintBoundary(
+                child: Stack(
                   children: [
-                    _buildActionButton(
-                      iconPath: 'assets/icons/feed/like.svg',
-                      color: isLiked
-                          ? Colors.red
-                          : (widget.isDarkMode
-                              ? Colors.white.withAlpha(204)
-                              : Colors.black.withAlpha(204)),
-                      onTap: () {
-                        HapticFeedback.lightImpact();
-                        setState(() => isLiked = !isLiked);
-                      },
-                    ),
-                    SizedBox(height: screenHeight * 0.015),
-                    _buildActionButton(
-                      iconPath: 'assets/icons/feed/comment.svg',
-                      onTap: _showCommentsSheet,
-                      color: widget.isDarkMode
-                          ? Colors.white.withAlpha(204)
-                          : Colors.black.withAlpha(204),
-                    ),
-                    SizedBox(height: screenHeight * 0.015),
-                    _buildActionButton(
-                      iconPath: 'assets/icons/feed/share.svg',
-                      onTap: _showShareSheet,
-                      color: widget.isDarkMode
-                          ? Colors.white.withAlpha(204)
-                          : Colors.black.withAlpha(204),
-                    ),
+                    // Profile Picture and Stats Overlay
+                    if (widget.showProfileImage)
+                      Positioned(
+                        top: cardWidth * 0.04,
+                        left: cardWidth * 0.06,
+                        child: Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(2),
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: widget.isDarkMode
+                                    ? Colors.black.withAlpha(230)
+                                    : Colors.white.withAlpha(230),
+                                border: Border.all(
+                                  color: widget.isDarkMode
+                                      ? Colors.white.withAlpha(38)
+                                      : Colors.black.withAlpha(26),
+                                  width: 1,
+                                ),
+                              ),
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(50),
+                                child: CachedNetworkImage(
+                                  imageUrl:
+                                      widget.post.authorProfile.profileImage,
+                                  width: cardWidth * 0.12,
+                                  height: cardWidth * 0.12,
+                                  fit: BoxFit.cover,
+                                  memCacheWidth: (cardWidth * 0.24).toInt(),
+                                  memCacheHeight: (cardWidth * 0.24).toInt(),
+                                  maxWidthDiskCache: 300,
+                                  maxHeightDiskCache: 300,
+                                  cacheKey:
+                                      '${widget.post.authorProfile.profileImage}_post_profile',
+                                  placeholder: (context, url) =>
+                                      CircularProgressIndicator(
+                                    color: widget.isDarkMode
+                                        ? Colors.white
+                                        : Colors.black,
+                                    strokeWidth: 2,
+                                  ),
+                                  errorWidget: (context, url, error) =>
+                                      const Icon(Icons.person),
+                                  httpHeaders: const {
+                                    'Accept': 'image/*',
+                                    'Cache-Control': 'max-age=3600',
+                                  },
+                                ),
+                              ),
+                            ),
+                            SizedBox(width: cardWidth * 0.03),
+                            Container(
+                              padding: EdgeInsets.symmetric(
+                                horizontal: cardWidth * 0.03,
+                                vertical: cardWidth * 0.015,
+                              ),
+                              decoration: BoxDecoration(
+                                color: widget.isDarkMode
+                                    ? Colors.black.withAlpha(230)
+                                    : Colors.white.withAlpha(230),
+                                borderRadius: BorderRadius.circular(20),
+                                border: Border.all(
+                                  color: widget.isDarkMode
+                                      ? Colors.white.withAlpha(38)
+                                      : Colors.black.withAlpha(26),
+                                  width: 1,
+                                ),
+                              ),
+                              child: Row(
+                                children: [
+                                  Text(
+                                    '${widget.post.likesCount} likes',
+                                    style: TextStyle(
+                                      color: widget.isDarkMode
+                                          ? Colors.white
+                                          : Colors.black,
+                                      fontSize: cardWidth * 0.035,
+                                    ),
+                                  ),
+                                  SizedBox(width: cardWidth * 0.02),
+                                  Text(
+                                    _getTimeAgo(widget.post.timestamp),
+                                    style: TextStyle(
+                                      color: widget.isDarkMode
+                                          ? Colors.white70
+                                          : Colors.black54,
+                                      fontSize: 14,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+
+                    // Description Overlay (at bottom)
+                    if (_showTextOverlay && _hasContent)
+                      Positioned(
+                        bottom: 0,
+                        left: 0,
+                        right: 0,
+                        child: Container(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: cardWidth * 0.04,
+                            vertical: cardWidth * 0.03,
+                          ),
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              begin: Alignment.topCenter,
+                              end: Alignment.bottomCenter,
+                              colors: [
+                                Colors.transparent,
+                                Colors.black.withAlpha(77),
+                                Colors.black.withAlpha(179),
+                              ],
+                            ),
+                            borderRadius: BorderRadius.circular(15),
+                          ),
+                          child: Text(
+                            widget.post.description,
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: cardWidth * 0.04,
+                            ),
+                          ),
+                        ),
+                      ),
                   ],
                 ),
               ),
-            ),
-          ),
 
-          // Heart Animation with RepaintBoundary
-          if (_showHeart)
-            RepaintBoundary(
-              child: Positioned.fill(
-                child: AnimatedOpacity(
-                  duration: const Duration(milliseconds: 200),
-                  opacity: _showHeart ? 1.0 : 0.0,
-                  child: Center(
-                    child: ScaleTransition(
-                      scale: _animation,
-                      child: Icon(
-                        Icons.favorite,
-                        color: Colors.white.withAlpha(255),
-                        size: screenWidth * 0.3,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-
-          // Three dots button
-          Positioned(
-            top: screenWidth * 0.04,
-            right: screenWidth * 0.06,
-            child: GestureDetector(
-              onTap: () {
-                if (widget.onMoreTap != null) {
-                  widget.onMoreTap!();
-                } else {
-                  _showReportSheet();
-                }
-              },
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(50),
-                child: BackdropFilter(
-                  filter: ImageFilter.blur(sigmaX: 10.0, sigmaY: 10.0),
+            // Action buttons with RepaintBoundary
+            if (!widget.isProfileView)
+              Positioned(
+                right: cardWidth * 0.04,
+                bottom: cardWidth * 0.15,
+                child: RepaintBoundary(
                   child: Container(
-                    padding: EdgeInsets.all(screenWidth * 0.015),
+                    padding: EdgeInsets.symmetric(
+                      horizontal: cardWidth * 0.018,
+                      vertical: cardWidth * 0.025,
+                    ),
                     decoration: BoxDecoration(
                       color: widget.isDarkMode
-                          ? Colors.white.withAlpha(38)
-                          : Colors.black.withAlpha(38),
-                      shape: BoxShape.circle,
+                          ? Colors.black.withAlpha(230)
+                          : Colors.white.withAlpha(230),
+                      borderRadius: BorderRadius.circular(25),
                       border: Border.all(
-                        color: Colors.white.withAlpha(50),
-                        width: 0.5,
+                        color: widget.isDarkMode
+                            ? Colors.white.withAlpha(38)
+                            : Colors.black.withAlpha(26),
+                        width: 1,
                       ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withAlpha(20),
-                          blurRadius: 10,
-                          spreadRadius: 2,
+                    ),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        _buildActionButton(
+                          iconPath: 'assets/icons/feed/like.svg',
+                          color: isLiked
+                              ? Colors.red
+                              : (widget.isDarkMode
+                                  ? Colors.white.withAlpha(204)
+                                  : Colors.black.withAlpha(204)),
+                          onTap: () {
+                            HapticFeedback.lightImpact();
+                            setState(() => isLiked = !isLiked);
+                          },
+                        ),
+                        SizedBox(height: screenHeight * 0.015),
+                        _buildActionButton(
+                          iconPath: 'assets/icons/feed/comment.svg',
+                          onTap: _showCommentsSheet,
+                          color: widget.isDarkMode
+                              ? Colors.white.withAlpha(204)
+                              : Colors.black.withAlpha(204),
+                        ),
+                        SizedBox(height: screenHeight * 0.015),
+                        _buildActionButton(
+                          iconPath: 'assets/icons/feed/share.svg',
+                          onTap: _showShareSheet,
+                          color: widget.isDarkMode
+                              ? Colors.white.withAlpha(204)
+                              : Colors.black.withAlpha(204),
                         ),
                       ],
                     ),
-                    child: Icon(
-                      Icons.more_vert,
-                      size: screenWidth * 0.045,
-                      color: Colors.white.withAlpha(230),
+                  ),
+                ),
+              ),
+
+            // Heart Animation with RepaintBoundary
+            if (_showHeart)
+              RepaintBoundary(
+                child: Positioned.fill(
+                  child: AnimatedOpacity(
+                    duration: const Duration(milliseconds: 200),
+                    opacity: _showHeart ? 1.0 : 0.0,
+                    child: Center(
+                      child: ScaleTransition(
+                        scale: _animation,
+                        child: Icon(
+                          Icons.favorite,
+                          color: Colors.white.withAlpha(255),
+                          size: cardWidth * 0.3,
+                        ),
+                      ),
                     ),
                   ),
                 ),
               ),
-            ),
-          ),
-        ],
+
+            // Three dots button
+            if (!widget.isProfileView)
+              Positioned(
+                top: cardWidth * 0.04,
+                right: cardWidth * 0.06,
+                child: GestureDetector(
+                  onTap: () {
+                    if (widget.onMoreTap != null) {
+                      widget.onMoreTap!();
+                    } else {
+                      _showReportSheet();
+                    }
+                  },
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(50),
+                    child: BackdropFilter(
+                      filter: ImageFilter.blur(sigmaX: 10.0, sigmaY: 10.0),
+                      child: Container(
+                        padding: EdgeInsets.all(cardWidth * 0.015),
+                        decoration: BoxDecoration(
+                          color: widget.isDarkMode
+                              ? Colors.white.withAlpha(38)
+                              : Colors.black.withAlpha(38),
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                            color: Colors.white.withAlpha(50),
+                            width: 0.5,
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withAlpha(20),
+                              blurRadius: 10,
+                              spreadRadius: 2,
+                            ),
+                          ],
+                        ),
+                        child: Icon(
+                          Icons.more_vert,
+                          size: cardWidth * 0.045,
+                          color: Colors.white.withAlpha(230),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+          ],
+        ),
       ),
     );
   }

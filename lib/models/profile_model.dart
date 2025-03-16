@@ -1,3 +1,5 @@
+import 'package:flutter/foundation.dart';
+
 class ProfileModel {
   final String profileId;
   final String username;
@@ -14,9 +16,11 @@ class ProfileModel {
   final int datesCount;
   final int postsCount;
   final int snipsCount;
+  final List<String> posts;
+  final List<String> snips;
   final ProfileImages images;
 
-  ProfileModel({
+  const ProfileModel({
     required this.profileId,
     required this.username,
     required this.name,
@@ -32,11 +36,18 @@ class ProfileModel {
     required this.datesCount,
     required this.postsCount,
     required this.snipsCount,
+    required this.posts,
+    required this.snips,
     required this.images,
   });
 
-  // Main constructor from full API response
-  factory ProfileModel.fromJson(Map<String, dynamic> json) {
+  // Parse profile data in background thread
+  static Future<ProfileModel> parseInBackground(Map<String, dynamic> json) {
+    return compute(_parseFullProfile, json);
+  }
+
+  // Main constructor for full profile data
+  static ProfileModel _parseFullProfile(Map<String, dynamic> json) {
     final data = json['data'] as Map<String, dynamic>;
     return ProfileModel(
       profileId: data['profile_id'] as String,
@@ -54,12 +65,18 @@ class ProfileModel {
       datesCount: data['dates_count'] as int,
       postsCount: data['posts_count'] as int,
       snipsCount: data['snips_count'] as int,
+      posts: (data['posts'] as List<dynamic>).cast<String>(),
+      snips: (data['snips'] as List<dynamic>).cast<String>(),
       images: ProfileImages.fromJson(data['images'] as Map<String, dynamic>),
     );
   }
 
   // Constructor for swipe view (minimal data)
-  factory ProfileModel.fromSwipeView(Map<String, dynamic> json) {
+  static Future<ProfileModel> parseSwipeProfile(Map<String, dynamic> json) {
+    return compute(_parseSwipeProfile, json);
+  }
+
+  static ProfileModel _parseSwipeProfile(Map<String, dynamic> json) {
     final data = json['data'] as Map<String, dynamic>;
     return ProfileModel(
       profileId: data['profile_id'] as String,
@@ -71,36 +88,46 @@ class ProfileModel {
       age: data['age'] as int,
       location: data['location'] as String,
       interests: (data['interests'] as List<dynamic>).cast<String>(),
-      friendsCount: 0, // Not needed for swipe
-      preferences: const {'min': 0, 'max': 0}, // Not needed for swipe
-      rating: 0.0, // Not needed for swipe
-      datesCount: 0, // Not needed for swipe
-      postsCount: 0, // Not needed for swipe
-      snipsCount: 0, // Not needed for swipe
-      images: ProfileImages.fromJson(data['images'] as Map<String, dynamic>),
+      friendsCount: 0,
+      preferences: const {'min': 0, 'max': 0},
+      rating: 0.0,
+      datesCount: 0,
+      postsCount: 0,
+      snipsCount: 0,
+      posts: const [],
+      snips: const [],
+      images:
+          ProfileImages.fromSwipeJson(data['images'] as Map<String, dynamic>),
     );
   }
 
-  // Constructor for user profile view (no preferences/orientation)
-  factory ProfileModel.fromUserProfile(Map<String, dynamic> json) {
+  // Constructor for user profile view
+  static Future<ProfileModel> parseUserProfile(Map<String, dynamic> json) {
+    return compute(_parseUserProfile, json);
+  }
+
+  static ProfileModel _parseUserProfile(Map<String, dynamic> json) {
     final data = json['data'] as Map<String, dynamic>;
     return ProfileModel(
       profileId: data['profile_id'] as String,
-      username: data['username'] as String,
+      username: '',
       name: data['name'] as String,
       bio: data['bio'] as String,
       gender: data['gender'] as String,
-      orientation: '', // Not shown in user profile
+      orientation: '',
       age: data['age'] as int,
       location: data['location'] as String,
       interests: (data['interests'] as List<dynamic>).cast<String>(),
       friendsCount: data['friends_count'] as int,
-      preferences: const {'min': 0, 'max': 0}, // Not shown in user profile
+      preferences: const {'min': 0, 'max': 0},
       rating: (data['rating'] as num).toDouble(),
       datesCount: data['dates_count'] as int,
       postsCount: data['posts_count'] as int,
       snipsCount: data['snips_count'] as int,
-      images: ProfileImages.fromJson(data['images'] as Map<String, dynamic>),
+      posts: const [],
+      snips: const [],
+      images:
+          ProfileImages.fromUserJson(data['images'] as Map<String, dynamic>),
     );
   }
 
@@ -121,6 +148,8 @@ class ProfileModel {
       'dates_count': datesCount,
       'posts_count': postsCount,
       'snips_count': snipsCount,
+      'posts': posts,
+      'snips': snips,
       'images': images.toJson(),
     };
   }
@@ -131,7 +160,7 @@ class ProfileImages {
   final List<String> mandate;
   final List<String> optional;
 
-  ProfileImages({
+  const ProfileImages({
     required this.profile,
     required this.mandate,
     required this.optional,
@@ -142,6 +171,25 @@ class ProfileImages {
       profile: json['profile'] as String,
       mandate: (json['mandate'] as List<dynamic>).cast<String>(),
       optional: (json['optional'] as List<dynamic>).cast<String>(),
+    );
+  }
+
+  // For swipe view - only needed images
+  factory ProfileImages.fromSwipeJson(Map<String, dynamic> json) {
+    final optionalImages = (json['optional'] as List<dynamic>).cast<String>();
+    return ProfileImages(
+      profile: json['profile'] as String,
+      mandate: (json['mandate'] as List<dynamic>).cast<String>(),
+      optional: optionalImages.take(2).toList(), // Take max 2 optional images
+    );
+  }
+
+  // For user profile - only profile image
+  factory ProfileImages.fromUserJson(Map<String, dynamic> json) {
+    return ProfileImages(
+      profile: json['profile'] as String,
+      mandate: const [],
+      optional: const [],
     );
   }
 

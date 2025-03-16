@@ -378,7 +378,7 @@ class ThinkProvider {
   Future<Map<String, dynamic>> getFeed({
     required String uuid,
     int page = 1,
-    String? profile_id, // New optional parameter
+    String? profileId, // New optional parameter
   }) async {
     try {
       // Create request body with optional profile_id
@@ -388,8 +388,8 @@ class ThinkProvider {
       };
 
       // Add profile_id to request only if it's provided
-      if (profile_id != null) {
-        requestBody['profile_id'] = profile_id;
+      if (profileId != null) {
+        requestBody['profile_id'] = profileId;
       }
 
       final response = await _callFunction('get_feed', requestBody);
@@ -435,18 +435,19 @@ class ThinkProvider {
   Future<Map<String, dynamic>> getSnips({
     required String uuid,
     int page = 1,
-    String? profile_id, // New optional parameter
+    String? profileId, // New optional parameter
   }) async {
     try {
       // Create request body with optional profile_id
       final Map<String, dynamic> requestBody = {
         'uuid': uuid,
         'page': page,
+        'profile_id': profileId,
       };
 
       // Add profile_id to request only if it's provided
-      if (profile_id != null) {
-        requestBody['profile_id'] = profile_id;
+      if (profileId != null) {
+        requestBody['profile_id'] = profileId;
       }
 
       final response = await _callFunction('get_snips', requestBody);

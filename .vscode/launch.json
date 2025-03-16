@@ -1,0 +1,10 @@
+{
+    "configurations": [
+        {
+            "name": "Flutter (lib\\models\\utils\\snip_cache_manager.dart)",
+            "type": "dart",
+            "request": "launch",
+            "program": "lib\\models\\utils\\snip_cache_manager.dart"
+        }
+    ]
+}

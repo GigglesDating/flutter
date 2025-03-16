@@ -102,7 +102,7 @@ class IconMapper {
     'spoke': Icons.spoke,
     'crisis_alert': Icons.crisis_alert,
     'menu_book_rounded': Icons.menu_book_rounded,
-    'volunteer_activism': Icons.volunteer_activism,
+    'volunteer_activism': Icons.volunteer_activism
     // add addtional icons mapping here if needed
   };
 

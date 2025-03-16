@@ -57,3 +57,9 @@ export '../models/utils/snip_cache_manager.dart';
 export '../models/utils/video_service.dart';
 export '../models/utils/snip_parser.dart';
 export 'utilities/icon_mapping.dart';
+
+//Models
+export '../models/profile_model.dart';
+export '../models/post_model.dart';
+export '../models/utils/comments_parser.dart';
+export '../models/user_model.dart';

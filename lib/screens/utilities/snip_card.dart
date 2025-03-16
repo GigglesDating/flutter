@@ -21,6 +21,10 @@ class SnipCard extends StatefulWidget {
   final VoidCallback? onScrollBack;
   final VoidCallback? onEndReached;
   final Function(String)? onVideoError;
+  final bool isProfileView;
+  final double? customWidth;
+  final double? customHeight;
+  final VoidCallback? onSnipTap;
 
   const SnipCard({
     super.key,
@@ -39,6 +43,10 @@ class SnipCard extends StatefulWidget {
     this.onScrollBack,
     this.onEndReached,
     this.onVideoError,
+    this.isProfileView = false,
+    this.customWidth,
+    this.customHeight,
+    this.onSnipTap,
   });
 
   @override
@@ -131,6 +139,12 @@ class _SnipCardState extends State<SnipCard>
   }
 
   Future<void> _initializeVideo() async {
+    // In profile view, only show thumbnail
+    if (widget.isProfileView) {
+      setState(() => _isBuffering = false);
+      return;
+    }
+
     try {
       // Start with thumbnail and low quality
       final controller = await VideoService.initializeController(
@@ -278,66 +292,83 @@ class _SnipCardState extends State<SnipCard>
   @override
   Widget build(BuildContext context) {
     final screenHeight = MediaQuery.of(context).size.height;
+    final screenWidth = MediaQuery.of(context).size.width;
     final bottomPadding = MediaQuery.of(context).padding.bottom;
-    final navBarHeight = screenHeight * 0.075; // Match navbar height
+    final navBarHeight = screenHeight * 0.075;
+
+    // Use custom dimensions if provided, otherwise use default
+    final cardWidth = widget.customWidth ?? screenWidth;
+    final cardHeight = widget.customHeight ?? screenHeight;
 
     if (_controller == null) {
       return _buildLoadingView();
     }
 
-    return GestureDetector(
-      onTap: _handleTap,
-      onDoubleTap: _handleDoubleTap,
-      onLongPress: _handleLongPress,
-      child: Stack(
-        children: [
-          // Video Player
-          _buildVideoPlayer(),
+    return Container(
+      width: cardWidth,
+      height: cardHeight,
+      margin: EdgeInsets.only(
+        bottom: widget.isProfileView ? 0 : screenHeight * 0.02,
+        top: widget.isProfileView ? 0 : screenHeight * 0.02,
+        right: widget.isProfileView ? screenWidth * 0.05 : 0,
+      ),
+      child: GestureDetector(
+        onTap: widget.isProfileView ? widget.onSnipTap : _handleTap,
+        onDoubleTap: widget.isProfileView ? null : _handleDoubleTap,
+        onLongPress: widget.isProfileView ? null : _handleLongPress,
+        child: Stack(
+          children: [
+            // Video Player
+            _buildVideoPlayer(),
 
-          // Stats Strip (Top)
-          if (_showStats)
-            Positioned(
-              top: MediaQuery.of(context).size.width * 0.04,
-              left: MediaQuery.of(context).size.width * 0.06,
-              child: _buildStatsStrip(),
-            ),
+            // Stats Strip (Top)
+            if (_showStats && !widget.isProfileView)
+              Positioned(
+                top: cardWidth * 0.04,
+                left: cardWidth * 0.06,
+                child: _buildStatsStrip(),
+              ),
 
-          // More Options Button (Top Right)
-          Positioned(
-            top: MediaQuery.of(context).size.width * 0.04,
-            right: MediaQuery.of(context).size.width * 0.06,
-            child: _buildMoreOptionsButton(),
-          ),
+            // More Options Button (Top Right)
+            if (!widget.isProfileView)
+              Positioned(
+                top: cardWidth * 0.04,
+                right: cardWidth * 0.06,
+                child: _buildMoreOptionsButton(),
+              ),
 
-          // Action Bar (Right)
-          Positioned(
-            right: MediaQuery.of(context).size.width * 0.04,
-            bottom: bottomPadding + navBarHeight,
-            child: _buildActionBar(),
-          ),
+            // Action Bar (Right)
+            if (!widget.isProfileView)
+              Positioned(
+                right: cardWidth * 0.04,
+                bottom: bottomPadding + navBarHeight,
+                child: _buildActionBar(),
+              ),
 
-          // Profile Info and Description (Bottom)
-          if (_showProfileInfo) _buildProfileInfo(),
+            // Profile Info and Description (Bottom)
+            if (_showProfileInfo && !widget.isProfileView) _buildProfileInfo(),
 
-          // Heart Animation (Center)
-          if (_showHeart)
-            Positioned.fill(
-              child: _buildHeartAnimation(),
-            ),
+            // Heart Animation (Center)
+            if (_showHeart && !widget.isProfileView)
+              Positioned.fill(
+                child: _buildHeartAnimation(),
+              ),
 
-          // Progress Bar (Bottom)
-          Positioned(
-            left: 0,
-            right: 0,
-            bottom: 0,
-            child: GestureDetector(
-              onHorizontalDragStart: _onProgressDragStart,
-              onHorizontalDragUpdate: _onProgressDragUpdate,
-              onHorizontalDragEnd: _onProgressDragEnd,
-              child: _buildProgressBar(),
-            ),
-          ),
-        ],
+            // Progress Bar (Bottom)
+            if (!widget.isProfileView)
+              Positioned(
+                left: 0,
+                right: 0,
+                bottom: 0,
+                child: GestureDetector(
+                  onHorizontalDragStart: _onProgressDragStart,
+                  onHorizontalDragUpdate: _onProgressDragUpdate,
+                  onHorizontalDragEnd: _onProgressDragEnd,
+                  child: _buildProgressBar(),
+                ),
+              ),
+          ],
+        ),
       ),
     );
   }

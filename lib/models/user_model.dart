@@ -11,9 +11,9 @@ class UserModel {
 
   factory UserModel.fromJson(Map<String, dynamic> json) {
     return UserModel(
-      profileId: json['profile_id'] as String,
-      name: json['name'] as String,
-      profileImage: json['profile_image'] as String,
+      profileId: json['profile_id']?.toString() ?? '',
+      name: json['name']?.toString() ?? '',
+      profileImage: json['profile_image']?.toString() ?? '',
     );
   }
 

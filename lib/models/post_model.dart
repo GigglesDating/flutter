@@ -25,16 +25,18 @@ class PostModel {
 
   factory PostModel.fromJson(Map<String, dynamic> json) {
     return PostModel(
-      postId: json['post_id'] as String,
+      postId: json['post_id']?.toString() ?? '',
       media: MediaContent.fromJson(json['media'] as Map<String, dynamic>),
-      description: json['description'] as String,
+      description: json['description']?.toString() ?? '',
       timestamp: DateTime.parse(json['timestamp'] as String),
       likesCount: json['likes_count'] as int? ?? 0,
       commentsCount: json['comments_count'] as int? ?? 0,
-      authorProfileId: json['author_profile_id'] as String,
+      authorProfileId: json['author_profile_id']?.toString() ?? '',
       authorProfile:
           UserModel.fromJson(json['author_profile'] as Map<String, dynamic>),
-      commentIds: (json['comment_ids'] as List?)?.cast<String>() ?? [],
+      commentIds:
+          (json['comment_ids'] as List?)?.map((e) => e.toString()).toList() ??
+              [],
     );
   }
 

@@ -18,13 +18,22 @@ class _SplashScreenState extends State<SplashScreen>
   VideoPlayerController? _videoController;
   bool _isNavigating = false;
   bool _useImageFallback = false;
+  bool _isVideoInitialized = false;
 
   @override
   void initState() {
     super.initState();
     _setupFadeAnimation();
-    _initializeVideo();
     _checkAuthAndNavigate();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_isVideoInitialized) {
+      _initializeVideo();
+      _isVideoInitialized = true;
+    }
   }
 
   void _setupFadeAnimation() {

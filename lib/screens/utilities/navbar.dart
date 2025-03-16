@@ -26,7 +26,7 @@ class NavigationController extends StatefulWidget {
 }
 
 class NavigationControllerState extends State<NavigationController>
-    with SingleTickerProviderStateMixin {
+    with SingleTickerProviderStateMixin, WidgetsBindingObserver {
   int _currentIndex = 0;
   bool _showNavBar = true;
   bool _isSOSActive = false;
@@ -41,10 +41,14 @@ class NavigationControllerState extends State<NavigationController>
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _pageController = PageController(initialPage: 0);
     _loadedTabs[0] = true; // Mark first tab as loaded
     _hideSystemBars();
     _startRotationTimer();
+
+    // Add navigation state listener
+    _pageController.addListener(_handlePageScroll);
   }
 
   void _hideSystemBars() {
@@ -59,6 +63,21 @@ class NavigationControllerState extends State<NavigationController>
     ));
   }
 
+  void _showSystemBars() {
+    SystemChrome.setEnabledSystemUIMode(
+      SystemUiMode.manual,
+      overlays: SystemUiOverlay.values,
+    );
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+    if (state == AppLifecycleState.resumed) {
+      _hideSystemBars();
+    }
+  }
+
   void _startRotationTimer() {
     _rotationTimer = Timer.periodic(const Duration(seconds: 3), (timer) {
       if (_showNavBar && mounted) {
@@ -69,9 +88,23 @@ class NavigationControllerState extends State<NavigationController>
     });
   }
 
+  void _handlePageScroll() {
+    if (!_pageController.hasClients) return;
+
+    final page = _pageController.page;
+    if (page == null) return;
+
+    // Update navigation state based on scroll position
+    if (page % 1 == 0) {
+      _onPageChanged(page.toInt());
+    }
+  }
+
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _rotationTimer?.cancel();
+    _pageController.removeListener(_handlePageScroll);
     _pageController.dispose();
     // Restore system UI when disposing
     SystemChrome.setEnabledSystemUIMode(
@@ -123,11 +156,10 @@ class NavigationControllerState extends State<NavigationController>
               physics: const NeverScrollableScrollPhysics(), // Disable swipe
               itemCount: _navigationItems.length,
               itemBuilder: (context, index) {
-                // Only build the widget if the tab has been loaded
-                if (!_loadedTabs[index]) {
-                  return const SizedBox.shrink();
-                }
-                return _navigationItems[index].builder();
+                return KeepAliveWidget(
+                  active: _loadedTabs[index],
+                  child: _navigationItems[index].builder(),
+                );
               },
             ),
 
@@ -356,7 +388,7 @@ class NavigationControllerState extends State<NavigationController>
     ),
   ];
 
-  void _handleSOSPress() {
+  Future<void> _handleSOSPress() async {
     if (_isSOSActive) {
       // If SOS is currently active, stop everything immediately
       Vibration.cancel();
@@ -414,22 +446,14 @@ class KeepAliveWidget extends StatefulWidget {
   State<KeepAliveWidget> createState() => _KeepAliveWidgetState();
 }
 
-class _KeepAliveWidgetState extends State<KeepAliveWidget> {
-  Widget? _child;
-
+class _KeepAliveWidgetState extends State<KeepAliveWidget>
+    with AutomaticKeepAliveClientMixin {
   @override
-  void didUpdateWidget(KeepAliveWidget oldWidget) {
-    super.didUpdateWidget(oldWidget);
-
-    if (widget.active && _child == null) {
-      _child = widget.child;
-    } else if (!widget.active && _child != null) {
-      _child = null;
-    }
-  }
+  bool get wantKeepAlive => widget.active;
 
   @override
   Widget build(BuildContext context) {
-    return _child ?? const SizedBox.shrink();
+    super.build(context);
+    return widget.active ? widget.child : const SizedBox.shrink();
   }
 }

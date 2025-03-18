@@ -348,7 +348,11 @@ class ThinkProvider {
         requestBody['profile_id'] = profileId;
       }
 
-      final response = await _callFunction('get_feed', requestBody);
+      final response = await _callFunction(
+        'get_feed',
+        requestBody,
+        forceRefresh: true, // Force refresh to skip caching
+      );
 
       if (response['status'] == 'success') {
         return {

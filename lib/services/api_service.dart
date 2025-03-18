@@ -32,12 +32,17 @@ class ApiService {
     final cacheKey = _generateCacheKey(endpoint, body);
 
     try {
-      // Check cache first if not forcing refresh
-      if (!forceRefresh) {
-        final cachedData = await CacheService.getCachedData(cacheKey);
-        if (cachedData != null) {
-          debugPrint('Cache hit for $endpoint');
-          return cachedData;
+      // Check cache first if not forcing refresh and caching is enabled
+      if (!forceRefresh && cacheDuration != null) {
+        try {
+          final cachedData = await CacheService.getCachedData(cacheKey);
+          if (cachedData != null) {
+            debugPrint('Cache hit for $endpoint');
+            return cachedData;
+          }
+        } catch (e) {
+          debugPrint('Cache error, proceeding with API call: $e');
+          // Continue with API call if cache fails
         }
       }
 
@@ -71,28 +76,40 @@ class ApiService {
             'API Error: ${response.statusCode} - ${decodedResponse['message'] ?? 'Unknown error'}');
       }
 
-      // Cache successful responses
-      if (response.statusCode == 200 || response.statusCode == 201) {
-        await CacheService.cacheData(
-          key: cacheKey,
-          data: decodedResponse,
-          duration: cacheDuration,
-        );
+      // Try to cache successful responses if caching is enabled
+      if ((response.statusCode == 200 || response.statusCode == 201) &&
+          cacheDuration != null) {
+        try {
+          await CacheService.cacheData(
+            key: cacheKey,
+            data: decodedResponse,
+            duration: cacheDuration,
+          );
+        } catch (e) {
+          debugPrint('Failed to cache response: $e');
+          // Continue even if caching fails
+        }
       }
 
       return decodedResponse;
     } catch (e) {
       debugPrint('API Error for $endpoint: $e');
 
-      // Check cache again in case of network error
-      final cachedData = await CacheService.getCachedData(cacheKey);
-      if (cachedData != null) {
-        debugPrint('Using cached data after error for $endpoint');
-        return {
-          ...cachedData,
-          'fromCache': true,
-          'error': e.toString(),
-        };
+      // Try cache again in case of network error
+      if (cacheDuration != null) {
+        try {
+          final cachedData = await CacheService.getCachedData(cacheKey);
+          if (cachedData != null) {
+            debugPrint('Using cached data after error for $endpoint');
+            return {
+              ...cachedData,
+              'fromCache': true,
+              'error': e.toString(),
+            };
+          }
+        } catch (cacheError) {
+          debugPrint('Cache error during fallback: $cacheError');
+        }
       }
 
       return {

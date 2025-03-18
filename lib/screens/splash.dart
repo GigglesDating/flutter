@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:video_player/video_player.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_frontend/network/auth_provider.dart';
 import 'barrel.dart';
@@ -15,25 +14,13 @@ class _SplashScreenState extends State<SplashScreen>
     with SingleTickerProviderStateMixin {
   late AnimationController _fadeController;
   late Animation<double> _fadeAnimation;
-  VideoPlayerController? _videoController;
   bool _isNavigating = false;
-  bool _useImageFallback = false;
-  bool _isVideoInitialized = false;
 
   @override
   void initState() {
     super.initState();
     _setupFadeAnimation();
     _checkAuthAndNavigate();
-  }
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    if (!_isVideoInitialized) {
-      _initializeVideo();
-      _isVideoInitialized = true;
-    }
   }
 
   void _setupFadeAnimation() {
@@ -43,28 +30,6 @@ class _SplashScreenState extends State<SplashScreen>
     );
     _fadeAnimation = Tween<double>(begin: 0, end: 1).animate(_fadeController);
     _fadeController.forward();
-  }
-
-  Future<void> _initializeVideo() async {
-    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    final videoPath =
-        isDarkMode ? 'assets/dark/favicon.mp4' : 'assets/light/favicon.mp4';
-
-    try {
-      _videoController = VideoPlayerController.asset(videoPath);
-      await _videoController!.initialize();
-      if (mounted) {
-        _videoController!.play();
-        setState(() {});
-      }
-    } catch (e) {
-      debugPrint('Video initialization error: $e');
-      if (mounted) {
-        setState(() {
-          _useImageFallback = true;
-        });
-      }
-    }
   }
 
   Future<void> _checkAuthAndNavigate() async {
@@ -259,7 +224,6 @@ class _SplashScreenState extends State<SplashScreen>
   @override
   void dispose() {
     _fadeController.dispose();
-    _videoController?.dispose();
     super.dispose();
   }
 
@@ -275,21 +239,12 @@ class _SplashScreenState extends State<SplashScreen>
           opacity: _fadeAnimation,
           child: Hero(
             tag: 'app_logo',
-            child: _useImageFallback ||
-                    _videoController == null ||
-                    !_videoController!.value.isInitialized
-                ? Image.asset(
-                    isDarkMode
-                        ? 'assets/dark/favicon.png'
-                        : 'assets/light/favicon.png',
-                    width: size.width * 0.4,
-                    height: size.width * 0.4,
-                  )
-                : SizedBox(
-                    width: size.width * 0.4,
-                    height: size.width * 0.4,
-                    child: VideoPlayer(_videoController!),
-                  ),
+            child: Image.asset(
+              'assets/light/favicon.png',
+              width: size.width * 0.4,
+              height: size.width * 0.4,
+              color: isDarkMode ? Colors.white : Colors.black,
+            ),
           ),
         ),
       ),

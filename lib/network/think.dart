@@ -32,9 +32,28 @@ class ThinkProvider {
   Future<Map<String, dynamic>> checkRegistrationStatus({
     required String uuid,
   }) async {
-    return _callFunction('check_registration_status', {
-      'uuid': uuid,
-    });
+    try {
+      final response = await _callFunction('check_registration_status', {
+        'uuid': uuid,
+      });
+
+      // Successful response should have status: success and reg_status field
+      if (response['status'] == 'success' && response['reg_status'] != null) {
+        return response; // Return the successful response as is
+      }
+
+      debugPrint('Error or invalid response from API: $response');
+      return {
+        'status': 'error',
+        'message': response['message'] ?? 'Invalid response format',
+      };
+    } catch (e) {
+      debugPrint('Error in checkRegistrationStatus: $e');
+      return {
+        'status': 'error',
+        'message': 'Failed to check registration status',
+      };
+    }
   }
 
   // Initial signup

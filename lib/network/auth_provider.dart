@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
+import 'dart:async';
 import 'config.dart';
 
 class AuthProvider extends ChangeNotifier {
@@ -50,6 +51,13 @@ class AuthProvider extends ChangeNotifier {
             Duration(milliseconds: ApiConfig.connectionTimeout),
           );
 
+      if (response.statusCode >= 500) {
+        return {
+          'status': false,
+          'error': 'Server error occurred. Please try again later.',
+        };
+      }
+
       final decodedResponse = jsonDecode(response.body);
 
       if (decodedResponse['requestId'] != null) {
@@ -61,12 +69,26 @@ class AuthProvider extends ChangeNotifier {
       _isLoading = false;
       notifyListeners();
       return decodedResponse;
+    } on TimeoutException {
+      _isLoading = false;
+      notifyListeners();
+      return {
+        'status': false,
+        'error': 'Connection timed out. Please check your internet connection.',
+      };
+    } on http.ClientException {
+      _isLoading = false;
+      notifyListeners();
+      return {
+        'status': false,
+        'error': 'Network error. Please check your internet connection.',
+      };
     } catch (e) {
       _isLoading = false;
       notifyListeners();
       return {
         'status': false,
-        'error': 'Failed to connect to server',
+        'error': 'An unexpected error occurred. Please try again.',
       };
     }
   }

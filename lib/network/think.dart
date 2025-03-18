@@ -42,7 +42,11 @@ class ThinkProvider {
         return response; // Return the successful response as is
       }
 
-      debugPrint('Error or invalid response from API: $response');
+      // Only log error for actual error responses
+      if (response['status'] != 'success') {
+        debugPrint('Error response from API: $response');
+      }
+
       return {
         'status': 'error',
         'message': response['message'] ?? 'Invalid response format',

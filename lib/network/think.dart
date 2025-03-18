@@ -1,10 +1,15 @@
-import 'dart:convert';
-import 'package:http/http.dart' as http;
 import 'config.dart';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../services/api_service.dart';
 
 class ThinkProvider {
+  final ApiService _apiService = ApiService();
+  static final ThinkProvider _instance = ThinkProvider._internal();
+
+  factory ThinkProvider() => _instance;
+  ThinkProvider._internal();
+
   // Check app version
   Future<Map<String, dynamic>> checkVersion() async {
     return _callFunction('check_version', {});
@@ -204,73 +209,24 @@ class ThinkProvider {
     }
   }
 
-  // Check member status
+  // Check member status with caching
   Future<Map<String, dynamic>> checkMemberStatus({
     required String uuid,
   }) async {
-    try {
-      debugPrint('Checking member status for UUID: $uuid');
-      final response = await _callFunction('check_registration_status', {
-        'uuid': uuid,
-      });
-      debugPrint('Raw API response: $response');
-
-      if (response['status'] == 'success') {
-        final regStatus = response['reg_status'] ?? 'waitlisted';
-        debugPrint('Extracted reg_status: $regStatus');
-
-        return {
-          'status': 'success',
-          'data': {
-            'member': regStatus == 'member' ? 'yes' : 'no',
-            'reg_process': regStatus,
-            'waitlist_position': response['waitlist_position'],
-            'total_waitlist': response['total_waitlist'],
-          }
-        };
-      } else {
-        debugPrint('Error response from API: ${response['message']}');
-        return {
-          'status': 'error',
-          'message': response['message'] ?? 'Failed to check member status',
-          'data': {'member': 'no', 'reg_process': 'waitlisted'}
-        };
-      }
-    } catch (e) {
-      debugPrint('Error in checkMemberStatus: $e');
-      return {
-        'status': 'error',
-        'message': 'Error checking member status: $e',
-        'data': {'member': 'no', 'reg_process': 'waitlisted'}
-      };
-    }
+    return await _callFunction(
+      'check_registration_status',
+      {'uuid': uuid},
+      cacheDuration: const Duration(minutes: 5),
+    );
   }
 
-  // Get override number for app review
+  // Get override number with longer cache
   Future<Map<String, dynamic>> getOverrideNumber() async {
-    try {
-      final response = await _callFunction('get_override_number', {});
-
-      if (response['status'] == 'success') {
-        return {
-          'status': 'success',
-          'data': {
-            'number': response['number'],
-          }
-        };
-      } else {
-        return {
-          'status': 'error',
-          'message': response['message'] ?? 'Failed to get override number',
-        };
-      }
-    } catch (e) {
-      debugPrint('Error in getOverrideNumber: $e');
-      return {
-        'status': 'error',
-        'message': 'Error getting override number: $e',
-      };
-    }
+    return await _callFunction(
+      'get_override_number',
+      {},
+      cacheDuration: const Duration(days: 1),
+    );
   }
 
   // Get intro video
@@ -589,24 +545,135 @@ class ThinkProvider {
     }
   }
 
-  // Generic function caller
+  // Helper method for API calls
   Future<Map<String, dynamic>> _callFunction(
-    String function,
-    Map<String, dynamic> data,
-  ) async {
+    String functionName,
+    Map<String, dynamic> params, {
+    Duration? cacheDuration,
+    bool forceRefresh = false,
+  }) async {
     try {
-      final response = await http.post(
-        Uri.parse(ApiConfig.functions),
-        headers: ApiConfig.headers,
-        body: jsonEncode({
-          'function': function,
-          ...data,
-        }),
-      );
+      final endpoint = '${ApiConfig.functions}$functionName/';
 
-      return jsonDecode(response.body);
+      return await _apiService.makeRequest(
+        endpoint: endpoint,
+        body: params,
+        cacheDuration: cacheDuration,
+        forceRefresh: forceRefresh,
+      );
     } catch (e) {
-      throw Exception('Failed to call function $function: $e');
+      debugPrint('Error calling function $functionName: $e');
+      return {
+        'status': 'error',
+        'message': 'Failed to connect to server',
+      };
     }
+  }
+
+  // Batch multiple function calls
+  Future<List<Map<String, dynamic>>> _batchFunctions(
+    List<Map<String, dynamic>> functions, {
+    Duration? cacheDuration,
+    bool forceRefresh = false,
+  }) async {
+    final requests = functions
+        .map((function) => {
+              'endpoint': '${ApiConfig.functions}${function['name']}/',
+              'body': function['params'],
+            })
+        .toList();
+
+    return await _apiService.batchRequests(
+      requests: requests,
+      cacheDuration: cacheDuration,
+      forceRefresh: forceRefresh,
+    );
+  }
+
+  // Request OTP without caching
+  Future<Map<String, dynamic>> requestOtp({
+    required String phoneNumber,
+  }) async {
+    return await _callFunction(
+      'request_otp',
+      {'phoneNumber': phoneNumber},
+      forceRefresh: true, // Never cache OTP requests
+    );
+  }
+
+  // Verify OTP without caching
+  Future<Map<String, dynamic>> verifyOtp({
+    required String phoneNumber,
+    required String otp,
+    required String requestId,
+  }) async {
+    return await _callFunction(
+      'verify_otp',
+      {
+        'phoneNumber': phoneNumber,
+        'otp': otp,
+        'requestId': requestId,
+      },
+      forceRefresh: true, // Never cache OTP verification
+    );
+  }
+
+  // Get user profile with short cache
+  Future<Map<String, dynamic>> getUserProfile({
+    required String uuid,
+  }) async {
+    return await _callFunction(
+      'get_profile',
+      {'uuid': uuid},
+      cacheDuration: const Duration(minutes: 15),
+    );
+  }
+
+  // Update profile without cache
+  Future<Map<String, dynamic>> updateProfile({
+    required String uuid,
+    required Map<String, dynamic> profileData,
+  }) async {
+    return await _callFunction(
+      'update_profile',
+      {
+        'uuid': uuid,
+        ...profileData,
+      },
+      forceRefresh: true,
+    );
+  }
+
+  // Batch load initial data
+  Future<Map<String, dynamic>> loadInitialData({
+    required String uuid,
+  }) async {
+    final functions = [
+      {
+        'name': 'check_registration_status',
+        'params': {'uuid': uuid},
+      },
+      {
+        'name': 'get_profile',
+        'params': {'uuid': uuid},
+      },
+      // Add other initial data calls here
+    ];
+
+    final results = await _batchFunctions(
+      functions,
+      cacheDuration: const Duration(minutes: 5),
+    );
+
+    return {
+      'status': 'success',
+      'registration_status': results[0],
+      'profile': results[1],
+    };
+  }
+
+  // Clean up resources
+  void dispose() {
+    _apiService.dispose();
   }
 }

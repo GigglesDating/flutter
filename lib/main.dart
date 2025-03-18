@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'network/auth_provider.dart';
 import 'screens/barrel.dart';
+import 'services/cache_service.dart';
 
 // Placeholder Screen Template
 class PlaceholderScreen extends StatelessWidget {
@@ -45,8 +46,11 @@ class PlaceholderScreen extends StatelessWidget {
   }
 }
 
-void main() {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Initialize cache service
+  await CacheService.init();
 
   // Add error handling for renderer
   ErrorWidget.builder = (FlutterErrorDetails details) {

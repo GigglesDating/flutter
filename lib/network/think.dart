@@ -556,9 +556,15 @@ class ThinkProvider {
       final endpoint = ApiConfig.getFunctionEndpoint(functionName);
       debugPrint('Calling function $functionName at $endpoint');
 
+      // Include the function name in the request body
+      final requestBody = {
+        'function': functionName,
+        ...params,
+      };
+
       final response = await _apiService.makeRequest(
         endpoint: endpoint,
-        body: params,
+        body: requestBody,
         cacheDuration: cacheDuration,
         forceRefresh: forceRefresh,
       );

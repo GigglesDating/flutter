@@ -2,17 +2,42 @@ import 'package:hive_flutter/hive_flutter.dart';
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import '../models/utils/snip_cache_manager.dart';
+import 'package:path_provider/path_provider.dart' as path_provider;
 
 class CacheService {
   static const String apiCacheBox = 'apiCache';
   static const Duration defaultCacheDuration = Duration(hours: 1);
   static SnipCacheManager? _snipCacheManager;
+  static bool _isInitialized = false;
 
   // Initialize Hive and open boxes
   static Future<void> init() async {
-    await Hive.initFlutter();
-    await Hive.openBox(apiCacheBox);
-    _snipCacheManager = SnipCacheManager();
+    if (_isInitialized) return;
+
+    try {
+      final appDir = await path_provider.getApplicationDocumentsDirectory();
+      await Hive.initFlutter(appDir.path);
+
+      if (!Hive.isBoxOpen(apiCacheBox)) {
+        await Hive.openBox(apiCacheBox);
+      }
+
+      _snipCacheManager = SnipCacheManager();
+      _isInitialized = true;
+      debugPrint('CacheService initialized successfully');
+    } catch (e) {
+      debugPrint('Error initializing CacheService: $e');
+      // Create a new box if there's an error with the existing one
+      try {
+        await Hive.deleteBoxFromDisk(apiCacheBox);
+        await Hive.openBox(apiCacheBox);
+        _isInitialized = true;
+        debugPrint('CacheService recovered after error');
+      } catch (e) {
+        debugPrint('Fatal error initializing CacheService: $e');
+        rethrow;
+      }
+    }
   }
 
   // Cache data with expiration

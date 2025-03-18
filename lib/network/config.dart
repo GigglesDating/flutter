@@ -6,22 +6,22 @@ class ApiConfig {
   static const String requestOtp = '$baseUrl/request-otp';
   static const String verifyOtp = '$baseUrl/verify-otp';
   static const String database = '$baseUrl/database';
-  static const String functions = '$baseUrl/functions';
+  static const String functions =
+      '$baseUrl/functions/'; // Fixed the functions endpoint
 
   // Headers
   static Map<String, String> get headers => {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
-        'X-Requested-With':
-            'XMLHttpRequest', // Add this to prevent HTML responses
+        'X-Requested-With': 'XMLHttpRequest',
       };
 
   // Timeouts
   static const int connectionTimeout = 30000; // 30 seconds
   static const int receiveTimeout = 30000; // 30 seconds
 
-  // Generate endpoint URL
+  // Generate endpoint URL - just return the functions endpoint as all function calls go there
   static String getFunctionEndpoint(String functionName) {
-    return '$functions/$functionName';
+    return functions; // All function calls go to the same endpoint
   }
 }

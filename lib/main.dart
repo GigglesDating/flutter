@@ -47,53 +47,99 @@ class PlaceholderScreen extends StatelessWidget {
 }
 
 void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
+  try {
+    WidgetsFlutterBinding.ensureInitialized();
 
-  // Initialize cache service
-  await CacheService.init();
+    // Initialize cache service with retry
+    bool cacheInitialized = false;
+    int retryCount = 0;
+    while (!cacheInitialized && retryCount < 3) {
+      try {
+        await CacheService.init();
+        cacheInitialized = true;
+      } catch (e) {
+        retryCount++;
+        debugPrint('Failed to initialize cache (attempt $retryCount): $e');
+        await Future.delayed(Duration(seconds: 1));
+      }
+    }
 
-  // Add error handling for renderer
-  ErrorWidget.builder = (FlutterErrorDetails details) {
-    return Material(
-      child: Container(
-        color: Colors.white,
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Image.asset(
-              'assets/light/favicon.png',
-              width: 100,
-              height: 100,
-            ),
-            const SizedBox(height: 16),
-            const Text('Loading...'),
-          ],
+    if (!cacheInitialized) {
+      debugPrint('Warning: Cache initialization failed after 3 attempts');
+    }
+
+    // Add error handling for renderer
+    ErrorWidget.builder = (FlutterErrorDetails details) {
+      return Material(
+        child: Container(
+          color: Colors.white,
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Image.asset(
+                'assets/light/favicon.png',
+                width: 100,
+                height: 100,
+              ),
+              const SizedBox(height: 16),
+              const Text('Loading...'),
+            ],
+          ),
         ),
+      );
+    };
+
+    // Set permanent system UI settings
+    SystemChrome.setSystemUIOverlayStyle(
+      const SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent,
+        systemNavigationBarColor: Colors.transparent,
+        systemNavigationBarDividerColor: Colors.transparent,
+        systemNavigationBarContrastEnforced: false,
       ),
     );
-  };
 
-  // Set permanent system UI settings
-  SystemChrome.setSystemUIOverlayStyle(
-    const SystemUiOverlayStyle(
-      statusBarColor: Colors.transparent,
-      systemNavigationBarColor: Colors.transparent,
-      systemNavigationBarDividerColor: Colors.transparent,
-      systemNavigationBarContrastEnforced: false,
-    ),
-  );
+    // Set initial system UI mode
+    SystemChrome.setEnabledSystemUIMode(
+      SystemUiMode.immersiveSticky,
+      overlays: [], // Hide both status and navigation bars
+    );
 
-  // Set initial system UI mode
-  SystemChrome.setEnabledSystemUIMode(
-    SystemUiMode.immersiveSticky,
-    overlays: [], // Hide both status and navigation bars
-  );
-
-  runApp(
-    MultiProvider(providers: [
-      ChangeNotifierProvider(create: (_) => AuthProvider()),
-    ], child: const MyApp()),
-  );
+    runApp(
+      MultiProvider(providers: [
+        ChangeNotifierProvider(create: (_) => AuthProvider()),
+      ], child: const MyApp()),
+    );
+  } catch (e) {
+    debugPrint('Fatal error during app initialization: $e');
+    // Show error screen
+    runApp(MaterialApp(
+      home: Material(
+        child: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(Icons.error_outline, size: 64, color: Colors.red),
+                const SizedBox(height: 16),
+                const Text(
+                  'Failed to start app',
+                  style: TextStyle(fontSize: 24),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Error: $e',
+                  style: const TextStyle(fontSize: 16),
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    ));
+  }
 }
 
 class MyApp extends StatelessWidget {

@@ -16,6 +16,12 @@ class ApiService {
     return '${endpoint}_${json.encode(body)}';
   }
 
+  // Check if response is HTML
+  bool _isHtmlResponse(String body) {
+    return body.trim().toLowerCase().startsWith('<!doctype html') ||
+        body.trim().toLowerCase().startsWith('<html');
+  }
+
   // Make API call with caching
   Future<Map<String, dynamic>> makeRequest({
     required String endpoint,
@@ -39,15 +45,31 @@ class ApiService {
       final response = await _client
           .post(
             Uri.parse(endpoint),
-            headers: ApiConfig.headers,
+            headers: {
+              ...ApiConfig.headers,
+              'X-Requested-With': 'XMLHttpRequest',
+              'Accept': 'application/json',
+            },
             body: json.encode(body),
           )
           .timeout(
             Duration(milliseconds: ApiConfig.connectionTimeout),
           );
 
+      // Check for HTML response
+      if (_isHtmlResponse(response.body)) {
+        throw Exception(
+            'Received HTML response instead of JSON. Possible authentication issue.');
+      }
+
       // Parse response
       final decodedResponse = json.decode(response.body);
+
+      // Check for error status codes
+      if (response.statusCode >= 400) {
+        throw Exception(
+            'API Error: ${response.statusCode} - ${decodedResponse['message'] ?? 'Unknown error'}');
+      }
 
       // Cache successful responses
       if (response.statusCode == 200 || response.statusCode == 201) {
@@ -73,7 +95,11 @@ class ApiService {
         };
       }
 
-      rethrow;
+      return {
+        'status': 'error',
+        'message': 'Failed to connect to server',
+        'error': e.toString(),
+      };
     }
   }
 

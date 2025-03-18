@@ -553,14 +553,21 @@ class ThinkProvider {
     bool forceRefresh = false,
   }) async {
     try {
-      final endpoint = '${ApiConfig.functions}$functionName/';
+      final endpoint = ApiConfig.getFunctionEndpoint(functionName);
+      debugPrint('Calling function $functionName at $endpoint');
 
-      return await _apiService.makeRequest(
+      final response = await _apiService.makeRequest(
         endpoint: endpoint,
         body: params,
         cacheDuration: cacheDuration,
         forceRefresh: forceRefresh,
       );
+
+      if (response['status'] == null) {
+        throw Exception('Invalid response format');
+      }
+
+      return response;
     } catch (e) {
       debugPrint('Error calling function $functionName: $e');
       return {

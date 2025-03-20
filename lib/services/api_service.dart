@@ -1,5 +1,7 @@
 import 'package:http/http.dart' as http;
+import 'package:http/io_client.dart';
 import 'dart:convert';
+import 'dart:io';
 import 'package:flutter/foundation.dart';
 import '../network/config.dart';
 import 'cache_service.dart';
@@ -7,9 +9,20 @@ import 'cache_service.dart';
 class ApiService {
   static final ApiService _instance = ApiService._internal();
   factory ApiService() => _instance;
-  ApiService._internal();
 
-  final _client = http.Client();
+  late final http.Client _client;
+
+  ApiService._internal() {
+    // In development, use a client that accepts self-signed certificates
+    if (kDebugMode) {
+      final httpClient = HttpClient()
+        ..badCertificateCallback =
+            (X509Certificate cert, String host, int port) => true;
+      _client = IOClient(httpClient);
+    } else {
+      _client = http.Client();
+    }
+  }
 
   // Generate cache key from request details
   String _generateCacheKey(String endpoint, Map<String, dynamic> body) {

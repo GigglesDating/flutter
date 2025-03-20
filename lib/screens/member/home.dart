@@ -21,14 +21,21 @@ class _HomeTabState extends State<HomeTab> {
   bool _isLoading = false;
   bool _hasMore = true;
   int _currentPage = 1;
-  final int _preloadDistance = 2; // Number of posts to preload
+  final int _preloadDistance = 2;
   bool _isError = false;
   String _errorMessage = '';
 
-  // Keep track of posts being preloaded
-  final Set<String> _preloadedImages = {};
+  // Enhanced caching system
+  static final Map<String, Map<String, dynamic>> _postCache = {};
+  static final Map<String, DateTime> _postCacheTimestamp = {};
+  static const Duration _cacheDuration = Duration(minutes: 15);
 
-  // Keep the temp profile images for now
+  // Track preloaded resources
+  final Set<String> _preloadedImages = {};
+  final Set<String> _preloadedProfiles = {};
+  final Set<String> _preloadedComments = {};
+
+  // Story profiles list
   final List<String> _tempUserProfiles = [
     'assets/tempImages/users/user1.jpg',
     'assets/tempImages/users/user2.jpg',
@@ -45,9 +52,6 @@ class _HomeTabState extends State<HomeTab> {
   bool _isInitialLoading = true;
   bool _isLoadingMore = false;
 
-  // Add memory cache for formatted posts
-  static final Map<String, Map<String, dynamic>> _postCache = {};
-
   @override
   void initState() {
     super.initState();
@@ -59,48 +63,11 @@ class _HomeTabState extends State<HomeTab> {
   @override
   void dispose() {
     _scrollController.dispose();
-    // Clear preloaded images and post cache
+    // Clear caches
     _preloadedImages.clear();
-    _postCache.clear();
+    _preloadedProfiles.clear();
+    _preloadedComments.clear();
     super.dispose();
-  }
-
-  void _preloadNextPosts() {
-    if (_posts.isEmpty || !_scrollController.hasClients) return;
-
-    try {
-      final int currentIndex = (_scrollController.position.pixels /
-              (_scrollController.position.maxScrollExtent / _posts.length))
-          .floor();
-
-      // Preload next few posts
-      for (var i = 1; i <= _preloadDistance; i++) {
-        final nextIndex = currentIndex + i;
-        if (nextIndex < _posts.length) {
-          final post = _posts[nextIndex];
-          final imageUrl = post.media.source;
-          final profileImageUrl = post.authorProfile.profileImage;
-
-          if (!_preloadedImages.contains(imageUrl)) {
-            _preloadedImages.add(imageUrl);
-            precacheImage(
-              CachedNetworkImageProvider(imageUrl),
-              context,
-            );
-          }
-
-          if (!_preloadedImages.contains(profileImageUrl)) {
-            _preloadedImages.add(profileImageUrl);
-            precacheImage(
-              CachedNetworkImageProvider(profileImageUrl),
-              context,
-            );
-          }
-        }
-      }
-    } catch (e) {
-      debugPrint('Error in _preloadNextPosts: $e');
-    }
   }
 
   Future<void> _loadInitialPosts() async {
@@ -111,7 +78,6 @@ class _HomeTabState extends State<HomeTab> {
       _isInitialLoading = true;
       _isError = false;
       _errorMessage = '';
-      _posts.clear();
     });
 
     try {
@@ -122,26 +88,20 @@ class _HomeTabState extends State<HomeTab> {
         throw Exception('No UUID found');
       }
 
-      Future<Map<String, dynamic>> fetchFeedInBackground(String uuid) async {
-        return await ThinkProvider().getFeed(uuid: uuid);
-      }
-
-      final response = await compute(fetchFeedInBackground, uuid);
-      debugPrint('API Response: $response');
-
-      if (!mounted) return;
-
-      if (response['status'] == 'success' && response['data'] != null) {
+      // Check cache first
+      final cachedPosts = _getCachedPosts('initial_posts');
+      if (cachedPosts != null) {
         setState(() {
-          _posts.addAll(PostModel.fromApiResponse(response));
-          _hasMore = response['data']['has_more'] ?? false;
-          _currentPage = 1;
+          _posts.addAll(cachedPosts);
           _isLoading = false;
           _isInitialLoading = false;
         });
-      } else {
-        throw Exception(response['message'] ?? 'Failed to load posts');
+        // Fetch fresh data in background
+        _fetchFreshPosts(uuid);
+        return;
       }
+
+      await _fetchFreshPosts(uuid);
     } catch (e) {
       debugPrint('Error loading posts: $e');
       if (mounted) {
@@ -153,6 +113,117 @@ class _HomeTabState extends State<HomeTab> {
         });
       }
     }
+  }
+
+  Future<void> _fetchFreshPosts(String uuid) async {
+    final response = await compute(
+      (uuid) => ThinkProvider().getFeed(uuid: uuid),
+      uuid,
+    );
+
+    if (!mounted) return;
+
+    if (response['status'] == 'success' && response['data'] != null) {
+      final newPosts = PostModel.fromApiResponse(response);
+
+      // Cache the posts
+      _cachePosts('initial_posts', newPosts);
+
+      setState(() {
+        _posts.clear();
+        _posts.addAll(newPosts);
+        _hasMore = response['data']['has_more'] ?? false;
+        _currentPage = 1;
+        _isLoading = false;
+        _isInitialLoading = false;
+      });
+
+      // Preload resources for visible and next few posts
+      _preloadPostResources(newPosts);
+    } else {
+      throw Exception(response['message'] ?? 'Failed to load posts');
+    }
+  }
+
+  void _preloadPostResources(List<PostModel> posts) async {
+    for (var i = 0; i < posts.length && i < _preloadDistance + 5; i++) {
+      final post = posts[i];
+
+      // Preload post image
+      if (!_preloadedImages.contains(post.media.source)) {
+        _preloadedImages.add(post.media.source);
+        precacheImage(
+          CachedNetworkImageProvider(post.media.source),
+          context,
+        );
+      }
+
+      // Preload author profile image
+      if (!_preloadedProfiles.contains(post.authorProfile.profileImage)) {
+        _preloadedProfiles.add(post.authorProfile.profileImage);
+        precacheImage(
+          CachedNetworkImageProvider(post.authorProfile.profileImage),
+          context,
+        );
+      }
+
+      // Preload comments if not already loaded
+      if (!_preloadedComments.contains(post.postId) &&
+          post.commentIds.isNotEmpty) {
+        _preloadedComments.add(post.postId);
+        _preloadComments(post.postId);
+      }
+    }
+  }
+
+  Future<void> _preloadComments(String postId) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final uuid = prefs.getString('user_uuid');
+      if (uuid == null) return;
+
+      await ThinkProvider().fetchComments(
+        uuid: uuid,
+        contentId: postId,
+        contentType: 'post',
+        page: 1,
+        pageSize: 10,
+      );
+    } catch (e) {
+      debugPrint('Error preloading comments for post $postId: $e');
+    }
+  }
+
+  List<PostModel>? _getCachedPosts(String key) {
+    final timestamp = _postCacheTimestamp[key];
+    if (timestamp == null) return null;
+
+    if (DateTime.now().difference(timestamp) > _cacheDuration) {
+      // Cache expired
+      _postCache.remove(key);
+      _postCacheTimestamp.remove(key);
+      return null;
+    }
+
+    final cachedData = _postCache[key];
+    if (cachedData == null) return null;
+
+    try {
+      return PostModel.fromApiResponse({
+        'status': 'success',
+        'data': {'posts': cachedData['posts']},
+      });
+    } catch (e) {
+      debugPrint('Error parsing cached posts: $e');
+      return null;
+    }
+  }
+
+  void _cachePosts(String key, List<PostModel> posts) {
+    _postCache[key] = {
+      'posts': posts.map((p) => p.toJson()).toList(),
+    };
+    _postCacheTimestamp[key] = DateTime.now();
   }
 
   Future<void> _loadMorePosts() async {
@@ -216,9 +287,6 @@ class _HomeTabState extends State<HomeTab> {
     } else if (_scrollController.offset <= 20 && !_showStories) {
       setState(() => _showStories = true);
     }
-
-    // Trigger preloading
-    _preloadNextPosts();
 
     // Debug prints
     debugPrint('Scroll position: ${_scrollController.position.pixels}');

@@ -96,10 +96,10 @@ class _CommentsSheetState extends State<CommentsSheet>
   bool _hasError = false;
   String _errorMessage = '';
 
-  // Cache configuration
+  // Enhanced caching configuration
   static const String _cacheBoxName = 'comments_cache';
   static const Duration _cacheDuration = Duration(minutes: 15);
-  static const int _maxCacheEntries = 50; // Maximum number of cached pages
+  static const int _maxCacheEntries = 50;
   static const int _maxCacheSize = 5 * 1024 * 1024; // 5MB max cache size
 
   static const int _pageSize = 20;
@@ -186,60 +186,64 @@ class _CommentsSheetState extends State<CommentsSheet>
   }
 
   Future<void> _cacheResponse(String key, Map<String, dynamic> response) async {
-    final cache = await Hive.openBox<String>(_cacheBoxName);
-    final expiryTime = DateTime.now().add(_cacheDuration);
+    try {
+      final box = await Hive.openBox<String>(_cacheBoxName);
 
-    // Check if adding this entry would exceed size limit
-    final jsonString = jsonEncode(response);
-    if (jsonString.length > _maxCacheSize) {
-      debugPrint('Skipping cache: Entry too large');
-      return;
+      // Check cache size before adding
+      if (await _shouldEvictCache(box)) {
+        await _evictOldestEntries(box);
+      }
+
+      final now = DateTime.now();
+      await box.put(key, jsonEncode(response));
+      await box.put(
+          '${key}_metadata',
+          jsonEncode({
+            'timestamp': now.toIso8601String(),
+            'expiry': now.add(_cacheDuration).toIso8601String(),
+          }));
+    } catch (e) {
+      debugPrint('Error caching response: $e');
     }
-
-    // Add metadata
-    final metadata = {
-      'expiry': expiryTime.toIso8601String(),
-      'cached_at': DateTime.now().toIso8601String(),
-      'size': jsonString.length,
-    };
-
-    await cache.put(key, jsonString);
-    await cache.put('${key}_metadata', jsonEncode(metadata));
-
-    // Enforce limits after adding new entry
-    await _enforceCacheLimits();
   }
 
-  Future<Map<String, dynamic>?> _getCachedResponse(String key) async {
-    final cache = await Hive.openBox<String>(_cacheBoxName);
-    final cachedData = cache.get(key);
-    final metadata = cache.get('${key}_metadata');
-
-    if (cachedData != null && metadata != null) {
-      final metadataMap = jsonDecode(metadata);
-      final expiryTime = DateTime.parse(metadataMap['expiry']);
-
-      if (DateTime.now().isBefore(expiryTime)) {
-        try {
-          return jsonDecode(cachedData);
-        } catch (e) {
-          debugPrint('Error parsing cached data: $e');
-          // Clean up corrupted cache entry
-          await cache.delete(key);
-          await cache.delete('${key}_metadata');
-          return null;
-        }
-      } else {
-        // Clean up expired cache
-        await cache.delete(key);
-        await cache.delete('${key}_metadata');
-        return null;
+  Future<bool> _shouldEvictCache(Box<String> box) async {
+    int totalSize = 0;
+    for (final key in box.keys) {
+      final value = box.get(key);
+      if (value != null) {
+        totalSize += value.length;
       }
     }
-    return null;
+    return totalSize > _maxCacheSize || box.length > _maxCacheEntries * 2;
   }
 
-  String get _cacheKey => '${widget.contentId}_${widget.contentType}';
+  Future<void> _evictOldestEntries(Box<String> box) async {
+    final entries = <MapEntry<String, DateTime>>[];
+
+    for (final key in box.keys) {
+      if (!key.endsWith('_metadata')) continue;
+
+      final metadata = box.get(key);
+      if (metadata != null) {
+        final timestamp = DateTime.parse(
+          jsonDecode(metadata)['timestamp'],
+        );
+        entries.add(MapEntry(key.replaceAll('_metadata', ''), timestamp));
+      }
+    }
+
+    entries.sort((a, b) => a.value.compareTo(b.value));
+
+    // Remove oldest third of entries
+    final entriesToRemove = entries.take(entries.length ~/ 3);
+    for (final entry in entriesToRemove) {
+      await box.delete(entry.key);
+      await box.delete('${entry.key}_metadata');
+    }
+  }
+
+  String get _cacheKey => '${widget.contentType}_${widget.contentId}_comments';
 
   Future<void> _loadComments() async {
     if (!mounted) return;
@@ -329,6 +333,31 @@ class _CommentsSheetState extends State<CommentsSheet>
       }
     } catch (e) {
       debugPrint('Error fetching fresh comments: $e');
+    }
+  }
+
+  Future<Map<String, dynamic>?> _getCachedResponse(String key) async {
+    try {
+      final box = await Hive.openBox<String>(_cacheBoxName);
+      final cachedData = box.get(key);
+      final metadata = box.get('${key}_metadata');
+
+      if (cachedData == null || metadata == null) return null;
+
+      final metadataMap = jsonDecode(metadata) as Map<String, dynamic>;
+      final expiryTime = DateTime.parse(metadataMap['expiry']);
+
+      if (DateTime.now().isAfter(expiryTime)) {
+        // Cache expired
+        await box.delete(key);
+        await box.delete('${key}_metadata');
+        return null;
+      }
+
+      return jsonDecode(cachedData) as Map<String, dynamic>;
+    } catch (e) {
+      debugPrint('Error reading cache: $e');
+      return null;
     }
   }
 

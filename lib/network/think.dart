@@ -418,14 +418,13 @@ class ThinkProvider {
   Future<Map<String, dynamic>> getSnips({
     required String uuid,
     int page = 1,
-    String? profileId, // New optional parameter
+    String? profileId, // Optional parameter
   }) async {
     try {
-      // Create request body with optional profile_id
+      // Create request body
       final Map<String, dynamic> requestBody = {
         'uuid': uuid,
         'page': page,
-        'profile_id': profileId,
       };
 
       // Add profile_id to request only if it's provided

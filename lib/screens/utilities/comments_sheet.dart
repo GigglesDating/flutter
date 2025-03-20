@@ -301,11 +301,18 @@ class _CommentsSheetState extends State<CommentsSheet>
   }
 
   Future<void> _fetchFreshComments() async {
+    if (!mounted) return;
+
     try {
       final prefs = await SharedPreferences.getInstance();
       final uuid = prefs.getString('user_uuid');
 
-      if (uuid == null) throw Exception('No UUID found');
+      if (uuid == null) {
+        throw Exception('No UUID found. Please log in again.');
+      }
+
+      debugPrint(
+          'Fetching comments for content: ${widget.contentId} with comment IDs: ${widget.commentIds}');
 
       final response = await ThinkProvider().fetchComments(
         uuid: uuid,
@@ -315,24 +322,41 @@ class _CommentsSheetState extends State<CommentsSheet>
         pageSize: _pageSize,
       );
 
+      if (response['status'] != 'success') {
+        throw Exception(response['message'] ?? 'Failed to fetch comments');
+      }
+
       // Parse in background
       final freshComments = await compute(_parseCommentsInBackground, response);
 
-      // Cache the new response
-      await _cacheResponse('${_cacheKey}_page_1', response);
-      _GlobalCommentsCache.cacheComments(_cacheKey, freshComments);
+      if (!mounted) return;
 
-      if (mounted) {
-        setState(() {
-          _comments = freshComments;
-          _isLoading = false;
-          _hasError = false;
-          _hasMoreComments = response['data']['has_more'] ?? false;
-          _currentPage = 1;
-        });
+      // Cache the new response only if successful
+      if (freshComments.isNotEmpty || response['data']['total_comments'] == 0) {
+        await _cacheResponse('${_cacheKey}_page_1', response);
+        _GlobalCommentsCache.cacheComments(_cacheKey, freshComments);
       }
+
+      setState(() {
+        _comments = freshComments;
+        _isLoading = false;
+        _hasError = false;
+        _hasMoreComments = response['data']['has_more'] ?? false;
+        _currentPage = 1;
+      });
     } catch (e) {
       debugPrint('Error fetching fresh comments: $e');
+      if (!mounted) return;
+
+      setState(() {
+        _isLoading = false;
+        _hasError = true;
+        _errorMessage = e.toString();
+        // Keep existing comments if any
+        if (_comments.isEmpty) {
+          _comments = [];
+        }
+      });
     }
   }
 
@@ -758,8 +782,13 @@ class _CommentsSheetState extends State<CommentsSheet>
   static Future<List<Comment>> _parseCommentsInBackground(
       Map<String, dynamic> response) async {
     try {
-      final parsedData = Comment.parseFromApi(response);
-      return parsedData['data']['comments'] as List<Comment>;
+      if (response['status'] != 'success' || response['data'] == null) {
+        debugPrint('Invalid response format: $response');
+        return [];
+      }
+
+      final commentsData = response['data']['comments'] as List<dynamic>;
+      return commentsData.map((json) => Comment.fromJson(json)).toList();
     } catch (e) {
       debugPrint('Error parsing comments: $e');
       return [];

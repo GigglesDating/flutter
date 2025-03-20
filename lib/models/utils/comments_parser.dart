@@ -28,28 +28,65 @@ class Comment {
 
   // Parse a single comment from JSON
   factory Comment.fromJson(Map<String, dynamic> json, {bool isReply = false}) {
-    final replies = isReply
-        ? const <Comment>[]
-        : (json['replies'] as List?)
-                ?.map((reply) => Comment.fromJson(reply as Map<String, dynamic>,
-                    isReply: true))
-                .toList() ??
-            const [];
+    try {
+      debugPrint('Parsing comment: $json');
 
-    return Comment(
-      id: isReply ? json['reply_id'].toString() : json['comment_id'].toString(),
-      text: json['text']?.toString() ?? '',
-      timestamp: DateTime.parse(
-          json['timestamp']?.toString() ?? DateTime.now().toIso8601String()),
-      likesCount: (json['likes_count'] as num?)?.toInt() ?? 0,
-      authorProfileId: json['author_profile_id']?.toString() ?? '',
-      authorProfile:
-          UserModel.fromJson(json['author_profile'] as Map<String, dynamic>),
-      replyToCommentId: isReply ? json['replytocomment_id']?.toString() : null,
-      replies: replies,
-      contentId: json['content_id']?.toString() ?? '',
-      contentType: json['content_type']?.toString() ?? '',
-    );
+      final replies = isReply
+          ? const <Comment>[]
+          : (json['replies'] as List?)
+                  ?.map((reply) => Comment.fromJson(
+                      reply as Map<String, dynamic>,
+                      isReply: true))
+                  .toList() ??
+              const [];
+
+      // Handle different ID field names
+      final id = json['comment_id']?.toString() ??
+          json['reply_id']?.toString() ??
+          json['id']?.toString() ??
+          '';
+
+      // Handle different timestamp formats
+      DateTime timestamp;
+      try {
+        timestamp = DateTime.parse(json['timestamp']?.toString() ?? '');
+      } catch (e) {
+        debugPrint('Error parsing timestamp: $e');
+        timestamp = DateTime.now();
+      }
+
+      // Handle missing or malformed author_profile
+      Map<String, dynamic> authorProfileJson;
+      if (json['author_profile'] is Map) {
+        authorProfileJson = json['author_profile'] as Map<String, dynamic>;
+      } else {
+        debugPrint('Invalid author_profile format: ${json['author_profile']}');
+        authorProfileJson = {
+          'name': 'Unknown User',
+          'profile_image': '',
+          // Add other required fields with default values
+        };
+      }
+
+      return Comment(
+        id: id,
+        text: json['text']?.toString() ?? '',
+        timestamp: timestamp,
+        likesCount: (json['likes_count'] as num?)?.toInt() ?? 0,
+        authorProfileId: json['author_profile_id']?.toString() ?? '',
+        authorProfile: UserModel.fromJson(authorProfileJson),
+        replyToCommentId:
+            isReply ? json['replytocomment_id']?.toString() : null,
+        replies: replies,
+        contentId: json['content_id']?.toString() ?? '',
+        contentType: json['content_type']?.toString() ?? '',
+      );
+    } catch (e, stackTrace) {
+      debugPrint('Error parsing comment: $e');
+      debugPrint('Stack trace: $stackTrace');
+      debugPrint('JSON data: $json');
+      rethrow;
+    }
   }
 
   // Convert comment to JSON
@@ -72,39 +109,68 @@ class Comment {
 
   // Helper method to parse a list of comments
   static List<Comment> parseCommentsList(List<dynamic> jsonList) {
-    return jsonList
-        .map((json) => Comment.fromJson(json as Map<String, dynamic>))
-        .toList();
+    final List<Comment> comments = [];
+    for (var json in jsonList) {
+      try {
+        if (json is Map<String, dynamic>) {
+          comments.add(Comment.fromJson(json));
+        } else {
+          debugPrint('Invalid comment format: $json');
+        }
+      } catch (e) {
+        debugPrint('Error parsing comment in list: $e');
+        // Continue parsing other comments
+        continue;
+      }
+    }
+    return comments;
   }
 
   // Parse the complete comments API response
   static Map<String, dynamic> parseFromApi(Map<String, dynamic> apiResponse) {
     try {
-      if (apiResponse['status'] != 'success' || apiResponse['data'] == null) {
-        debugPrint('Invalid API response format: $apiResponse');
-        throw Exception('Invalid API response format');
+      debugPrint('Parsing API response: $apiResponse');
+
+      if (apiResponse['status'] != 'success') {
+        debugPrint(
+            'API response status is not success: ${apiResponse['status']}');
+        return {
+          'status': 'error',
+          'message': apiResponse['message'] ?? 'Invalid response format',
+          'data': {
+            'comments': [],
+            'total_comments': 0,
+          }
+        };
       }
 
-      final data = apiResponse['data'] as Map<String, dynamic>;
-      if (data['comments'] == null) {
-        debugPrint('No comments found in data: $data');
-        throw Exception('No comments data found in response');
-      }
+      final data = apiResponse['data'] as Map<String, dynamic>? ?? {};
+      final commentsList = data['comments'] as List? ?? [];
 
-      final commentsList = data['comments'] as List;
       return {
         'status': 'success',
         'data': {
           'comments': parseCommentsList(commentsList),
           'total_comments':
               (data['total_comments'] as num?)?.toInt() ?? commentsList.length,
+          'has_more': data['has_more'] ?? false,
+          'next_page': data['next_page'],
         }
       };
     } catch (e, stackTrace) {
       debugPrint('Error parsing API response: $e');
       debugPrint('Stack trace: $stackTrace');
       debugPrint('API Response: $apiResponse');
-      rethrow;
+      return {
+        'status': 'error',
+        'message': 'Error parsing comments: $e',
+        'data': {
+          'comments': [],
+          'total_comments': 0,
+          'has_more': false,
+          'next_page': null,
+        }
+      };
     }
   }
 }

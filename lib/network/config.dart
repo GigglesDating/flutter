@@ -1,13 +1,13 @@
 class ApiConfig {
   // Base URLs
   static const String baseUrl = 'https://backend.gigglesdating.com/api';
+  static const String functionsBase = '$baseUrl/functions';
 
   // Endpoints
-  static const String requestOtp = '$baseUrl/request-otp';
-  static const String verifyOtp = '$baseUrl/verify-otp';
+  static const String requestOtp = '$baseUrl/auth/request-otp';
+  static const String verifyOtp = '$baseUrl/auth/verify-otp';
   static const String database = '$baseUrl/database';
-  static const String functions =
-      '$baseUrl/functions/'; // Fixed the functions endpoint
+  static const String functions = '$functionsBase'; // Remove trailing slash
 
   // Headers
   static Map<String, String> get headers => {
@@ -20,8 +20,11 @@ class ApiConfig {
   static const int connectionTimeout = 30000; // 30 seconds
   static const int receiveTimeout = 30000; // 30 seconds
 
-  // Generate endpoint URL - just return the functions endpoint as all function calls go there
+  // Generate endpoint URL for specific function
   static String getFunctionEndpoint(String functionName) {
-    return functions; // All function calls go to the same endpoint
+    return '$functions/$functionName'; // Add function name to path
   }
+
+  // Debug configuration
+  static bool get isDebug => true; // Set to false for production
 }

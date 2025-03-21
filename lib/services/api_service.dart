@@ -7,14 +7,27 @@ import '../network/config.dart';
 import 'cache_service.dart';
 import 'dart:collection';
 
+// Create HTTP client with proper SSL handling
+HttpClient _createHttpClient() {
+  final client = HttpClient();
+  if (kDebugMode) {
+    debugPrint(
+        '🔐 Configuring HTTP client to accept self-signed certificates in debug mode');
+    client.badCertificateCallback =
+        (X509Certificate cert, String host, int port) => true;
+  }
+  return client;
+}
+
 // Isolate worker for API requests
 Future<Map<String, dynamic>> _makeRequestInIsolate(
     Map<String, dynamic> params) async {
-  final client = params['isDebug']
-      ? IOClient(HttpClient()..badCertificateCallback = (_, __, ___) => true)
-      : http.Client();
+  final httpClient = _createHttpClient();
+  final client = IOClient(httpClient);
 
   try {
+    debugPrint('📡 Making API request to: ${params['endpoint']}');
+
     final response = await client
         .post(
           Uri.parse(params['endpoint']),
@@ -25,6 +38,11 @@ Future<Map<String, dynamic>> _makeRequestInIsolate(
 
     final responseBody = response.body;
 
+    // Handle empty responses
+    if (responseBody.isEmpty) {
+      throw Exception('Empty response from server');
+    }
+
     // Check for HTML response which might indicate auth issues
     if (responseBody.trim().toLowerCase().startsWith('<!doctype html') ||
         responseBody.trim().toLowerCase().startsWith('<html')) {
@@ -32,13 +50,27 @@ Future<Map<String, dynamic>> _makeRequestInIsolate(
           'Received HTML response instead of JSON. Possible authentication issue.');
     }
 
-    if (response.statusCode >= 400) {
-      throw Exception('API Error: ${response.statusCode}');
+    // Parse response
+    Map<String, dynamic> jsonResponse;
+    try {
+      jsonResponse = json.decode(responseBody);
+    } catch (e) {
+      throw Exception('Invalid JSON response: $responseBody');
     }
 
-    return json.decode(responseBody);
+    // Check status code after parsing JSON to get any error messages from the response
+    if (response.statusCode >= 400) {
+      final errorMessage = jsonResponse['message'] ?? 'Unknown error';
+      throw Exception('API Error ${response.statusCode}: $errorMessage');
+    }
+
+    return jsonResponse;
+  } catch (e) {
+    debugPrint('❌ API request failed: $e');
+    rethrow;
   } finally {
     client.close();
+    httpClient.close();
   }
 }
 
@@ -46,7 +78,7 @@ class ApiService {
   static final ApiService _instance = ApiService._internal();
   factory ApiService() => _instance;
 
-  late final http.Client _client;
+  late final IOClient _client;
 
   // Request coalescing
   final _pendingRequests = <String, Future<Map<String, dynamic>>>{};
@@ -58,15 +90,8 @@ class ApiService {
   int _activeRequests = 0;
 
   ApiService._internal() {
-    // In development, use a client that accepts self-signed certificates
-    if (kDebugMode) {
-      final httpClient = HttpClient()
-        ..badCertificateCallback =
-            (X509Certificate cert, String host, int port) => true;
-      _client = IOClient(httpClient);
-    } else {
-      _client = http.Client();
-    }
+    final httpClient = _createHttpClient();
+    _client = IOClient(httpClient);
   }
 
   // Process queue with concurrency control
@@ -98,12 +123,6 @@ class ApiService {
     return '${endpoint}_${json.encode(body)}';
   }
 
-  // Check if response is HTML
-  bool _isHtmlResponse(String body) {
-    return body.trim().toLowerCase().startsWith('<!doctype html') ||
-        body.trim().toLowerCase().startsWith('<html');
-  }
-
   // Make API call with caching and request coalescing
   Future<Map<String, dynamic>> makeRequest({
     required String endpoint,
@@ -131,6 +150,7 @@ class ApiService {
           }
         }
 
+        debugPrint('🔄 Making fresh request to $endpoint');
         // Make API call in isolate
         final response = await compute(_makeRequestInIsolate, {
           'endpoint': endpoint,
@@ -172,7 +192,7 @@ class ApiService {
 
         return {
           'status': 'error',
-          'message': 'Failed to connect to server',
+          'message': e.toString(),
           'error': e.toString(),
         };
       } finally {

@@ -5,6 +5,8 @@ import '../services/api_service.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'dart:async';
+import 'dart:io';
+import 'package:http/io_client.dart';
 
 class ThinkProvider {
   final ApiService _apiService = ApiService();
@@ -15,7 +17,24 @@ class ThinkProvider {
   static const int _maxRetries = 3;
 
   factory ThinkProvider() => _instance;
-  ThinkProvider._internal();
+  ThinkProvider._internal() {
+    // Initialize the API endpoints
+    _initializeEndpoints();
+  }
+
+  Future<void> _initializeEndpoints() async {
+    try {
+      final response = await http.get(Uri.parse(baseUrl));
+      if (response.statusCode == 200) {
+        final endpoints = jsonDecode(response.body);
+        if (endpoints['functions'] != null) {
+          debugPrint('API Endpoints initialized successfully');
+        }
+      }
+    } catch (e) {
+      debugPrint('Failed to initialize API endpoints: $e');
+    }
+  }
 
   // Check app version
   Future<Map<String, dynamic>> checkVersion() async {
@@ -365,21 +384,20 @@ class ThinkProvider {
     required String uuid,
     int page = 1,
     int pageSize = 10,
-    String? profileId, // Restored profileId parameter
+    String? profileId,
   }) async {
     try {
-      // Create request body with optional profile_id
       final Map<String, dynamic> requestBody = {
         'uuid': uuid,
         'page': page,
         'page_size': pageSize,
       };
 
-      // Add profile_id to request only if it's provided
       if (profileId != null) {
         requestBody['profile_id'] = profileId;
       }
 
+      debugPrint('Calling getFeed with params: $requestBody');
       final response = await _callFunction('get_feed', requestBody);
 
       if (response['status'] == 'success') {
@@ -393,6 +411,7 @@ class ThinkProvider {
           }
         };
       } else {
+        debugPrint('Error response from getFeed: $response');
         return {
           'status': 'error',
           'message': response['message'] ?? 'Failed to fetch feed',
@@ -559,9 +578,14 @@ class ThinkProvider {
 
     while (retryCount < _maxRetries) {
       try {
-        final client = http.Client();
+        // Create a HttpClient that accepts self-signed certificates
+        final httpClient = HttpClient()
+          ..badCertificateCallback =
+              (X509Certificate cert, String host, int port) => true;
+
+        final ioClient = IOClient(httpClient);
         try {
-          final response = await client
+          final response = await ioClient
               .post(
                 Uri.parse(functions),
                 headers: {'Content-Type': 'application/json'},
@@ -590,7 +614,7 @@ class ThinkProvider {
             throw Exception('Server error: ${response.statusCode}');
           }
         } finally {
-          client.close();
+          ioClient.close();
         }
       } catch (e) {
         lastException = e is Exception ? e : Exception(e.toString());

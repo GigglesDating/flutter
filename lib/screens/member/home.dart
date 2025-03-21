@@ -6,8 +6,8 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_frontend/screens/barrel.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/foundation.dart';
+import '../../services/cache_service.dart';
 
 class HomeTab extends StatefulWidget {
   const HomeTab({super.key});
@@ -25,15 +25,9 @@ class _HomeTabState extends State<HomeTab> {
   bool _isError = false;
   String _errorMessage = '';
 
-  // Enhanced caching system
-  static final Map<String, Map<String, dynamic>> _postCache = {};
-  static final Map<String, DateTime> _postCacheTimestamp = {};
-  static const Duration _cacheDuration = Duration(minutes: 15);
-
-  // Track preloaded resources
-  final Set<String> _preloadedImages = {};
-  final Set<String> _preloadedProfiles = {};
-  final Set<String> _preloadedComments = {};
+  // Track loading states
+  bool _isInitialLoading = true;
+  bool _isLoadingMore = false;
 
   // Story profiles list
   final List<String> _tempUserProfiles = [
@@ -48,10 +42,6 @@ class _HomeTabState extends State<HomeTab> {
   File? _croppedImage;
   final ImagePicker _picker = ImagePicker();
 
-  // Track loading states
-  bool _isInitialLoading = true;
-  bool _isLoadingMore = false;
-
   @override
   void initState() {
     super.initState();
@@ -63,10 +53,6 @@ class _HomeTabState extends State<HomeTab> {
   @override
   void dispose() {
     _scrollController.dispose();
-    // Clear caches
-    _preloadedImages.clear();
-    _preloadedProfiles.clear();
-    _preloadedComments.clear();
     super.dispose();
   }
 
@@ -89,13 +75,23 @@ class _HomeTabState extends State<HomeTab> {
       }
 
       // Check cache first
-      final cachedPosts = _getCachedPosts('initial_posts');
+      final cachedPosts =
+          await CacheService.getCachedData('feed_posts_initial');
       if (cachedPosts != null) {
+        final posts = PostModel.fromApiResponse({
+          'status': 'success',
+          'data': cachedPosts,
+        });
+
         setState(() {
-          _posts.addAll(cachedPosts);
+          _posts.addAll(posts);
           _isLoading = false;
           _isInitialLoading = false;
         });
+
+        // Preload media for cached posts
+        _preloadPostResources(posts);
+
         // Fetch fresh data in background
         _fetchFreshPosts(uuid);
         return;
@@ -127,7 +123,11 @@ class _HomeTabState extends State<HomeTab> {
       final newPosts = PostModel.fromApiResponse(response);
 
       // Cache the posts
-      _cachePosts('initial_posts', newPosts);
+      await CacheService.cacheData(
+        key: 'feed_posts_initial',
+        data: response['data'],
+        duration: const Duration(minutes: 15),
+      );
 
       setState(() {
         _posts.clear();
@@ -146,34 +146,36 @@ class _HomeTabState extends State<HomeTab> {
   }
 
   void _preloadPostResources(List<PostModel> posts) async {
+    final videoUrls = <String>[];
+    final thumbnailUrls = <String>[];
+
     for (var i = 0; i < posts.length && i < _preloadDistance + 5; i++) {
       final post = posts[i];
 
-      // Preload post image
-      if (!_preloadedImages.contains(post.media.source)) {
-        _preloadedImages.add(post.media.source);
-        precacheImage(
-          CachedNetworkImageProvider(post.media.source),
-          context,
-        );
+      // Add media URLs for preloading
+      if (post.media.type == 'video') {
+        videoUrls.add(post.media.source);
+      } else {
+        thumbnailUrls.add(post.media.source);
       }
 
-      // Preload author profile image
-      if (!_preloadedProfiles.contains(post.authorProfile.profileImage)) {
-        _preloadedProfiles.add(post.authorProfile.profileImage);
-        precacheImage(
-          CachedNetworkImageProvider(post.authorProfile.profileImage),
-          context,
-        );
-      }
+      // Add profile image for preloading
+      thumbnailUrls.add(post.authorProfile.profileImage);
 
       // Preload comments if not already loaded
-      if (!_preloadedComments.contains(post.postId) &&
-          post.commentIds.isNotEmpty) {
-        _preloadedComments.add(post.postId);
+      final commentsCacheKey = 'comments_${post.postId}_1';
+      final cachedComments = await CacheService.getCachedData(commentsCacheKey);
+      if (cachedComments == null && post.commentIds.isNotEmpty) {
         _preloadComments(post.postId);
       }
     }
+
+    // Preload media using CacheService
+    await CacheService.preloadMedia(
+      videoUrls: videoUrls,
+      thumbnailUrls: thumbnailUrls,
+      priority: CachePriority.high,
+    );
   }
 
   Future<void> _preloadComments(String postId) async {
@@ -182,48 +184,24 @@ class _HomeTabState extends State<HomeTab> {
       final uuid = prefs.getString('user_uuid');
       if (uuid == null) return;
 
-      await ThinkProvider().fetchComments(
+      final response = await ThinkProvider().fetchComments(
         uuid: uuid,
         contentId: postId,
         contentType: 'post',
         page: 1,
         pageSize: 10,
       );
+
+      if (response['status'] == 'success') {
+        await CacheService.cacheData(
+          key: 'comments_${postId}_1',
+          data: response['data'],
+          duration: const Duration(minutes: 30),
+        );
+      }
     } catch (e) {
       debugPrint('Error preloading comments for post $postId: $e');
     }
-  }
-
-  List<PostModel>? _getCachedPosts(String key) {
-    final timestamp = _postCacheTimestamp[key];
-    if (timestamp == null) return null;
-
-    if (DateTime.now().difference(timestamp) > _cacheDuration) {
-      // Cache expired
-      _postCache.remove(key);
-      _postCacheTimestamp.remove(key);
-      return null;
-    }
-
-    final cachedData = _postCache[key];
-    if (cachedData == null) return null;
-
-    try {
-      return PostModel.fromApiResponse({
-        'status': 'success',
-        'data': {'posts': cachedData['posts']},
-      });
-    } catch (e) {
-      debugPrint('Error parsing cached posts: $e');
-      return null;
-    }
-  }
-
-  void _cachePosts(String key, List<PostModel> posts) {
-    _postCache[key] = {
-      'posts': posts.map((p) => p.toJson()).toList(),
-    };
-    _postCacheTimestamp[key] = DateTime.now();
   }
 
   Future<void> _loadMorePosts() async {

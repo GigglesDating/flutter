@@ -5,6 +5,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import '../barrel.dart';
 import 'dart:async';
 import 'dart:ui';
+import '../../services/cache_service.dart';
 
 class PostCard extends StatefulWidget {
   final PostModel post;
@@ -74,35 +75,24 @@ class _PostCardState extends State<PostCard>
     _imageCancellationToken = CancellationToken();
 
     try {
-      // Preload main post image
+      final thumbnailUrls = <String>[];
+
+      // Add post image if available
       if (widget.post.media.source.isNotEmpty) {
-        await CachedNetworkImage.evictFromCache(widget.post.media.source);
-        await precacheImage(
-          CachedNetworkImageProvider(
-            widget.post.media.source,
-            cacheKey: '${widget.post.media.source}_post_main',
-          ),
-          context,
-          onError: (e, stackTrace) {
-            debugPrint('Error preloading post image: $e');
-          },
-        );
+        thumbnailUrls.add(widget.post.media.source);
       }
 
-      // Preload profile image if needed
+      // Add profile image if needed
       if (widget.showProfileImage &&
           widget.post.authorProfile.profileImage.isNotEmpty) {
-        await precacheImage(
-          CachedNetworkImageProvider(
-            widget.post.authorProfile.profileImage,
-            cacheKey: '${widget.post.authorProfile.profileImage}_post_profile',
-          ),
-          context,
-          onError: (e, stackTrace) {
-            debugPrint('Error preloading profile image: $e');
-          },
-        );
+        thumbnailUrls.add(widget.post.authorProfile.profileImage);
       }
+
+      // Use CacheService to preload media
+      await CacheService.preloadMedia(
+        thumbnailUrls: thumbnailUrls,
+        priority: CachePriority.high,
+      );
     } catch (e) {
       debugPrint('Error in preloading images: $e');
     }
@@ -113,21 +103,6 @@ class _PostCardState extends State<PostCard>
     _imageCancellationToken?.cancel();
     _animationController.dispose();
     _heartTimer?.cancel();
-
-    // Clear cached images with specific cache keys
-    if (widget.post.media.source.isNotEmpty) {
-      CachedNetworkImage.evictFromCache(
-        widget.post.media.source,
-        cacheKey: '${widget.post.media.source}_post_main',
-      );
-    }
-    if (widget.showProfileImage &&
-        widget.post.authorProfile.profileImage.isNotEmpty) {
-      CachedNetworkImage.evictFromCache(
-        widget.post.authorProfile.profileImage,
-        cacheKey: '${widget.post.authorProfile.profileImage}_post_profile',
-      );
-    }
     super.dispose();
   }
 

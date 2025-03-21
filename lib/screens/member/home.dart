@@ -74,10 +74,12 @@ class _HomeTabState extends State<HomeTab> {
         throw Exception('No UUID found');
       }
 
+      debugPrint('🔍 Checking cache for initial posts...');
       // Check cache first
       final cachedPosts =
           await CacheService.getCachedData('feed_posts_initial');
       if (cachedPosts != null) {
+        debugPrint('✅ Cache hit! Using cached posts');
         final posts = PostModel.fromApiResponse({
           'status': 'success',
           'data': cachedPosts,
@@ -90,16 +92,19 @@ class _HomeTabState extends State<HomeTab> {
         });
 
         // Preload media for cached posts
+        debugPrint('🖼️ Preloading media for ${posts.length} cached posts');
         _preloadPostResources(posts);
 
         // Fetch fresh data in background
+        debugPrint('🔄 Fetching fresh posts in background');
         _fetchFreshPosts(uuid);
         return;
       }
 
+      debugPrint('❌ Cache miss, fetching fresh posts');
       await _fetchFreshPosts(uuid);
     } catch (e) {
-      debugPrint('Error loading posts: $e');
+      debugPrint('❌ Error loading posts: $e');
       if (mounted) {
         setState(() {
           _isLoading = false;
@@ -149,33 +154,54 @@ class _HomeTabState extends State<HomeTab> {
     final videoUrls = <String>[];
     final thumbnailUrls = <String>[];
 
+    debugPrint('📦 Starting resource preload for ${posts.length} posts');
+
     for (var i = 0; i < posts.length && i < _preloadDistance + 5; i++) {
       final post = posts[i];
 
       // Add media URLs for preloading
       if (post.media.type == 'video') {
         videoUrls.add(post.media.source);
+        debugPrint('🎥 Added video for preload: ${post.media.source}');
       } else {
         thumbnailUrls.add(post.media.source);
+        debugPrint('🖼️ Added image for preload: ${post.media.source}');
       }
 
       // Add profile image for preloading
       thumbnailUrls.add(post.authorProfile.profileImage);
+      debugPrint(
+          '👤 Added profile image for preload: ${post.authorProfile.profileImage}');
 
       // Preload comments if not already loaded
       final commentsCacheKey = 'comments_${post.postId}_1';
       final cachedComments = await CacheService.getCachedData(commentsCacheKey);
       if (cachedComments == null && post.commentIds.isNotEmpty) {
+        debugPrint('💬 Preloading comments for post: ${post.postId}');
         _preloadComments(post.postId);
+      } else if (cachedComments != null) {
+        debugPrint('✅ Using cached comments for post: ${post.postId}');
       }
     }
 
+    // Get cache stats before preload
+    final beforeStats = await CacheService.getCacheStats();
+    debugPrint('📊 Cache stats before preload: $beforeStats');
+
     // Preload media using CacheService
+    debugPrint('🚀 Starting media preload');
+    debugPrint('📹 Videos to preload: ${videoUrls.length}');
+    debugPrint('🖼️ Images to preload: ${thumbnailUrls.length}');
+
     await CacheService.preloadMedia(
       videoUrls: videoUrls,
       thumbnailUrls: thumbnailUrls,
       priority: CachePriority.high,
     );
+
+    // Get cache stats after preload
+    final afterStats = await CacheService.getCacheStats();
+    debugPrint('📊 Cache stats after preload: $afterStats');
   }
 
   Future<void> _preloadComments(String postId) async {

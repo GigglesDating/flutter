@@ -7,6 +7,7 @@ import 'dart:convert';
 import 'dart:async';
 import 'dart:io';
 import 'package:http/io_client.dart';
+import 'dart:math';
 
 class ThinkProvider {
   final ApiService _apiService = ApiService();
@@ -15,24 +16,101 @@ class ThinkProvider {
   static const String functions = '$baseUrl/functions/';
   static const Duration _timeout = Duration(seconds: 30);
   static const int _maxRetries = 3;
+  late final http.Client _client;
 
   factory ThinkProvider() => _instance;
+
   ThinkProvider._internal() {
+    _client = _createClient();
     // Initialize the API endpoints
     _initializeEndpoints();
   }
 
+  http.Client _createClient() {
+    final httpClient = HttpClient()
+      ..badCertificateCallback = (X509Certificate cert, String host, int port) {
+        debugPrint('⚠️ Accepting self-signed certificate for $host:$port');
+        return true; // Accept self-signed certificates
+      }
+      ..connectionTimeout = _timeout;
+
+    return IOClient(httpClient);
+  }
+
   Future<void> _initializeEndpoints() async {
     try {
-      final response = await http.get(Uri.parse(baseUrl));
+      debugPrint('🔄 Initializing API endpoints...');
+      final response = await _client.get(Uri.parse(baseUrl)).timeout(_timeout);
+
       if (response.statusCode == 200) {
         final endpoints = jsonDecode(response.body);
         if (endpoints['functions'] != null) {
-          debugPrint('API Endpoints initialized successfully');
+          debugPrint('✅ API Endpoints initialized successfully');
         }
+      } else {
+        debugPrint(
+            '⚠️ API initialization failed with status: ${response.statusCode}');
       }
     } catch (e) {
-      debugPrint('Failed to initialize API endpoints: $e');
+      if (e is SocketException) {
+        debugPrint('❌ Network error: ${e.message}');
+      } else if (e is TimeoutException) {
+        debugPrint('⏰ Connection timeout');
+      } else {
+        debugPrint('❌ Failed to initialize API endpoints: $e');
+      }
+    }
+  }
+
+  Future<Map<String, dynamic>> _callFunction(
+    String function,
+    Map<String, dynamic> params, {
+    int retryCount = 0,
+    Duration? cacheDuration,
+    bool forceRefresh = false,
+  }) async {
+    try {
+      debugPrint('📡 Calling API function: $function');
+      debugPrint('📦 Parameters: $params');
+
+      final requestBody = {
+        'function': function,
+        ...params,
+      };
+
+      // Use ApiService for the request with caching support
+      final response = await _apiService.makeRequest(
+        endpoint: functions,
+        body: requestBody,
+        cacheDuration: cacheDuration,
+        forceRefresh: forceRefresh,
+      );
+
+      debugPrint('✅ API call successful');
+      return response;
+    } catch (e) {
+      debugPrint('❌ API attempt ${retryCount + 1} failed for $function: $e');
+
+      // Implement retry logic with exponential backoff
+      if (retryCount < _maxRetries - 1) {
+        final waitTime =
+            Duration(milliseconds: pow(2, retryCount + 1).toInt() * 1000);
+        debugPrint('⏳ Retrying in ${waitTime.inSeconds} seconds...');
+        await Future.delayed(waitTime);
+        return _callFunction(
+          function,
+          params,
+          retryCount: retryCount + 1,
+          cacheDuration: cacheDuration,
+          forceRefresh: forceRefresh,
+        );
+      }
+
+      return {
+        'status': 'error',
+        'message': 'Failed to connect to server',
+        'error': e.toString(),
+      };
     }
   }
 
@@ -564,81 +642,6 @@ class ThinkProvider {
         'error': e.toString(),
       };
     }
-  }
-
-  // Helper method for API calls
-  Future<Map<String, dynamic>> _callFunction(
-    String functionName,
-    Map<String, dynamic> params, {
-    Duration? cacheDuration,
-    bool forceRefresh = false,
-  }) async {
-    int retryCount = 0;
-    Exception? lastException;
-
-    while (retryCount < _maxRetries) {
-      try {
-        // Create a HttpClient that accepts self-signed certificates
-        final httpClient = HttpClient()
-          ..badCertificateCallback =
-              (X509Certificate cert, String host, int port) => true;
-
-        final ioClient = IOClient(httpClient);
-        try {
-          final response = await ioClient
-              .post(
-                Uri.parse(functions),
-                headers: {'Content-Type': 'application/json'},
-                body: jsonEncode({
-                  'function': functionName,
-                  ...params,
-                }),
-              )
-              .timeout(_timeout);
-
-          if (response.statusCode == 200) {
-            try {
-              final responseBody = utf8.decode(response.bodyBytes);
-              if (responseBody.isEmpty) {
-                throw Exception('Empty response from server');
-              }
-
-              final decodedResponse =
-                  jsonDecode(responseBody) as Map<String, dynamic>;
-              debugPrint('API Response for $functionName: $decodedResponse');
-              return decodedResponse;
-            } catch (e) {
-              throw Exception('Invalid response format: $e');
-            }
-          } else {
-            throw Exception('Server error: ${response.statusCode}');
-          }
-        } finally {
-          ioClient.close();
-        }
-      } catch (e) {
-        lastException = e is Exception ? e : Exception(e.toString());
-        debugPrint(
-            'API attempt ${retryCount + 1} failed for $functionName: $e');
-
-        if (e is TimeoutException || e.toString().contains('SocketException')) {
-          retryCount++;
-          if (retryCount < _maxRetries) {
-            await Future.delayed(
-                Duration(milliseconds: 1000 * (1 << retryCount)));
-            continue;
-          }
-        } else {
-          break;
-        }
-      }
-    }
-
-    return {
-      'status': 'error',
-      'message': 'Failed to connect to server',
-      'error': lastException?.toString(),
-    };
   }
 
   // Batch multiple function calls

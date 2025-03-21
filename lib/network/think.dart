@@ -365,19 +365,56 @@ class ThinkProvider {
     required String uuid,
     int page = 1,
     int pageSize = 10,
+    String? profileId, // Restored profileId parameter
   }) async {
     try {
-      return await _callFunction('get_feed', {
+      // Create request body with optional profile_id
+      final Map<String, dynamic> requestBody = {
         'uuid': uuid,
         'page': page,
         'page_size': pageSize,
-      });
+      };
+
+      // Add profile_id to request only if it's provided
+      if (profileId != null) {
+        requestBody['profile_id'] = profileId;
+      }
+
+      final response = await _callFunction('get_feed', requestBody);
+
+      if (response['status'] == 'success') {
+        return {
+          'status': 'success',
+          'data': {
+            'posts': List<Map<String, dynamic>>.from(response['data']['posts']),
+            'has_more': response['data']['has_more'],
+            'next_page': response['data']['next_page'],
+            'total_posts': response['data']['total_posts'],
+          }
+        };
+      } else {
+        return {
+          'status': 'error',
+          'message': response['message'] ?? 'Failed to fetch feed',
+          'data': {
+            'posts': [],
+            'has_more': false,
+            'next_page': null,
+            'total_posts': 0,
+          }
+        };
+      }
     } catch (e) {
-      debugPrint('Error getting feed: $e');
+      debugPrint('Error in getFeed: $e');
       return {
         'status': 'error',
-        'message': 'Failed to load feed',
-        'error': e.toString(),
+        'message': 'Error fetching feed: $e',
+        'data': {
+          'posts': [],
+          'has_more': false,
+          'next_page': null,
+          'total_posts': 0,
+        }
       };
     }
   }
@@ -524,14 +561,6 @@ class ThinkProvider {
       try {
         final client = http.Client();
         try {
-          // Add connection check
-          final checkUrl = Uri.parse(baseUrl);
-          final checkResponse = await client.get(checkUrl).timeout(_timeout);
-          if (checkResponse.statusCode != 200) {
-            throw Exception(
-                'Server is not reachable (Status: ${checkResponse.statusCode})');
-          }
-
           final response = await client
               .post(
                 Uri.parse(functions),
@@ -569,22 +598,18 @@ class ThinkProvider {
             'API attempt ${retryCount + 1} failed for $functionName: $e');
 
         if (e is TimeoutException || e.toString().contains('SocketException')) {
-          // Only retry on network-related errors
           retryCount++;
           if (retryCount < _maxRetries) {
-            // Exponential backoff
             await Future.delayed(
                 Duration(milliseconds: 1000 * (1 << retryCount)));
             continue;
           }
         } else {
-          // Don't retry on other types of errors
           break;
         }
       }
     }
 
-    // If we get here, all retries failed
     return {
       'status': 'error',
       'message': 'Failed to connect to server',

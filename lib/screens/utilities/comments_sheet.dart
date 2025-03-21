@@ -248,7 +248,11 @@ class _CommentsSheetState extends State<CommentsSheet>
   Future<void> _loadComments() async {
     if (!mounted) return;
 
-    setState(() => _isLoading = true);
+    setState(() {
+      _isLoading = true;
+      _hasError = false;
+      _errorMessage = '';
+    });
 
     try {
       // Check memory cache first
@@ -259,9 +263,9 @@ class _CommentsSheetState extends State<CommentsSheet>
             _comments = memoryCachedComments;
             _isLoading = false;
             _currentPage = 1;
-            // Still fetch fresh data in background
-            _fetchFreshComments();
           });
+          // Fetch fresh data in background
+          _fetchFreshComments(showLoading: false);
           return;
         }
       }
@@ -280,32 +284,44 @@ class _CommentsSheetState extends State<CommentsSheet>
           });
           // Cache in memory for faster access next time
           _GlobalCommentsCache.cacheComments(_cacheKey, cachedComments);
+
+          // Pre-load author images
+          _preloadAuthorImages(cachedComments);
         }
       }
 
-      await _fetchFreshComments();
+      await _fetchFreshComments(showLoading: !_comments.isNotEmpty);
     } catch (e, stackTrace) {
       debugPrint('Error loading comments: $e');
-      if (kDebugMode) {
-        print('Stack trace: $stackTrace');
-      }
+      debugPrint('Stack trace: $stackTrace');
 
       if (mounted) {
         setState(() {
           _isLoading = false;
           _hasError = true;
-          _errorMessage = e.toString();
+          _errorMessage = 'Failed to load comments. Please try again.';
         });
       }
     }
   }
 
-  Future<void> _fetchFreshComments() async {
+  Future<void> _fetchFreshComments({bool showLoading = true}) async {
+    if (!mounted) return;
+
+    if (showLoading) {
+      setState(() => _isLoading = true);
+    }
+
     try {
       final prefs = await SharedPreferences.getInstance();
       final uuid = prefs.getString('user_uuid');
 
-      if (uuid == null) throw Exception('No UUID found');
+      if (uuid == null) {
+        throw Exception('No UUID found. Please log in again.');
+      }
+
+      debugPrint(
+          'Fetching comments for content: ${widget.contentId} with comment IDs: ${widget.commentIds}');
 
       final response = await ThinkProvider().fetchComments(
         uuid: uuid,
@@ -315,24 +331,71 @@ class _CommentsSheetState extends State<CommentsSheet>
         pageSize: _pageSize,
       );
 
+      if (!mounted) return;
+
+      if (response['status'] != 'success') {
+        throw Exception(response['message'] ?? 'Failed to fetch comments');
+      }
+
       // Parse in background
       final freshComments = await compute(_parseCommentsInBackground, response);
 
-      // Cache the new response
-      await _cacheResponse('${_cacheKey}_page_1', response);
-      _GlobalCommentsCache.cacheComments(_cacheKey, freshComments);
+      // Pre-load author images
+      _preloadAuthorImages(freshComments);
 
-      if (mounted) {
-        setState(() {
-          _comments = freshComments;
-          _isLoading = false;
-          _hasError = false;
-          _hasMoreComments = response['data']['has_more'] ?? false;
-          _currentPage = 1;
-        });
+      if (!mounted) return;
+
+      // Cache the new response only if successful
+      if (freshComments.isNotEmpty || response['data']['total_comments'] == 0) {
+        await _cacheResponse('${_cacheKey}_page_1', response);
+        _GlobalCommentsCache.cacheComments(_cacheKey, freshComments);
       }
+
+      setState(() {
+        _comments = freshComments;
+        _isLoading = false;
+        _hasError = false;
+        _hasMoreComments = response['data']['has_more'] ?? false;
+        _currentPage = 1;
+      });
     } catch (e) {
       debugPrint('Error fetching fresh comments: $e');
+      if (!mounted) return;
+
+      setState(() {
+        _isLoading = false;
+        if (showLoading) {
+          _hasError = true;
+          _errorMessage = 'Failed to fetch comments. Please try again.';
+        }
+      });
+    }
+  }
+
+  void _preloadAuthorImages(List<Comment> comments) {
+    for (final comment in comments) {
+      if (comment.authorProfile.profileImage.isNotEmpty) {
+        precacheImage(
+          CachedNetworkImageProvider(
+            comment.authorProfile.profileImage,
+            cacheKey: '${comment.authorProfile.profileImage}_thumb',
+          ),
+          context,
+        );
+      }
+
+      // Also preload reply author images
+      for (final reply in comment.replies) {
+        if (reply.authorProfile.profileImage.isNotEmpty) {
+          precacheImage(
+            CachedNetworkImageProvider(
+              reply.authorProfile.profileImage,
+              cacheKey: '${reply.authorProfile.profileImage}_reply_thumb',
+            ),
+            context,
+          );
+        }
+      }
     }
   }
 
@@ -758,8 +821,13 @@ class _CommentsSheetState extends State<CommentsSheet>
   static Future<List<Comment>> _parseCommentsInBackground(
       Map<String, dynamic> response) async {
     try {
-      final parsedData = Comment.parseFromApi(response);
-      return parsedData['data']['comments'] as List<Comment>;
+      if (response['status'] != 'success' || response['data'] == null) {
+        debugPrint('Invalid response format: $response');
+        return [];
+      }
+
+      final commentsData = response['data']['comments'] as List<dynamic>;
+      return commentsData.map((json) => Comment.fromJson(json)).toList();
     } catch (e) {
       debugPrint('Error parsing comments: $e');
       return [];

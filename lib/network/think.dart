@@ -2,11 +2,8 @@ import 'config.dart';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../services/api_service.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
 import 'dart:async';
-import 'dart:io';
-import 'package:http/io_client.dart';
+import 'dart:math';
 
 class ThinkProvider {
   final ApiService _apiService = ApiService();
@@ -16,59 +13,134 @@ class ThinkProvider {
   static const Duration _timeout = Duration(seconds: 30);
   static const int _maxRetries = 3;
 
+  // Cache durations for different types of data
+  static const Duration _shortCache = Duration(minutes: 5);
+  static const Duration _mediumCache = Duration(hours: 1);
+  static const Duration _longCache = Duration(days: 1);
+
   factory ThinkProvider() => _instance;
+
   ThinkProvider._internal() {
-    // Initialize the API endpoints
     _initializeEndpoints();
   }
 
   Future<void> _initializeEndpoints() async {
     try {
-      final response = await http.get(Uri.parse(baseUrl));
-      if (response.statusCode == 200) {
-        final endpoints = jsonDecode(response.body);
-        if (endpoints['functions'] != null) {
-          debugPrint('API Endpoints initialized successfully');
-        }
+      debugPrint('🔄 Initializing API endpoints...');
+      final response = await _apiService.makeRequest(
+        endpoint: baseUrl,
+        body: {},
+        cacheDuration: _mediumCache,
+      );
+
+      if (response['status'] == 'success') {
+        debugPrint('✅ API Endpoints initialized successfully');
+      } else {
+        debugPrint('⚠️ API initialization failed: ${response['message']}');
       }
     } catch (e) {
-      debugPrint('Failed to initialize API endpoints: $e');
+      debugPrint('❌ Failed to initialize API endpoints: $e');
     }
   }
 
-  // Check app version
-  Future<Map<String, dynamic>> checkVersion() async {
-    return _callFunction('check_version', {});
+  Future<Map<String, dynamic>> _callFunction(
+    String function,
+    Map<String, dynamic> params, {
+    int retryCount = 0,
+    Duration? cacheDuration,
+    bool forceRefresh = false,
+  }) async {
+    try {
+      debugPrint('📡 Calling API function: $function');
+      debugPrint('📦 Parameters: $params');
+
+      final requestBody = {
+        'function': function,
+        ...params,
+      };
+
+      // Use ApiService for the request with caching support
+      final response = await _apiService.makeRequest(
+        endpoint: functions,
+        body: requestBody,
+        cacheDuration: cacheDuration,
+        forceRefresh: forceRefresh,
+      );
+
+      if (response['status'] == 'success') {
+        debugPrint('✅ API call successful');
+        return response;
+      } else {
+        debugPrint('⚠️ API call failed: ${response['message']}');
+        throw Exception(response['message'] ?? 'API call failed');
+      }
+    } catch (e) {
+      debugPrint('❌ API attempt ${retryCount + 1} failed for $function: $e');
+
+      // Implement retry logic with exponential backoff
+      if (retryCount < _maxRetries - 1) {
+        final waitTime =
+            Duration(milliseconds: pow(2, retryCount + 1).toInt() * 1000);
+        debugPrint('⏳ Retrying in ${waitTime.inSeconds} seconds...');
+        await Future.delayed(waitTime);
+        return _callFunction(
+          function,
+          params,
+          retryCount: retryCount + 1,
+          cacheDuration: cacheDuration,
+          forceRefresh: forceRefresh,
+        );
+      }
+
+      return {
+        'status': 'error',
+        'message': 'Failed to connect to server',
+        'error': e.toString(),
+      };
+    }
   }
 
-  // Update user location
+  // Check app version - medium cache
+  Future<Map<String, dynamic>> checkVersion() async {
+    return _callFunction(
+      'check_version',
+      {},
+      cacheDuration: _mediumCache,
+    );
+  }
+
+  // Update user location - no cache
   Future<Map<String, dynamic>> updateLocation({
     required String uuid,
     required double latitude,
     required double longitude,
   }) async {
-    return _callFunction('update_location', {
-      'uuid': uuid,
-      'latitude': latitude,
-      'longitude': longitude,
-    });
+    return _callFunction(
+      'update_location',
+      {
+        'uuid': uuid,
+        'latitude': latitude,
+        'longitude': longitude,
+      },
+      forceRefresh: true,
+    );
   }
 
-  // Check registration status
+  // Check registration status - short cache
   Future<Map<String, dynamic>> checkRegistrationStatus({
     required String uuid,
   }) async {
     try {
-      final response = await _callFunction('check_registration_status', {
-        'uuid': uuid,
-      });
+      final response = await _callFunction(
+        'check_registration_status',
+        {'uuid': uuid},
+        cacheDuration: _shortCache,
+      );
 
-      // Successful response should have status: success and reg_status field
       if (response['status'] == 'success' && response['reg_status'] != null) {
-        return response; // Return the successful response as is
+        return response;
       }
 
-      // Only log error for actual error responses
       if (response['status'] != 'success') {
         debugPrint('Error response from API: $response');
       }
@@ -86,7 +158,7 @@ class ThinkProvider {
     }
   }
 
-  // Initial signup
+  // Initial signup - no cache
   Future<Map<String, dynamic>> signup({
     required String uuid,
     required String firstName,
@@ -97,15 +169,14 @@ class ThinkProvider {
     required String city,
     required bool consent,
   }) async {
-    // Get phone number from SharedPreferences
     final prefs = await SharedPreferences.getInstance();
-    final phoneNumber = prefs.getString(
-        'phone_number'); // We need to store this during OTP verification
+    final phoneNumber = prefs.getString('phone_number');
 
-    try {
-      final response = await _callFunction('signup', {
+    return _callFunction(
+      'signup',
+      {
         'uuid': uuid,
-        'phone_number': phoneNumber, // Add this
+        'phone_number': phoneNumber,
         'firstName': firstName,
         'lastName': lastName,
         'dob': dob,
@@ -113,17 +184,12 @@ class ThinkProvider {
         'gender': gender,
         'city': city,
         'consent': consent,
-      });
-      return response;
-    } catch (e) {
-      return {
-        'status': 'error',
-        'message': 'Error during signup: $e',
-      };
-    }
+      },
+      forceRefresh: true,
+    );
   }
 
-  // Profile Creation Step 1
+  // Profile Creation Step 1 - no cache
   Future<Map<String, dynamic>> pC1Submit({
     required String uuid,
     required String profileImage,
@@ -134,110 +200,144 @@ class ThinkProvider {
     String? optionalImage1,
     String? optionalImage2,
   }) async {
-    return _callFunction('p_c1_submit', {
-      'uuid': uuid,
-      'profile_image': profileImage,
-      'bio': bio,
-      'mandate_image_1': mandateImage1,
-      'mandate_image_2': mandateImage2,
-      'gender_orientation': genderOrientation,
-      if (optionalImage1 != null) 'optional_image_1': optionalImage1,
-      if (optionalImage2 != null) 'optional_image_2': optionalImage2,
-    });
+    return _callFunction(
+      'p_c1_submit',
+      {
+        'uuid': uuid,
+        'profile_image': profileImage,
+        'bio': bio,
+        'mandate_image_1': mandateImage1,
+        'mandate_image_2': mandateImage2,
+        'gender_orientation': genderOrientation,
+        if (optionalImage1 != null) 'optional_image_1': optionalImage1,
+        if (optionalImage2 != null) 'optional_image_2': optionalImage2,
+      },
+      forceRefresh: true,
+    );
   }
 
-  // Profile Creation Step 2
+  // Profile Creation Step 2 - no cache
   Future<Map<String, dynamic>> pC2Submit({
     required String uuid,
-    required List<String>
-        genderPreference, // Can be ['men', 'women', 'non-binary', 'everyone']
+    required List<String> genderPreference,
     required Map<String, dynamic> agePreference,
   }) async {
-    return _callFunction('p_c2_submit', {
-      'uuid': uuid,
-      'gender_preference': genderPreference,
-      'age_preference': agePreference,
-    });
+    return _callFunction(
+      'p_c2_submit',
+      {
+        'uuid': uuid,
+        'gender_preference': genderPreference,
+        'age_preference': agePreference,
+      },
+      forceRefresh: true,
+    );
   }
 
-  // Profile Creation Step 3
+  // Profile Creation Step 3 - no cache
   Future<Map<String, dynamic>> pC3Submit({
     required String uuid,
     required List<Map<String, dynamic>> selectedInterests,
   }) async {
-    return _callFunction('p_c3_submit', {
-      'uuid': uuid,
-      'selected_interests': selectedInterests,
-    });
+    return _callFunction(
+      'p_c3_submit',
+      {
+        'uuid': uuid,
+        'selected_interests': selectedInterests,
+      },
+      forceRefresh: true,
+    );
   }
 
-  // Get all interests from D1BackendDb
+  // Get all interests - long cache
   Future<Map<String, dynamic>> getInterests() async {
-    return _callFunction('get_interests', {});
+    return _callFunction(
+      'get_interests',
+      {},
+      cacheDuration: _longCache,
+    );
   }
 
-  // Add a custom interest
+  // Add custom interest - no cache
   Future<Map<String, dynamic>> addCustomInterest({
     required String uuid,
     required String interestName,
   }) async {
-    return _callFunction('add_custom_interest', {
-      'uuid': uuid,
-      'interest_name': interestName,
-    });
+    return _callFunction(
+      'add_custom_interest',
+      {
+        'uuid': uuid,
+        'interest_name': interestName,
+      },
+      forceRefresh: true,
+    );
   }
 
-  // Submit Aadhar Information
+  // Submit Aadhar Information - no cache
   Future<Map<String, dynamic>> submitAadharInfo({
     required String uuid,
-    required Map<String, dynamic>
-        kycData, // The complete JSON data from KYC service
+    required Map<String, dynamic> kycData,
   }) async {
-    return _callFunction('submit_aadhar_info', {
-      'uuid': uuid,
-      ...kycData, // Spread the KYC data into the request
-    });
+    return _callFunction(
+      'submit_aadhar_info',
+      {
+        'uuid': uuid,
+        ...kycData,
+      },
+      forceRefresh: true,
+    );
   }
 
-  // Submit Support Ticket
+  // Submit Support Ticket - no cache
   Future<Map<String, dynamic>> submitSupportTicket({
     required String uuid,
     required String screenName,
     required String supportText,
-    String? image1, // base64 encoded image
-    String? image2, // base64 encoded image
+    String? image1,
+    String? image2,
   }) async {
-    return _callFunction('submit_support_ticket', {
-      'uuid': uuid,
-      'screen_name': screenName,
-      'support_text': supportText,
-      if (image1 != null) 'image1': image1,
-      if (image2 != null) 'image2': image2,
-    });
+    return _callFunction(
+      'submit_support_ticket',
+      {
+        'uuid': uuid,
+        'screen_name': screenName,
+        'support_text': supportText,
+        if (image1 != null) 'image1': image1,
+        if (image2 != null) 'image2': image2,
+      },
+      forceRefresh: true,
+    );
   }
 
-  // In ThinkProvider class
+  // Logout - no cache
   Future<Map<String, dynamic>> logout({
     required String uuid,
   }) async {
-    return _callFunction('logout', {
-      'uuid': uuid,
-    });
+    return _callFunction(
+      'logout',
+      {'uuid': uuid},
+      forceRefresh: true,
+    );
   }
 
-  // In ThinkProvider class
+  // Delete account - no cache
   Future<Map<String, dynamic>> deleteAccount({
     required String uuid,
   }) async {
-    return _callFunction('delete_account', {
-      'uuid': uuid,
-    });
+    return _callFunction(
+      'delete_account',
+      {'uuid': uuid},
+      forceRefresh: true,
+    );
   }
 
-  // Function to fetch Faqs
+  // Get FAQs - long cache
   Future<Map<String, dynamic>> getFaqs() async {
     try {
-      final response = await _callFunction('get_faqs', {});
+      final response = await _callFunction(
+        'get_faqs',
+        {},
+        cacheDuration: _longCache,
+      );
 
       if (response['status'] == 'success') {
         return {
@@ -258,38 +358,39 @@ class ThinkProvider {
     }
   }
 
-  // Check member status with caching
+  // Check member status - short cache
   Future<Map<String, dynamic>> checkMemberStatus({
     required String uuid,
   }) async {
-    return await _callFunction(
+    return _callFunction(
       'check_registration_status',
       {'uuid': uuid},
-      cacheDuration: const Duration(minutes: 5),
+      cacheDuration: _shortCache,
     );
   }
 
-  // Get override number with longer cache
+  // Get override number - long cache
   Future<Map<String, dynamic>> getOverrideNumber() async {
-    return await _callFunction(
+    return _callFunction(
       'get_override_number',
       {},
-      cacheDuration: const Duration(days: 1),
+      cacheDuration: _longCache,
     );
   }
 
-  // Get intro video
+  // Get intro video - medium cache
   Future<Map<String, dynamic>> getIntroVideo() async {
     try {
-      final response = await _callFunction('get_intro_video', {});
+      final response = await _callFunction(
+        'get_intro_video',
+        {},
+        cacheDuration: _mediumCache,
+      );
 
       if (response['status'] == 'success') {
         return {
           'status': 'success',
-          'data': {
-            'intro_video_url': response['data']
-                ['intro_video_url'] // This is now a pre-signed URL
-          }
+          'data': {'intro_video_url': response['data']['intro_video_url']}
         };
       } else {
         return {
@@ -306,10 +407,14 @@ class ThinkProvider {
     }
   }
 
-  // Get events
+  // Get events - short cache
   Future<Map<String, dynamic>> getEvents() async {
     try {
-      final response = await _callFunction('get_events', {});
+      final response = await _callFunction(
+        'get_events',
+        {},
+        cacheDuration: _shortCache,
+      );
 
       if (response['status'] == 'success') {
         return {'status': 'success', 'data': response['events']};
@@ -330,18 +435,22 @@ class ThinkProvider {
     }
   }
 
-  // Update or check event likes
+  // Update event like - no cache
   Future<Map<String, dynamic>> updateEventLike({
     required String uuid,
     String? eventId,
-    String? action, // only 'like' or 'check' now
+    String? action,
   }) async {
     try {
-      final response = await _callFunction('update_event_like', {
-        'uuid': uuid,
-        if (eventId != null) 'event_id': eventId,
-        'action': action ?? 'check', // default to 'check' if no action provided
-      });
+      final response = await _callFunction(
+        'update_event_like',
+        {
+          'uuid': uuid,
+          if (eventId != null) 'event_id': eventId,
+          'action': action ?? 'check',
+        },
+        forceRefresh: true,
+      );
 
       if (response['status'] == 'success') {
         if (action == 'check') {
@@ -379,7 +488,7 @@ class ThinkProvider {
     }
   }
 
-  // Get feed posts with pagination
+  // Get feed posts - short cache
   Future<Map<String, dynamic>> getFeed({
     required String uuid,
     int page = 1,
@@ -398,7 +507,11 @@ class ThinkProvider {
       }
 
       debugPrint('Calling getFeed with params: $requestBody');
-      final response = await _callFunction('get_feed', requestBody);
+      final response = await _callFunction(
+        'get_feed',
+        requestBody,
+        cacheDuration: _shortCache,
+      );
 
       if (response['status'] == 'success') {
         return {
@@ -438,25 +551,27 @@ class ThinkProvider {
     }
   }
 
-  // Get snips/reels with pagination
+  // Get snips/reels - short cache
   Future<Map<String, dynamic>> getSnips({
     required String uuid,
     int page = 1,
-    String? profileId, // Optional parameter
+    String? profileId,
   }) async {
     try {
-      // Create request body
       final Map<String, dynamic> requestBody = {
         'uuid': uuid,
         'page': page,
       };
 
-      // Add profile_id to request only if it's provided
       if (profileId != null) {
         requestBody['profile_id'] = profileId;
       }
 
-      final response = await _callFunction('get_snips', requestBody);
+      final response = await _callFunction(
+        'get_snips',
+        requestBody,
+        cacheDuration: _shortCache,
+      );
 
       if (response['status'] == 'success') {
         return {
@@ -495,16 +610,20 @@ class ThinkProvider {
     }
   }
 
-  // Fetch profile information
+  // Fetch profile - short cache
   Future<Map<String, dynamic>> fetchProfile({
     required String uuid,
     required String profileId,
   }) async {
     try {
-      final response = await _callFunction('fetch_profile', {
-        'uuid': uuid,
-        'profile_id': profileId,
-      });
+      final response = await _callFunction(
+        'fetch_profile',
+        {
+          'uuid': uuid,
+          'profile_id': profileId,
+        },
+        cacheDuration: _shortCache,
+      );
 
       if (response['status'] == 'success') {
         return {
@@ -540,7 +659,7 @@ class ThinkProvider {
     }
   }
 
-  // Fetch comments for a specific content (post/snip/story)
+  // Fetch comments - short cache
   Future<Map<String, dynamic>> fetchComments({
     required String uuid,
     required String contentId,
@@ -549,13 +668,17 @@ class ThinkProvider {
     int pageSize = 20,
   }) async {
     try {
-      return await _callFunction('fetch_comments', {
-        'uuid': uuid,
-        'content_id': contentId,
-        'content_type': contentType,
-        'page': page,
-        'page_size': pageSize,
-      });
+      return await _callFunction(
+        'fetch_comments',
+        {
+          'uuid': uuid,
+          'content_id': contentId,
+          'content_type': contentType,
+          'page': page,
+          'page_size': pageSize,
+        },
+        cacheDuration: _shortCache,
+      );
     } catch (e) {
       debugPrint('Error fetching comments: $e');
       return {
@@ -566,82 +689,7 @@ class ThinkProvider {
     }
   }
 
-  // Helper method for API calls
-  Future<Map<String, dynamic>> _callFunction(
-    String functionName,
-    Map<String, dynamic> params, {
-    Duration? cacheDuration,
-    bool forceRefresh = false,
-  }) async {
-    int retryCount = 0;
-    Exception? lastException;
-
-    while (retryCount < _maxRetries) {
-      try {
-        // Create a HttpClient that accepts self-signed certificates
-        final httpClient = HttpClient()
-          ..badCertificateCallback =
-              (X509Certificate cert, String host, int port) => true;
-
-        final ioClient = IOClient(httpClient);
-        try {
-          final response = await ioClient
-              .post(
-                Uri.parse(functions),
-                headers: {'Content-Type': 'application/json'},
-                body: jsonEncode({
-                  'function': functionName,
-                  ...params,
-                }),
-              )
-              .timeout(_timeout);
-
-          if (response.statusCode == 200) {
-            try {
-              final responseBody = utf8.decode(response.bodyBytes);
-              if (responseBody.isEmpty) {
-                throw Exception('Empty response from server');
-              }
-
-              final decodedResponse =
-                  jsonDecode(responseBody) as Map<String, dynamic>;
-              debugPrint('API Response for $functionName: $decodedResponse');
-              return decodedResponse;
-            } catch (e) {
-              throw Exception('Invalid response format: $e');
-            }
-          } else {
-            throw Exception('Server error: ${response.statusCode}');
-          }
-        } finally {
-          ioClient.close();
-        }
-      } catch (e) {
-        lastException = e is Exception ? e : Exception(e.toString());
-        debugPrint(
-            'API attempt ${retryCount + 1} failed for $functionName: $e');
-
-        if (e is TimeoutException || e.toString().contains('SocketException')) {
-          retryCount++;
-          if (retryCount < _maxRetries) {
-            await Future.delayed(
-                Duration(milliseconds: 1000 * (1 << retryCount)));
-            continue;
-          }
-        } else {
-          break;
-        }
-      }
-    }
-
-    return {
-      'status': 'error',
-      'message': 'Failed to connect to server',
-      'error': lastException?.toString(),
-    };
-  }
-
-  // Batch multiple function calls
+  // Batch multiple function calls with caching
   Future<List<Map<String, dynamic>>> _batchFunctions(
     List<Map<String, dynamic>> functions, {
     Duration? cacheDuration,
@@ -661,51 +709,51 @@ class ThinkProvider {
     );
   }
 
-  // Request OTP without caching
+  // Request OTP - no cache
   Future<Map<String, dynamic>> requestOtp({
     required String phoneNumber,
   }) async {
-    return await _callFunction(
+    return _callFunction(
       'request_otp',
       {'phoneNumber': phoneNumber},
-      forceRefresh: true, // Never cache OTP requests
+      forceRefresh: true,
     );
   }
 
-  // Verify OTP without caching
+  // Verify OTP - no cache
   Future<Map<String, dynamic>> verifyOtp({
     required String phoneNumber,
     required String otp,
     required String requestId,
   }) async {
-    return await _callFunction(
+    return _callFunction(
       'verify_otp',
       {
         'phoneNumber': phoneNumber,
         'otp': otp,
         'requestId': requestId,
       },
-      forceRefresh: true, // Never cache OTP verification
+      forceRefresh: true,
     );
   }
 
-  // Get user profile with short cache
+  // Get user profile - short cache
   Future<Map<String, dynamic>> getUserProfile({
     required String uuid,
   }) async {
-    return await _callFunction(
+    return _callFunction(
       'get_profile',
       {'uuid': uuid},
-      cacheDuration: const Duration(minutes: 15),
+      cacheDuration: _shortCache,
     );
   }
 
-  // Update profile without cache
+  // Update profile - no cache
   Future<Map<String, dynamic>> updateProfile({
     required String uuid,
     required Map<String, dynamic> profileData,
   }) async {
-    return await _callFunction(
+    return _callFunction(
       'update_profile',
       {
         'uuid': uuid,
@@ -715,7 +763,7 @@ class ThinkProvider {
     );
   }
 
-  // Batch load initial data
+  // Batch load initial data - short cache
   Future<Map<String, dynamic>> loadInitialData({
     required String uuid,
   }) async {
@@ -728,12 +776,11 @@ class ThinkProvider {
         'name': 'get_profile',
         'params': {'uuid': uuid},
       },
-      // Add other initial data calls here
     ];
 
     final results = await _batchFunctions(
       functions,
-      cacheDuration: const Duration(minutes: 5),
+      cacheDuration: _shortCache,
     );
 
     return {

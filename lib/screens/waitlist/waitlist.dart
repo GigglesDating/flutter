@@ -9,6 +9,7 @@ import 'package:intl/intl.dart';
 import '../barrel.dart';
 import '../../network/auth_provider.dart';
 import 'package:provider/provider.dart';
+import '../../routes/app_router.dart';
 
 class WaitlistScreen extends StatefulWidget {
   const WaitlistScreen({super.key});
@@ -459,8 +460,6 @@ class _WaitlistScreenState extends State<WaitlistScreen>
                           ),
                         ),
                         onTap: () async {
-                          if (!mounted) return;
-
                           try {
                             // Get UUID from SharedPreferences
                             final prefs = await SharedPreferences.getInstance();
@@ -476,9 +475,8 @@ class _WaitlistScreenState extends State<WaitlistScreen>
                             }
 
                             final thinkProvider = ThinkProvider();
-                            final response = await thinkProvider.logout(
-                              uuid: uuid,
-                            );
+                            final response =
+                                await thinkProvider.logout(uuid: uuid);
 
                             if (!mounted) return;
 
@@ -488,18 +486,12 @@ class _WaitlistScreenState extends State<WaitlistScreen>
                               await prefs.remove('reg_process');
 
                               if (!mounted) return;
-                              Navigator.of(context).pushAndRemoveUntil(
-                                MaterialPageRoute(
-                                  builder: (context) => const SplashScreen(),
-                                ),
-                                (route) => false,
-                              );
+                              AppRouter.logout(context);
                             } else {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(
-                                  content: Text(
-                                      response['message'] ?? 'Logout failed'),
-                                ),
+                                    content: Text(response['message'] ??
+                                        'Logout failed')),
                               );
                             }
                           } catch (e) {

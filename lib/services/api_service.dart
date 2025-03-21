@@ -5,23 +5,117 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import '../network/config.dart';
 import 'cache_service.dart';
+import 'dart:collection';
+
+// Create HTTP client with proper SSL handling
+HttpClient _createHttpClient() {
+  final client = HttpClient();
+  if (kDebugMode) {
+    debugPrint(
+        '🔐 Configuring HTTP client to accept self-signed certificates in debug mode');
+    client.badCertificateCallback =
+        (X509Certificate cert, String host, int port) => true;
+  }
+  return client;
+}
+
+// Isolate worker for API requests
+Future<Map<String, dynamic>> _makeRequestInIsolate(
+    Map<String, dynamic> params) async {
+  final httpClient = _createHttpClient();
+  final client = IOClient(httpClient);
+
+  try {
+    debugPrint('📡 Making API request to: ${params['endpoint']}');
+
+    final response = await client
+        .post(
+          Uri.parse(params['endpoint']),
+          headers: params['headers'],
+          body: json.encode(params['body']),
+        )
+        .timeout(Duration(milliseconds: params['timeout']));
+
+    final responseBody = response.body;
+
+    // Handle empty responses
+    if (responseBody.isEmpty) {
+      throw Exception('Empty response from server');
+    }
+
+    // Check for HTML response which might indicate auth issues
+    if (responseBody.trim().toLowerCase().startsWith('<!doctype html') ||
+        responseBody.trim().toLowerCase().startsWith('<html')) {
+      throw Exception(
+          'Received HTML response instead of JSON. Possible authentication issue.');
+    }
+
+    // Parse response
+    Map<String, dynamic> jsonResponse;
+    try {
+      jsonResponse = json.decode(responseBody);
+    } catch (e) {
+      throw Exception('Invalid JSON response: $responseBody');
+    }
+
+    // Check status code after parsing JSON to get any error messages from the response
+    if (response.statusCode >= 400) {
+      final errorMessage = jsonResponse['message'] ?? 'Unknown error';
+      throw Exception('API Error ${response.statusCode}: $errorMessage');
+    }
+
+    return jsonResponse;
+  } catch (e) {
+    debugPrint('❌ API request failed: $e');
+    rethrow;
+  } finally {
+    client.close();
+    httpClient.close();
+  }
+}
 
 class ApiService {
   static final ApiService _instance = ApiService._internal();
   factory ApiService() => _instance;
 
-  late final http.Client _client;
+  late final IOClient _client;
+
+  // Request coalescing
+  final _pendingRequests = <String, Future<Map<String, dynamic>>>{};
+
+  // Request queue
+  final _requestQueue = Queue<Future<void> Function()>();
+  bool _processing = false;
+  static const _maxConcurrentRequests = 4;
+  int _activeRequests = 0;
 
   ApiService._internal() {
-    // In development, use a client that accepts self-signed certificates
-    if (kDebugMode) {
-      final httpClient = HttpClient()
-        ..badCertificateCallback =
-            (X509Certificate cert, String host, int port) => true;
-      _client = IOClient(httpClient);
-    } else {
-      _client = http.Client();
+    final httpClient = _createHttpClient();
+    _client = IOClient(httpClient);
+  }
+
+  // Process queue with concurrency control
+  Future<void> _processQueue() async {
+    if (_processing) return;
+    _processing = true;
+
+    while (_requestQueue.isNotEmpty) {
+      if (_activeRequests >= _maxConcurrentRequests) {
+        await Future.delayed(const Duration(milliseconds: 100));
+        continue;
+      }
+
+      final request = _requestQueue.removeFirst();
+      _activeRequests++;
+
+      try {
+        await request();
+      } finally {
+        _activeRequests--;
+      }
     }
+
+    _processing = false;
   }
 
   // Generate cache key from request details
@@ -29,13 +123,7 @@ class ApiService {
     return '${endpoint}_${json.encode(body)}';
   }
 
-  // Check if response is HTML
-  bool _isHtmlResponse(String body) {
-    return body.trim().toLowerCase().startsWith('<!doctype html') ||
-        body.trim().toLowerCase().startsWith('<html');
-  }
-
-  // Make API call with caching
+  // Make API call with caching and request coalescing
   Future<Map<String, dynamic>> makeRequest({
     required String endpoint,
     required Map<String, dynamic> body,
@@ -44,96 +132,86 @@ class ApiService {
   }) async {
     final cacheKey = _generateCacheKey(endpoint, body);
 
-    try {
-      // Check cache first if not forcing refresh and caching is enabled
-      if (!forceRefresh && cacheDuration != null) {
-        try {
+    // Check for pending request with same cache key
+    if (_pendingRequests.containsKey(cacheKey)) {
+      debugPrint('📦 Reusing pending request for $endpoint');
+      return _pendingRequests[cacheKey]!;
+    }
+
+    // Create the request function
+    Future<Map<String, dynamic>> requestFunction() async {
+      try {
+        // Check cache first if not forcing refresh
+        if (!forceRefresh && cacheDuration != null) {
           final cachedData = await CacheService.getCachedData(cacheKey);
           if (cachedData != null) {
-            debugPrint('Cache hit for $endpoint');
+            debugPrint('✅ Cache hit for $endpoint');
             return cachedData;
           }
-        } catch (e) {
-          debugPrint('Cache error, proceeding with API call: $e');
-          // Continue with API call if cache fails
         }
-      }
 
-      // Make API call
-      final response = await _client
-          .post(
-            Uri.parse(endpoint),
-            headers: {
-              ...ApiConfig.headers,
-              'X-Requested-With': 'XMLHttpRequest',
-              'Accept': 'application/json',
-            },
-            body: json.encode(body),
-          )
-          .timeout(
-            Duration(milliseconds: ApiConfig.connectionTimeout),
-          );
+        debugPrint('🔄 Making fresh request to $endpoint');
+        // Make API call in isolate
+        final response = await compute(_makeRequestInIsolate, {
+          'endpoint': endpoint,
+          'headers': {
+            ...ApiConfig.headers,
+            'X-Requested-With': 'XMLHttpRequest',
+            'Accept': 'application/json',
+          },
+          'body': body,
+          'timeout': ApiConfig.connectionTimeout,
+          'isDebug': kDebugMode,
+        });
 
-      // Check for HTML response
-      if (_isHtmlResponse(response.body)) {
-        throw Exception(
-            'Received HTML response instead of JSON. Possible authentication issue.');
-      }
-
-      // Parse response
-      final decodedResponse = json.decode(response.body);
-
-      // Check for error status codes
-      if (response.statusCode >= 400) {
-        throw Exception(
-            'API Error: ${response.statusCode} - ${decodedResponse['message'] ?? 'Unknown error'}');
-      }
-
-      // Try to cache successful responses if caching is enabled
-      if ((response.statusCode == 200 || response.statusCode == 201) &&
-          cacheDuration != null) {
-        try {
+        // Cache successful response
+        if (cacheDuration != null) {
           await CacheService.cacheData(
             key: cacheKey,
-            data: decodedResponse,
+            data: response,
             duration: cacheDuration,
           );
-        } catch (e) {
-          debugPrint('Failed to cache response: $e');
-          // Continue even if caching fails
         }
-      }
 
-      return decodedResponse;
-    } catch (e) {
-      debugPrint('API Error for $endpoint: $e');
+        return response;
+      } catch (e) {
+        debugPrint('❌ API Error for $endpoint: $e');
 
-      // Try cache again in case of network error
-      if (cacheDuration != null) {
-        try {
+        // Try cache on error
+        if (cacheDuration != null) {
           final cachedData = await CacheService.getCachedData(cacheKey);
           if (cachedData != null) {
-            debugPrint('Using cached data after error for $endpoint');
+            debugPrint('⚠️ Using cached data after error for $endpoint');
             return {
               ...cachedData,
               'fromCache': true,
               'error': e.toString(),
             };
           }
-        } catch (cacheError) {
-          debugPrint('Cache error during fallback: $cacheError');
         }
-      }
 
-      return {
-        'status': 'error',
-        'message': 'Failed to connect to server',
-        'error': e.toString(),
-      };
+        return {
+          'status': 'error',
+          'message': e.toString(),
+          'error': e.toString(),
+        };
+      } finally {
+        // Remove from pending requests
+        _pendingRequests.remove(cacheKey);
+      }
     }
+
+    // Add to pending requests and queue
+    final future = requestFunction();
+    _pendingRequests[cacheKey] = future;
+
+    _requestQueue.add(() => future);
+    _processQueue();
+
+    return future;
   }
 
-  // Batch multiple API calls
+  // Batch multiple API calls with concurrency control
   Future<List<Map<String, dynamic>>> batchRequests({
     required List<Map<String, dynamic>> requests,
     Duration? cacheDuration,
@@ -152,5 +230,7 @@ class ApiService {
   // Clean up resources
   void dispose() {
     _client.close();
+    _pendingRequests.clear();
+    _requestQueue.clear();
   }
 }

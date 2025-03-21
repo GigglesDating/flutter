@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_frontend/screens/barrel.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../../../routes/app_router.dart';
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
@@ -457,19 +458,45 @@ class _SettingsPageState extends State<SettingsPage> {
                 ),
               ),
             ),
-            InkWell(
+            GestureDetector(
               onTap: () async {
-                bool cleared = await clearUserData();
-                if (cleared) {
-                  if (mounted) {
-                    Navigator.pushAndRemoveUntil(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => LoginScreen(),
-                      ),
-                      (route) => false,
+                try {
+                  // Get UUID from SharedPreferences
+                  final prefs = await SharedPreferences.getInstance();
+                  final uuid = prefs.getString('user_uuid');
+
+                  if (uuid == null) {
+                    if (!mounted) return;
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('User ID not found')),
+                    );
+                    return;
+                  }
+
+                  final thinkProvider = ThinkProvider();
+                  final response = await thinkProvider.logout(uuid: uuid);
+
+                  if (!mounted) return;
+
+                  if (response['status'] == 'success') {
+                    // Clear stored data
+                    await prefs.remove('user_uuid');
+                    await prefs.remove('reg_process');
+
+                    if (!mounted) return;
+                    AppRouter.logout(context);
+                  } else {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                          content:
+                              Text(response['message'] ?? 'Logout failed')),
                     );
                   }
+                } catch (e) {
+                  if (!mounted) return;
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Error during logout: $e')),
+                  );
                 }
               },
               child: Container(
@@ -481,6 +508,7 @@ class _SettingsPageState extends State<SettingsPage> {
                     Icon(Icons.logout,
                         size: iconSize,
                         color: const Color.fromARGB(255, 176, 0, 32)),
+                    const SizedBox(width: 8),
                     SizedBox(
                       width: 8,
                     ),

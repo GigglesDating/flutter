@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
+import 'dart:async';
 import 'network/auth_provider.dart';
-import 'screens/barrel.dart';
 import 'services/cache_service.dart';
+import 'routes/app_router.dart';
+import 'routes/route_constants.dart';
 
 // Placeholder Screen Template
 class PlaceholderScreen extends StatelessWidget {
@@ -50,25 +52,20 @@ void main() async {
   try {
     WidgetsFlutterBinding.ensureInitialized();
 
-    // Initialize cache service with retry
-    bool cacheInitialized = false;
-    int retryCount = 0;
-    while (!cacheInitialized && retryCount < 3) {
-      try {
-        await CacheService.init();
-        cacheInitialized = true;
-      } catch (e) {
-        retryCount++;
-        debugPrint('Failed to initialize cache (attempt $retryCount): $e');
-        await Future.delayed(Duration(seconds: 1));
-      }
-    }
+    // Initialize cache service in background
+    unawaited(_initializeCacheService());
 
-    if (!cacheInitialized) {
-      debugPrint('Warning: Cache initialization failed after 3 attempts');
-    }
+    // Set permanent system UI settings
+    SystemChrome.setSystemUIOverlayStyle(
+      const SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent,
+        systemNavigationBarColor: Colors.transparent,
+        systemNavigationBarDividerColor: Colors.transparent,
+        systemNavigationBarContrastEnforced: false,
+      ),
+    );
 
-    // Add error handling for renderer
+    // Configure error widget
     ErrorWidget.builder = (FlutterErrorDetails details) {
       return Material(
         child: Container(
@@ -89,57 +86,37 @@ void main() async {
       );
     };
 
-    // Set permanent system UI settings
-    SystemChrome.setSystemUIOverlayStyle(
-      const SystemUiOverlayStyle(
-        statusBarColor: Colors.transparent,
-        systemNavigationBarColor: Colors.transparent,
-        systemNavigationBarDividerColor: Colors.transparent,
-        systemNavigationBarContrastEnforced: false,
-      ),
-    );
-
-    // Set initial system UI mode
-    SystemChrome.setEnabledSystemUIMode(
-      SystemUiMode.immersiveSticky,
-      overlays: [], // Hide both status and navigation bars
-    );
-
     runApp(
-      MultiProvider(providers: [
-        ChangeNotifierProvider(create: (_) => AuthProvider()),
-      ], child: const MyApp()),
+      MultiProvider(
+        providers: [
+          ChangeNotifierProvider(create: (_) => AuthProvider()),
+          // Add other providers here
+        ],
+        child: const MyApp(),
+      ),
     );
   } catch (e) {
-    debugPrint('Fatal error during app initialization: $e');
-    // Show error screen
-    runApp(MaterialApp(
-      home: Material(
-        child: Center(
-          child: Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Icon(Icons.error_outline, size: 64, color: Colors.red),
-                const SizedBox(height: 16),
-                const Text(
-                  'Failed to start app',
-                  style: TextStyle(fontSize: 24),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  'Error: $e',
-                  style: const TextStyle(fontSize: 16),
-                  textAlign: TextAlign.center,
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    ));
+    debugPrint('Error during app initialization: $e');
+    rethrow;
   }
+}
+
+Future<void> _initializeCacheService() async {
+  int retryCount = 0;
+  while (retryCount < 3) {
+    try {
+      await CacheService.init();
+      debugPrint('Cache service initialized successfully');
+      return;
+    } catch (e) {
+      retryCount++;
+      debugPrint('Failed to initialize cache (attempt $retryCount): $e');
+      if (retryCount < 3) {
+        await Future.delayed(Duration(milliseconds: 500 * retryCount));
+      }
+    }
+  }
+  debugPrint('Warning: Cache initialization failed after 3 attempts');
 }
 
 class MyApp extends StatelessWidget {
@@ -151,24 +128,11 @@ class MyApp extends StatelessWidget {
       title: 'Giggles',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.green),
         useMaterial3: true,
       ),
-      darkTheme: ThemeData.dark(useMaterial3: true).copyWith(
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: Colors.blue,
-          brightness: Brightness.dark,
-        ),
-      ),
-      themeMode: ThemeMode.system,
-      initialRoute: '/',
-      routes: {
-        '/': (context) => const SplashScreen(),
-        '/login': (context) => const LoginScreen(),
-        '/signup': (context) => const SignupScreen(),
-        '/waitlist': (context) => const WaitlistScreen(),
-        '/navigation': (context) => const NavigationController(),
-      },
+      onGenerateRoute: AppRouter.generateRoute,
+      initialRoute: Routes.splash,
     );
   }
 }

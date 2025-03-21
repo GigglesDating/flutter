@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'dart:async';
 import 'package:provider/provider.dart';
+import '../../routes/app_router.dart';
 import '../barrel.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -16,7 +17,6 @@ class _LoginScreenState extends State<LoginScreen> {
   String _phoneNumber = '';
   String _otp = '';
   String? _requestId;
-  String? _regProcess;
   bool _isPressed = false;
   bool _isLoading = false;
   bool _isOtpSent = false;
@@ -41,10 +41,83 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
+  /// Unified method to handle OTP requests
+  Future<bool> _handleOtpRequest(String phoneNumber,
+      {bool isResend = false}) async {
+    if (phoneNumber.length != 10) {
+      setState(() {
+        _errorMessage = 'Please enter a valid 10-digit phone number';
+      });
+      return false;
+    }
+
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+
+    try {
+      // Handle override number case
+      if (phoneNumber == _overrideNumber) {
+        await Future.delayed(const Duration(milliseconds: 500));
+        if (!mounted) return false;
+
+        setState(() {
+          _isLoading = false;
+          _isOtpSent = true;
+          _requestId = 'override';
+          _phoneNumber = phoneNumber;
+          _inputController.clear();
+          if (!isResend) _startResendTimer();
+        });
+        return true;
+      }
+
+      // Normal OTP request flow
+      final authProvider = Provider.of<AuthProvider>(context, listen: false);
+      final response = await authProvider.requestOtp(phoneNumber: phoneNumber);
+
+      if (!mounted) return false;
+
+      if (response['status'] == true ||
+          response['success'] == true ||
+          response['requestId'] != null) {
+        setState(() {
+          _isLoading = false;
+          _isOtpSent = true;
+          _requestId = response['requestId'];
+          _phoneNumber = phoneNumber;
+          _inputController.clear();
+          if (!isResend) _startResendTimer();
+        });
+        return true;
+      } else {
+        setState(() {
+          _isLoading = false;
+          _errorMessage =
+              response['message'] ?? response['error'] ?? 'Failed to send OTP';
+        });
+        return false;
+      }
+    } catch (e) {
+      if (!mounted) return false;
+      setState(() {
+        _isLoading = false;
+        _errorMessage = 'Failed to send OTP. Please try again.';
+      });
+      return false;
+    }
+  }
+
   void _startResendTimer() {
     _canResendOtp = false;
     _resendTimer = 30;
+    _timer?.cancel();
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (!mounted) {
+        timer.cancel();
+        return;
+      }
       setState(() {
         if (_resendTimer > 0) {
           _resendTimer--;
@@ -54,6 +127,17 @@ class _LoginScreenState extends State<LoginScreen> {
         }
       });
     });
+  }
+
+  Future<void> requestOtp() async {
+    await _handleOtpRequest(_phoneNumber);
+  }
+
+  Future<void> _resendOtp() async {
+    if (_canResendOtp) {
+      await _handleOtpRequest(_phoneNumber, isResend: true);
+      _startResendTimer();
+    }
   }
 
   Future<void> _fetchOverrideNumber() async {
@@ -88,10 +172,7 @@ class _LoginScreenState extends State<LoginScreen> {
         setState(() {
           _isLoading = false;
         });
-        Navigator.of(context).pushAndRemoveUntil(
-          MaterialPageRoute(builder: (context) => const NavigationController()),
-          (route) => false,
-        );
+        AppRouter.navigateToHome(context);
         return;
       }
 
@@ -114,24 +195,14 @@ class _LoginScreenState extends State<LoginScreen> {
 
         switch (regProcess) {
           case 'new_user':
-            Navigator.of(context).pushAndRemoveUntil(
-              MaterialPageRoute(builder: (context) => const SignupScreen()),
-              (route) => false,
-            );
+            AppRouter.navigateToWaitlist(context);
             break;
           case 'reg_started':
-            Navigator.of(context).pushAndRemoveUntil(
-              MaterialPageRoute(builder: (context) => const KycConsentScreen()),
-              (route) => false,
-            );
+            AppRouter.navigateToWaitlist(context);
             break;
           default:
             // User is fully registered, go to main app
-            Navigator.of(context).pushAndRemoveUntil(
-              MaterialPageRoute(
-                  builder: (context) => const NavigationController()),
-              (route) => false,
-            );
+            AppRouter.navigateToHome(context);
         }
       } else {
         setState(() {
@@ -147,46 +218,6 @@ class _LoginScreenState extends State<LoginScreen> {
         _errorMessage = 'Failed to verify OTP';
       });
     }
-  }
-
-  Future<void> requestOtp() async {
-    if (_phoneNumber.length != 10) {
-      setState(() {
-        _errorMessage = 'Please enter a valid 10-digit phone number';
-      });
-      return;
-    }
-
-    setState(() {
-      _isLoading = true;
-      _errorMessage = null;
-    });
-
-    // If this is the override number, skip actual OTP request
-    if (_phoneNumber == _overrideNumber) {
-      await Future.delayed(const Duration(seconds: 1));
-      if (!mounted) return;
-
-      setState(() {
-        _isLoading = false;
-        _isOtpSent = true;
-        _requestId = 'override';
-        _inputController.clear();
-        _startResendTimer();
-      });
-      return;
-    }
-
-    // Normal OTP request flow
-    await Future.delayed(const Duration(seconds: 2));
-    if (!mounted) return;
-
-    setState(() {
-      _isLoading = false;
-      _isOtpSent = true;
-      _inputController.clear();
-      _startResendTimer();
-    });
   }
 
   void _showEditNumberSheet() {
@@ -237,47 +268,7 @@ class _LoginScreenState extends State<LoginScreen> {
               onPressed: () async {
                 if (tempNumber.length == 10) {
                   Navigator.pop(context);
-                  setState(() {
-                    _phoneNumber = tempNumber;
-                    _isOtpSent = false;
-                    _otp = '';
-                    _inputController.clear();
-                  });
-
-                  // Call requestOtp API with new number
-                  final authProvider =
-                      Provider.of<AuthProvider>(context, listen: false);
-
-                  setState(() {
-                    _isLoading = true;
-                    _errorMessage = null;
-                  });
-
-                  final response = await authProvider.requestOtp(
-                    phoneNumber: _phoneNumber,
-                  );
-
-                  if (!mounted) return;
-
-                  if (response['status'] == true ||
-                      response['success'] == true ||
-                      response['requestId'] != null) {
-                    setState(() {
-                      _isLoading = false;
-                      _isOtpSent = true;
-                      _requestId = response['requestId'];
-                      _otp = '';
-                      _inputController.clear();
-                      _startResendTimer();
-                    });
-                  } else {
-                    setState(() {
-                      _isLoading = false;
-                      _errorMessage = response['message'] ??
-                          response['error'] ??
-                          'Failed to send OTP';
-                    });
-                  }
+                  await _handleOtpRequest(tempNumber);
                 }
               },
               child: const Text('Update & Request OTP'),
@@ -449,53 +440,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                                 onPressed: _canResendOtp
                                                     ? () async {
                                                         // Call requestOtp API when resend is pressed
-                                                        final authProvider =
-                                                            Provider.of<
-                                                                    AuthProvider>(
-                                                                context,
-                                                                listen: false);
-
-                                                        setState(() {
-                                                          _isLoading = true;
-                                                          _errorMessage = null;
-                                                        });
-
-                                                        final response =
-                                                            await authProvider
-                                                                .requestOtp(
-                                                          phoneNumber:
-                                                              _phoneNumber,
-                                                        );
-
-                                                        if (!mounted) return;
-
-                                                        if (response['status'] == true ||
-                                                            response[
-                                                                    'success'] ==
-                                                                true ||
-                                                            response[
-                                                                    'requestId'] !=
-                                                                null) {
-                                                          setState(() {
-                                                            _isLoading = false;
-                                                            _requestId =
-                                                                response[
-                                                                    'requestId'];
-                                                            _otp = '';
-                                                            _inputController
-                                                                .clear();
-                                                            _startResendTimer();
-                                                          });
-                                                        } else {
-                                                          setState(() {
-                                                            _isLoading = false;
-                                                            _errorMessage = response[
-                                                                    'message'] ??
-                                                                response[
-                                                                    'error'] ??
-                                                                'Failed to send OTP';
-                                                          });
-                                                        }
+                                                        await _resendOtp();
                                                       }
                                                     : null,
                                                 child: Text(

@@ -31,8 +31,6 @@ class NavigationControllerState extends State<NavigationController>
   bool _showNavBar = true;
   bool _isSOSActive = false;
   late Size size;
-  double _rotationValue = 0.0;
-  Timer? _rotationTimer;
   late PageController _pageController;
   final List<bool> _loadedTabs = List.generate(5, (index) => false);
 
@@ -45,7 +43,6 @@ class NavigationControllerState extends State<NavigationController>
     _pageController = PageController(initialPage: 0);
     _loadedTabs[0] = true; // Mark first tab as loaded
     _hideSystemBars();
-    _startRotationTimer();
 
     // Add navigation state listener
     _pageController.addListener(_handlePageScroll);
@@ -63,29 +60,12 @@ class NavigationControllerState extends State<NavigationController>
     ));
   }
 
-  void _showSystemBars() {
-    SystemChrome.setEnabledSystemUIMode(
-      SystemUiMode.manual,
-      overlays: SystemUiOverlay.values,
-    );
-  }
-
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     super.didChangeAppLifecycleState(state);
     if (state == AppLifecycleState.resumed) {
       _hideSystemBars();
     }
-  }
-
-  void _startRotationTimer() {
-    _rotationTimer = Timer.periodic(const Duration(seconds: 3), (timer) {
-      if (_showNavBar && mounted) {
-        setState(() {
-          _rotationValue = _rotationValue + 1; // Full rotation
-        });
-      }
-    });
   }
 
   void _handlePageScroll() {
@@ -103,7 +83,6 @@ class NavigationControllerState extends State<NavigationController>
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
-    _rotationTimer?.cancel();
     _pageController.removeListener(_handlePageScroll);
     _pageController.dispose();
     // Restore system UI when disposing
@@ -120,7 +99,6 @@ class NavigationControllerState extends State<NavigationController>
         _currentIndex = index;
         _showNavBar = index != 1; // Hide nav bar for SwipeScreen
         _loadedTabs[index] = true; // Mark tab as loaded
-        _rotationValue = _rotationValue + 1;
       });
 
       // Ensure immersive mode is maintained
@@ -268,9 +246,9 @@ class NavigationControllerState extends State<NavigationController>
                 : Colors.black.withAlpha(26),
           ),
           child: Center(
-            child: AnimatedRotation(
-              duration: const Duration(milliseconds: 500),
-              turns: isSelected && _currentIndex == index ? _rotationValue : 0,
+            child: AnimatedScale(
+              duration: const Duration(milliseconds: 300),
+              scale: isSelected ? 1.1 : 1.0,
               child: SvgPicture.asset(
                 getIconPath(index),
                 width: iconSize * 0.55,

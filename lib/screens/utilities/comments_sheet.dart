@@ -248,7 +248,11 @@ class _CommentsSheetState extends State<CommentsSheet>
   Future<void> _loadComments() async {
     if (!mounted) return;
 
-    setState(() => _isLoading = true);
+    setState(() {
+      _isLoading = true;
+      _hasError = false;
+      _errorMessage = '';
+    });
 
     try {
       // Check memory cache first
@@ -259,9 +263,9 @@ class _CommentsSheetState extends State<CommentsSheet>
             _comments = memoryCachedComments;
             _isLoading = false;
             _currentPage = 1;
-            // Still fetch fresh data in background
-            _fetchFreshComments();
           });
+          // Fetch fresh data in background
+          _fetchFreshComments(showLoading: false);
           return;
         }
       }
@@ -280,28 +284,33 @@ class _CommentsSheetState extends State<CommentsSheet>
           });
           // Cache in memory for faster access next time
           _GlobalCommentsCache.cacheComments(_cacheKey, cachedComments);
+
+          // Pre-load author images
+          _preloadAuthorImages(cachedComments);
         }
       }
 
-      await _fetchFreshComments();
+      await _fetchFreshComments(showLoading: !_comments.isNotEmpty);
     } catch (e, stackTrace) {
       debugPrint('Error loading comments: $e');
-      if (kDebugMode) {
-        print('Stack trace: $stackTrace');
-      }
+      debugPrint('Stack trace: $stackTrace');
 
       if (mounted) {
         setState(() {
           _isLoading = false;
           _hasError = true;
-          _errorMessage = e.toString();
+          _errorMessage = 'Failed to load comments. Please try again.';
         });
       }
     }
   }
 
-  Future<void> _fetchFreshComments() async {
+  Future<void> _fetchFreshComments({bool showLoading = true}) async {
     if (!mounted) return;
+
+    if (showLoading) {
+      setState(() => _isLoading = true);
+    }
 
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -322,12 +331,17 @@ class _CommentsSheetState extends State<CommentsSheet>
         pageSize: _pageSize,
       );
 
+      if (!mounted) return;
+
       if (response['status'] != 'success') {
         throw Exception(response['message'] ?? 'Failed to fetch comments');
       }
 
       // Parse in background
       final freshComments = await compute(_parseCommentsInBackground, response);
+
+      // Pre-load author images
+      _preloadAuthorImages(freshComments);
 
       if (!mounted) return;
 
@@ -350,13 +364,38 @@ class _CommentsSheetState extends State<CommentsSheet>
 
       setState(() {
         _isLoading = false;
-        _hasError = true;
-        _errorMessage = e.toString();
-        // Keep existing comments if any
-        if (_comments.isEmpty) {
-          _comments = [];
+        if (showLoading) {
+          _hasError = true;
+          _errorMessage = 'Failed to fetch comments. Please try again.';
         }
       });
+    }
+  }
+
+  void _preloadAuthorImages(List<Comment> comments) {
+    for (final comment in comments) {
+      if (comment.authorProfile.profileImage.isNotEmpty) {
+        precacheImage(
+          CachedNetworkImageProvider(
+            comment.authorProfile.profileImage,
+            cacheKey: '${comment.authorProfile.profileImage}_thumb',
+          ),
+          context,
+        );
+      }
+
+      // Also preload reply author images
+      for (final reply in comment.replies) {
+        if (reply.authorProfile.profileImage.isNotEmpty) {
+          precacheImage(
+            CachedNetworkImageProvider(
+              reply.authorProfile.profileImage,
+              cacheKey: '${reply.authorProfile.profileImage}_reply_thumb',
+            ),
+            context,
+          );
+        }
+      }
     }
   }
 

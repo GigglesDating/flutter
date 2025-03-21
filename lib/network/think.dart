@@ -2,10 +2,17 @@ import 'config.dart';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../services/api_service.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import 'dart:async';
 
 class ThinkProvider {
   final ApiService _apiService = ApiService();
   static final ThinkProvider _instance = ThinkProvider._internal();
+  static const String baseUrl = 'https://backend.gigglesdating.com/api';
+  static const String functions = '$baseUrl/functions/';
+  static const Duration _timeout = Duration(seconds: 30);
+  static const int _maxRetries = 3;
 
   factory ThinkProvider() => _instance;
   ThinkProvider._internal();
@@ -357,64 +364,25 @@ class ThinkProvider {
   Future<Map<String, dynamic>> getFeed({
     required String uuid,
     int page = 1,
-    String? profileId, // New optional parameter
+    int pageSize = 10,
   }) async {
     try {
-      // Create request body with optional profile_id
-      final Map<String, dynamic> requestBody = {
+      return await _callFunction('get_feed', {
         'uuid': uuid,
         'page': page,
-      };
-
-      // Add profile_id to request only if it's provided
-      if (profileId != null) {
-        requestBody['profile_id'] = profileId;
-      }
-
-      final response = await _callFunction(
-        'get_feed',
-        requestBody,
-        forceRefresh: true, // Force refresh to skip caching
-      );
-
-      if (response['status'] == 'success') {
-        return {
-          'status': 'success',
-          'data': {
-            'posts': List<Map<String, dynamic>>.from(response['data']['posts']),
-            'has_more': response['data']['has_more'],
-            'next_page': response['data']['next_page'],
-            'total_posts': response['data']['total_posts'],
-          }
-        };
-      } else {
-        return {
-          'status': 'error',
-          'message': response['message'] ?? 'Failed to fetch feed',
-          'data': {
-            'posts': [],
-            'has_more': false,
-            'next_page': null,
-            'total_posts': 0,
-          }
-        };
-      }
+        'page_size': pageSize,
+      });
     } catch (e) {
-      debugPrint('Error in getFeed: $e');
+      debugPrint('Error getting feed: $e');
       return {
         'status': 'error',
-        'message': 'Error fetching feed: $e',
-        'data': {
-          'posts': [],
-          'has_more': false,
-          'next_page': null,
-          'total_posts': 0,
-        }
+        'message': 'Failed to load feed',
+        'error': e.toString(),
       };
     }
   }
 
-// Get snips/reels with pagination
+  // Get snips/reels with pagination
   Future<Map<String, dynamic>> getSnips({
     required String uuid,
     int page = 1,
@@ -519,54 +487,25 @@ class ThinkProvider {
   // Fetch comments for a specific content (post/snip/story)
   Future<Map<String, dynamic>> fetchComments({
     required String uuid,
-    required String contentType,
     required String contentId,
+    required String contentType,
     int page = 1,
     int pageSize = 20,
   }) async {
     try {
-      final response = await _callFunction('fetch_comments', {
+      return await _callFunction('fetch_comments', {
         'uuid': uuid,
-        'content_type': contentType,
         'content_id': contentId,
+        'content_type': contentType,
         'page': page,
         'page_size': pageSize,
       });
-
-      if (response['status'] == 'success') {
-        return {
-          'status': 'success',
-          'data': {
-            'comments':
-                List<Map<String, dynamic>>.from(response['data']['comments']),
-            'total_comments': response['data']['total_comments'],
-            'has_more': response['data']['has_more'] ?? false,
-            'next_page': response['data']['next_page'],
-          }
-        };
-      } else {
-        return {
-          'status': 'error',
-          'message': response['message'] ?? 'Failed to fetch comments',
-          'data': {
-            'comments': [],
-            'total_comments': 0,
-            'has_more': false,
-            'next_page': null,
-          }
-        };
-      }
     } catch (e) {
-      debugPrint('Error in fetchComments: $e');
+      debugPrint('Error fetching comments: $e');
       return {
         'status': 'error',
-        'message': 'Error fetching comments: $e',
-        'data': {
-          'comments': [],
-          'total_comments': 0,
-          'has_more': false,
-          'next_page': null,
-        }
+        'message': 'Failed to load comments',
+        'error': e.toString(),
       };
     }
   }
@@ -578,35 +517,79 @@ class ThinkProvider {
     Duration? cacheDuration,
     bool forceRefresh = false,
   }) async {
-    try {
-      final endpoint = ApiConfig.getFunctionEndpoint(functionName);
-      debugPrint('Calling function $functionName at $endpoint');
+    int retryCount = 0;
+    Exception? lastException;
 
-      // Include the function name in the request body
-      final requestBody = {
-        'function': functionName,
-        ...params,
-      };
+    while (retryCount < _maxRetries) {
+      try {
+        final client = http.Client();
+        try {
+          // Add connection check
+          final checkUrl = Uri.parse(baseUrl);
+          final checkResponse = await client.get(checkUrl).timeout(_timeout);
+          if (checkResponse.statusCode != 200) {
+            throw Exception(
+                'Server is not reachable (Status: ${checkResponse.statusCode})');
+          }
 
-      final response = await _apiService.makeRequest(
-        endpoint: endpoint,
-        body: requestBody,
-        cacheDuration: cacheDuration,
-        forceRefresh: forceRefresh,
-      );
+          final response = await client
+              .post(
+                Uri.parse(functions),
+                headers: {'Content-Type': 'application/json'},
+                body: jsonEncode({
+                  'function': functionName,
+                  ...params,
+                }),
+              )
+              .timeout(_timeout);
 
-      if (response['status'] == null) {
-        throw Exception('Invalid response format');
+          if (response.statusCode == 200) {
+            try {
+              final responseBody = utf8.decode(response.bodyBytes);
+              if (responseBody.isEmpty) {
+                throw Exception('Empty response from server');
+              }
+
+              final decodedResponse =
+                  jsonDecode(responseBody) as Map<String, dynamic>;
+              debugPrint('API Response for $functionName: $decodedResponse');
+              return decodedResponse;
+            } catch (e) {
+              throw Exception('Invalid response format: $e');
+            }
+          } else {
+            throw Exception('Server error: ${response.statusCode}');
+          }
+        } finally {
+          client.close();
+        }
+      } catch (e) {
+        lastException = e is Exception ? e : Exception(e.toString());
+        debugPrint(
+            'API attempt ${retryCount + 1} failed for $functionName: $e');
+
+        if (e is TimeoutException || e.toString().contains('SocketException')) {
+          // Only retry on network-related errors
+          retryCount++;
+          if (retryCount < _maxRetries) {
+            // Exponential backoff
+            await Future.delayed(
+                Duration(milliseconds: 1000 * (1 << retryCount)));
+            continue;
+          }
+        } else {
+          // Don't retry on other types of errors
+          break;
+        }
       }
-
-      return response;
-    } catch (e) {
-      debugPrint('Error calling function $functionName: $e');
-      return {
-        'status': 'error',
-        'message': 'Failed to connect to server',
-      };
     }
+
+    // If we get here, all retries failed
+    return {
+      'status': 'error',
+      'message': 'Failed to connect to server',
+      'error': lastException?.toString(),
+    };
   }
 
   // Batch multiple function calls

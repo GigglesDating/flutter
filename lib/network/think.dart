@@ -28,8 +28,8 @@ class ThinkProvider {
     try {
       debugPrint('🔄 Initializing API endpoints...');
       final response = await _apiService.makeRequest(
-        endpoint: baseUrl,
-        body: {},
+        endpoint: ApiConfig.functions,
+        body: {'function': 'initialize', 'params': {}},
         cacheDuration: _mediumCache,
       );
 
@@ -54,6 +54,9 @@ class ThinkProvider {
       debugPrint('📡 Calling API function: $function');
       debugPrint('📦 Parameters: $params');
 
+      final endpoint = ApiConfig.getFunctionEndpoint(function);
+      ApiConfig.logEndpoint(endpoint);
+
       final requestBody = {
         'function': function,
         ...params,
@@ -61,7 +64,7 @@ class ThinkProvider {
 
       // Use ApiService for the request with caching support
       final response = await _apiService.makeRequest(
-        endpoint: functions,
+        endpoint: endpoint,
         body: requestBody,
         cacheDuration: cacheDuration,
         forceRefresh: forceRefresh,
@@ -94,7 +97,7 @@ class ThinkProvider {
 
       return {
         'status': 'error',
-        'message': 'Failed to connect to server',
+        'message': e.toString(),
         'error': e.toString(),
       };
     }

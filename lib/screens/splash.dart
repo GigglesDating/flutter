@@ -128,6 +128,9 @@ class _SplashScreenState extends State<SplashScreen>
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+
     return Scaffold(
       backgroundColor: Colors.white,
       body: FadeTransition(
@@ -137,8 +140,11 @@ class _SplashScreenState extends State<SplashScreen>
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Image.asset(
-                'assets/light/logo.png',
-                width: MediaQuery.of(context).size.width * 0.6,
+                isDarkMode
+                    ? 'assets/dark/favicon.png'
+                    : 'assets/light/favicon.png',
+                width: screenWidth * 0.4,
+                height: screenWidth * 0.4,
               ),
               const SizedBox(height: 24),
               const CircularProgressIndicator(),

@@ -6,7 +6,12 @@ import 'dart:async';
 import '../barrel.dart';
 
 class NavigationController extends StatefulWidget {
-  const NavigationController({super.key});
+  final int initialTab;
+
+  const NavigationController({
+    super.key,
+    this.initialTab = 0,
+  });
 
   // Add static method to handle navigation from child screens
   static void navigateToTab(BuildContext context, int index) {
@@ -27,7 +32,7 @@ class NavigationController extends StatefulWidget {
 
 class NavigationControllerState extends State<NavigationController>
     with SingleTickerProviderStateMixin, WidgetsBindingObserver {
-  int _currentIndex = 0;
+  late int _currentIndex;
   bool _showNavBar = true;
   bool _isSOSActive = false;
   late Size size;
@@ -39,9 +44,10 @@ class NavigationControllerState extends State<NavigationController>
   @override
   void initState() {
     super.initState();
+    _currentIndex = widget.initialTab;
     WidgetsBinding.instance.addObserver(this);
-    _pageController = PageController(initialPage: 0);
-    _loadedTabs[0] = true; // Mark first tab as loaded
+    _pageController = PageController(initialPage: widget.initialTab);
+    _loadedTabs[widget.initialTab] = true; // Mark initial tab as loaded
     _hideSystemBars();
 
     // Add navigation state listener

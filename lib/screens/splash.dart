@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_frontend/network/auth_provider.dart';
+import 'dart:async';
+import '../routes/app_router.dart';
+import '../routes/route_constants.dart';
 import 'barrel.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -20,7 +23,10 @@ class _SplashScreenState extends State<SplashScreen>
   void initState() {
     super.initState();
     _setupFadeAnimation();
-    _checkAuthAndNavigate();
+    // Delay auth check until animation starts
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _checkAuthAndNavigate();
+    });
   }
 
   void _setupFadeAnimation() {
@@ -37,54 +43,22 @@ class _SplashScreenState extends State<SplashScreen>
     _isNavigating = true;
 
     try {
-      // Initialize auth state from stored preferences
       final authProvider = Provider.of<AuthProvider>(context, listen: false);
       await authProvider.initializeAuth();
 
-      debugPrint(
-          'Initial reg_process from SharedPreferences: ${authProvider.regProcess}');
-
-      // Wait for minimum splash duration
-      await Future.delayed(const Duration(seconds: 3));
+      // Minimum splash duration for animation
+      await Future.delayed(const Duration(seconds: 2));
       if (!mounted) return;
 
-      if (authProvider.isAuthenticated) {
-        final uuid = authProvider.uuid;
-        debugPrint('User UUID: $uuid');
+      if (authProvider.isAuthenticated && authProvider.uuid != null) {
+        debugPrint('User authenticated with UUID: ${authProvider.uuid}');
 
-        if (uuid != null) {
-          final thinkProvider = ThinkProvider();
-          final response = await thinkProvider.checkMemberStatus(uuid: uuid);
-          debugPrint('API Response: $response');
+        // Start member status check in background
+        unawaited(_checkMemberStatusInBackground(authProvider,
+            authProvider.uuid!, authProvider.regProcess ?? 'new_user'));
 
-          if (response['status'] == 'success' && response['data'] != null) {
-            final newRegProcess = response['data']['reg_process'];
-            final currentRegProcess = authProvider.regProcess;
-
-            debugPrint('Current reg_process: $currentRegProcess');
-            debugPrint('New reg_process from API: $newRegProcess');
-
-            if (newRegProcess != null && newRegProcess != currentRegProcess) {
-              debugPrint(
-                  'Updating reg_process from $currentRegProcess to $newRegProcess');
-              await authProvider.updateRegProcess(newRegProcess);
-
-              // Verify the update
-              debugPrint(
-                  'Updated reg_process in AuthProvider: ${authProvider.regProcess}');
-            }
-          } else {
-            debugPrint('Error or invalid response from API: $response');
-            // Keep existing reg_process if API call fails
-            debugPrint(
-                'Keeping existing reg_process: ${authProvider.regProcess}');
-          }
-        }
-
-        // Use the final reg_process for navigation
-        final regProcess = authProvider.regProcess ?? 'new_user';
-        debugPrint('Final reg_process before navigation: $regProcess');
-        _handleNavigation(regProcess);
+        // Navigate immediately based on current reg_process
+        _handleNavigation(authProvider.regProcess ?? 'new_user');
       } else {
         debugPrint('User not authenticated, navigating to login');
         Navigator.of(context).pushReplacementNamed('/login');
@@ -97,127 +71,52 @@ class _SplashScreenState extends State<SplashScreen>
     }
   }
 
+  Future<void> _checkMemberStatusInBackground(
+    AuthProvider authProvider,
+    String uuid,
+    String currentRegProcess,
+  ) async {
+    try {
+      final thinkProvider = ThinkProvider();
+      final response = await thinkProvider.checkMemberStatus(uuid: uuid);
+
+      if (!mounted) return;
+
+      if (response['status'] == 'success' &&
+          response['data'] != null &&
+          response['data']['reg_process'] != null) {
+        final newRegProcess = response['data']['reg_process'];
+
+        // Only update if reg_process has changed
+        if (newRegProcess != currentRegProcess) {
+          debugPrint(
+              'Updating reg_process from $currentRegProcess to $newRegProcess');
+          await authProvider.updateRegProcess(newRegProcess);
+        }
+      }
+    } catch (e) {
+      debugPrint('Background member status check error: $e');
+    }
+  }
+
   void _handleNavigation(String regStatus) {
     if (!mounted) return;
 
-    switch (regStatus) {
-      case 'new_user':
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => const SignupScreen()),
-        );
-        break;
-
-      case 'reg_started':
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => const KycConsentScreen()),
-        );
-        break;
-
-      case 'aadhar_in_review':
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-            builder: (context) => const AadharStatusScreen(),
-            settings: const RouteSettings(
-                arguments: {'status': AadharStatus.inReview}),
-          ),
-        );
-        break;
-
-      case 'aadhar_failed':
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-            builder: (context) => const AadharStatusScreen(),
-            settings:
-                const RouteSettings(arguments: {'status': AadharStatus.failed}),
-          ),
-        );
-        break;
-
-      case 'aadhar_verified':
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => const ProfileCreation1()),
-        );
-        break;
-
-      case 'pc1':
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => const ProfileCreation2()),
-        );
-        break;
-
-      case 'pc2':
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => const ProfileCreation3()),
-        );
-        break;
-
-      case 'waitlisted':
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => const WaitlistScreen()),
-        );
-        break;
-
-      case 'member_approved':
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => const SubscriptionScreen()),
-        );
-        break;
-
+    switch (regStatus.toLowerCase()) {
       case 'member':
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => const NavigationController()),
-        );
+        AppRouter.navigateToHome(context);
         break;
-
-      case 'member_expired':
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => const WaitlistScreen()),
-        );
+      case 'new_user':
+        Navigator.of(context).pushReplacementNamed(Routes.login);
         break;
-
-      case 'member_banned':
-        showDialog(
-          context: context,
-          barrierDismissible: false,
-          builder: (BuildContext context) {
-            return AlertDialog(
-              title: const Text('Account Banned'),
-              content: const Text(
-                  'Sorry, your account has been banned. Please login with a different account or contact support.'),
-              actions: [
-                TextButton(
-                  onPressed: () {
-                    Navigator.pushReplacement(
-                      context,
-                      MaterialPageRoute(
-                          builder: (context) => const LoginScreen()),
-                    );
-                  },
-                  child: const Text('OK'),
-                ),
-              ],
-            );
-          },
-        );
+      case 'pending_verification':
+        Navigator.of(context).pushReplacementNamed(Routes.waitlist);
         break;
-
+      case 'pending_profile':
+        Navigator.of(context).pushReplacementNamed(Routes.waitlist);
+        break;
       default:
-        // Handle unknown status or errors
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => const LoginScreen()),
-        );
+        AppRouter.navigateToLogin(context);
     }
   }
 
@@ -229,22 +128,21 @@ class _SplashScreenState extends State<SplashScreen>
 
   @override
   Widget build(BuildContext context) {
-    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    final size = MediaQuery.of(context).size;
-
     return Scaffold(
-      backgroundColor: isDarkMode ? Colors.black : Colors.white,
-      body: Center(
-        child: FadeTransition(
-          opacity: _fadeAnimation,
-          child: Hero(
-            tag: 'app_logo',
-            child: Image.asset(
-              'assets/light/favicon.png',
-              width: size.width * 0.4,
-              height: size.width * 0.4,
-              color: isDarkMode ? Colors.white : Colors.black,
-            ),
+      backgroundColor: Colors.white,
+      body: FadeTransition(
+        opacity: _fadeAnimation,
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Image.asset(
+                'assets/light/logo.png',
+                width: MediaQuery.of(context).size.width * 0.6,
+              ),
+              const SizedBox(height: 24),
+              const CircularProgressIndicator(),
+            ],
           ),
         ),
       ),

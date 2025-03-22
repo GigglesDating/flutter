@@ -42,13 +42,6 @@ Future<Map<String, dynamic>> _makeRequestInIsolate(
       throw Exception('Empty response from server');
     }
 
-    // Check for HTML response which might indicate auth issues
-    if (responseBody.trim().toLowerCase().startsWith('<!doctype html') ||
-        responseBody.trim().toLowerCase().startsWith('<html')) {
-      throw Exception(
-          'Received HTML response instead of JSON. Possible authentication issue.');
-    }
-
     // Parse response
     Map<String, dynamic> jsonResponse;
     try {
@@ -153,14 +146,9 @@ class ApiService {
         // Make API call in isolate
         final response = await compute(_makeRequestInIsolate, {
           'endpoint': endpoint,
-          'headers': {
-            ...ApiConfig.headers,
-            'X-Requested-With': 'XMLHttpRequest',
-            'Accept': 'application/json',
-          },
+          'headers': ApiConfig.headers,
           'body': body,
-          'timeout': ApiConfig.connectionTimeout,
-          'isDebug': kDebugMode,
+          'timeout': ApiConfig.connectionTimeout.inMilliseconds,
         });
 
         // Cache successful response

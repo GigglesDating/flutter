@@ -48,7 +48,7 @@ class AuthProvider extends ChangeNotifier {
             }),
           )
           .timeout(
-            Duration(milliseconds: ApiConfig.connectionTimeout),
+            ApiConfig.connectionTimeout,
           );
 
       if (response.statusCode >= 500) {
@@ -114,7 +114,7 @@ class AuthProvider extends ChangeNotifier {
             }),
           )
           .timeout(
-            Duration(milliseconds: ApiConfig.connectionTimeout),
+            ApiConfig.connectionTimeout,
           );
 
       if (response.statusCode >= 500) {

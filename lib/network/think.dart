@@ -29,7 +29,9 @@ class ThinkProvider {
       debugPrint('🔄 Initializing API endpoints...');
       final response = await _apiService.makeRequest(
         endpoint: ApiConfig.functions,
-        body: {'function': 'initialize', 'params': {}},
+        body: {
+          'function': 'initialize',
+        },
         cacheDuration: _mediumCache,
       );
 
@@ -55,14 +57,12 @@ class ThinkProvider {
       debugPrint('📦 Parameters: $params');
 
       final endpoint = ApiConfig.getFunctionEndpoint(function);
-      ApiConfig.logEndpoint(endpoint);
 
       final requestBody = {
         'function': function,
         ...params,
       };
 
-      // Use ApiService for the request with caching support
       final response = await _apiService.makeRequest(
         endpoint: endpoint,
         body: requestBody,
@@ -80,7 +80,6 @@ class ThinkProvider {
     } catch (e) {
       debugPrint('❌ API attempt ${retryCount + 1} failed for $function: $e');
 
-      // Implement retry logic with exponential backoff
       if (retryCount < _maxRetries - 1) {
         final waitTime =
             Duration(milliseconds: pow(2, retryCount + 1).toInt() * 1000);

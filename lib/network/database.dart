@@ -8,9 +8,14 @@ class DatabaseProvider {
     required String bucket,
   }) async {
     try {
-      final response = await http.get(
-        Uri.parse('${ApiConfig.database}$uuid/$bucket/'),
+      final response = await http.post(
+        Uri.parse(ApiConfig.database),
         headers: ApiConfig.headers,
+        body: jsonEncode({
+          'function': 'get_data',
+          'uuid': uuid,
+          'bucket': bucket,
+        }),
       );
 
       return jsonDecode(response.body);
@@ -26,9 +31,14 @@ class DatabaseProvider {
   }) async {
     try {
       final response = await http.post(
-        Uri.parse('${ApiConfig.database}$uuid/$bucket/'),
+        Uri.parse(ApiConfig.database),
         headers: ApiConfig.headers,
-        body: jsonEncode(data),
+        body: jsonEncode({
+          'function': 'update_data',
+          'uuid': uuid,
+          'bucket': bucket,
+          'data': data,
+        }),
       );
 
       return jsonDecode(response.body);

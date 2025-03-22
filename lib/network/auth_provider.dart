@@ -41,14 +41,15 @@ class AuthProvider extends ChangeNotifier {
 
       final response = await http
           .post(
-            Uri.parse(ApiConfig.requestOtp),
+            Uri.parse(ApiConfig.functions),
             headers: ApiConfig.headers,
             body: jsonEncode({
+              'function': 'request_otp',
               'phoneNumber': '+91$phoneNumber',
             }),
           )
           .timeout(
-            Duration(milliseconds: ApiConfig.connectionTimeout),
+            ApiConfig.connectionTimeout,
           );
 
       if (response.statusCode >= 500) {
@@ -105,16 +106,17 @@ class AuthProvider extends ChangeNotifier {
 
       final response = await http
           .post(
-            Uri.parse(ApiConfig.verifyOtp),
+            Uri.parse(ApiConfig.functions),
             headers: ApiConfig.headers,
             body: jsonEncode({
+              'function': 'verify_otp',
               'phoneNumber': phoneNumber,
               'otp': otp,
               'requestId': requestId,
             }),
           )
           .timeout(
-            Duration(milliseconds: ApiConfig.connectionTimeout),
+            ApiConfig.connectionTimeout,
           );
 
       if (response.statusCode >= 500) {

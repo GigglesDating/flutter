@@ -8,9 +8,6 @@ import 'dart:math';
 class ThinkProvider {
   final ApiService _apiService = ApiService();
   static final ThinkProvider _instance = ThinkProvider._internal();
-  static const String baseUrl = 'https://backend.gigglesdating.com/api';
-  static const String functions = '$baseUrl/functions/';
-  static const Duration _timeout = Duration(seconds: 30);
   static const int _maxRetries = 3;
 
   // Cache durations for different types of data
@@ -29,7 +26,9 @@ class ThinkProvider {
       debugPrint('🔄 Initializing API endpoints...');
       final response = await _apiService.makeRequest(
         endpoint: ApiConfig.functions,
-        body: {'function': 'initialize', 'params': {}},
+        body: {
+          'function': 'initialize',
+        },
         cacheDuration: _mediumCache,
       );
 
@@ -54,17 +53,13 @@ class ThinkProvider {
       debugPrint('📡 Calling API function: $function');
       debugPrint('📦 Parameters: $params');
 
-      final endpoint = ApiConfig.getFunctionEndpoint(function);
-      ApiConfig.logEndpoint(endpoint);
-
       final requestBody = {
         'function': function,
         ...params,
       };
 
-      // Use ApiService for the request with caching support
       final response = await _apiService.makeRequest(
-        endpoint: endpoint,
+        endpoint: ApiConfig.functions,
         body: requestBody,
         cacheDuration: cacheDuration,
         forceRefresh: forceRefresh,
@@ -80,7 +75,6 @@ class ThinkProvider {
     } catch (e) {
       debugPrint('❌ API attempt ${retryCount + 1} failed for $function: $e');
 
-      // Implement retry logic with exponential backoff
       if (retryCount < _maxRetries - 1) {
         final waitTime =
             Duration(milliseconds: pow(2, retryCount + 1).toInt() * 1000);

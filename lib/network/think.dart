@@ -347,21 +347,51 @@ class ThinkProvider {
     int pageSize = 10,
     String? profileId,
   }) async {
-    final Map<String, dynamic> requestBody = {
-      'uuid': uuid,
-      'page': page,
-      'page_size': pageSize,
-    };
+    try {
+      final Map<String, dynamic> requestBody = {
+        'uuid': uuid,
+        'page': page,
+        'page_size': pageSize,
+      };
 
-    if (profileId != null) {
-      requestBody['profile_id'] = profileId;
+      if (profileId != null) {
+        requestBody['profile_id'] = profileId;
+      }
+
+      final response = await _callFunction(
+        'get_feed',
+        requestBody,
+        cacheDuration: CacheService.shortCache,
+      );
+
+      // Ensure the response has the correct structure
+      if (response['status'] == 'success' && response['data'] != null) {
+        return response;
+      }
+
+      // Return a properly structured error response
+      return {
+        'status': 'error',
+        'message': response['message'] ?? 'Failed to load feed',
+        'data': {
+          'posts': [],
+          'has_more': false,
+          'next_page': null,
+          'total_posts': 0
+        }
+      };
+    } catch (e) {
+      return {
+        'status': 'error',
+        'message': e.toString(),
+        'data': {
+          'posts': [],
+          'has_more': false,
+          'next_page': null,
+          'total_posts': 0
+        }
+      };
     }
-
-    return _callFunction(
-      'get_feed',
-      requestBody,
-      cacheDuration: CacheService.shortCache,
-    );
   }
 
   // Get snips/reels - short cache

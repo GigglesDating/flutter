@@ -7,102 +7,62 @@ import '../network/config.dart';
 import 'cache_service.dart';
 import 'dart:collection';
 
-// Create HTTP client with proper SSL handling
 HttpClient _createHttpClient() {
   final client = HttpClient();
-
-  // Allow self-signed certificates in debug mode
   if (kDebugMode) {
-    debugPrint('🔒 Allowing self-signed certificates in debug mode');
     client.badCertificateCallback =
         (X509Certificate cert, String host, int port) => true;
   }
-
   return client;
 }
 
-// Isolate worker for API requests
 Future<Map<String, dynamic>> _makeRequestInIsolate(
     Map<String, dynamic> params) async {
   final httpClient = _createHttpClient();
   final client = IOClient(httpClient);
 
   try {
-    debugPrint('📡 Making API request to: ${params['endpoint']}');
-
-    // Format request body
-    final requestBody = {
-      'data': params['body'], // Wrap the body in a 'data' field
-      'timestamp': DateTime.now().millisecondsSinceEpoch,
-    };
-    debugPrint('📦 Request body: $requestBody');
-
     final response = await client
         .post(
           Uri.parse(params['endpoint']),
           headers: params['headers'],
-          body: json.encode(requestBody), // Use the wrapped request body
+          body: json.encode(params['body']),
         )
         .timeout(Duration(milliseconds: params['timeout']));
 
-    debugPrint('📥 Response status code: ${response.statusCode}');
-    debugPrint('📥 Response headers: ${response.headers}');
-
-    final responseBody = response.body;
-    debugPrint('📥 Raw response: $responseBody');
-
-    // Handle empty responses
-    if (responseBody.isEmpty) {
-      debugPrint('⚠️ Empty response received from server');
+    if (response.body.isEmpty) {
       return {
         'status': 'error',
         'message': 'Empty response from server',
-        'statusCode': response.statusCode,
-        'headers': response.headers,
+        'data': null
       };
     }
 
-    // Parse response
     Map<String, dynamic> jsonResponse;
     try {
-      jsonResponse = json.decode(responseBody);
+      jsonResponse = json.decode(response.body);
     } catch (e) {
-      debugPrint('❌ Failed to parse JSON response: $e');
       return {
         'status': 'error',
-        'message': 'Invalid JSON response: $responseBody',
-        'statusCode': response.statusCode,
-        'headers': response.headers,
+        'message': 'Invalid response format',
+        'data': null
       };
     }
 
-    // Check status code after parsing JSON to get any error messages from the response
     if (response.statusCode >= 400) {
-      final errorMessage = jsonResponse['message'] ?? 'Unknown error';
-      debugPrint('❌ API Error ${response.statusCode}: $errorMessage');
       return {
         'status': 'error',
-        'message': 'API Error ${response.statusCode}: $errorMessage',
-        'statusCode': response.statusCode,
-        'error': jsonResponse,
+        'message': jsonResponse['message'] ?? 'Server error',
+        'data': null
       };
     }
 
     return jsonResponse;
   } catch (e) {
-    debugPrint('❌ API request failed: $e');
     if (e is TimeoutException) {
-      return {
-        'status': 'error',
-        'message': 'Request timed out',
-        'error': e.toString(),
-      };
+      return {'status': 'error', 'message': 'Request timed out', 'data': null};
     }
-    return {
-      'status': 'error',
-      'message': e.toString(),
-      'error': e.toString(),
-    };
+    return {'status': 'error', 'message': e.toString(), 'data': null};
   } finally {
     client.close();
     httpClient.close();
@@ -114,11 +74,7 @@ class ApiService {
   factory ApiService() => _instance;
 
   late final IOClient _client;
-
-  // Request coalescing
   final _pendingRequests = <String, Future<Map<String, dynamic>>>{};
-
-  // Request queue
   final _requestQueue = Queue<Future<void> Function()>();
   bool _processing = false;
   static const _maxConcurrentRequests = 4;
@@ -129,7 +85,6 @@ class ApiService {
     _client = IOClient(httpClient);
   }
 
-  // Process queue with concurrency control
   Future<void> _processQueue() async {
     if (_processing) return;
     _processing = true;
@@ -153,12 +108,14 @@ class ApiService {
     _processing = false;
   }
 
-  // Generate cache key from request details
   String _generateCacheKey(String endpoint, Map<String, dynamic> body) {
-    return '${endpoint}_${json.encode(body)}';
+    final functionName = body['function'] as String?;
+    final uuid = body['uuid'] as String?;
+    return functionName != null
+        ? '${endpoint}_${functionName}_${uuid ?? ""}_${json.encode(body)}'
+        : '${endpoint}_${json.encode(body)}';
   }
 
-  // Make API call with caching and request coalescing
   Future<Map<String, dynamic>> makeRequest({
     required String endpoint,
     required Map<String, dynamic> body,
@@ -167,26 +124,19 @@ class ApiService {
   }) async {
     final cacheKey = _generateCacheKey(endpoint, body);
 
-    // Check for pending request with same cache key
     if (_pendingRequests.containsKey(cacheKey)) {
-      debugPrint('📦 Reusing pending request for $endpoint');
       return _pendingRequests[cacheKey]!;
     }
 
-    // Create the request function
     Future<Map<String, dynamic>> requestFunction() async {
       try {
-        // Check cache first if not forcing refresh
         if (!forceRefresh && cacheDuration != null) {
           final cachedData = await CacheService.getCachedData(cacheKey);
           if (cachedData != null) {
-            debugPrint('✅ Cache hit for $endpoint');
             return cachedData;
           }
         }
 
-        debugPrint('🔄 Making fresh request to $endpoint');
-        // Make API call in isolate
         final response = await compute(_makeRequestInIsolate, {
           'endpoint': endpoint,
           'headers': ApiConfig.headers,
@@ -194,8 +144,7 @@ class ApiService {
           'timeout': ApiConfig.connectionTimeout.inMilliseconds,
         });
 
-        // Cache successful response
-        if (cacheDuration != null) {
+        if (response['status'] == 'success' && cacheDuration != null) {
           await CacheService.cacheData(
             key: cacheKey,
             data: response,
@@ -205,13 +154,9 @@ class ApiService {
 
         return response;
       } catch (e) {
-        debugPrint('❌ API Error for $endpoint: $e');
-
-        // Try cache on error
         if (cacheDuration != null) {
           final cachedData = await CacheService.getCachedData(cacheKey);
           if (cachedData != null) {
-            debugPrint('⚠️ Using cached data after error for $endpoint');
             return {
               ...cachedData,
               'fromCache': true,
@@ -220,18 +165,12 @@ class ApiService {
           }
         }
 
-        return {
-          'status': 'error',
-          'message': e.toString(),
-          'error': e.toString(),
-        };
+        return {'status': 'error', 'message': e.toString(), 'data': null};
       } finally {
-        // Remove from pending requests
         _pendingRequests.remove(cacheKey);
       }
     }
 
-    // Add to pending requests and queue
     final future = requestFunction();
     _pendingRequests[cacheKey] = future;
 
@@ -241,7 +180,6 @@ class ApiService {
     return future;
   }
 
-  // Batch multiple API calls with concurrency control
   Future<List<Map<String, dynamic>>> batchRequests({
     required List<Map<String, dynamic>> requests,
     Duration? cacheDuration,
@@ -257,7 +195,6 @@ class ApiService {
     return await Future.wait(futures);
   }
 
-  // Clean up resources
   void dispose() {
     _client.close();
     _pendingRequests.clear();

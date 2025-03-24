@@ -1,7 +1,7 @@
 class ApiConfig {
   // Base URL
   static const String baseUrl = 'https://backend.gigglesdating.com/api';
-  static const String functions = '$baseUrl/functions';
+  static const String functions = '$baseUrl/functions/';
   static const String database = '$baseUrl/database';
 
   // Headers

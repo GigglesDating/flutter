@@ -117,36 +117,55 @@ class _HomeTabState extends State<HomeTab> {
   }
 
   Future<void> _fetchFreshPosts(String uuid) async {
-    final response = await compute(
-      (uuid) => ThinkProvider().getFeed(uuid: uuid),
-      uuid,
-    );
+    try {
+      debugPrint('Fetching fresh posts for UUID: $uuid');
 
-    if (!mounted) return;
-
-    if (response['status'] == 'success' && response['data'] != null) {
-      final newPosts = PostModel.fromApiResponse(response);
-
-      // Cache the posts
-      await CacheService.cacheData(
-        key: 'feed_posts_initial',
-        data: response['data'],
-        duration: const Duration(minutes: 15),
+      // Use compute for the API call and initial processing
+      final response = await compute(
+        (uuid) => ThinkProvider().getFeed(uuid: uuid),
+        uuid,
       );
+      debugPrint('Raw API response: $response');
 
-      setState(() {
-        _posts.clear();
-        _posts.addAll(newPosts);
-        _hasMore = response['data']['has_more'] ?? false;
-        _currentPage = 1;
-        _isLoading = false;
-        _isInitialLoading = false;
-      });
+      if (!mounted) return;
 
-      // Preload resources for visible and next few posts
-      _preloadPostResources(newPosts);
-    } else {
-      throw Exception(response['message'] ?? 'Failed to load posts');
+      if (response['status'] == 'success' && response['data'] != null) {
+        debugPrint('Response status: success');
+        debugPrint('Posts data: ${response['data']['posts']}');
+
+        // Use compute for parsing posts to keep it off main thread
+        final newPosts = await compute(
+          (response) => PostModel.fromApiResponse(response),
+          response,
+        );
+        debugPrint('Parsed ${newPosts.length} posts');
+
+        // Cache the posts
+        await CacheService.cacheData(
+          key: 'feed_posts_initial',
+          data: response['data'],
+          duration: const Duration(minutes: 15),
+        );
+
+        setState(() {
+          _posts.clear();
+          _posts.addAll(newPosts);
+          _hasMore = response['data']['has_more'] ?? false;
+          _currentPage = 1;
+          _isLoading = false;
+          _isInitialLoading = false;
+        });
+
+        // Preload resources for visible and next few posts
+        _preloadPostResources(newPosts);
+      } else {
+        debugPrint('Error response: ${response['message']}');
+        throw Exception(response['message'] ?? 'Failed to load posts');
+      }
+    } catch (e, stackTrace) {
+      debugPrint('Error in _fetchFreshPosts: $e');
+      debugPrint('Stack trace: $stackTrace');
+      rethrow;
     }
   }
 
@@ -246,32 +265,51 @@ class _HomeTabState extends State<HomeTab> {
         throw Exception('No UUID found');
       }
 
-      final response = await ThinkProvider().getFeed(
-        uuid: uuid,
-        page: _currentPage + 1,
+      debugPrint('Loading more posts for page: ${_currentPage + 1}');
+      // Fix: Create a properly typed class for compute parameters
+      final params = {
+        'uuid': uuid as String,
+        'page': (_currentPage + 1) as int,
+      };
+
+      final response = await compute(
+        (Map<String, dynamic> params) => ThinkProvider().getFeed(
+          uuid: params['uuid'] as String,
+          page: params['page'] as int,
+        ),
+        params,
       );
+      debugPrint('Load more response: $response');
 
       if (!mounted) return;
 
       if (response['status'] == 'success' && response['data'] != null) {
-        final newPosts = PostModel.fromApiResponse(response);
+        final newPosts = await compute(
+          (Map<String, dynamic> response) =>
+              PostModel.fromApiResponse(response),
+          response,
+        );
+        debugPrint('Loaded ${newPosts.length} more posts');
 
         setState(() {
           if (newPosts.isEmpty) {
             _hasMore = false;
           } else {
             _posts.addAll(newPosts);
-            _hasMore = response['data']['has_more'] ?? true;
+            _hasMore = response['data']['has_more'] ?? false;
             _currentPage += 1;
           }
           _isLoading = false;
           _isLoadingMore = false;
         });
+
+        _preloadPostResources(newPosts);
       } else {
         throw Exception(response['message'] ?? 'Failed to load more posts');
       }
-    } catch (e) {
+    } catch (e, stackTrace) {
       debugPrint('Error loading more posts: $e');
+      debugPrint('Stack trace: $stackTrace');
       if (mounted) {
         setState(() {
           _isLoading = false;

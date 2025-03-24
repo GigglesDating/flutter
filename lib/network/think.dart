@@ -69,8 +69,32 @@ class ThinkProvider {
         debugPrint('✅ API call successful');
         return response;
       } else {
-        debugPrint('⚠️ API call failed: ${response['message']}');
-        throw Exception(response['message'] ?? 'API call failed');
+        final errorMessage = response['message'] ?? 'API call failed';
+        debugPrint('⚠️ API call failed: $errorMessage');
+
+        // Check if we should retry based on the error
+        if (retryCount < _maxRetries - 1 &&
+            !errorMessage.contains('Invalid JSON') &&
+            !errorMessage.contains('API Error 4')) {
+          // Don't retry 4xx errors
+          final waitTime =
+              Duration(milliseconds: pow(2, retryCount + 1).toInt() * 1000);
+          debugPrint('⏳ Retrying in ${waitTime.inSeconds} seconds...');
+          await Future.delayed(waitTime);
+          return _callFunction(
+            function,
+            params,
+            retryCount: retryCount + 1,
+            cacheDuration: cacheDuration,
+            forceRefresh: forceRefresh,
+          );
+        }
+
+        return {
+          'status': 'error',
+          'message': errorMessage,
+          'error': response['error'],
+        };
       }
     } catch (e) {
       debugPrint('❌ API attempt ${retryCount + 1} failed for $function: $e');

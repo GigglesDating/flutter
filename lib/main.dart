@@ -65,7 +65,7 @@ void main() async {
     }
 
     // Initialize Hive with the correct path
-    await Hive.initFlutter(hiveDir.path);
+    Hive.init(hiveDir.path); // Changed from initFlutter to init
     debugPrint('Hive initialized successfully');
 
     // Initialize cache service with proper error handling
@@ -154,7 +154,7 @@ Future<void> _initializeCacheService() async {
     try {
       debugPrint('Initializing cache service (attempt ${retryCount + 1})');
       await CacheService.init();
-      final stats = await CacheService.getCacheStats();
+      // final stats = await CacheService.getCacheStats();
       debugPrint('Cache service initialized successfully');
       return;
     } catch (e) {
@@ -166,6 +166,8 @@ Future<void> _initializeCacheService() async {
         await Future.delayed(Duration(milliseconds: delay));
       } else {
         debugPrint('Cache initialization failed after $maxRetries attempts');
+        throw Exception(
+            'Failed to initialize cache service after $maxRetries attempts');
       }
     }
   }

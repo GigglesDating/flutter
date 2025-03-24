@@ -1,6 +1,8 @@
 import 'package:http/io_client.dart';
 import 'dart:convert';
 import 'dart:io';
+import 'package:path_provider/path_provider.dart'; // Add this import
+import 'package:hive/hive.dart'; // Add this import
 import 'dart:async';
 import 'package:flutter/foundation.dart';
 import '../network/config.dart';
@@ -20,6 +22,10 @@ HttpClient _createHttpClient() {
 // Isolate function for making HTTP requests
 Future<Map<String, dynamic>> _makeRequestInIsolate(
     Map<String, dynamic> params) async {
+  // Initialize Hive in the isolate
+  final hiveDir = await getApplicationDocumentsDirectory();
+  Hive.init(hiveDir.path); // Removed await since init is void
+
   final httpClient = _createHttpClient();
   final client = IOClient(httpClient);
 
@@ -30,7 +36,6 @@ Future<Map<String, dynamic>> _makeRequestInIsolate(
     final timeout = params['timeout'] as int;
 
     debugPrint('Making request to: $endpoint');
-    debugPrint('Headers: $headers');
     debugPrint('Body: $body');
 
     final response = await client
@@ -41,7 +46,7 @@ Future<Map<String, dynamic>> _makeRequestInIsolate(
         )
         .timeout(Duration(milliseconds: timeout));
 
-    if (response.statusCode == 200) {
+    if (response.statusCode == ApiConfig.statusOk) {
       final jsonResponse = json.decode(response.body);
       return jsonResponse;
     } else {

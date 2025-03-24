@@ -9,6 +9,14 @@ import 'dart:collection';
 // Create HTTP client with proper SSL handling
 HttpClient _createHttpClient() {
   final client = HttpClient();
+
+  // Allow self-signed certificates in debug mode
+  if (kDebugMode) {
+    debugPrint('🔒 Allowing self-signed certificates in debug mode');
+    client.badCertificateCallback =
+        (X509Certificate cert, String host, int port) => true;
+  }
+
   return client;
 }
 

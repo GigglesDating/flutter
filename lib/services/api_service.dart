@@ -29,13 +29,19 @@ Future<Map<String, dynamic>> _makeRequestInIsolate(
 
   try {
     debugPrint('📡 Making API request to: ${params['endpoint']}');
-    debugPrint('📦 Request body: ${params['body']}');
+
+    // Format request body
+    final requestBody = {
+      'data': params['body'], // Wrap the body in a 'data' field
+      'timestamp': DateTime.now().millisecondsSinceEpoch,
+    };
+    debugPrint('📦 Request body: $requestBody');
 
     final response = await client
         .post(
           Uri.parse(params['endpoint']),
           headers: params['headers'],
-          body: json.encode(params['body']),
+          body: json.encode(requestBody), // Use the wrapped request body
         )
         .timeout(Duration(milliseconds: params['timeout']));
 

@@ -165,6 +165,14 @@ class _HomeTabState extends State<HomeTab> {
     } catch (e, stackTrace) {
       debugPrint('Error in _fetchFreshPosts: $e');
       debugPrint('Stack trace: $stackTrace');
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+          _isInitialLoading = false;
+          _isError = true;
+          _errorMessage = e.toString();
+        });
+      }
       rethrow;
     }
   }
@@ -266,7 +274,8 @@ class _HomeTabState extends State<HomeTab> {
       }
 
       debugPrint('Loading more posts for page: ${_currentPage + 1}');
-      // Fix: Create a properly typed class for compute parameters
+
+      // Create a properly typed map for compute parameters
       final params = {
         'uuid': uuid,
         'page': (_currentPage + 1),

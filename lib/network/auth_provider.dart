@@ -6,12 +6,22 @@ import 'dart:async';
 import 'config.dart';
 
 class AuthProvider extends ChangeNotifier {
+  // Private fields
   String? _requestId;
   String? _uuid;
   String? _phoneNumber;
   String? _regProcess;
   bool _isLoading = false;
   bool _isAuthenticated = false;
+
+  // SharedPreferences keys
+  static const String _keyUuid = 'user_uuid';
+  static const String _keyPhone = 'phone_number';
+  static const String _keyRegProcess = 'reg_process';
+
+  // Function names
+  static const String _functionRequestOtp = 'request_otp';
+  static const String _functionVerifyOtp = 'verify_otp';
 
   // Getters
   bool get isLoading => _isLoading;
@@ -24,9 +34,9 @@ class AuthProvider extends ChangeNotifier {
   // Initialize from SharedPreferences
   Future<void> initializeAuth() async {
     final prefs = await SharedPreferences.getInstance();
-    _uuid = prefs.getString('user_uuid');
-    _phoneNumber = prefs.getString('phone_number');
-    _regProcess = prefs.getString('reg_process');
+    _uuid = prefs.getString(_keyUuid);
+    _phoneNumber = prefs.getString(_keyPhone);
+    _regProcess = prefs.getString(_keyRegProcess);
     _isAuthenticated = _uuid != null;
     notifyListeners();
   }
@@ -36,27 +46,22 @@ class AuthProvider extends ChangeNotifier {
     required String phoneNumber,
   }) async {
     try {
-      _isLoading = true;
-      notifyListeners();
+      _setLoading(true);
 
       final response = await http
           .post(
-            Uri.parse(ApiConfig.functions),
+            Uri.parse(ApiConfig.functionsEndpoint),
             headers: ApiConfig.headers,
             body: jsonEncode({
-              'function': 'request_otp',
+              'function': _functionRequestOtp,
               'phoneNumber': '+91$phoneNumber',
             }),
           )
-          .timeout(
-            ApiConfig.connectionTimeout,
-          );
+          .timeout(ApiConfig.connectionTimeout);
 
-      if (response.statusCode >= 500) {
-        return {
-          'status': false,
-          'error': 'Server error occurred. Please try again later.',
-        };
+      if (response.statusCode >= ApiConfig.statusServerError) {
+        return _createErrorResponse(
+            'Server error occurred. Please try again later.');
       }
 
       final decodedResponse = jsonDecode(response.body);
@@ -67,30 +72,18 @@ class AuthProvider extends ChangeNotifier {
         decodedResponse['status'] = true;
       }
 
-      _isLoading = false;
-      notifyListeners();
       return decodedResponse;
     } on TimeoutException {
-      _isLoading = false;
-      notifyListeners();
-      return {
-        'status': false,
-        'error': 'Connection timed out. Please check your internet connection.',
-      };
+      return _createErrorResponse(
+          'Connection timed out. Please check your internet connection.');
     } on http.ClientException {
-      _isLoading = false;
-      notifyListeners();
-      return {
-        'status': false,
-        'error': 'Network error. Please check your internet connection.',
-      };
+      return _createErrorResponse(
+          'Network error. Please check your internet connection.');
     } catch (e) {
-      _isLoading = false;
-      notifyListeners();
-      return {
-        'status': false,
-        'error': 'An unexpected error occurred. Please try again.',
-      };
+      return _createErrorResponse(
+          'An unexpected error occurred. Please try again.');
+    } finally {
+      _setLoading(false);
     }
   }
 
@@ -101,31 +94,31 @@ class AuthProvider extends ChangeNotifier {
     required String requestId,
   }) async {
     try {
-      _isLoading = true;
-      notifyListeners();
+      _setLoading(true);
 
       final response = await http
           .post(
-            Uri.parse(ApiConfig.functions),
+            Uri.parse(ApiConfig.functionsEndpoint),
             headers: ApiConfig.headers,
             body: jsonEncode({
-              'function': 'verify_otp',
+              'function': _functionVerifyOtp,
               'phoneNumber': phoneNumber,
               'otp': otp,
               'requestId': requestId,
             }),
           )
-          .timeout(
-            ApiConfig.connectionTimeout,
-          );
+          .timeout(ApiConfig.connectionTimeout);
 
-      if (response.statusCode >= 500) {
-        throw Exception('Server error: ${response.statusCode}');
+      if (response.statusCode >= ApiConfig.statusServerError) {
+        return _createErrorResponse(
+            'Server error occurred. Please try again later.');
       }
 
       final decodedResponse = jsonDecode(response.body);
 
-      if (response.statusCode == 200 || response.statusCode == 201) {
+      if (response.statusCode == ApiConfig.statusOk ||
+          response.statusCode == 201) {
+        // Consider adding 201 to ApiConfig if needed
         if (decodedResponse['uuid'] != null) {
           await _saveAuthData(
             uuid: decodedResponse['uuid'],
@@ -136,17 +129,26 @@ class AuthProvider extends ChangeNotifier {
         decodedResponse['status'] = true;
       }
 
-      _isLoading = false;
-      notifyListeners();
       return decodedResponse;
     } catch (e) {
-      _isLoading = false;
-      notifyListeners();
-      return {
-        'status': false,
-        'error': 'Failed to connect to server',
-      };
+      return _createErrorResponse('Failed to connect to server');
+    } finally {
+      _setLoading(false);
     }
+  }
+
+  // Helper method to create error response
+  Map<String, dynamic> _createErrorResponse(String message) {
+    return {
+      'status': false,
+      'error': message,
+    };
+  }
+
+  // Helper method to set loading state
+  void _setLoading(bool value) {
+    _isLoading = value;
+    notifyListeners();
   }
 
   // Save authentication data
@@ -157,10 +159,10 @@ class AuthProvider extends ChangeNotifier {
   }) async {
     final prefs = await SharedPreferences.getInstance();
 
-    await prefs.setString('user_uuid', uuid);
-    await prefs.setString('phone_number', phoneNumber);
+    await prefs.setString(_keyUuid, uuid);
+    await prefs.setString(_keyPhone, phoneNumber);
     if (regProcess != null) {
-      await prefs.setString('reg_process', regProcess);
+      await prefs.setString(_keyRegProcess, regProcess);
     }
 
     _uuid = uuid;
@@ -174,9 +176,9 @@ class AuthProvider extends ChangeNotifier {
   // Logout
   Future<void> logout() async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.remove('user_uuid');
-    await prefs.remove('phone_number');
-    await prefs.remove('reg_process');
+    await prefs.remove(_keyUuid);
+    await prefs.remove(_keyPhone);
+    await prefs.remove(_keyRegProcess);
 
     _uuid = null;
     _phoneNumber = null;
@@ -187,10 +189,10 @@ class AuthProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  // Add this method after _saveAuthData
+  // Update registration process
   Future<void> updateRegProcess(String regProcess) async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('reg_process', regProcess);
+    await prefs.setString(_keyRegProcess, regProcess);
     _regProcess = regProcess;
     notifyListeners();
   }

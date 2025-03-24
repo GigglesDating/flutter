@@ -27,19 +27,8 @@ class ThinkProvider {
     try {
       // Initialize ApiService first
       await _apiService.initialize();
-
-      final response = await _apiService.makeRequest(
-        endpoint: ApiConfig.functionsEndpoint,
-        body: {'function': 'initialize'},
-        cacheDuration: CacheService.mediumCache,
-      );
-
-      if (response['status'] != 'success') {
-        debugPrint('API initialization failed: ${response['message']}');
-      } else {
-        _isInitialized = true;
-        debugPrint('ThinkProvider initialized successfully');
-      }
+      _isInitialized = true;
+      debugPrint('ThinkProvider initialized successfully');
     } catch (e) {
       debugPrint('Failed to initialize API endpoints: $e');
     }

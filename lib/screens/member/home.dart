@@ -117,28 +117,25 @@ class _HomeTabState extends State<HomeTab> {
   }
 
   Future<void> _fetchFreshPosts(String uuid) async {
-    try {
-      debugPrint('Fetching fresh posts for UUID: $uuid');
+    if (!mounted) return;
 
-      // Use compute for the API call and initial processing
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
       final response = await compute(
         (uuid) => ThinkProvider().getFeed(uuid: uuid),
         uuid,
       );
-      debugPrint('Raw API response: $response');
 
       if (!mounted) return;
 
       if (response['status'] == 'success' && response['data'] != null) {
-        debugPrint('Response status: success');
-        debugPrint('Posts data: ${response['data']['posts']}');
-
-        // Use compute for parsing posts to keep it off main thread
         final newPosts = await compute(
           (response) => PostModel.fromApiResponse(response),
           response,
         );
-        debugPrint('Parsed ${newPosts.length} posts');
 
         // Cache the posts
         await CacheService.cacheData(
@@ -156,24 +153,22 @@ class _HomeTabState extends State<HomeTab> {
           _isInitialLoading = false;
         });
 
-        // Preload resources for visible and next few posts
         _preloadPostResources(newPosts);
       } else {
-        debugPrint('Error response: ${response['message']}');
         throw Exception(response['message'] ?? 'Failed to load posts');
       }
     } catch (e, stackTrace) {
       debugPrint('Error in _fetchFreshPosts: $e');
       debugPrint('Stack trace: $stackTrace');
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-          _isInitialLoading = false;
-          _isError = true;
-          _errorMessage = e.toString();
-        });
-      }
-      rethrow;
+
+      if (!mounted) return;
+
+      setState(() {
+        _isLoading = false;
+        _isInitialLoading = false;
+        _isError = true;
+        _errorMessage = e.toString();
+      });
     }
   }
 

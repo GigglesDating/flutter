@@ -57,15 +57,15 @@ void main() async {
 
     // Get the application documents directory
     final appDir = await path_provider.getApplicationDocumentsDirectory();
-    final cacheDir = Directory('${appDir.path}/cache');
+    final hiveDir = Directory('${appDir.path}/hive');
 
-    // Create cache directory if it doesn't exist
-    if (!await cacheDir.exists()) {
-      await cacheDir.create(recursive: true);
+    // Create Hive directory if it doesn't exist
+    if (!await hiveDir.exists()) {
+      await hiveDir.create(recursive: true);
     }
 
-    // Initialize Hive with the cache directory
-    await Hive.initFlutter(cacheDir.path);
+    // Initialize Hive with the correct path
+    await Hive.initFlutter(hiveDir.path);
     debugPrint('Hive initialized successfully');
 
     // Initialize cache service with proper error handling
@@ -106,14 +106,12 @@ void main() async {
       MultiProvider(
         providers: [
           ChangeNotifierProvider(create: (_) => AuthProvider()),
-          // Add other providers here
         ],
         child: const MyApp(),
       ),
     );
   } catch (e) {
     debugPrint('Error during app initialization: $e');
-    // Show a user-friendly error screen instead of crashing
     runApp(
       MaterialApp(
         home: Scaffold(
@@ -135,10 +133,7 @@ void main() async {
                 ),
                 const SizedBox(height: 16),
                 ElevatedButton(
-                  onPressed: () {
-                    // Attempt to restart the app
-                    main();
-                  },
+                  onPressed: () => main(),
                   child: const Text('Retry'),
                 ),
               ],
@@ -157,30 +152,20 @@ Future<void> _initializeCacheService() async {
 
   while (retryCount < maxRetries) {
     try {
-      debugPrint(
-          'Attempting to initialize cache service (attempt ${retryCount + 1})');
-
-      // Initialize cache service
+      debugPrint('Initializing cache service (attempt ${retryCount + 1})');
       await CacheService.init();
-
-      // Verify initialization
       final stats = await CacheService.getCacheStats();
-      debugPrint('Cache service stats: $stats');
-
       debugPrint('Cache service initialized successfully');
       return;
     } catch (e) {
       retryCount++;
-      debugPrint('Failed to initialize cache (attempt $retryCount): $e');
+      debugPrint('Cache initialization failed (attempt $retryCount): $e');
 
       if (retryCount < maxRetries) {
         final delay = baseDelay * retryCount;
-        debugPrint('Retrying in ${delay}ms...');
         await Future.delayed(Duration(milliseconds: delay));
       } else {
-        debugPrint(
-            'Warning: Cache initialization failed after $maxRetries attempts');
-        // Log the error but don't rethrow - we want the app to continue even if cache fails
+        debugPrint('Cache initialization failed after $maxRetries attempts');
       }
     }
   }

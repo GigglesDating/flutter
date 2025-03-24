@@ -24,55 +24,35 @@ Future<Map<String, dynamic>> _makeRequestInIsolate(
   final client = IOClient(httpClient);
 
   try {
-    debugPrint('Making request to: ${params['endpoint']}');
-    debugPrint('Request body: ${params['body']}');
+    final endpoint = params['endpoint'] as String;
+    final headers = params['headers'] as Map<String, String>;
+    final body = params['body'] as Map<String, dynamic>;
+    final timeout = params['timeout'] as int;
+
+    debugPrint('Making request to: $endpoint');
+    debugPrint('Headers: $headers');
+    debugPrint('Body: $body');
 
     final response = await client
         .post(
-          Uri.parse(params['endpoint']),
-          headers: params['headers'],
-          body: json.encode(params['body']),
+          Uri.parse(endpoint),
+          headers: headers,
+          body: json.encode(body),
         )
-        .timeout(Duration(milliseconds: params['timeout']));
+        .timeout(Duration(milliseconds: timeout));
 
-    debugPrint('Response status code: ${response.statusCode}');
-    debugPrint('Response body: ${response.body}');
-
-    if (response.body.isEmpty) {
+    if (response.statusCode == 200) {
+      final jsonResponse = json.decode(response.body);
+      return jsonResponse;
+    } else {
       return {
         'status': 'error',
-        'message': 'Empty response from server',
+        'message': 'Server error: ${response.statusCode}',
         'data': null
       };
     }
-
-    Map<String, dynamic> jsonResponse;
-    try {
-      jsonResponse = json.decode(response.body);
-    } catch (e) {
-      debugPrint('Error parsing response: $e');
-      return {
-        'status': 'error',
-        'message': 'Invalid response format',
-        'data': null
-      };
-    }
-
-    if (response.statusCode >= 400) {
-      debugPrint('Error response: ${jsonResponse['message']}');
-      return {
-        'status': 'error',
-        'message': jsonResponse['message'] ?? 'Server error',
-        'data': null
-      };
-    }
-
-    return jsonResponse;
   } catch (e) {
-    debugPrint('Request error: $e');
-    if (e is TimeoutException) {
-      return {'status': 'error', 'message': 'Request timed out', 'data': null};
-    }
+    debugPrint('Request error in isolate: $e');
     return {'status': 'error', 'message': e.toString(), 'data': null};
   } finally {
     client.close();
@@ -104,14 +84,11 @@ class ApiService {
     }
 
     try {
-      // Wait for cache service to be ready
       await CacheService.init();
-
       _isInitialized = true;
       debugPrint('ApiService initialized successfully');
     } catch (e) {
       debugPrint('Error initializing ApiService: $e');
-      // Don't rethrow - we want the service to continue even if initialization fails
     }
   }
 
@@ -130,8 +107,6 @@ class ApiService {
 
       try {
         await request();
-      } catch (e) {
-        debugPrint('Error processing request: $e');
       } finally {
         _activeRequests--;
       }
@@ -146,8 +121,6 @@ class ApiService {
     final key = functionName != null
         ? '${endpoint}_${functionName}_${uuid ?? ""}_${json.encode(body)}'
         : '${endpoint}_${json.encode(body)}';
-
-    debugPrint('Generated cache key: $key');
     return key;
   }
 
@@ -157,7 +130,6 @@ class ApiService {
     Duration? cacheDuration,
     bool forceRefresh = false,
   }) async {
-    // Ensure service is initialized
     if (!_isInitialized) {
       await initialize();
     }
@@ -165,73 +137,40 @@ class ApiService {
     final cacheKey = _generateCacheKey(endpoint, body);
 
     if (_pendingRequests.containsKey(cacheKey)) {
-      debugPrint('Using pending request for key: $cacheKey');
       return _pendingRequests[cacheKey]!;
     }
 
     Future<Map<String, dynamic>> requestFunction() async {
       try {
         if (!forceRefresh && cacheDuration != null) {
-          try {
-            debugPrint('Checking cache for key: $cacheKey');
-            final cachedData = await CacheService.getCachedData(cacheKey);
-            if (cachedData != null) {
-              debugPrint('Cache hit for key: $cacheKey');
-              return cachedData;
-            }
-            debugPrint('Cache miss for key: $cacheKey');
-          } catch (cacheError) {
-            debugPrint('Cache error (non-fatal): $cacheError');
-            // Continue with API request even if cache fails
+          final cachedData = await CacheService.getCachedData(cacheKey);
+          if (cachedData != null) {
+            return cachedData;
           }
         }
 
-        debugPrint('Making API request for key: $cacheKey');
         final response = await compute(_makeRequestInIsolate, {
           'endpoint': endpoint,
           'headers': ApiConfig.headers,
           'body': body,
-          'timeout': ApiConfig.connectionTimeout.inMilliseconds,
+          'timeout': 30000, // 30 seconds timeout
         });
 
         if (response['status'] == 'success' && cacheDuration != null) {
-          try {
-            debugPrint('Caching successful response for key: $cacheKey');
-            await CacheService.cacheData(
-              key: cacheKey,
-              data: response,
-              duration: cacheDuration,
-            );
-          } catch (cacheError) {
-            debugPrint('Cache error (non-fatal): $cacheError');
-            // Continue even if caching fails
-          }
+          await CacheService.cacheData(
+            key: cacheKey,
+            data: response,
+            duration: cacheDuration,
+          );
         }
 
         return response;
       } catch (e) {
         debugPrint('Error in request function: $e');
-        if (cacheDuration != null) {
-          try {
-            final cachedData = await CacheService.getCachedData(cacheKey);
-            if (cachedData != null) {
-              debugPrint('Using cached data after error for key: $cacheKey');
-              return {
-                ...cachedData,
-                'fromCache': true,
-                'error': e.toString(),
-              };
-            }
-          } catch (cacheError) {
-            debugPrint('Error accessing cache: $cacheError');
-          }
-        }
-
         return {
           'status': 'error',
           'message': e.toString(),
           'data': null,
-          'error': e.toString(),
         };
       } finally {
         _pendingRequests.remove(cacheKey);
@@ -252,7 +191,6 @@ class ApiService {
     Duration? cacheDuration,
     bool forceRefresh = false,
   }) async {
-    debugPrint('Processing batch request with ${requests.length} items');
     final futures = requests.map((request) => makeRequest(
           endpoint: request['endpoint'],
           body: request['body'],
@@ -261,9 +199,7 @@ class ApiService {
         ));
 
     try {
-      final results = await Future.wait(futures);
-      debugPrint('Batch request completed successfully');
-      return results;
+      return await Future.wait(futures);
     } catch (e) {
       debugPrint('Error in batch request: $e');
       return List.generate(
@@ -272,7 +208,6 @@ class ApiService {
           'status': 'error',
           'message': 'Batch request failed',
           'data': null,
-          'error': e.toString(),
         },
       );
     }

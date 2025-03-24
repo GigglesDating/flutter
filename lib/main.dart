@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 import 'dart:async';
 import 'network/auth_provider.dart';
 import 'services/cache_service.dart';
@@ -52,8 +53,12 @@ void main() async {
   try {
     WidgetsFlutterBinding.ensureInitialized();
 
-    // Initialize cache service in background
-    unawaited(_initializeCacheService());
+    // Initialize Hive first
+    await Hive.initFlutter();
+    debugPrint('Hive initialized successfully');
+
+    // Initialize cache service with proper error handling
+    await _initializeCacheService();
 
     // Set permanent system UI settings
     SystemChrome.setSystemUIOverlayStyle(
@@ -103,20 +108,31 @@ void main() async {
 
 Future<void> _initializeCacheService() async {
   int retryCount = 0;
-  while (retryCount < 3) {
+  const maxRetries = 3;
+  const baseDelay = 500; // milliseconds
+
+  while (retryCount < maxRetries) {
     try {
+      debugPrint(
+          'Attempting to initialize cache service (attempt ${retryCount + 1})');
       await CacheService.init();
       debugPrint('Cache service initialized successfully');
       return;
     } catch (e) {
       retryCount++;
       debugPrint('Failed to initialize cache (attempt $retryCount): $e');
-      if (retryCount < 3) {
-        await Future.delayed(Duration(milliseconds: 500 * retryCount));
+
+      if (retryCount < maxRetries) {
+        final delay = baseDelay * retryCount;
+        debugPrint('Retrying in ${delay}ms...');
+        await Future.delayed(Duration(milliseconds: delay));
+      } else {
+        debugPrint(
+            'Warning: Cache initialization failed after $maxRetries attempts');
+        // Don't rethrow - we want the app to continue even if cache fails
       }
     }
   }
-  debugPrint('Warning: Cache initialization failed after 3 attempts');
 }
 
 class MyApp extends StatelessWidget {

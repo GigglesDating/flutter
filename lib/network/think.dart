@@ -10,6 +10,7 @@ class ThinkProvider {
   final ApiService _apiService = ApiService();
   static final ThinkProvider _instance = ThinkProvider._internal();
   static const int _maxRetries = 3;
+  bool _isInitialized = false;
 
   factory ThinkProvider() => _instance;
 
@@ -18,7 +19,12 @@ class ThinkProvider {
   }
 
   Future<void> _initializeEndpoints() async {
+    if (_isInitialized) return;
+
     try {
+      // Initialize ApiService first
+      await _apiService.initialize();
+
       final response = await _apiService.makeRequest(
         endpoint: ApiConfig.functionsEndpoint,
         body: {'function': 'initialize'},
@@ -27,6 +33,9 @@ class ThinkProvider {
 
       if (response['status'] != 'success') {
         debugPrint('API initialization failed: ${response['message']}');
+      } else {
+        _isInitialized = true;
+        debugPrint('ThinkProvider initialized successfully');
       }
     } catch (e) {
       debugPrint('Failed to initialize API endpoints: $e');
@@ -40,6 +49,10 @@ class ThinkProvider {
     Duration? cacheDuration,
     bool forceRefresh = false,
   }) async {
+    if (!_isInitialized) {
+      await _initializeEndpoints();
+    }
+
     try {
       final requestBody = {'function': function, ...params};
 
@@ -529,8 +542,8 @@ class ThinkProvider {
     };
   }
 
-  // Clean up resources
   void dispose() {
     _apiService.dispose();
+    _isInitialized = false;
   }
 }

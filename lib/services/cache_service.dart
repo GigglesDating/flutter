@@ -92,7 +92,10 @@ class CacheService {
     required dynamic data,
     Duration? duration,
   }) async {
-    if (!_isInitialized) await init();
+    if (!_isInitialized) {
+      debugPrint('Cache service not initialized, attempting to initialize...');
+      await init();
+    }
 
     try {
       final box = Hive.box(apiCacheBox);
@@ -122,7 +125,10 @@ class CacheService {
   }
 
   static Future<dynamic> getCachedData(String key) async {
-    if (!_isInitialized) await init();
+    if (!_isInitialized) {
+      debugPrint('Cache service not initialized, attempting to initialize...');
+      await init();
+    }
 
     try {
       final box = Hive.box(apiCacheBox);
@@ -146,7 +152,11 @@ class CacheService {
   }
 
   static Future<void> clearCache(String key) async {
-    if (!_isInitialized) await init();
+    if (!_isInitialized) {
+      debugPrint('Cache service not initialized, attempting to initialize...');
+      await init();
+    }
+
     try {
       final box = Hive.box(apiCacheBox);
       await box.delete(key);
@@ -157,7 +167,11 @@ class CacheService {
   }
 
   static Future<void> clearAllCache() async {
-    if (!_isInitialized) await init();
+    if (!_isInitialized) {
+      debugPrint('Cache service not initialized, attempting to initialize...');
+      await init();
+    }
+
     try {
       final box = Hive.box(apiCacheBox);
       await box.clear();
@@ -231,7 +245,10 @@ class CacheService {
   }
 
   static Future<Map<String, dynamic>> getCacheStats() async {
-    if (!_isInitialized) await init();
+    if (!_isInitialized) {
+      debugPrint('Cache service not initialized, attempting to initialize...');
+      await init();
+    }
 
     try {
       final box = Hive.box(apiCacheBox);
@@ -304,7 +321,11 @@ class CacheService {
     List<String> thumbnailUrls = const [],
     CachePriority priority = CachePriority.medium,
   }) async {
-    if (_snipCacheManager == null) return;
+    if (_snipCacheManager == null) {
+      debugPrint(
+          'SnipCacheManager not initialized, attempting to initialize...');
+      await init();
+    }
 
     try {
       await _snipCacheManager!.preloadBatch(
@@ -319,6 +340,12 @@ class CacheService {
   }
 
   static Future<void> cleanMediaCache() async {
+    if (_snipCacheManager == null) {
+      debugPrint(
+          'SnipCacheManager not initialized, attempting to initialize...');
+      await init();
+    }
+
     try {
       await _snipCacheManager?.emptyCache();
       debugPrint('Media cache cleaned');

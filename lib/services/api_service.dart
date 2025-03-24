@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:async';
 import 'package:flutter/foundation.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 import '../network/config.dart';
 import 'cache_service.dart';
 import 'dart:collection';
@@ -88,10 +89,28 @@ class ApiService {
   bool _processing = false;
   static const _maxConcurrentRequests = 4;
   int _activeRequests = 0;
+  bool _isInitialized = false;
 
   ApiService._internal() {
     final httpClient = _createHttpClient();
     _client = IOClient(httpClient);
+  }
+
+  Future<void> initialize() async {
+    if (_isInitialized) return;
+
+    try {
+      // Wait for Hive to be ready
+      if (!Hive.isBoxOpen('api_cache')) {
+        await Hive.openBox('api_cache');
+      }
+
+      _isInitialized = true;
+      debugPrint('ApiService initialized successfully');
+    } catch (e) {
+      debugPrint('Error initializing ApiService: $e');
+      // Don't rethrow - we want the service to continue even if initialization fails
+    }
   }
 
   Future<void> _processQueue() async {
@@ -136,6 +155,11 @@ class ApiService {
     Duration? cacheDuration,
     bool forceRefresh = false,
   }) async {
+    // Ensure service is initialized
+    if (!_isInitialized) {
+      await initialize();
+    }
+
     final cacheKey = _generateCacheKey(endpoint, body);
 
     if (_pendingRequests.containsKey(cacheKey)) {
@@ -146,13 +170,18 @@ class ApiService {
     Future<Map<String, dynamic>> requestFunction() async {
       try {
         if (!forceRefresh && cacheDuration != null) {
-          debugPrint('Checking cache for key: $cacheKey');
-          final cachedData = await CacheService.getCachedData(cacheKey);
-          if (cachedData != null) {
-            debugPrint('Cache hit for key: $cacheKey');
-            return cachedData;
+          try {
+            debugPrint('Checking cache for key: $cacheKey');
+            final cachedData = await CacheService.getCachedData(cacheKey);
+            if (cachedData != null) {
+              debugPrint('Cache hit for key: $cacheKey');
+              return cachedData;
+            }
+            debugPrint('Cache miss for key: $cacheKey');
+          } catch (cacheError) {
+            debugPrint('Cache error (non-fatal): $cacheError');
+            // Continue with API request even if cache fails
           }
-          debugPrint('Cache miss for key: $cacheKey');
         }
 
         debugPrint('Making API request for key: $cacheKey');
@@ -164,12 +193,17 @@ class ApiService {
         });
 
         if (response['status'] == 'success' && cacheDuration != null) {
-          debugPrint('Caching successful response for key: $cacheKey');
-          await CacheService.cacheData(
-            key: cacheKey,
-            data: response,
-            duration: cacheDuration,
-          );
+          try {
+            debugPrint('Caching successful response for key: $cacheKey');
+            await CacheService.cacheData(
+              key: cacheKey,
+              data: response,
+              duration: cacheDuration,
+            );
+          } catch (cacheError) {
+            debugPrint('Cache error (non-fatal): $cacheError');
+            // Continue even if caching fails
+          }
         }
 
         return response;
@@ -246,5 +280,6 @@ class ApiService {
     _client.close();
     _pendingRequests.clear();
     _requestQueue.clear();
+    _isInitialized = false;
   }
 }

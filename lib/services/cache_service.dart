@@ -1,44 +1,44 @@
 import 'package:hive_flutter/hive_flutter.dart';
 import 'dart:convert';
 import '../models/utils/snip_cache_manager.dart';
-import 'package:path_provider/path_provider.dart' as path_provider;
 import 'package:flutter/foundation.dart';
-import 'dart:io';
 
 class CacheService {
+  // Box names
   static const String apiCacheBox = 'apiCache';
+  static const String mediaCacheBox = 'mediaCache';
 
+  // Cache durations
   static const Duration shortCache = Duration(minutes: 5);
   static const Duration mediumCache = Duration(hours: 1);
   static const Duration longCache = Duration(days: 1);
   static const Duration defaultCacheDuration = mediumCache;
 
+  // Cache limits
   static const int maxCacheSize = 100 * 1024 * 1024; // 100MB
   static const int maxItemSize = 5 * 1024 * 1024; // 5MB
 
+  // State management
   static SnipCacheManager? _snipCacheManager;
   static bool _isInitialized = false;
   static DateTime _lastCleanup = DateTime.now();
   static const Duration cleanupInterval = Duration(hours: 6);
 
+  // Initialize the cache service
   static Future<void> init() async {
-    if (_isInitialized) return;
+    if (_isInitialized) {
+      debugPrint('Cache service already initialized');
+      return;
+    }
 
     try {
-      // Get the application documents directory
-      final appDir = await path_provider.getApplicationDocumentsDirectory();
-      final cacheDir = Directory('${appDir.path}/cache');
+      debugPrint('Starting cache service initialization...');
 
-      // Create cache directory if it doesn't exist
-      if (!await cacheDir.exists()) {
-        await cacheDir.create(recursive: true);
-      }
-
-      // Initialize Hive with the cache directory
-      await Hive.initFlutter(cacheDir.path);
-
-      // Initialize the API cache box
+      // Initialize API cache box
       await _initBox(apiCacheBox);
+
+      // Initialize media cache box
+      await _initBox(mediaCacheBox);
 
       // Initialize SnipCacheManager
       _snipCacheManager = SnipCacheManager();
@@ -50,43 +50,74 @@ class CacheService {
       debugPrint('Cache service initialized successfully');
     } catch (e) {
       debugPrint('Error initializing cache service: $e');
-      // Try to recover by deleting and recreating the box
-      try {
-        await _recoverBox(apiCacheBox);
-        _isInitialized = true;
-        debugPrint('Cache service recovered successfully');
-      } catch (e) {
-        debugPrint('Failed to recover cache service: $e');
-        // Don't rethrow, allow the app to continue without cache
-      }
+      await _recoverFromError();
     }
   }
 
+  // Initialize a specific box
   static Future<void> _initBox(String boxName) async {
     try {
       if (!Hive.isBoxOpen(boxName)) {
+        debugPrint('Opening box: $boxName');
         await Hive.openBox(boxName);
       }
+      debugPrint('Box $boxName initialized successfully');
     } catch (e) {
       debugPrint('Error opening box $boxName: $e');
       await _recoverBox(boxName);
     }
   }
 
-  static Future<void> _recoverBox(String boxName) async {
+  // Recover from initialization error
+  static Future<void> _recoverFromError() async {
     try {
-      // Try to delete the box if it exists
-      if (Hive.isBoxOpen(boxName)) {
-        await Hive.box(boxName).close();
-      }
-      await Hive.deleteBoxFromDisk(boxName);
-      await Hive.openBox(boxName);
+      debugPrint('Attempting to recover cache service...');
+
+      // Try to recover API cache box
+      await _recoverBox(apiCacheBox);
+
+      // Try to recover media cache box
+      await _recoverBox(mediaCacheBox);
+
+      // Reinitialize SnipCacheManager
+      _snipCacheManager = SnipCacheManager();
+
+      _isInitialized = true;
+      debugPrint('Cache service recovered successfully');
     } catch (e) {
-      debugPrint('Error recovering box $boxName: $e');
-      // Don't rethrow, allow the app to continue without this box
+      debugPrint('Failed to recover cache service: $e');
+      // Don't rethrow - allow the app to continue without cache
     }
   }
 
+  // Recover a specific box
+  static Future<void> _recoverBox(String boxName) async {
+    try {
+      debugPrint('Attempting to recover box: $boxName');
+
+      // Close box if open
+      if (Hive.isBoxOpen(boxName)) {
+        await Hive.box(boxName).close();
+      }
+
+      // Try to delete and recreate the box
+      try {
+        await Hive.deleteBoxFromDisk(boxName);
+        debugPrint('Deleted box from disk: $boxName');
+      } catch (e) {
+        debugPrint('Error deleting box from disk: $e');
+      }
+
+      // Open the box
+      await Hive.openBox(boxName);
+      debugPrint('Successfully recovered box: $boxName');
+    } catch (e) {
+      debugPrint('Error recovering box $boxName: $e');
+      // Don't rethrow - allow the app to continue without this box
+    }
+  }
+
+  // Cache data with proper error handling
   static Future<void> cacheData({
     required String key,
     required dynamic data,
@@ -101,6 +132,7 @@ class CacheService {
       final box = Hive.box(apiCacheBox);
       final expiryTime = DateTime.now().add(duration ?? defaultCacheDuration);
 
+      // Check data size
       final dataSize = utf8.encode(json.encode(data)).length;
       if (dataSize > maxItemSize) {
         debugPrint('Cache item too large: $dataSize bytes');
@@ -124,6 +156,7 @@ class CacheService {
     await _performMaintenanceIfNeeded();
   }
 
+  // Get cached data with proper error handling
   static Future<dynamic> getCachedData(String key) async {
     if (!_isInitialized) {
       debugPrint('Cache service not initialized, attempting to initialize...');
@@ -134,14 +167,19 @@ class CacheService {
       final box = Hive.box(apiCacheBox);
       final cachedJson = box.get(key);
 
-      if (cachedJson == null) return null;
+      if (cachedJson == null) {
+        debugPrint('Cache miss for key: $key');
+        return null;
+      }
 
       final cached = json.decode(cachedJson);
       final expiry = DateTime.parse(cached['expiry']);
 
       if (DateTime.now().isBefore(expiry)) {
+        debugPrint('Cache hit for key: $key');
         return cached['data'];
       } else {
+        debugPrint('Cache expired for key: $key');
         await box.delete(key);
         return null;
       }
@@ -151,6 +189,7 @@ class CacheService {
     }
   }
 
+  // Clear specific cache
   static Future<void> clearCache(String key) async {
     if (!_isInitialized) {
       debugPrint('Cache service not initialized, attempting to initialize...');
@@ -166,6 +205,7 @@ class CacheService {
     }
   }
 
+  // Clear all cache
   static Future<void> clearAllCache() async {
     if (!_isInitialized) {
       debugPrint('Cache service not initialized, attempting to initialize...');
@@ -182,6 +222,7 @@ class CacheService {
     }
   }
 
+  // Perform maintenance if needed
   static Future<void> _performMaintenanceIfNeeded() async {
     if (DateTime.now().difference(_lastCleanup) < cleanupInterval) {
       return;
@@ -212,10 +253,12 @@ class CacheService {
         }
       }
 
+      // Delete expired items
       for (var key in itemsToDelete) {
         await box.delete(key);
       }
 
+      // Handle size limits
       if (totalSize > maxCacheSize) {
         final items = keys
             .where((k) => !itemsToDelete.contains(k))
@@ -244,6 +287,7 @@ class CacheService {
     }
   }
 
+  // Get cache statistics
   static Future<Map<String, dynamic>> getCacheStats() async {
     if (!_isInitialized) {
       debugPrint('Cache service not initialized, attempting to initialize...');
@@ -316,6 +360,7 @@ class CacheService {
     }
   }
 
+  // Media cache methods
   static Future<void> preloadMedia({
     List<String> videoUrls = const [],
     List<String> thumbnailUrls = const [],

@@ -15,11 +15,14 @@ class ThinkProvider {
   factory ThinkProvider() => _instance;
 
   ThinkProvider._internal() {
-    _initializeEndpoints();
+    // Removed automatic initialization
   }
 
-  Future<void> _initializeEndpoints() async {
-    if (_isInitialized) return;
+  Future<void> initialize() async {
+    if (_isInitialized) {
+      debugPrint('ThinkProvider already initialized');
+      return;
+    }
 
     try {
       // Initialize ApiService first
@@ -50,11 +53,12 @@ class ThinkProvider {
     bool forceRefresh = false,
   }) async {
     if (!_isInitialized) {
-      await _initializeEndpoints();
+      await initialize();
     }
 
     try {
       final requestBody = {'function': function, ...params};
+      debugPrint('Calling function: $function with params: $params');
 
       final response = await _apiService.makeRequest(
         endpoint: ApiConfig.functionsEndpoint,
@@ -68,6 +72,7 @@ class ThinkProvider {
       }
 
       final errorMessage = response['message'] ?? 'API call failed';
+      debugPrint('Function call failed: $errorMessage');
 
       if (retryCount < _maxRetries - 1 &&
           !errorMessage.contains('Invalid JSON') &&
@@ -75,6 +80,7 @@ class ThinkProvider {
         final waitTime = Duration(
           milliseconds: pow(2, retryCount + 1).toInt() * 1000,
         );
+        debugPrint('Retrying in ${waitTime.inMilliseconds}ms...');
         await Future.delayed(waitTime);
         return _callFunction(
           function,
@@ -87,10 +93,12 @@ class ThinkProvider {
 
       return {'status': 'error', 'message': errorMessage, 'data': null};
     } catch (e) {
+      debugPrint('Error in _callFunction: $e');
       if (retryCount < _maxRetries - 1) {
         final waitTime = Duration(
           milliseconds: pow(2, retryCount + 1).toInt() * 1000,
         );
+        debugPrint('Retrying in ${waitTime.inMilliseconds}ms...');
         await Future.delayed(waitTime);
         return _callFunction(
           function,
@@ -121,13 +129,14 @@ class ThinkProvider {
     required double longitude,
   }) async {
     return _callFunction(
-        'update_location',
-        {
-          'uuid': uuid,
-          'latitude': latitude,
-          'longitude': longitude,
-        },
-        forceRefresh: true);
+      'update_location',
+      {
+        'uuid': uuid,
+        'latitude': latitude,
+        'longitude': longitude,
+      },
+      forceRefresh: true,
+    );
   }
 
   // Check registration status - short cache
@@ -135,11 +144,10 @@ class ThinkProvider {
     required String uuid,
   }) async {
     return _callFunction(
-        'check_registration_status',
-        {
-          'uuid': uuid,
-        },
-        cacheDuration: CacheService.shortCache);
+      'check_registration_status',
+      {'uuid': uuid},
+      cacheDuration: CacheService.shortCache,
+    );
   }
 
   // Initial signup - no cache
@@ -157,19 +165,20 @@ class ThinkProvider {
     final phoneNumber = prefs.getString('phone_number');
 
     return _callFunction(
-        'signup',
-        {
-          'uuid': uuid,
-          'phone_number': phoneNumber,
-          'firstName': firstName,
-          'lastName': lastName,
-          'dob': dob,
-          'email': email,
-          'gender': gender,
-          'city': city,
-          'consent': consent,
-        },
-        forceRefresh: true);
+      'signup',
+      {
+        'uuid': uuid,
+        'phone_number': phoneNumber,
+        'firstName': firstName,
+        'lastName': lastName,
+        'dob': dob,
+        'email': email,
+        'gender': gender,
+        'city': city,
+        'consent': consent,
+      },
+      forceRefresh: true,
+    );
   }
 
   // Profile Creation Step 1 - no cache
@@ -184,18 +193,19 @@ class ThinkProvider {
     String? optionalImage2,
   }) async {
     return _callFunction(
-        'p_c1_submit',
-        {
-          'uuid': uuid,
-          'profile_image': profileImage,
-          'bio': bio,
-          'mandate_image_1': mandateImage1,
-          'mandate_image_2': mandateImage2,
-          'gender_orientation': genderOrientation,
-          if (optionalImage1 != null) 'optional_image_1': optionalImage1,
-          if (optionalImage2 != null) 'optional_image_2': optionalImage2,
-        },
-        forceRefresh: true);
+      'p_c1_submit',
+      {
+        'uuid': uuid,
+        'profile_image': profileImage,
+        'bio': bio,
+        'mandate_image_1': mandateImage1,
+        'mandate_image_2': mandateImage2,
+        'gender_orientation': genderOrientation,
+        if (optionalImage1 != null) 'optional_image_1': optionalImage1,
+        if (optionalImage2 != null) 'optional_image_2': optionalImage2,
+      },
+      forceRefresh: true,
+    );
   }
 
   // Profile Creation Step 2 - no cache
@@ -205,13 +215,14 @@ class ThinkProvider {
     required Map<String, dynamic> agePreference,
   }) async {
     return _callFunction(
-        'p_c2_submit',
-        {
-          'uuid': uuid,
-          'gender_preference': genderPreference,
-          'age_preference': agePreference,
-        },
-        forceRefresh: true);
+      'p_c2_submit',
+      {
+        'uuid': uuid,
+        'gender_preference': genderPreference,
+        'age_preference': agePreference,
+      },
+      forceRefresh: true,
+    );
   }
 
   // Profile Creation Step 3 - no cache
@@ -220,12 +231,13 @@ class ThinkProvider {
     required List<Map<String, dynamic>> selectedInterests,
   }) async {
     return _callFunction(
-        'p_c3_submit',
-        {
-          'uuid': uuid,
-          'selected_interests': selectedInterests,
-        },
-        forceRefresh: true);
+      'p_c3_submit',
+      {
+        'uuid': uuid,
+        'selected_interests': selectedInterests,
+      },
+      forceRefresh: true,
+    );
   }
 
   // Get all interests - long cache
@@ -243,12 +255,13 @@ class ThinkProvider {
     required String interestName,
   }) async {
     return _callFunction(
-        'add_custom_interest',
-        {
-          'uuid': uuid,
-          'interest_name': interestName,
-        },
-        forceRefresh: true);
+      'add_custom_interest',
+      {
+        'uuid': uuid,
+        'interest_name': interestName,
+      },
+      forceRefresh: true,
+    );
   }
 
   // Submit Aadhar Information - no cache
@@ -257,12 +270,13 @@ class ThinkProvider {
     required Map<String, dynamic> kycData,
   }) async {
     return _callFunction(
-        'submit_aadhar_info',
-        {
-          'uuid': uuid,
-          ...kycData,
-        },
-        forceRefresh: true);
+      'submit_aadhar_info',
+      {
+        'uuid': uuid,
+        ...kycData,
+      },
+      forceRefresh: true,
+    );
   }
 
   // Submit Support Ticket - no cache
@@ -274,15 +288,16 @@ class ThinkProvider {
     String? image2,
   }) async {
     return _callFunction(
-        'submit_support_ticket',
-        {
-          'uuid': uuid,
-          'screen_name': screenName,
-          'support_text': supportText,
-          if (image1 != null) 'image1': image1,
-          if (image2 != null) 'image2': image2,
-        },
-        forceRefresh: true);
+      'submit_support_ticket',
+      {
+        'uuid': uuid,
+        'screen_name': screenName,
+        'support_text': supportText,
+        if (image1 != null) 'image1': image1,
+        if (image2 != null) 'image2': image2,
+      },
+      forceRefresh: true,
+    );
   }
 
   // Logout - no cache
@@ -303,11 +318,10 @@ class ThinkProvider {
   // Check member status - short cache
   Future<Map<String, dynamic>> checkMemberStatus({required String uuid}) async {
     return _callFunction(
-        'check_registration_status',
-        {
-          'uuid': uuid,
-        },
-        cacheDuration: CacheService.shortCache);
+      'check_registration_status',
+      {'uuid': uuid},
+      cacheDuration: CacheService.shortCache,
+    );
   }
 
   // Get override number - long cache
@@ -344,13 +358,14 @@ class ThinkProvider {
     String? action,
   }) async {
     return _callFunction(
-        'update_event_like',
-        {
-          'uuid': uuid,
-          if (eventId != null) 'event_id': eventId,
-          'action': action ?? 'check',
-        },
-        forceRefresh: true);
+      'update_event_like',
+      {
+        'uuid': uuid,
+        if (eventId != null) 'event_id': eventId,
+        'action': action ?? 'check',
+      },
+      forceRefresh: true,
+    );
   }
 
   // Get feed posts - short cache
@@ -377,12 +392,10 @@ class ThinkProvider {
         cacheDuration: CacheService.shortCache,
       );
 
-      // Ensure the response has the correct structure
       if (response['status'] == 'success' && response['data'] != null) {
         return response;
       }
 
-      // Return a properly structured error response
       return {
         'status': 'error',
         'message': response['message'] ?? 'Failed to load feed',
@@ -414,11 +427,9 @@ class ThinkProvider {
     String? profileId,
   }) async {
     final Map<String, dynamic> requestBody = {'uuid': uuid, 'page': page};
-
     if (profileId != null) {
       requestBody['profile_id'] = profileId;
     }
-
     return _callFunction(
       'get_snips',
       requestBody,
@@ -432,12 +443,13 @@ class ThinkProvider {
     required String profileId,
   }) async {
     return _callFunction(
-        'fetch_profile',
-        {
-          'uuid': uuid,
-          'profile_id': profileId,
-        },
-        cacheDuration: CacheService.shortCache);
+      'fetch_profile',
+      {
+        'uuid': uuid,
+        'profile_id': profileId,
+      },
+      cacheDuration: CacheService.shortCache,
+    );
   }
 
   // Fetch comments - short cache
@@ -449,25 +461,25 @@ class ThinkProvider {
     int pageSize = 20,
   }) async {
     return _callFunction(
-        'fetch_comments',
-        {
-          'uuid': uuid,
-          'content_id': contentId,
-          'content_type': contentType,
-          'page': page,
-          'page_size': pageSize,
-        },
-        cacheDuration: CacheService.shortCache);
+      'fetch_comments',
+      {
+        'uuid': uuid,
+        'content_id': contentId,
+        'content_type': contentType,
+        'page': page,
+        'page_size': pageSize,
+      },
+      cacheDuration: CacheService.shortCache,
+    );
   }
 
   // Request OTP - no cache
   Future<Map<String, dynamic>> requestOtp({required String phoneNumber}) async {
     return _callFunction(
-        'request_otp',
-        {
-          'phoneNumber': phoneNumber,
-        },
-        forceRefresh: true);
+      'request_otp',
+      {'phoneNumber': phoneNumber},
+      forceRefresh: true,
+    );
   }
 
   // Verify OTP - no cache
@@ -477,23 +489,23 @@ class ThinkProvider {
     required String requestId,
   }) async {
     return _callFunction(
-        'verify_otp',
-        {
-          'phoneNumber': phoneNumber,
-          'otp': otp,
-          'requestId': requestId,
-        },
-        forceRefresh: true);
+      'verify_otp',
+      {
+        'phoneNumber': phoneNumber,
+        'otp': otp,
+        'requestId': requestId,
+      },
+      forceRefresh: true,
+    );
   }
 
   // Get user profile - short cache
   Future<Map<String, dynamic>> getUserProfile({required String uuid}) async {
     return _callFunction(
-        'get_profile',
-        {
-          'uuid': uuid,
-        },
-        cacheDuration: CacheService.shortCache);
+      'get_profile',
+      {'uuid': uuid},
+      cacheDuration: CacheService.shortCache,
+    );
   }
 
   // Update profile - no cache
@@ -502,44 +514,59 @@ class ThinkProvider {
     required Map<String, dynamic> profileData,
   }) async {
     return _callFunction(
-        'update_profile',
-        {
-          'uuid': uuid,
-          ...profileData,
-        },
-        forceRefresh: true);
+      'update_profile',
+      {
+        'uuid': uuid,
+        ...profileData,
+      },
+      forceRefresh: true,
+    );
   }
 
   // Batch load initial data - short cache
   Future<Map<String, dynamic>> loadInitialData({required String uuid}) async {
-    final List<Map<String, dynamic>> functions = [
-      {
-        'name': 'check_registration_status',
-        'params': {'uuid': uuid},
-      },
-      {
-        'name': 'get_profile',
-        'params': {'uuid': uuid},
-      },
-    ];
+    if (!_isInitialized) {
+      await initialize();
+    }
 
-    final results = await _apiService.batchRequests(
-      requests: functions
-          .map((f) => {
-                'endpoint': ApiConfig.functionsEndpoint,
-                'body': {
-                  'function': f['name'] as String,
-                  ...(f['params'] as Map<String, dynamic>),
-                },
-              })
-          .toList(),
-      cacheDuration: CacheService.shortCache,
-    );
+    try {
+      final List<Map<String, dynamic>> functions = [
+        {
+          'name': 'check_registration_status',
+          'params': {'uuid': uuid},
+        },
+        {
+          'name': 'get_profile',
+          'params': {'uuid': uuid},
+        },
+      ];
 
-    return {
-      'status': 'success',
-      'data': {'registration_status': results[0], 'profile': results[1]},
-    };
+      debugPrint('Loading initial data for UUID: $uuid');
+      final results = await _apiService.batchRequests(
+        requests: functions
+            .map((f) => {
+                  'endpoint': ApiConfig.functionsEndpoint,
+                  'body': {
+                    'function': f['name'] as String,
+                    ...(f['params'] as Map<String, dynamic>),
+                  },
+                })
+            .toList(),
+        cacheDuration: CacheService.shortCache,
+      );
+
+      return {
+        'status': 'success',
+        'data': {'registration_status': results[0], 'profile': results[1]},
+      };
+    } catch (e) {
+      debugPrint('Error loading initial data: $e');
+      return {
+        'status': 'error',
+        'message': e.toString(),
+        'data': null,
+      };
+    }
   }
 
   void dispose() {

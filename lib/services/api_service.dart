@@ -3,11 +3,11 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:async';
 import 'package:flutter/foundation.dart';
-import 'package:hive_flutter/hive_flutter.dart';
 import '../network/config.dart';
 import 'cache_service.dart';
 import 'dart:collection';
 
+// Create HTTP client with proper SSL handling
 HttpClient _createHttpClient() {
   final client = HttpClient();
   if (kDebugMode) {
@@ -17,6 +17,7 @@ HttpClient _createHttpClient() {
   return client;
 }
 
+// Isolate function for making HTTP requests
 Future<Map<String, dynamic>> _makeRequestInIsolate(
     Map<String, dynamic> params) async {
   final httpClient = _createHttpClient();
@@ -97,13 +98,14 @@ class ApiService {
   }
 
   Future<void> initialize() async {
-    if (_isInitialized) return;
+    if (_isInitialized) {
+      debugPrint('ApiService already initialized');
+      return;
+    }
 
     try {
-      // Wait for Hive to be ready
-      if (!Hive.isBoxOpen('api_cache')) {
-        await Hive.openBox('api_cache');
-      }
+      // Wait for cache service to be ready
+      await CacheService.init();
 
       _isInitialized = true;
       debugPrint('ApiService initialized successfully');

@@ -7,6 +7,8 @@ import 'network/auth_provider.dart';
 import 'services/cache_service.dart';
 import 'routes/app_router.dart';
 import 'routes/route_constants.dart';
+import 'package:path_provider/path_provider.dart' as path_provider;
+import 'dart:io';
 
 // Placeholder Screen Template
 class PlaceholderScreen extends StatelessWidget {
@@ -53,8 +55,17 @@ void main() async {
   try {
     WidgetsFlutterBinding.ensureInitialized();
 
-    // Initialize Hive first
-    await Hive.initFlutter();
+    // Get the application documents directory
+    final appDir = await path_provider.getApplicationDocumentsDirectory();
+    final cacheDir = Directory('${appDir.path}/cache');
+
+    // Create cache directory if it doesn't exist
+    if (!await cacheDir.exists()) {
+      await cacheDir.create(recursive: true);
+    }
+
+    // Initialize Hive with the cache directory
+    await Hive.initFlutter(cacheDir.path);
     debugPrint('Hive initialized successfully');
 
     // Initialize cache service with proper error handling
@@ -102,7 +113,40 @@ void main() async {
     );
   } catch (e) {
     debugPrint('Error during app initialization: $e');
-    rethrow;
+    // Show a user-friendly error screen instead of crashing
+    runApp(
+      MaterialApp(
+        home: Scaffold(
+          body: Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(Icons.error_outline, size: 48, color: Colors.red),
+                const SizedBox(height: 16),
+                const Text(
+                  'Failed to initialize app',
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Please restart the app\nError: $e',
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(color: Colors.red),
+                ),
+                const SizedBox(height: 16),
+                ElevatedButton(
+                  onPressed: () {
+                    // Attempt to restart the app
+                    main();
+                  },
+                  child: const Text('Retry'),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
   }
 }
 
@@ -115,7 +159,14 @@ Future<void> _initializeCacheService() async {
     try {
       debugPrint(
           'Attempting to initialize cache service (attempt ${retryCount + 1})');
+
+      // Initialize cache service
       await CacheService.init();
+
+      // Verify initialization
+      final stats = await CacheService.getCacheStats();
+      debugPrint('Cache service stats: $stats');
+
       debugPrint('Cache service initialized successfully');
       return;
     } catch (e) {
@@ -129,7 +180,7 @@ Future<void> _initializeCacheService() async {
       } else {
         debugPrint(
             'Warning: Cache initialization failed after $maxRetries attempts');
-        // Don't rethrow - we want the app to continue even if cache fails
+        // Log the error but don't rethrow - we want the app to continue even if cache fails
       }
     }
   }

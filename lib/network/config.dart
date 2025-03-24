@@ -6,9 +6,12 @@ class ApiConfig {
 
   // Headers
   static const Map<String, String> headers = {
-    'Content-Type': 'application/json',
-    'Accept': 'application/json',
+    'Content-Type': 'application/json; charset=UTF-8',
+    'Accept': 'application/json, text/plain, */*',
     'X-Requested-With': 'XMLHttpRequest',
+    'Connection': 'keep-alive',
+    'Cache-Control': 'no-cache',
+    'Pragma': 'no-cache',
   };
 
   // Timeouts

@@ -277,8 +277,8 @@ class _HomeTabState extends State<HomeTab> {
 
       // Create a properly typed map for compute parameters
       final params = {
-        'uuid': uuid as String,
-        'page': (_currentPage + 1) as int,
+        'uuid': uuid,
+        'page': (_currentPage + 1),
       };
 
       final response = await compute(

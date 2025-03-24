@@ -1,6 +1,7 @@
 import 'package:http/io_client.dart';
 import 'dart:convert';
 import 'dart:io';
+import 'dart:async';
 import 'package:flutter/foundation.dart';
 import '../network/config.dart';
 import 'cache_service.dart';
@@ -28,6 +29,7 @@ Future<Map<String, dynamic>> _makeRequestInIsolate(
 
   try {
     debugPrint('📡 Making API request to: ${params['endpoint']}');
+    debugPrint('📦 Request body: ${params['body']}');
 
     final response = await client
         .post(
@@ -37,11 +39,21 @@ Future<Map<String, dynamic>> _makeRequestInIsolate(
         )
         .timeout(Duration(milliseconds: params['timeout']));
 
+    debugPrint('📥 Response status code: ${response.statusCode}');
+    debugPrint('📥 Response headers: ${response.headers}');
+
     final responseBody = response.body;
+    debugPrint('📥 Raw response: $responseBody');
 
     // Handle empty responses
     if (responseBody.isEmpty) {
-      throw Exception('Empty response from server');
+      debugPrint('⚠️ Empty response received from server');
+      return {
+        'status': 'error',
+        'message': 'Empty response from server',
+        'statusCode': response.statusCode,
+        'headers': response.headers,
+      };
     }
 
     // Parse response
@@ -49,19 +61,42 @@ Future<Map<String, dynamic>> _makeRequestInIsolate(
     try {
       jsonResponse = json.decode(responseBody);
     } catch (e) {
-      throw Exception('Invalid JSON response: $responseBody');
+      debugPrint('❌ Failed to parse JSON response: $e');
+      return {
+        'status': 'error',
+        'message': 'Invalid JSON response: $responseBody',
+        'statusCode': response.statusCode,
+        'headers': response.headers,
+      };
     }
 
     // Check status code after parsing JSON to get any error messages from the response
     if (response.statusCode >= 400) {
       final errorMessage = jsonResponse['message'] ?? 'Unknown error';
-      throw Exception('API Error ${response.statusCode}: $errorMessage');
+      debugPrint('❌ API Error ${response.statusCode}: $errorMessage');
+      return {
+        'status': 'error',
+        'message': 'API Error ${response.statusCode}: $errorMessage',
+        'statusCode': response.statusCode,
+        'error': jsonResponse,
+      };
     }
 
     return jsonResponse;
   } catch (e) {
     debugPrint('❌ API request failed: $e');
-    rethrow;
+    if (e is TimeoutException) {
+      return {
+        'status': 'error',
+        'message': 'Request timed out',
+        'error': e.toString(),
+      };
+    }
+    return {
+      'status': 'error',
+      'message': e.toString(),
+      'error': e.toString(),
+    };
   } finally {
     client.close();
     httpClient.close();

@@ -57,6 +57,7 @@ class ThinkProvider {
         'function': function,
         ...params,
       };
+      debugPrint('📦 Request body: $requestBody');
 
       final response = await _apiService.makeRequest(
         endpoint: ApiConfig.functions,

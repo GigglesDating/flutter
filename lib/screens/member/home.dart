@@ -268,8 +268,8 @@ class _HomeTabState extends State<HomeTab> {
       debugPrint('Loading more posts for page: ${_currentPage + 1}');
       // Fix: Create a properly typed class for compute parameters
       final params = {
-        'uuid': uuid as String,
-        'page': (_currentPage + 1) as int,
+        'uuid': uuid,
+        'page': (_currentPage + 1),
       };
 
       final response = await compute(

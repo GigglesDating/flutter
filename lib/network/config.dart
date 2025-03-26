@@ -6,8 +6,7 @@ class ApiConfig {
   static const String requestOtp = '$baseUrl/request-otp';
   static const String verifyOtp = '$baseUrl/verify-otp';
   static const String database = '$baseUrl/database';
-  static const String functions =
-      '$baseUrl/functions/'; // Fixed the functions endpoint
+  static const String functions = '$baseUrl/functions/';
 
   // Headers
   static Map<String, String> get headers => {
@@ -20,8 +19,13 @@ class ApiConfig {
   static const int connectionTimeout = 30000; // 30 seconds
   static const int receiveTimeout = 30000; // 30 seconds
 
-  // Generate endpoint URL - just return the functions endpoint as all function calls go there
+  // Phone number configuration
+  static const String countryCode = '+91';
+  static const int phoneNumberLength = 10;
+  static const int otpLength = 4; // Changed from 6 to 4 to match login screen
+
+  // Generate endpoint URL
   static String getFunctionEndpoint(String functionName) {
-    return functions; // All function calls go to the same endpoint
+    return functions;
   }
 }

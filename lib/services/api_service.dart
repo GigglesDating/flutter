@@ -106,7 +106,7 @@ class ApiService {
 
       return decodedResponse;
     } catch (e) {
-      debugPrint('API Error for $endpoint: $e');
+      debugPrint('A3 - API Error for $endpoint: $e');
 
       // Try cache again in case of network error
       if (cacheDuration != null) {

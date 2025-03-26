@@ -116,12 +116,12 @@ class _WaitlistScreenState extends State<WaitlistScreen>
       }
 
       final thinkProvider = ThinkProvider();
-      final response = await thinkProvider.checkMemberStatus(uuid: uuid);
+      final response = await thinkProvider.checkRegistrationStatus(uuid: uuid);
 
       if (!mounted) return;
 
       if (response['status'] == 'success') {
-        if (response['data']['member'] == 'yes') {
+        if (response['reg_status'] == 'member') {
           // Update the reg_process in SharedPreferences
           await prefs.setString('reg_process', 'member_approved');
 

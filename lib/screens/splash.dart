@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_frontend/network/auth_provider.dart';
 import 'dart:async';
-import '../routes/app_router.dart';
 import '../routes/route_constants.dart';
 import 'barrel.dart';
 
@@ -18,6 +17,9 @@ class _SplashScreenState extends State<SplashScreen>
   late AnimationController _fadeController;
   late Animation<double> _fadeAnimation;
   bool _isNavigating = false;
+  bool _isStatusCheckComplete = false;
+  Timer? _statusCheckTimeout;
+  // static const int _maxStatusCheckAttempts = 3;
 
   @override
   void initState() {
@@ -46,90 +48,123 @@ class _SplashScreenState extends State<SplashScreen>
       final authProvider = Provider.of<AuthProvider>(context, listen: false);
       await authProvider.initializeAuth();
 
-      // Minimum splash duration for animation
-      await Future.delayed(const Duration(seconds: 2));
       if (!mounted) return;
 
       if (authProvider.isAuthenticated && authProvider.uuid != null) {
         debugPrint('User authenticated with UUID: ${authProvider.uuid}');
-
-        // Start member status check in background
-        unawaited(_checkMemberStatusInBackground(authProvider,
-            authProvider.uuid!, authProvider.regProcess ?? 'new_user'));
-
-        // Navigate immediately based on current reg_process
-        _handleNavigation(authProvider.regProcess ?? 'new_user');
+        await _checkMemberStatus(authProvider.uuid!);
       } else {
         debugPrint('User not authenticated, navigating to login');
-        Navigator.of(context).pushReplacementNamed('/login');
+        if (mounted) {
+          Navigator.of(context).pushReplacementNamed(Routes.login);
+        }
       }
     } catch (e) {
       debugPrint('Authentication check error: $e');
       if (mounted) {
-        Navigator.of(context).pushReplacementNamed('/login');
+        Navigator.of(context).pushReplacementNamed(Routes.login);
       }
     }
   }
 
-  Future<void> _checkMemberStatusInBackground(
-    AuthProvider authProvider,
-    String uuid,
-    String currentRegProcess,
-  ) async {
+  Future<void> _checkMemberStatus(String uuid) async {
+    if (_isStatusCheckComplete) return;
+
     try {
       final thinkProvider = ThinkProvider();
       final response = await thinkProvider.checkMemberStatus(uuid: uuid);
+      debugPrint(
+          'SplashScreen._checkMemberStatus received response: $response');
 
       if (!mounted) return;
 
-      if (response['status'] == 'success' &&
-          response['data'] != null &&
-          response['data']['reg_process'] != null) {
-        final newRegProcess = response['data']['reg_process'];
+      if (response['status'] == 'success' && response['reg_status'] != null) {
+        final regStatus = response['reg_status'];
+        debugPrint('Registration status: $regStatus');
 
-        // Only update if reg_process has changed
-        if (newRegProcess != currentRegProcess) {
-          debugPrint(
-              'Updating reg_process from $currentRegProcess to $newRegProcess');
-          await authProvider.updateRegProcess(newRegProcess);
+        setState(() {
+          _isStatusCheckComplete = true;
+        });
+
+        if (mounted) {
+          _handleNavigation(regStatus);
+        }
+      } else {
+        // If we don't get a valid response, try one more time
+        await Future.delayed(const Duration(seconds: 1));
+        final retryResponse = await thinkProvider.checkMemberStatus(uuid: uuid);
+
+        if (!mounted) return;
+
+        if (retryResponse['status'] == 'success' &&
+            retryResponse['reg_status'] != null) {
+          final regStatus = retryResponse['reg_status'];
+          debugPrint('Registration status (retry): $regStatus');
+
+          setState(() {
+            _isStatusCheckComplete = true;
+          });
+
+          if (mounted) {
+            _handleNavigation(regStatus);
+          }
+        } else {
+          // If both attempts fail, navigate to login
+          debugPrint('Failed to get registration status, navigating to login');
+          if (mounted) {
+            Navigator.of(context).pushReplacementNamed(Routes.login);
+          }
         }
       }
     } catch (e) {
-      debugPrint('Background member status check error: $e');
+      debugPrint('Status check error: $e');
+      if (mounted) {
+        Navigator.of(context).pushReplacementNamed(Routes.login);
+      }
     }
   }
 
   void _handleNavigation(String regStatus) {
     if (!mounted) return;
 
+    debugPrint('Navigating based on registration status: $regStatus');
+
     switch (regStatus.toLowerCase()) {
       case 'member':
-        AppRouter.navigateToHome(context);
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(
+            builder: (_) => const NavigationController(initialTab: 0),
+          ),
+          (route) => false,
+        );
         break;
       case 'new_user':
         Navigator.of(context).pushReplacementNamed(Routes.login);
         break;
       case 'pending_verification':
-        Navigator.of(context).pushReplacementNamed(Routes.waitlist);
-        break;
       case 'pending_profile':
         Navigator.of(context).pushReplacementNamed(Routes.waitlist);
         break;
       default:
-        AppRouter.navigateToLogin(context);
+        Navigator.of(context).pushReplacementNamed(Routes.login);
     }
   }
 
   @override
   void dispose() {
     _fadeController.dispose();
+    _statusCheckTimeout?.cancel();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    final isDarkMode =
+        MediaQuery.of(context).platformBrightness == Brightness.dark;
+
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: isDarkMode ? Colors.black : Colors.white,
       body: FadeTransition(
         opacity: _fadeAnimation,
         child: Center(
@@ -137,11 +172,19 @@ class _SplashScreenState extends State<SplashScreen>
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Image.asset(
-                'assets/light/logo.png',
+                isDarkMode
+                    ? 'assets/dark/favicon.png'
+                    : 'assets/light/favicon.png',
                 width: MediaQuery.of(context).size.width * 0.6,
               ),
               const SizedBox(height: 24),
-              const CircularProgressIndicator(),
+              if (!_isStatusCheckComplete)
+                const CircularProgressIndicator()
+              else
+                Icon(
+                  Icons.check_circle,
+                  color: isDarkMode ? Colors.white : Colors.black,
+                ),
             ],
           ),
         ),

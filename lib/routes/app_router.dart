@@ -50,42 +50,37 @@ class AppRouter {
       default:
         // Handle unknown routes
         return MaterialPageRoute(
-          builder: (_) => Scaffold(
-            body: Center(
-              child: Text('No route defined for ${settings.name}'),
-            ),
-          ),
+          builder:
+              (_) => Scaffold(
+                body: Center(
+                  child: Text('No route defined for ${settings.name}'),
+                ),
+              ),
         );
     }
   }
 
   // Navigation helper methods
   static void navigateToHome(BuildContext context) {
-    Navigator.of(context).pushNamedAndRemoveUntil(
-      Routes.home,
-      (route) => false,
-    );
+    Navigator.of(
+      context,
+    ).pushNamedAndRemoveUntil(Routes.home, (route) => false);
   }
 
   static void navigateToLogin(BuildContext context) {
-    Navigator.of(context).pushNamedAndRemoveUntil(
-      Routes.login,
-      (route) => false,
-    );
+    Navigator.of(
+      context,
+    ).pushNamedAndRemoveUntil(Routes.login, (route) => false);
   }
 
   static void navigateToWaitlist(BuildContext context) {
-    Navigator.of(context).pushNamedAndRemoveUntil(
-      Routes.waitlist,
-      (route) => false,
-    );
+    Navigator.of(
+      context,
+    ).pushNamedAndRemoveUntil(Routes.waitlist, (route) => false);
   }
 
   static void navigateToTab(BuildContext context, String route) {
-    Navigator.of(context).pushNamedAndRemoveUntil(
-      route,
-      (r) => false,
-    );
+    Navigator.of(context).pushNamedAndRemoveUntil(route, (r) => false);
   }
 
   static void logout(BuildContext context) {

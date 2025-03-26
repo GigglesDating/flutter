@@ -63,20 +63,12 @@ class ThinkProvider {
         'uuid': uuid,
       });
 
-      // Successful response should have status: success and reg_status field
-      if (response['status'] == 'success' && response['reg_status'] != null) {
-        return response; // Return the successful response as is
-      }
-
       // Only log error for actual error responses
       if (response['status'] != 'success') {
         debugPrint('Error response from API: $response');
       }
 
-      return {
-        'status': 'error',
-        'message': response['message'] ?? 'Invalid response format',
-      };
+      return response;
     } catch (e) {
       debugPrint('Error in checkRegistrationStatus: $e');
       return {
@@ -256,17 +248,6 @@ class ThinkProvider {
         'message': 'Error fetching FAQs: $e',
       };
     }
-  }
-
-  // Check member status with caching
-  Future<Map<String, dynamic>> checkMemberStatus({
-    required String uuid,
-  }) async {
-    return await _callFunction(
-      'check_registration_status',
-      {'uuid': uuid},
-      cacheDuration: const Duration(minutes: 5),
-    );
   }
 
   // Get override number with longer cache
@@ -605,7 +586,8 @@ class ThinkProvider {
 
               final decodedResponse =
                   jsonDecode(responseBody) as Map<String, dynamic>;
-              debugPrint('API Response for $functionName: $decodedResponse');
+              debugPrint(
+                  'A2 - API Response for $functionName: $decodedResponse');
               return decodedResponse;
             } catch (e) {
               throw Exception('Invalid response format: $e');

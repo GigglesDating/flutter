@@ -46,11 +46,12 @@ class AuthProvider extends ChangeNotifier {
     required String phoneNumber,
   }) async {
     try {
-      _setLoading(true);
+      _isLoading = true;
+      notifyListeners();
 
       final response = await http
           .post(
-            Uri.parse(ApiConfig.functionsEndpoint),
+            Uri.parse(ApiConfig.requestOtp),
             headers: ApiConfig.headers,
             body: jsonEncode({
               'function': _functionRequestOtp,
@@ -59,9 +60,11 @@ class AuthProvider extends ChangeNotifier {
           )
           .timeout(ApiConfig.connectionTimeout);
 
-      if (response.statusCode >= ApiConfig.statusServerError) {
-        return _createErrorResponse(
-            'Server error occurred. Please try again later.');
+      if (response.statusCode >= 500) {
+        return {
+          'status': false,
+          'error': 'Server error occurred. Please try again later.',
+        };
       }
 
       final decodedResponse = jsonDecode(response.body);
@@ -72,18 +75,30 @@ class AuthProvider extends ChangeNotifier {
         decodedResponse['status'] = true;
       }
 
+      _isLoading = false;
+      notifyListeners();
       return decodedResponse;
     } on TimeoutException {
-      return _createErrorResponse(
-          'Connection timed out. Please check your internet connection.');
+      _isLoading = false;
+      notifyListeners();
+      return {
+        'status': false,
+        'error': 'Connection timed out. Please check your internet connection.',
+      };
     } on http.ClientException {
-      return _createErrorResponse(
-          'Network error. Please check your internet connection.');
+      _isLoading = false;
+      notifyListeners();
+      return {
+        'status': false,
+        'error': 'Network error. Please check your internet connection.',
+      };
     } catch (e) {
-      return _createErrorResponse(
-          'An unexpected error occurred. Please try again.');
-    } finally {
-      _setLoading(false);
+      _isLoading = false;
+      notifyListeners();
+      return {
+        'status': false,
+        'error': 'An unexpected error occurred. Please try again.',
+      };
     }
   }
 
@@ -94,31 +109,34 @@ class AuthProvider extends ChangeNotifier {
     required String requestId,
   }) async {
     try {
-      _setLoading(true);
+      _isLoading = true;
+      notifyListeners();
 
       final response = await http
           .post(
-            Uri.parse(ApiConfig.functionsEndpoint),
+            Uri.parse(ApiConfig.verifyOtp),
             headers: ApiConfig.headers,
             body: jsonEncode({
-              'function': _functionVerifyOtp,
               'phoneNumber': phoneNumber,
               'otp': otp,
               'requestId': requestId,
+              'otp': otp,
             }),
           )
           .timeout(ApiConfig.connectionTimeout);
 
-      if (response.statusCode >= ApiConfig.statusServerError) {
-        return _createErrorResponse(
-            'Server error occurred. Please try again later.');
+      if (response.statusCode >= 500) {
+        throw Exception('Server error: ${response.statusCode}');
       }
 
-      final decodedResponse = jsonDecode(response.body);
+      // Handle different status codes
+      switch (response.statusCode) {
+        case 200:
+        case 201:
+          try {
+            final decodedResponse = jsonDecode(response.body);
 
-      if (response.statusCode == ApiConfig.statusOk ||
-          response.statusCode == 201) {
-        // Consider adding 201 to ApiConfig if needed
+      if (response.statusCode == 200 || response.statusCode == 201) {
         if (decodedResponse['uuid'] != null) {
           await _saveAuthData(
             uuid: decodedResponse['uuid'],
@@ -129,26 +147,17 @@ class AuthProvider extends ChangeNotifier {
         decodedResponse['status'] = true;
       }
 
+      _isLoading = false;
+      notifyListeners();
       return decodedResponse;
     } catch (e) {
-      return _createErrorResponse('Failed to connect to server');
-    } finally {
-      _setLoading(false);
+      _isLoading = false;
+      notifyListeners();
+      return {
+        'status': false,
+        'error': 'Failed to connect to server',
+      };
     }
-  }
-
-  // Helper method to create error response
-  Map<String, dynamic> _createErrorResponse(String message) {
-    return {
-      'status': false,
-      'error': message,
-    };
-  }
-
-  // Helper method to set loading state
-  void _setLoading(bool value) {
-    _isLoading = value;
-    notifyListeners();
   }
 
   // Save authentication data

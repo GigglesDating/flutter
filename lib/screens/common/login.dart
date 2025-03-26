@@ -135,6 +135,11 @@ class _LoginScreenState extends State<LoginScreen> {
 
   Future<void> _resendOtp() async {
     if (_canResendOtp) {
+      setState(() {
+        _requestId = null; // Clear old requestId
+        _otp = ''; // Clear old OTP
+        _inputController.clear(); // Clear input field
+      });
       await _handleOtpRequest(_phoneNumber, isResend: true);
       _startResendTimer();
     }
@@ -154,6 +159,14 @@ class _LoginScreenState extends State<LoginScreen> {
     if (_otp.length != 4) {
       setState(() {
         _errorMessage = 'Please enter a valid 4-digit OTP';
+      });
+      return;
+    }
+
+    // Validate requestId before verification
+    if (_requestId == null || _requestId == 'override') {
+      setState(() {
+        _errorMessage = 'Invalid request ID. Please request a new OTP.';
       });
       return;
     }
@@ -178,7 +191,8 @@ class _LoginScreenState extends State<LoginScreen> {
 
       // Normal OTP verification flow
       final response = await authProvider.verifyOtp(
-        phoneNumber: '+91$_phoneNumber',
+        phoneNumber:
+            _phoneNumber, // Remove +91 prefix as it's handled in AuthProvider
         otp: _otp,
         requestId: _requestId!,
       );

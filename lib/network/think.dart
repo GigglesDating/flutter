@@ -1,44 +1,78 @@
-import 'config.dart';
 import 'package:flutter/foundation.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import '../services/api_service.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
-import 'dart:async';
-import 'dart:io';
-import 'package:http/io_client.dart';
+import '../network/config.dart';
+// import 'dart:convert';
 
 class ThinkProvider {
   final ApiService _apiService = ApiService();
   static final ThinkProvider _instance = ThinkProvider._internal();
-  static const String baseUrl = 'https://backend.gigglesdating.com/api';
-  static const String functions = '$baseUrl/functions/';
-  static const Duration _timeout = Duration(seconds: 30);
-  static const int _maxRetries = 3;
 
   factory ThinkProvider() => _instance;
-  ThinkProvider._internal() {
-    // Initialize the API endpoints
-    _initializeEndpoints();
-  }
+  ThinkProvider._internal();
 
-  Future<void> _initializeEndpoints() async {
+  // Helper method for API calls - will be used by all endpoint functions
+  @protected // Mark as protected to indicate it's for internal use
+  Future<Map<String, dynamic>> _callFunction(
+    String functionName,
+    Map<String, dynamic> params, {
+    Duration? cacheDuration,
+    bool forceRefresh = false,
+  }) async {
     try {
-      final response = await http.get(Uri.parse(baseUrl));
-      if (response.statusCode == 200) {
-        final endpoints = jsonDecode(response.body);
-        if (endpoints['functions'] != null) {
-          debugPrint('API Endpoints initialized successfully');
-        }
-      }
+      return await _apiService.makeRequest(
+        endpoint: ApiConfig.functions,
+        body: {
+          'function': functionName,
+          ...params,
+        },
+        cacheDuration: cacheDuration,
+        forceRefresh: forceRefresh,
+      );
     } catch (e) {
-      debugPrint('Failed to initialize API endpoints: $e');
+      debugPrint('Error in _callFunction for $functionName: $e');
+      return {
+        'status': 'error',
+        'message': 'Failed to execute function: $functionName',
+        'error': e.toString(),
+      };
     }
   }
 
+///////////////////////////////////////
+  ///     FUNCTION DEFINITIONS     ///
+  /// ///////////////////////////////
+
   // Check app version
   Future<Map<String, dynamic>> checkVersion() async {
-    return _callFunction('check_version', {});
+    try {
+      final response = await _callFunction(
+        ApiConfig.functionCheckVersion,
+        {},
+        cacheDuration: ApiConfig.longCache, // Use long cache for version checks
+      );
+
+      if (response['status'] == 'success') {
+        return {
+          'status': 'success',
+          'latest_version': response['latest_version'],
+          'minimum_version': response['minimum_version'],
+          'update_mandatory': response['update_mandatory'],
+          'update_url': response['update_url'],
+        };
+      } else {
+        return {
+          'status': 'error',
+          'message': response['message'] ?? 'Failed to check version',
+        };
+      }
+    } catch (e) {
+      debugPrint('Error in checkVersion: $e');
+      return {
+        'status': 'error',
+        'message': 'Failed to check app version',
+        'error': e.toString(),
+      };
+    }
   }
 
   // Update user location
@@ -47,40 +81,47 @@ class ThinkProvider {
     required double latitude,
     required double longitude,
   }) async {
-    return _callFunction('update_location', {
-      'uuid': uuid,
-      'latitude': latitude,
-      'longitude': longitude,
-    });
-  }
-
-  // Check registration status
-  Future<Map<String, dynamic>> checkRegistrationStatus({
-    required String uuid,
-  }) async {
     try {
-      final response = await _callFunction('check_registration_status', {
-        'uuid': uuid,
-      });
+      final response = await _callFunction(
+        ApiConfig.functionUpdateLocation,
+        {
+          'uuid': uuid,
+          'latitude': latitude,
+          'longitude': longitude,
+        },
+        cacheDuration:
+            ApiConfig.shortCache, // Use short cache for location updates
+      );
 
-      // Only log error for actual error responses
-      if (response['status'] != 'success') {
-        debugPrint('Error response from API: $response');
+      if (response['status'] == 'success') {
+        return {
+          'status': 'success',
+          'message': response['message'],
+          'data': {
+            'location': response['data']['location'],
+            'timestamp': response['data']['timestamp'],
+          },
+        };
+      } else {
+        return {
+          'status': 'error',
+          'message': response['message'] ?? 'Failed to update location',
+        };
       }
-
-      return response;
     } catch (e) {
-      debugPrint('Error in checkRegistrationStatus: $e');
+      debugPrint('Error in updateLocation: $e');
       return {
         'status': 'error',
-        'message': 'Failed to check registration status',
+        'message': 'Failed to update location',
+        'error': e.toString(),
       };
     }
   }
 
-  // Initial signup
+  // User signup
   Future<Map<String, dynamic>> signup({
     required String uuid,
+    required String phoneNumber,
     required String firstName,
     required String lastName,
     required String dob,
@@ -89,83 +130,304 @@ class ThinkProvider {
     required String city,
     required bool consent,
   }) async {
-    // Get phone number from SharedPreferences
-    final prefs = await SharedPreferences.getInstance();
-    final phoneNumber = prefs.getString(
-        'phone_number'); // We need to store this during OTP verification
-
     try {
-      final response = await _callFunction('signup', {
-        'uuid': uuid,
-        'phone_number': phoneNumber, // Add this
-        'firstName': firstName,
-        'lastName': lastName,
-        'dob': dob,
-        'email': email,
-        'gender': gender,
-        'city': city,
-        'consent': consent,
-      });
-      return response;
+      final response = await _callFunction(
+        ApiConfig.signup,
+        {
+          'uuid': uuid,
+          'phone_number': phoneNumber,
+          'firstName': firstName,
+          'lastName': lastName,
+          'dob': dob,
+          'email': email,
+          'gender': gender,
+          'city': city,
+          'consent': consent,
+        },
+      );
+
+      if (response['status'] == 'success') {
+        return {
+          'status': 'success',
+          'message': response['message'],
+          'reg_process': response['reg_process'],
+        };
+      } else {
+        return {
+          'status': 'error',
+          'message': response['message'] ?? 'Failed to sign up',
+        };
+      }
     } catch (e) {
+      debugPrint('Error in signup: $e');
       return {
         'status': 'error',
-        'message': 'Error during signup: $e',
+        'message': 'Failed to complete signup',
+        'error': e.toString(),
       };
     }
   }
 
-  // Profile Creation Step 1
+  // Check user registration status
+  Future<Map<String, dynamic>> checkRegistrationStatus({
+    required String uuid,
+  }) async {
+    try {
+      final response = await _callFunction(
+        ApiConfig.functionCheckRegistrationStatus,
+        {
+          'uuid': uuid,
+        },
+      );
+
+      if (response['status'] == 200) {
+        return {
+          'status': response['status'],
+          'message': response['message'],
+          'reg_process': response['reg_process'],
+        };
+      } else {
+        return {
+          'status': 'error',
+          'message':
+              response['message'] ?? 'Failed to check registration status',
+        };
+      }
+    } catch (e) {
+      debugPrint('Error in checkRegistrationStatus: $e');
+      return {
+        'status': 'error',
+        'message': 'Failed to check registration status',
+        'error': e.toString(),
+      };
+    }
+  }
+
+  // Test AWS connection
+  Future<Map<String, dynamic>> testAwsConnection() async {
+    try {
+      final response = await _callFunction(
+        ApiConfig.testAwsConnection,
+        {},
+      );
+
+      if (response['status'] == 'success') {
+        return {
+          'status': 'success',
+          'message': response['message'],
+          'buckets': response['buckets'],
+        };
+      } else {
+        return {
+          'status': 'error',
+          'message': response['message'] ?? 'Failed to test AWS connection',
+        };
+      }
+    } catch (e) {
+      debugPrint('Error in testAwsConnection: $e');
+      return {
+        'status': 'error',
+        'message': 'Failed to test AWS connection',
+        'error': e.toString(),
+      };
+    }
+  }
+
+  // Submit profile creation step 1
   Future<Map<String, dynamic>> pC1Submit({
     required String uuid,
     required String profileImage,
-    required String bio,
     required String mandateImage1,
     required String mandateImage2,
     required String genderOrientation,
+    required String bio,
     String? optionalImage1,
     String? optionalImage2,
   }) async {
-    return _callFunction('p_c1_submit', {
-      'uuid': uuid,
-      'profile_image': profileImage,
-      'bio': bio,
-      'mandate_image_1': mandateImage1,
-      'mandate_image_2': mandateImage2,
-      'gender_orientation': genderOrientation,
-      if (optionalImage1 != null) 'optional_image_1': optionalImage1,
-      if (optionalImage2 != null) 'optional_image_2': optionalImage2,
-    });
+    try {
+      final Map<String, dynamic> params = {
+        'uuid': uuid,
+        'profile_image': profileImage,
+        'mandate_image_1': mandateImage1,
+        'mandate_image_2': mandateImage2,
+        'gender_orientation': genderOrientation,
+        'bio': bio,
+      };
+
+      // Add optional images if provided
+      if (optionalImage1 != null) {
+        params['optional_image_1'] = optionalImage1;
+      }
+      if (optionalImage2 != null) {
+        params['optional_image_2'] = optionalImage2;
+      }
+
+      final response = await _callFunction(
+        ApiConfig.pC1Submit,
+        params,
+      );
+
+      if (response['status'] == 'success') {
+        return {
+          'status': 'success',
+          'message': response['message'],
+          'uuid': response['uuid'],
+          'reg_status': response['reg_status'],
+        };
+      } else {
+        return {
+          'status': 'error',
+          'message':
+              response['message'] ?? 'Failed to submit profile creation step 1',
+        };
+      }
+    } catch (e) {
+      debugPrint('Error in pC1Submit: $e');
+      return {
+        'status': 'error',
+        'message': 'Failed to submit profile creation step 1',
+        'error': e.toString(),
+      };
+    }
   }
 
-  // Profile Creation Step 2
+  // Submit profile creation step 2
   Future<Map<String, dynamic>> pC2Submit({
     required String uuid,
-    required List<String>
-        genderPreference, // Can be ['men', 'women', 'non-binary', 'everyone']
-    required Map<String, dynamic> agePreference,
+    required List<String> interests,
+    required List<String> languages,
+    required List<String> relationshipGoals,
+    required List<String> dealBreakers,
+    required String aboutMe,
+    String? optionalImage3,
+    String? optionalImage4,
+    String? optionalImage5,
+    String? optionalImage6,
   }) async {
-    return _callFunction('p_c2_submit', {
-      'uuid': uuid,
-      'gender_preference': genderPreference,
-      'age_preference': agePreference,
-    });
+    try {
+      final Map<String, dynamic> params = {
+        'uuid': uuid,
+        'interests': interests,
+        'languages': languages,
+        'relationship_goals': relationshipGoals,
+        'deal_breakers': dealBreakers,
+        'about_me': aboutMe,
+      };
+
+      // Add optional images if provided
+      if (optionalImage3 != null) {
+        params['optional_image_3'] = optionalImage3;
+      }
+      if (optionalImage4 != null) {
+        params['optional_image_4'] = optionalImage4;
+      }
+      if (optionalImage5 != null) {
+        params['optional_image_5'] = optionalImage5;
+      }
+      if (optionalImage6 != null) {
+        params['optional_image_6'] = optionalImage6;
+      }
+
+      final response = await _callFunction(
+        ApiConfig.pC2Submit,
+        params,
+      );
+
+      if (response['status'] == 'success') {
+        return {
+          'status': 'success',
+          'message': response['message'],
+          'uuid': response['uuid'],
+          'reg_status': response['reg_status'],
+        };
+      } else {
+        return {
+          'status': 'error',
+          'message':
+              response['message'] ?? 'Failed to submit profile creation step 2',
+        };
+      }
+    } catch (e) {
+      debugPrint('Error in pC2Submit: $e');
+      return {
+        'status': 'error',
+        'message': 'Failed to submit profile creation step 2',
+        'error': e.toString(),
+      };
+    }
   }
 
-  // Profile Creation Step 3
+  // Submit profile creation step 3
   Future<Map<String, dynamic>> pC3Submit({
     required String uuid,
-    required List<Map<String, dynamic>> selectedInterests,
+    required List<String> selectedInterests,
   }) async {
-    return _callFunction('p_c3_submit', {
-      'uuid': uuid,
-      'selected_interests': selectedInterests,
-    });
+    try {
+      final response = await _callFunction(
+        ApiConfig.pC3Submit,
+        {
+          'uuid': uuid,
+          'selected_interests': selectedInterests,
+        },
+      );
+
+      if (response['status'] == 'success') {
+        return {
+          'status': 'success',
+          'message': response['message'],
+          'reg_process':
+              response['reg_process'], // Will be 'waitlisted' on success
+        };
+      } else {
+        return {
+          'status': 'error',
+          'message':
+              response['message'] ?? 'Failed to submit profile creation step 3',
+        };
+      }
+    } catch (e) {
+      debugPrint('Error in pC3Submit: $e');
+      return {
+        'status': 'error',
+        'message': 'Failed to submit profile creation step 3',
+        'error': e.toString(),
+      };
+    }
   }
 
-  // Get all interests from D1BackendDb
-  Future<Map<String, dynamic>> getInterests() async {
-    return _callFunction('get_interests', {});
+  // Get available interests
+  Future<Map<String, dynamic>> getInterests({
+    required String uuid,
+  }) async {
+    try {
+      final response = await _callFunction(
+        ApiConfig.getInterests,
+        {
+          'UUID':
+              uuid, // Note: Backend expects 'UUID' (uppercase) as per the request body
+        },
+      );
+
+      if (response['status'] == 'success') {
+        return {
+          'status': 'success',
+          'data': response[
+              'data'], // List of interest objects with id, name, icon_name, and category
+        };
+      } else {
+        return {
+          'status': 'error',
+          'message': response['message'] ?? 'Failed to fetch interests',
+        };
+      }
+    } catch (e) {
+      debugPrint('Error in getInterests: $e');
+      return {
+        'status': 'error',
+        'message': 'Failed to fetch interests',
+        'error': e.toString(),
+      };
+    }
   }
 
   // Add a custom interest
@@ -173,63 +435,212 @@ class ThinkProvider {
     required String uuid,
     required String interestName,
   }) async {
-    return _callFunction('add_custom_interest', {
-      'uuid': uuid,
-      'interest_name': interestName,
-    });
+    try {
+      final response = await _callFunction(
+        ApiConfig.addCustomInterest,
+        {
+          'uuid': uuid,
+          'interest_name': interestName,
+        },
+      );
+
+      if (response['status'] == 'success') {
+        return {
+          'status': 'success',
+          'message': response['message'],
+          'data': response['data'], // Contains the created interest object
+        };
+      } else {
+        return {
+          'status': 'error',
+          'message': response['message'] ?? 'Failed to add custom interest',
+        };
+      }
+    } catch (e) {
+      debugPrint('Error in addCustomInterest: $e');
+      return {
+        'status': 'error',
+        'message': 'Failed to add custom interest',
+        'error': e.toString(),
+      };
+    }
   }
 
-  // Submit Aadhar Information
+  // Submit Aadhar verification information
   Future<Map<String, dynamic>> submitAadharInfo({
     required String uuid,
-    required Map<String, dynamic>
-        kycData, // The complete JSON data from KYC service
+    String? aadharImage,
+    String? selfieImage,
+    String? aadharPdfFile,
   }) async {
-    return _callFunction('submit_aadhar_info', {
-      'uuid': uuid,
-      ...kycData, // Spread the KYC data into the request
-    });
+    try {
+      final Map<String, dynamic> params = {
+        'uuid': uuid,
+      };
+
+      // Add optional parameters only if they are provided
+      if (aadharImage != null) {
+        params['AadharImage'] = aadharImage;
+      }
+      if (selfieImage != null) {
+        params['SelfieImage'] = selfieImage;
+      }
+      if (aadharPdfFile != null) {
+        params['Aadhar_pdf_file'] = aadharPdfFile;
+      }
+
+      final response = await _callFunction(
+        ApiConfig.submitAadharInfo,
+        params,
+      );
+
+      if (response['status'] == 'success') {
+        return {
+          'status': 'success',
+          'message': response['message'],
+        };
+      } else {
+        return {
+          'status': 'error',
+          'message':
+              response['message'] ?? 'Failed to submit Aadhar information',
+        };
+      }
+    } catch (e) {
+      debugPrint('Error in submitAadharInfo: $e');
+      return {
+        'status': 'error',
+        'message': 'Failed to submit Aadhar information',
+        'error': e.toString(),
+      };
+    }
   }
 
-  // Submit Support Ticket
+  // Submit a support ticket
   Future<Map<String, dynamic>> submitSupportTicket({
     required String uuid,
     required String screenName,
     required String supportText,
-    String? image1, // base64 encoded image
-    String? image2, // base64 encoded image
+    String? image1,
+    String? image2,
   }) async {
-    return _callFunction('submit_support_ticket', {
-      'uuid': uuid,
-      'screen_name': screenName,
-      'support_text': supportText,
-      if (image1 != null) 'image1': image1,
-      if (image2 != null) 'image2': image2,
-    });
+    try {
+      final Map<String, dynamic> params = {
+        'uuid': uuid,
+        'screen_name': screenName,
+        'support_text': supportText,
+      };
+
+      // Add optional images if provided
+      if (image1 != null) {
+        params['image1'] = image1;
+      }
+      if (image2 != null) {
+        params['image2'] = image2;
+      }
+
+      final response = await _callFunction(
+        ApiConfig.submitSupportTicket,
+        params,
+      );
+
+      if (response['status'] == 'success') {
+        return {
+          'status': 'success',
+          'message': response['message'],
+          'ticket_id': response['ticket_id'],
+        };
+      } else {
+        return {
+          'status': 'error',
+          'message': response['message'] ?? 'Failed to submit support ticket',
+        };
+      }
+    } catch (e) {
+      debugPrint('Error in submitSupportTicket: $e');
+      return {
+        'status': 'error',
+        'message': 'Failed to submit support ticket',
+        'error': e.toString(),
+      };
+    }
   }
 
-  // In ThinkProvider class
+  // Handle user logout
   Future<Map<String, dynamic>> logout({
     required String uuid,
   }) async {
-    return _callFunction('logout', {
-      'uuid': uuid,
-    });
+    try {
+      final response = await _callFunction(
+        ApiConfig.logout,
+        {
+          'uuid': uuid,
+        },
+      );
+
+      if (response['status'] == 'success') {
+        return {
+          'status': 'success',
+          'message': response['message'],
+        };
+      } else {
+        return {
+          'status': 'error',
+          'message': response['message'] ?? 'Failed to logout',
+        };
+      }
+    } catch (e) {
+      debugPrint('Error in logout: $e');
+      return {
+        'status': 'error',
+        'message': 'Failed to logout',
+        'error': e.toString(),
+      };
+    }
   }
 
-  // In ThinkProvider class
+  // Delete user account and all associated data
   Future<Map<String, dynamic>> deleteAccount({
     required String uuid,
   }) async {
-    return _callFunction('delete_account', {
-      'uuid': uuid,
-    });
+    try {
+      final response = await _callFunction(
+        ApiConfig.deleteAccount,
+        {
+          'uuid': uuid,
+        },
+      );
+
+      if (response['status'] == 'success') {
+        return {
+          'status': 'success',
+          'message': response['message'],
+        };
+      } else {
+        return {
+          'status': 'error',
+          'message': response['message'] ?? 'Failed to delete account',
+        };
+      }
+    } catch (e) {
+      debugPrint('Error in deleteAccount: $e');
+      return {
+        'status': 'error',
+        'message': 'Failed to delete account',
+        'error': e.toString(),
+      };
+    }
   }
 
-  // Function to fetch Faqs
+  // Get FAQs
   Future<Map<String, dynamic>> getFaqs() async {
     try {
-      final response = await _callFunction('get_faqs', {});
+      final response = await _callFunction(
+        ApiConfig.getFaqs,
+        {},
+        cacheDuration:
+            ApiConfig.longCache, // Cache FAQs since they rarely change
+      );
 
       if (response['status'] == 'success') {
         return {
@@ -243,34 +654,63 @@ class ThinkProvider {
         };
       }
     } catch (e) {
+      debugPrint('Error in getFaqs: $e');
       return {
         'status': 'error',
-        'message': 'Error fetching FAQs: $e',
+        'message': 'Failed to fetch FAQs',
+        'error': e.toString(),
       };
     }
   }
 
-  // Get override number with longer cache
-  Future<Map<String, dynamic>> getOverrideNumber() async {
-    return await _callFunction(
-      'get_override_number',
-      {},
-      cacheDuration: const Duration(days: 1),
-    );
+  // Get events
+  Future<Map<String, dynamic>> getEvents() async {
+    try {
+      final response = await _callFunction(
+        ApiConfig.getEvents,
+        {},
+        cacheDuration:
+            ApiConfig.mediumCache, // Cache events for a medium duration
+      );
+
+      if (response['status'] == 'success') {
+        return {
+          'status': 'success',
+          'events':
+              response['events'], // List of events with presigned image URLs
+        };
+      } else {
+        return {
+          'status': 'error',
+          'message': response['message'] ?? 'Failed to fetch events',
+        };
+      }
+    } catch (e) {
+      debugPrint('Error in getEvents: $e');
+      return {
+        'status': 'error',
+        'message': 'Failed to fetch events',
+        'error': e.toString(),
+      };
+    }
   }
 
-  // Get intro video
+  // Get intro video URL
   Future<Map<String, dynamic>> getIntroVideo() async {
     try {
-      final response = await _callFunction('get_intro_video', {});
+      final response = await _callFunction(
+        ApiConfig.getIntroVideo,
+        {},
+        cacheDuration:
+            ApiConfig.longCache, // Cache URL since video rarely changes
+      );
 
       if (response['status'] == 'success') {
         return {
           'status': 'success',
           'data': {
-            'intro_video_url': response['data']
-                ['intro_video_url'] // This is now a pre-signed URL
-          }
+            'intro_video_url': response['data']['intro_video_url'],
+          },
         };
       } else {
         return {
@@ -282,69 +722,39 @@ class ThinkProvider {
       debugPrint('Error in getIntroVideo: $e');
       return {
         'status': 'error',
-        'message': 'Error fetching intro video: $e',
+        'message': 'Failed to fetch intro video',
+        'error': e.toString(),
       };
     }
   }
 
-  // Get events
-  Future<Map<String, dynamic>> getEvents() async {
-    try {
-      final response = await _callFunction('get_events', {});
-
-      if (response['status'] == 'success') {
-        return {'status': 'success', 'data': response['events']};
-      } else {
-        return {
-          'status': 'error',
-          'message': response['message'] ?? 'Failed to fetch events',
-          'data': []
-        };
-      }
-    } catch (e) {
-      debugPrint('Error in getEvents: $e');
-      return {
-        'status': 'error',
-        'message': 'Error fetching events: $e',
-        'data': []
-      };
-    }
-  }
-
-  // Update or check event likes
+  // Update event like status or check liked events
   Future<Map<String, dynamic>> updateEventLike({
     required String uuid,
+    required String action,
     String? eventId,
-    String? action, // only 'like' or 'check' now
   }) async {
     try {
-      final response = await _callFunction('update_event_like', {
+      final Map<String, dynamic> params = {
         'uuid': uuid,
-        if (eventId != null) 'event_id': eventId,
-        'action': action ?? 'check', // default to 'check' if no action provided
-      });
+        'action': action,
+      };
+
+      // Add event_id only for like action
+      if (action == 'like' && eventId != null) {
+        params['event_id'] = eventId;
+      }
+
+      final response = await _callFunction(
+        ApiConfig.updateEventLike,
+        params,
+      );
 
       if (response['status'] == 'success') {
-        if (action == 'check') {
-          return {
-            'status': 'success',
-            'data': {
-              'liked_events':
-                  List<String>.from(response['data']['liked_events']),
-            }
-          };
-        } else {
-          return {
-            'status': 'success',
-            'data': {
-              'event_id': response['data']['event_id'],
-              'likes_count': response['data']['likes_count'],
-              'liked_events':
-                  List<String>.from(response['data']['liked_events']),
-              'is_liked': response['data']['is_liked'],
-            }
-          };
-        }
+        return {
+          'status': 'success',
+          'data': response['data'],
+        };
       } else {
         return {
           'status': 'error',
@@ -355,374 +765,189 @@ class ThinkProvider {
       debugPrint('Error in updateEventLike: $e');
       return {
         'status': 'error',
-        'message': 'Error updating event like: $e',
+        'message': 'Failed to update event like',
+        'error': e.toString(),
       };
     }
   }
 
-  // Get feed posts with pagination
+  // Get paginated feed with profile information
   Future<Map<String, dynamic>> getFeed({
     required String uuid,
     int page = 1,
-    int pageSize = 10,
     String? profileId,
   }) async {
     try {
-      final Map<String, dynamic> requestBody = {
+      final Map<String, dynamic> params = {
         'uuid': uuid,
         'page': page,
-        'page_size': pageSize,
       };
 
+      // Add profile_id if provided
       if (profileId != null) {
-        requestBody['profile_id'] = profileId;
+        params['profile_id'] = profileId;
       }
 
-      debugPrint('Calling getFeed with params: $requestBody');
-      final response = await _callFunction('get_feed', requestBody);
+      final response = await _callFunction(
+        ApiConfig.getFeed,
+        params,
+        cacheDuration:
+            ApiConfig.shortCache, // Short cache since feed updates frequently
+      );
 
       if (response['status'] == 'success') {
         return {
           'status': 'success',
-          'data': {
-            'posts': List<Map<String, dynamic>>.from(response['data']['posts']),
-            'has_more': response['data']['has_more'],
-            'next_page': response['data']['next_page'],
-            'total_posts': response['data']['total_posts'],
-          }
+          'data': response[
+              'data'], // Contains posts, has_more, next_page, and total_posts
         };
       } else {
-        debugPrint('Error response from getFeed: $response');
         return {
           'status': 'error',
           'message': response['message'] ?? 'Failed to fetch feed',
-          'data': {
-            'posts': [],
-            'has_more': false,
-            'next_page': null,
-            'total_posts': 0,
-          }
         };
       }
     } catch (e) {
       debugPrint('Error in getFeed: $e');
       return {
         'status': 'error',
-        'message': 'Error fetching feed: $e',
-        'data': {
-          'posts': [],
-          'has_more': false,
-          'next_page': null,
-          'total_posts': 0,
-        }
+        'message': 'Failed to fetch feed',
+        'error': e.toString(),
       };
     }
   }
 
-  // Get snips/reels with pagination
+  // Get paginated snips feed with profile information
   Future<Map<String, dynamic>> getSnips({
     required String uuid,
     int page = 1,
-    String? profileId, // Optional parameter
+    String? profileId,
   }) async {
     try {
-      // Create request body
-      final Map<String, dynamic> requestBody = {
+      final Map<String, dynamic> params = {
         'uuid': uuid,
         'page': page,
       };
 
-      // Add profile_id to request only if it's provided
+      // Add profile_id if provided
       if (profileId != null) {
-        requestBody['profile_id'] = profileId;
+        params['profile_id'] = profileId;
       }
 
-      final response = await _callFunction('get_snips', requestBody);
+      final response = await _callFunction(
+        ApiConfig.getSnips,
+        params,
+        cacheDuration: ApiConfig
+            .shortCache, // Short cache since snips feed updates frequently
+      );
 
       if (response['status'] == 'success') {
         return {
           'status': 'success',
-          'data': {
-            'snips': List<Map<String, dynamic>>.from(response['data']['snips']),
-            'has_more': response['data']['has_more'],
-            'next_page': response['data']['next_page'],
-            'total_snips': response['data']['total_snips'],
-          }
+          'data': response[
+              'data'], // Contains snips, has_more, next_page, and total_snips
         };
       } else {
         return {
           'status': 'error',
           'message': response['message'] ?? 'Failed to fetch snips',
-          'data': {
-            'snips': [],
-            'has_more': false,
-            'next_page': null,
-            'total_snips': 0,
-          }
         };
       }
     } catch (e) {
       debugPrint('Error in getSnips: $e');
       return {
         'status': 'error',
-        'message': 'Error fetching snips: $e',
-        'data': {
-          'snips': [],
-          'has_more': false,
-          'next_page': null,
-          'total_snips': 0,
-        }
+        'message': 'Failed to fetch snips',
+        'error': e.toString(),
       };
     }
   }
 
-  // Fetch profile information
+  // Fetch detailed profile information
   Future<Map<String, dynamic>> fetchProfile({
     required String uuid,
     required String profileId,
   }) async {
     try {
-      final response = await _callFunction('fetch_profile', {
-        'uuid': uuid,
-        'profile_id': profileId,
-      });
+      final response = await _callFunction(
+        ApiConfig.fetchProfile,
+        {
+          'uuid': uuid,
+          'profile_id': profileId,
+        },
+        cacheDuration: ApiConfig
+            .mediumCache, // Medium cache since profile data changes occasionally
+      );
 
       if (response['status'] == 'success') {
         return {
           'status': 'success',
-          'data': {
-            'profile': Map<String, dynamic>.from(response['data']['profile']),
-            'posts_count': response['data']['posts_count'],
-            'snips_count': response['data']['snips_count'],
-          }
+          'data': response['data'], // Contains complete profile information
         };
       } else {
         return {
           'status': 'error',
           'message': response['message'] ?? 'Failed to fetch profile',
-          'data': {
-            'profile': {},
-            'posts_count': 0,
-            'snips_count': 0,
-          }
         };
       }
     } catch (e) {
       debugPrint('Error in fetchProfile: $e');
       return {
         'status': 'error',
-        'message': 'Error fetching profile: $e',
-        'data': {
-          'profile': {},
-          'posts_count': 0,
-          'snips_count': 0,
-        }
-      };
-    }
-  }
-
-  // Fetch comments for a specific content (post/snip/story)
-  Future<Map<String, dynamic>> fetchComments({
-    required String uuid,
-    required String contentId,
-    required String contentType,
-    int page = 1,
-    int pageSize = 20,
-  }) async {
-    try {
-      return await _callFunction('fetch_comments', {
-        'uuid': uuid,
-        'content_id': contentId,
-        'content_type': contentType,
-        'page': page,
-        'page_size': pageSize,
-      });
-    } catch (e) {
-      debugPrint('Error fetching comments: $e');
-      return {
-        'status': 'error',
-        'message': 'Failed to load comments',
+        'message': 'Failed to fetch profile',
         'error': e.toString(),
       };
     }
   }
 
-  // Helper method for API calls
-  Future<Map<String, dynamic>> _callFunction(
-    String functionName,
-    Map<String, dynamic> params, {
-    Duration? cacheDuration,
-    bool forceRefresh = false,
+  // Fetch comments for a specific content
+  Future<Map<String, dynamic>> fetchComments({
+    required String uuid,
+    required String contentType,
+    required String contentId,
   }) async {
-    int retryCount = 0;
-    Exception? lastException;
-
-    while (retryCount < _maxRetries) {
-      try {
-        // Create a HttpClient that accepts self-signed certificates
-        final httpClient = HttpClient()
-          ..badCertificateCallback =
-              (X509Certificate cert, String host, int port) => true;
-
-        final ioClient = IOClient(httpClient);
-        try {
-          final response = await ioClient
-              .post(
-                Uri.parse(functions),
-                headers: {'Content-Type': 'application/json'},
-                body: jsonEncode({
-                  'function': functionName,
-                  ...params,
-                }),
-              )
-              .timeout(_timeout);
-
-          if (response.statusCode == 200) {
-            try {
-              final responseBody = utf8.decode(response.bodyBytes);
-              if (responseBody.isEmpty) {
-                throw Exception('Empty response from server');
-              }
-
-              final decodedResponse =
-                  jsonDecode(responseBody) as Map<String, dynamic>;
-              debugPrint(
-                  'A2 - API Response for $functionName: $decodedResponse');
-              return decodedResponse;
-            } catch (e) {
-              throw Exception('Invalid response format: $e');
-            }
-          } else {
-            throw Exception('Server error: ${response.statusCode}');
-          }
-        } finally {
-          ioClient.close();
-        }
-      } catch (e) {
-        lastException = e is Exception ? e : Exception(e.toString());
-        debugPrint(
-            'API attempt ${retryCount + 1} failed for $functionName: $e');
-
-        if (e is TimeoutException || e.toString().contains('SocketException')) {
-          retryCount++;
-          if (retryCount < _maxRetries) {
-            await Future.delayed(
-                Duration(milliseconds: 1000 * (1 << retryCount)));
-            continue;
-          }
-        } else {
-          break;
-        }
+    try {
+      // Validate content type
+      final validContentTypes = ['post', 'snip', 'story'];
+      if (!validContentTypes.contains(contentType)) {
+        return {
+          'status': 'error',
+          'message':
+              'Invalid content type. Must be one of: ${validContentTypes.join(", ")}',
+        };
       }
+
+      final response = await _callFunction(
+        ApiConfig.fetchComments,
+        {
+          'uuid': uuid,
+          'content_type': contentType,
+          'content_id': contentId,
+        },
+        cacheDuration: ApiConfig
+            .shortCache, // Short cache since comments update frequently
+      );
+
+      if (response['status'] == 'success') {
+        return {
+          'status': 'success',
+          'data': response[
+              'data'], // Contains comments array and total_comments count
+        };
+      } else {
+        return {
+          'status': 'error',
+          'message': response['message'] ?? 'Failed to fetch comments',
+        };
+      }
+    } catch (e) {
+      debugPrint('Error in fetchComments: $e');
+      return {
+        'status': 'error',
+        'message': 'Failed to fetch comments',
+        'error': e.toString(),
+      };
     }
-
-    return {
-      'status': 'error',
-      'message': 'Failed to connect to server',
-      'error': lastException?.toString(),
-    };
-  }
-
-  // Batch multiple function calls
-  Future<List<Map<String, dynamic>>> _batchFunctions(
-    List<Map<String, dynamic>> functions, {
-    Duration? cacheDuration,
-    bool forceRefresh = false,
-  }) async {
-    final requests = functions
-        .map((function) => {
-              'endpoint': '${ApiConfig.functions}${function['name']}/',
-              'body': function['params'],
-            })
-        .toList();
-
-    return await _apiService.batchRequests(
-      requests: requests,
-      cacheDuration: cacheDuration,
-      forceRefresh: forceRefresh,
-    );
-  }
-
-  // Request OTP without caching
-  Future<Map<String, dynamic>> requestOtp({
-    required String phoneNumber,
-  }) async {
-    return await _callFunction(
-      'request_otp',
-      {'phoneNumber': phoneNumber},
-      forceRefresh: true, // Never cache OTP requests
-    );
-  }
-
-  // Verify OTP without caching
-  Future<Map<String, dynamic>> verifyOtp({
-    required String phoneNumber,
-    required String otp,
-    required String requestId,
-  }) async {
-    return await _callFunction(
-      'verify_otp',
-      {
-        'phoneNumber': phoneNumber,
-        'otp': otp,
-        'requestId': requestId,
-      },
-      forceRefresh: true, // Never cache OTP verification
-    );
-  }
-
-  // Get user profile with short cache
-  Future<Map<String, dynamic>> getUserProfile({
-    required String uuid,
-  }) async {
-    return await _callFunction(
-      'get_profile',
-      {'uuid': uuid},
-      cacheDuration: const Duration(minutes: 15),
-    );
-  }
-
-  // Update profile without cache
-  Future<Map<String, dynamic>> updateProfile({
-    required String uuid,
-    required Map<String, dynamic> profileData,
-  }) async {
-    return await _callFunction(
-      'update_profile',
-      {
-        'uuid': uuid,
-        ...profileData,
-      },
-      forceRefresh: true,
-    );
-  }
-
-  // Batch load initial data
-  Future<Map<String, dynamic>> loadInitialData({
-    required String uuid,
-  }) async {
-    final functions = [
-      {
-        'name': 'check_registration_status',
-        'params': {'uuid': uuid},
-      },
-      {
-        'name': 'get_profile',
-        'params': {'uuid': uuid},
-      },
-      // Add other initial data calls here
-    ];
-
-    final results = await _batchFunctions(
-      functions,
-      cacheDuration: const Duration(minutes: 5),
-    );
-
-    return {
-      'status': 'success',
-      'registration_status': results[0],
-      'profile': results[1],
-    };
   }
 
   // Clean up resources

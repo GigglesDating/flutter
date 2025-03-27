@@ -2,15 +2,39 @@ import 'package:http/http.dart' as http;
 import 'package:http/io_client.dart';
 import 'dart:convert';
 import 'dart:io';
+import 'dart:async';
 import 'package:flutter/foundation.dart';
 import '../network/config.dart';
 import 'cache_service.dart';
+
+// Custom exception for API errors
+class ApiError implements Exception {
+  final String message;
+  final int? statusCode;
+  final dynamic data;
+
+  ApiError(this.message, {this.statusCode, this.data});
+
+  @override
+  String toString() =>
+      'ApiError: $message${statusCode != null ? ' (Status: $statusCode)' : ''}';
+}
+
+// Token for cancelling requests
+class CancelToken {
+  bool _isCancelled = false;
+  bool get isCancelled => _isCancelled;
+  void cancel() => _isCancelled = true;
+}
 
 class ApiService {
   static final ApiService _instance = ApiService._internal();
   factory ApiService() => _instance;
 
   late final http.Client _client;
+  final List<Function(Map<String, dynamic>)> _requestInterceptors = [];
+  final List<Function(Map<String, dynamic>)> _responseInterceptors = [];
+  final Map<String, CancelToken> _activeRequests = {};
 
   ApiService._internal() {
     // In development, use a client that accepts self-signed certificates
@@ -24,6 +48,16 @@ class ApiService {
     }
   }
 
+  // Add request interceptor
+  void addRequestInterceptor(Function(Map<String, dynamic>) interceptor) {
+    _requestInterceptors.add(interceptor);
+  }
+
+  // Add response interceptor
+  void addResponseInterceptor(Function(Map<String, dynamic>) interceptor) {
+    _responseInterceptors.add(interceptor);
+  }
+
   // Generate cache key from request details
   String _generateCacheKey(String endpoint, Map<String, dynamic> body) {
     return '${endpoint}_${json.encode(body)}';
@@ -35,13 +69,35 @@ class ApiService {
         body.trim().toLowerCase().startsWith('<html');
   }
 
+  // Sign request (implement your signing logic)
+  String _signRequest(Map<String, dynamic> body) {
+    // TODO: Implement request signing
+    return '';
+  }
+
+  // Validate response (implement your validation logic)
+  bool _validateResponse(Map<String, dynamic> response) {
+    // TODO: Implement response validation
+    return true;
+  }
+
   // Make API call with caching
   Future<Map<String, dynamic>> makeRequest({
     required String endpoint,
     required Map<String, dynamic> body,
     Duration? cacheDuration,
     bool forceRefresh = false,
+    String? requestId,
   }) async {
+    // Check for cancellation
+    if (requestId != null) {
+      if (_activeRequests[requestId]?.isCancelled ?? false) {
+        throw ApiError('Request cancelled');
+      }
+      _activeRequests[requestId]?.cancel();
+      _activeRequests[requestId] = CancelToken();
+    }
+
     final cacheKey = _generateCacheKey(endpoint, body);
 
     try {
@@ -55,8 +111,19 @@ class ApiService {
           }
         } catch (e) {
           debugPrint('Cache error, proceeding with API call: $e');
-          // Continue with API call if cache fails
         }
+      }
+
+      // Apply request interceptors
+      final interceptedBody = Map<String, dynamic>.from(body);
+      for (var interceptor in _requestInterceptors) {
+        interceptor(interceptedBody);
+      }
+
+      // Add request signature
+      final signature = _signRequest(interceptedBody);
+      if (signature.isNotEmpty) {
+        interceptedBody['signature'] = signature;
       }
 
       // Make API call
@@ -68,25 +135,37 @@ class ApiService {
               'X-Requested-With': 'XMLHttpRequest',
               'Accept': 'application/json',
             },
-            body: json.encode(body),
+            body: json.encode(interceptedBody),
           )
-          .timeout(
-            Duration(milliseconds: ApiConfig.connectionTimeout),
-          );
+          .timeout(Duration(milliseconds: ApiConfig.connectionTimeout));
 
       // Check for HTML response
       if (_isHtmlResponse(response.body)) {
-        throw Exception(
+        throw ApiError(
             'Received HTML response instead of JSON. Possible authentication issue.');
       }
 
       // Parse response
       final decodedResponse = json.decode(response.body);
 
+      // Apply response interceptors
+      final interceptedResponse = Map<String, dynamic>.from(decodedResponse);
+      for (var interceptor in _responseInterceptors) {
+        interceptor(interceptedResponse);
+      }
+
+      // Validate response
+      if (!_validateResponse(interceptedResponse)) {
+        throw ApiError('Invalid response format');
+      }
+
       // Check for error status codes
       if (response.statusCode >= 400) {
-        throw Exception(
-            'API Error: ${response.statusCode} - ${decodedResponse['message'] ?? 'Unknown error'}');
+        throw ApiError(
+          decodedResponse['message'] ?? 'Unknown error',
+          statusCode: response.statusCode,
+          data: decodedResponse,
+        );
       }
 
       // Try to cache successful responses if caching is enabled
@@ -95,18 +174,17 @@ class ApiService {
         try {
           await CacheService.cacheData(
             key: cacheKey,
-            data: decodedResponse,
+            data: interceptedResponse,
             duration: cacheDuration,
           );
         } catch (e) {
           debugPrint('Failed to cache response: $e');
-          // Continue even if caching fails
         }
       }
 
-      return decodedResponse;
+      return interceptedResponse;
     } catch (e) {
-      debugPrint('A3 - API Error for $endpoint: $e');
+      debugPrint('API Error for $endpoint: $e');
 
       // Try cache again in case of network error
       if (cacheDuration != null) {
@@ -125,11 +203,15 @@ class ApiService {
         }
       }
 
-      return {
-        'status': 'error',
-        'message': 'Failed to connect to server',
-        'error': e.toString(),
-      };
+      throw ApiError(
+        'Failed to connect to server',
+        data: e.toString(),
+      );
+    } finally {
+      // Clean up request token
+      if (requestId != null) {
+        _activeRequests.remove(requestId);
+      }
     }
   }
 
@@ -144,13 +226,20 @@ class ApiService {
           body: request['body'],
           cacheDuration: cacheDuration,
           forceRefresh: forceRefresh,
+          requestId: request['requestId'],
         ));
 
     return await Future.wait(futures);
   }
 
+  // Cancel a specific request
+  void cancelRequest(String requestId) {
+    _activeRequests[requestId]?.cancel();
+  }
+
   // Clean up resources
   void dispose() {
     _client.close();
+    _activeRequests.clear();
   }
 }

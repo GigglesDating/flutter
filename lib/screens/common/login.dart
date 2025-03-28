@@ -4,7 +4,7 @@ import 'package:flutter/services.dart';
 import 'dart:async';
 import 'package:provider/provider.dart';
 import '../../routes/app_router.dart';
-import '../barrel.dart';
+// import '../barrel.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -31,7 +31,7 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   void initState() {
     super.initState();
-    _fetchOverrideNumber();
+    // _fetchOverrideNumber();
   }
 
   @override
@@ -145,15 +145,15 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
-  Future<void> _fetchOverrideNumber() async {
-    final thinkProvider = ThinkProvider();
-    final response = await thinkProvider.getOverrideNumber();
-    if (response['status'] == 'success') {
-      setState(() {
-        _overrideNumber = response['data']['number'];
-      });
-    }
-  }
+  // Future<void> _fetchOverrideNumber() async {
+  //   final thinkProvider = ThinkProvider();
+  //   final response = await thinkProvider.getOverrideNumber();
+  //   if (response['status'] == 'success') {
+  //     setState(() {
+  //       _overrideNumber = response['data']['number'];
+  //     });
+  //   }
+  // }
 
   Future<void> _verifyOtp() async {
     if (_otp.length != 4) {

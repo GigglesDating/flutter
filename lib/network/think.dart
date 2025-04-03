@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import '../services/api_service.dart';
 import '../network/config.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 // import 'dart:convert';
 
 class ThinkProvider {
@@ -120,8 +121,6 @@ class ThinkProvider {
 
   // User signup
   Future<Map<String, dynamic>> signup({
-    required String uuid,
-    required String phoneNumber,
     required String firstName,
     required String lastName,
     required String dob,
@@ -131,6 +130,18 @@ class ThinkProvider {
     required bool consent,
   }) async {
     try {
+      // Get UUID and phone number from SharedPreferences
+      final prefs = await SharedPreferences.getInstance();
+      final uuid = prefs.getString('user_uuid');
+      final phoneNumber = prefs.getString('phone_number');
+
+      if (uuid == null || phoneNumber == null) {
+        return {
+          'status': 'error',
+          'message': 'User not authenticated. Please login first.',
+        };
+      }
+
       final response = await _callFunction(
         ApiConfig.signup,
         {

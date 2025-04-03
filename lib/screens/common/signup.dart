@@ -554,16 +554,8 @@ class _SignupScreenState extends State<SignupScreen> {
     setState(() => _isLoading = true);
 
     try {
-      final authProvider = Provider.of<AuthProvider>(context, listen: false);
-      final uuid = authProvider.uuid;
-
-      if (uuid == null) {
-        throw Exception('User ID not found. Please try logging in again.');
-      }
-
       final thinkProvider = ThinkProvider();
       final response = await thinkProvider.signup(
-        uuid: uuid,
         firstName: _firstNameController.text.trim(),
         lastName: _lastNameController.text.trim(),
         dob: DateFormat('yyyy-MM-dd').format(_birthday!),
@@ -579,8 +571,9 @@ class _SignupScreenState extends State<SignupScreen> {
           _isLoading = false); // Reset loading state regardless of response
 
       if (response['status'] == 'success') {
+        // Update reg_process in SharedPreferences
         final prefs = await SharedPreferences.getInstance();
-        await prefs.setString('reg_process', 'reg_started');
+        await prefs.setString('reg_process', response['reg_process']);
 
         if (!mounted) return;
 

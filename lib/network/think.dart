@@ -305,42 +305,48 @@ class ThinkProvider {
   // Submit profile creation step 2
   Future<Map<String, dynamic>> pC2Submit({
     required String uuid,
-    required List<String> interests,
-    required List<String> languages,
-    required List<String> relationshipGoals,
-    required List<String> dealBreakers,
-    required String aboutMe,
-    String? optionalImage3,
-    String? optionalImage4,
-    String? optionalImage5,
-    String? optionalImage6,
+    required dynamic genderPreference, // Can be String or List<String>
+    required dynamic agePreference,
   }) async {
     try {
+      // Validate gender preference format
+      if (genderPreference is! String && genderPreference is! List<String>) {
+        return {
+          'status': 'error',
+          'message': 'gender_preference must be a string or list',
+        };
+      }
+
+      // Convert single string preference to list if needed
+      List<String> genderPrefList;
+      if (genderPreference is String) {
+        if (genderPreference.toLowerCase() == 'everyone') {
+          genderPrefList = ['men', 'women', 'non-binary'];
+        } else {
+          genderPrefList = [genderPreference];
+        }
+      } else {
+        genderPrefList = genderPreference;
+      }
+
+      // Validate gender preference values
+      final validGenders = {'men', 'women', 'non-binary', 'everyone'};
+      if (!genderPrefList
+          .every((g) => validGenders.contains(g.toLowerCase()))) {
+        return {
+          'status': 'error',
+          'message': 'Invalid gender preference values',
+        };
+      }
+
       final Map<String, dynamic> params = {
         'uuid': uuid,
-        'interests': interests,
-        'languages': languages,
-        'relationship_goals': relationshipGoals,
-        'deal_breakers': dealBreakers,
-        'about_me': aboutMe,
+        'gender_preference': genderPrefList,
+        'age_preference': agePreference,
       };
 
-      // Add optional images if provided
-      if (optionalImage3 != null) {
-        params['optional_image_3'] = optionalImage3;
-      }
-      if (optionalImage4 != null) {
-        params['optional_image_4'] = optionalImage4;
-      }
-      if (optionalImage5 != null) {
-        params['optional_image_5'] = optionalImage5;
-      }
-      if (optionalImage6 != null) {
-        params['optional_image_6'] = optionalImage6;
-      }
-
       final response = await _callFunction(
-        ApiConfig.pC2Submit,
+        ApiConfig.pC2Submit, // Make sure this constant is defined
         params,
       );
 
@@ -480,28 +486,26 @@ class ThinkProvider {
   // Submit Aadhar verification information
   Future<Map<String, dynamic>> submitAadharInfo({
     required String uuid,
-    String? aadharImage,
-    String? selfieImage,
-    String? aadharPdfFile,
+    required Map<String, dynamic> kycData,
   }) async {
     try {
       final Map<String, dynamic> params = {
         'uuid': uuid,
       };
 
-      // Add optional parameters only if they are provided
-      if (aadharImage != null) {
-        params['AadharImage'] = aadharImage;
+      // Add KYC data parameters if they exist in the kycData map
+      if (kycData.containsKey('AadharImage')) {
+        params['AadharImage'] = kycData['AadharImage'];
       }
-      if (selfieImage != null) {
-        params['SelfieImage'] = selfieImage;
+      if (kycData.containsKey('SelfieImage')) {
+        params['SelfieImage'] = kycData['SelfieImage'];
       }
-      if (aadharPdfFile != null) {
-        params['Aadhar_pdf_file'] = aadharPdfFile;
+      if (kycData.containsKey('Aadhar_pdf_file')) {
+        params['Aadhar_pdf_file'] = kycData['Aadhar_pdf_file'];
       }
 
       final response = await _callFunction(
-        ApiConfig.submitAadharInfo,
+        ApiConfig.submitAadharInfo, // Make sure this constant is defined
         params,
       );
 
@@ -916,6 +920,8 @@ class ThinkProvider {
     required String uuid,
     required String contentType,
     required String contentId,
+    int page = 1, // Default to first page
+    int pageSize = 10, // Default page size
   }) async {
     try {
       // Validate content type
@@ -935,15 +941,48 @@ class ThinkProvider {
           'content_type': contentType,
           'content_id': contentId,
         },
-        cacheDuration: ApiConfig
-            .shortCache, // Short cache since comments update frequently
+        cacheDuration: ApiConfig.shortCache,
       );
 
       if (response['status'] == 'success') {
+        // Handle empty comments case explicitly
+        if (response['data'] == null || response['data']['comments'] == null) {
+          return {
+            'status': 'success',
+            'data': {
+              'comments': [],
+              'total_comments': 0,
+              'current_page': page,
+              'total_pages': 1,
+              'has_more': false,
+            }
+          };
+        }
+
+        // Get all comments
+        final allComments = response['data']['comments'] as List;
+        final totalComments = response['data']['total_comments'] as int;
+
+        // Calculate pagination
+        final startIndex = (page - 1) * pageSize;
+        final endIndex = startIndex + pageSize;
+        final totalPages = (totalComments / pageSize).ceil();
+
+        // Get paginated comments
+        final paginatedComments = allComments.sublist(
+          startIndex,
+          endIndex > allComments.length ? allComments.length : endIndex,
+        );
+
         return {
           'status': 'success',
-          'data': response[
-              'data'], // Contains comments array and total_comments count
+          'data': {
+            'comments': paginatedComments,
+            'total_comments': totalComments,
+            'current_page': page,
+            'total_pages': totalPages,
+            'has_more': page < totalPages,
+          }
         };
       } else {
         return {

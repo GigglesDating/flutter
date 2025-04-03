@@ -9,6 +9,7 @@ class CacheService {
   static const Duration defaultCacheDuration = Duration(hours: 1);
   static SnipCacheManager? _snipCacheManager;
   static bool _isInitialized = false;
+  static Box? _apiCacheBox;
 
   // Initialize Hive and open boxes
   static Future<void> init() async {
@@ -18,10 +19,8 @@ class CacheService {
       final appDir = await path_provider.getApplicationDocumentsDirectory();
       await Hive.initFlutter(appDir.path);
 
-      if (!Hive.isBoxOpen(apiCacheBox)) {
-        await Hive.openBox(apiCacheBox);
-      }
-
+      // Open box and store reference
+      _apiCacheBox = await Hive.openBox(apiCacheBox);
       _snipCacheManager = SnipCacheManager();
       _isInitialized = true;
       debugPrint('CacheService initialized successfully');
@@ -30,7 +29,7 @@ class CacheService {
       // Create a new box if there's an error with the existing one
       try {
         await Hive.deleteBoxFromDisk(apiCacheBox);
-        await Hive.openBox(apiCacheBox);
+        _apiCacheBox = await Hive.openBox(apiCacheBox);
         _isInitialized = true;
         debugPrint('CacheService recovered after error');
       } catch (e) {
@@ -46,7 +45,11 @@ class CacheService {
     required dynamic data,
     Duration? duration,
   }) async {
-    final box = Hive.box(apiCacheBox);
+    if (!_isInitialized || _apiCacheBox == null) {
+      debugPrint('CacheService not initialized');
+      return;
+    }
+
     final expiryTime = DateTime.now().add(duration ?? defaultCacheDuration);
 
     final cacheData = {
@@ -54,13 +57,17 @@ class CacheService {
       'expiry': expiryTime.toIso8601String(),
     };
 
-    await box.put(key, json.encode(cacheData));
+    await _apiCacheBox!.put(key, json.encode(cacheData));
   }
 
   // Get cached data if not expired
   static Future<dynamic> getCachedData(String key) async {
-    final box = Hive.box(apiCacheBox);
-    final cachedJson = box.get(key);
+    if (!_isInitialized || _apiCacheBox == null) {
+      debugPrint('CacheService not initialized');
+      return null;
+    }
+
+    final cachedJson = _apiCacheBox!.get(key);
 
     if (cachedJson == null) return null;
 
@@ -72,7 +79,7 @@ class CacheService {
         return cached['data'];
       } else {
         // Clean up expired cache
-        await box.delete(key);
+        await _apiCacheBox!.delete(key);
         return null;
       }
     } catch (e) {
@@ -83,35 +90,47 @@ class CacheService {
 
   // Clear specific cache
   static Future<void> clearCache(String key) async {
-    final box = Hive.box(apiCacheBox);
-    await box.delete(key);
+    if (!_isInitialized || _apiCacheBox == null) {
+      debugPrint('CacheService not initialized');
+      return;
+    }
+
+    await _apiCacheBox!.delete(key);
   }
 
   // Clear all cache
   static Future<void> clearAllCache() async {
-    final box = Hive.box(apiCacheBox);
-    await box.clear();
+    if (!_isInitialized || _apiCacheBox == null) {
+      debugPrint('CacheService not initialized');
+      return;
+    }
+
+    await _apiCacheBox!.clear();
     await _snipCacheManager?.emptyCache();
   }
 
   // Clean expired cache entries
   static Future<void> cleanExpiredCache() async {
-    final box = Hive.box(apiCacheBox);
-    final keys = box.keys.toList();
+    if (!_isInitialized || _apiCacheBox == null) {
+      debugPrint('CacheService not initialized');
+      return;
+    }
+
+    final keys = _apiCacheBox!.keys.toList();
 
     for (var key in keys) {
-      final cachedJson = box.get(key);
+      final cachedJson = _apiCacheBox!.get(key);
       if (cachedJson != null) {
         try {
           final cached = json.decode(cachedJson);
           final expiry = DateTime.parse(cached['expiry']);
 
           if (DateTime.now().isAfter(expiry)) {
-            await box.delete(key);
+            await _apiCacheBox!.delete(key);
           }
         } catch (e) {
           debugPrint('Error cleaning cache: $e');
-          await box.delete(key);
+          await _apiCacheBox!.delete(key);
         }
       }
     }
@@ -122,13 +141,17 @@ class CacheService {
 
   // Get combined cache statistics
   static Future<Map<String, dynamic>> getCacheStats() async {
-    final box = Hive.box(apiCacheBox);
-    int totalEntries = box.length;
+    if (!_isInitialized || _apiCacheBox == null) {
+      debugPrint('CacheService not initialized');
+      return {};
+    }
+
+    int totalEntries = _apiCacheBox!.length;
     int expiredEntries = 0;
     int validEntries = 0;
 
-    for (var key in box.keys) {
-      final cachedJson = box.get(key);
+    for (var key in _apiCacheBox!.keys) {
+      final cachedJson = _apiCacheBox!.get(key);
       if (cachedJson != null) {
         try {
           final cached = json.decode(cachedJson);

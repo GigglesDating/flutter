@@ -52,8 +52,8 @@ void main() async {
   try {
     WidgetsFlutterBinding.ensureInitialized();
 
-    // Initialize cache service in background
-    unawaited(_initializeCacheService());
+    // Initialize cache service before running the app
+    await _initializeCacheService();
 
     // Set permanent system UI settings
     SystemChrome.setSystemUIOverlayStyle(

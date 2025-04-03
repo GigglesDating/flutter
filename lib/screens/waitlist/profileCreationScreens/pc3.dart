@@ -33,8 +33,14 @@ class _ProfileCreation3State extends State<ProfileCreation3> {
 
   Future<void> _fetchInterests() async {
     try {
+      final prefs = await SharedPreferences.getInstance();
+      final uuid = prefs.getString('user_uuid');
+      if (uuid == null) {
+        throw Exception('User UUID not found');
+      }
+
       final thinkProvider = ThinkProvider();
-      final response = await thinkProvider.getInterests();
+      final response = await thinkProvider.getInterests(uuid: uuid);
 
       if (response['status'] == 'success') {
         final List<dynamic> interestsList = response['data'];
@@ -147,27 +153,14 @@ class _ProfileCreation3State extends State<ProfileCreation3> {
       final authProvider = Provider.of<AuthProvider>(context, listen: false);
       final uuid = authProvider.uuid ?? '';
 
-      // Convert selected interests to required format
-      final selectedInterests = _selectedInterests.map((interest) {
-        if (_customInterests.contains(interest)) {
-          return {'name': interest, 'is_custom': true, 'added_by': uuid};
-        } else {
-          final defaultInterest = _defaultInterests.firstWhere(
-            (i) => i['name'] == interest,
-            orElse: () => {'id': '', 'name': interest},
-          );
-          return {
-            'id': defaultInterest['id'],
-            'name': interest,
-            'is_custom': false
-          };
-        }
-      }).toList();
+      // Convert selected interests to simple string list
+      // We'll only send the interest names as per backend requirements
+      final selectedInterests = _selectedInterests.toList();
 
       final thinkProvider = ThinkProvider();
       final response = await thinkProvider.pC3Submit(
         uuid: uuid,
-        selectedInterests: selectedInterests,
+        selectedInterests: selectedInterests, // Now passing List<String>
       );
 
       if (response['status'] != 'success') {

@@ -5,8 +5,7 @@ import 'dart:ui';
 import 'package:flutter_datetime_picker_plus/flutter_datetime_picker_plus.dart'
     as picker;
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:provider/provider.dart';
-import '../../network/auth_provider.dart';
+
 import '../barrel.dart';
 
 class SignupScreen extends StatefulWidget {

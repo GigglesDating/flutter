@@ -45,10 +45,15 @@ class _SplashScreenState extends State<SplashScreen>
     _isNavigating = true;
 
     try {
+      debugPrint('Starting auth check in splash screen...');
       final authProvider = Provider.of<AuthProvider>(context, listen: false);
       await authProvider.initializeAuth();
 
       if (!mounted) return;
+
+      debugPrint('Auth check results:');
+      debugPrint('Is Authenticated: ${authProvider.isAuthenticated}');
+      debugPrint('UUID: ${authProvider.uuid}');
 
       if (authProvider.isAuthenticated && authProvider.uuid != null) {
         debugPrint('User authenticated with UUID: ${authProvider.uuid}');
@@ -72,14 +77,14 @@ class _SplashScreenState extends State<SplashScreen>
 
     try {
       final thinkProvider = ThinkProvider();
-      final response = await thinkProvider.checkMemberStatus(uuid: uuid);
+      final response = await thinkProvider.checkRegistrationStatus(uuid: uuid);
       debugPrint(
           'SplashScreen._checkMemberStatus received response: $response');
 
       if (!mounted) return;
 
-      if (response['status'] == 'success' && response['reg_status'] != null) {
-        final regStatus = response['reg_status'];
+      if (response['status'] == 200 && response['reg_process'] != null) {
+        final regStatus = response['reg_process'];
         debugPrint('Registration status: $regStatus');
 
         setState(() {
@@ -92,13 +97,14 @@ class _SplashScreenState extends State<SplashScreen>
       } else {
         // If we don't get a valid response, try one more time
         await Future.delayed(const Duration(seconds: 1));
-        final retryResponse = await thinkProvider.checkMemberStatus(uuid: uuid);
+        final retryResponse =
+            await thinkProvider.checkRegistrationStatus(uuid: uuid);
 
         if (!mounted) return;
 
-        if (retryResponse['status'] == 'success' &&
-            retryResponse['reg_status'] != null) {
-          final regStatus = retryResponse['reg_status'];
+        if (retryResponse['status'] == 200 &&
+            retryResponse['reg_process'] != null) {
+          final regStatus = retryResponse['reg_process'];
           debugPrint('Registration status (retry): $regStatus');
 
           setState(() {

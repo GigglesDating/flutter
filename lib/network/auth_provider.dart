@@ -24,10 +24,19 @@ class AuthProvider extends ChangeNotifier {
   // Initialize from SharedPreferences
   Future<void> initializeAuth() async {
     final prefs = await SharedPreferences.getInstance();
+    debugPrint('Initializing auth from SharedPreferences...');
+
     _uuid = prefs.getString('user_uuid');
     _phoneNumber = prefs.getString('phone_number');
     _regProcess = prefs.getString('reg_process');
     _isAuthenticated = _uuid != null;
+
+    debugPrint('Auth initialization complete:');
+    debugPrint('UUID: $_uuid');
+    debugPrint('Phone: $_phoneNumber');
+    debugPrint('Reg Process: $_regProcess');
+    debugPrint('Is Authenticated: $_isAuthenticated');
+
     notifyListeners();
   }
 
@@ -340,6 +349,7 @@ class AuthProvider extends ChangeNotifier {
     required String phoneNumber,
     String? regProcess,
   }) async {
+    debugPrint('Saving auth data...');
     final prefs = await SharedPreferences.getInstance();
 
     await prefs.setString('user_uuid', uuid);
@@ -352,6 +362,12 @@ class AuthProvider extends ChangeNotifier {
     _phoneNumber = phoneNumber;
     _regProcess = regProcess;
     _isAuthenticated = true;
+
+    debugPrint('Auth data saved:');
+    debugPrint('UUID: $_uuid');
+    debugPrint('Phone: $_phoneNumber');
+    debugPrint('Reg Process: $_regProcess');
+    debugPrint('Is Authenticated: $_isAuthenticated');
 
     notifyListeners();
   }

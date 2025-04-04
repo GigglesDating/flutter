@@ -60,6 +60,7 @@ class ApiConfig {
   static const String getSnips = 'get_snips';
   static const String fetchProfile = 'fetch_profile';
   static const String fetchComments = 'fetch_comments';
+  static const String fetchAuthorProfiles = 'fetch_author_profiles';
 
   // Add more function names as needed
 

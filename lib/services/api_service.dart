@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:async';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import '../network/config.dart';
 import 'cache_service.dart';
 
@@ -37,6 +38,12 @@ class ApiService {
   final Map<String, CancelToken> _activeRequests = {};
 
   ApiService._internal() {
+    // Ensure background isolate messenger is initialized
+    final rootIsolateToken = RootIsolateToken.instance;
+    if (rootIsolateToken != null) {
+      BackgroundIsolateBinaryMessenger.ensureInitialized(rootIsolateToken);
+    }
+
     // In development, use a client that accepts self-signed certificates
     if (kDebugMode) {
       final httpClient = HttpClient()

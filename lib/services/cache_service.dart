@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import '../models/utils/snip_cache_manager.dart';
 import 'package:path_provider/path_provider.dart' as path_provider;
+import 'package:flutter/services.dart';
 
 class CacheService {
   static const String apiCacheBox = 'apiCache';
@@ -10,13 +11,45 @@ class CacheService {
   static SnipCacheManager? _snipCacheManager;
   static bool _isInitialized = false;
   static Box? _apiCacheBox;
+  static Future<void>? _initFuture;
 
   // Initialize Hive and open boxes
   static Future<void> init() async {
     if (_isInitialized) return;
 
+    // If initialization is in progress, wait for it
+    if (_initFuture != null) {
+      await _initFuture;
+      return;
+    }
+
+    _initFuture = _initializeCache();
     try {
+      await _initFuture;
+    } finally {
+      _initFuture = null;
+    }
+  }
+
+  static Future<void> _initializeCache() async {
+    try {
+      // Ensure background isolate messenger is initialized
+      final rootIsolateToken = RootIsolateToken.instance;
+      if (rootIsolateToken != null) {
+        BackgroundIsolateBinaryMessenger.ensureInitialized(rootIsolateToken);
+        debugPrint(
+            'BackgroundIsolateBinaryMessenger initialized in CacheService');
+      } else {
+        debugPrint('Warning: RootIsolateToken is null in CacheService');
+      }
+
+      // Get application documents directory with error handling
       final appDir = await path_provider.getApplicationDocumentsDirectory();
+      if (appDir.path.isEmpty) {
+        throw Exception('Application documents directory path is empty');
+      }
+
+      debugPrint('Initializing Hive with path: ${appDir.path}');
       await Hive.initFlutter(appDir.path);
 
       // Open box and store reference
@@ -34,8 +67,16 @@ class CacheService {
         debugPrint('CacheService recovered after error');
       } catch (e) {
         debugPrint('Fatal error initializing CacheService: $e');
-        rethrow;
+        // Don't rethrow, let the app continue with limited caching
+        _isInitialized = false;
       }
+    }
+  }
+
+  // Ensure cache is initialized before any operation
+  static Future<void> _ensureInitialized() async {
+    if (!_isInitialized) {
+      await init();
     }
   }
 
@@ -45,13 +86,13 @@ class CacheService {
     required dynamic data,
     Duration? duration,
   }) async {
-    if (!_isInitialized || _apiCacheBox == null) {
-      debugPrint('CacheService not initialized');
+    await _ensureInitialized();
+    if (_apiCacheBox == null) {
+      debugPrint('CacheService box not available');
       return;
     }
 
     final expiryTime = DateTime.now().add(duration ?? defaultCacheDuration);
-
     final cacheData = {
       'data': data,
       'expiry': expiryTime.toIso8601String(),
@@ -62,13 +103,13 @@ class CacheService {
 
   // Get cached data if not expired
   static Future<dynamic> getCachedData(String key) async {
-    if (!_isInitialized || _apiCacheBox == null) {
-      debugPrint('CacheService not initialized');
+    await _ensureInitialized();
+    if (_apiCacheBox == null) {
+      debugPrint('CacheService box not available');
       return null;
     }
 
     final cachedJson = _apiCacheBox!.get(key);
-
     if (cachedJson == null) return null;
 
     try {
@@ -199,16 +240,52 @@ class CacheService {
   }) async {
     if (_snipCacheManager == null) return;
 
-    await _snipCacheManager!.preloadBatch(
-      videoUrls: videoUrls,
-      thumbnailUrls: thumbnailUrls,
-      videoPriority: priority,
-      thumbnailPriority: CachePriority.low,
-    );
+    // Use Future.microtask for background operations
+    Future.microtask(() async {
+      try {
+        // Process videos and thumbnails in parallel
+        await Future.wait([
+          _preloadVideos(videoUrls, priority),
+          _preloadThumbnails(thumbnailUrls),
+        ]);
+      } catch (e) {
+        debugPrint('Error preloading media: $e');
+      }
+    });
+  }
+
+  static Future<void> _preloadVideos(
+      List<String> urls, CachePriority priority) async {
+    for (var url in urls) {
+      try {
+        await _snipCacheManager?.preloadVideo(url);
+      } catch (e) {
+        debugPrint('Error preloading video $url: $e');
+      }
+    }
+  }
+
+  static Future<void> _preloadThumbnails(List<String> urls) async {
+    for (var url in urls) {
+      try {
+        await _snipCacheManager?.preloadThumbnail(url);
+      } catch (e) {
+        debugPrint('Error preloading thumbnail $url: $e');
+      }
+    }
   }
 
   // Clean media cache
   static Future<void> cleanMediaCache() async {
-    await _snipCacheManager?.emptyCache();
+    if (_snipCacheManager == null) return;
+
+    // Use Future.microtask for background operations
+    Future.microtask(() async {
+      try {
+        await _snipCacheManager?.emptyCache();
+      } catch (e) {
+        debugPrint('Error cleaning media cache: $e');
+      }
+    });
   }
 }

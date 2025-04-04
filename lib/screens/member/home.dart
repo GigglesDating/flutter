@@ -21,7 +21,6 @@ class _HomeTabState extends State<HomeTab> {
   bool _isLoading = false;
   bool _hasMore = true;
   int _currentPage = 1;
-  final int _preloadDistance = 2;
   bool _isError = false;
   String _errorMessage = '';
 
@@ -38,7 +37,7 @@ class _HomeTabState extends State<HomeTab> {
   ];
 
   final ScrollController _scrollController = ScrollController();
-  bool _showStories = true;
+  final bool _showStories = true;
   File? _croppedImage;
   final ImagePicker _picker = ImagePicker();
 
@@ -46,8 +45,29 @@ class _HomeTabState extends State<HomeTab> {
   void initState() {
     super.initState();
     _scrollController.addListener(_onScroll);
-    _loadInitialPosts();
-    _checkAuthentication();
+
+    // Ensure background isolate messenger is initialized
+    try {
+      final rootIsolateToken = RootIsolateToken.instance;
+      if (rootIsolateToken != null) {
+        BackgroundIsolateBinaryMessenger.ensureInitialized(rootIsolateToken);
+        debugPrint('BackgroundIsolateBinaryMessenger initialized in HomeTab');
+      } else {
+        debugPrint('Warning: RootIsolateToken is null in HomeTab');
+      }
+    } catch (e) {
+      debugPrint(
+          'Error initializing BackgroundIsolateBinaryMessenger in HomeTab: $e');
+    }
+
+    // Initialize CacheService before loading posts
+    _initializeCacheService().then((_) {
+      // Delay initial load to allow UI to render first
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _loadInitialPosts();
+        _checkAuthentication();
+      });
+    });
   }
 
   @override
@@ -59,236 +79,366 @@ class _HomeTabState extends State<HomeTab> {
   Future<void> _loadInitialPosts() async {
     if (_isLoading) return;
 
-    setState(() {
-      _isLoading = true;
-      _isInitialLoading = true;
-      _isError = false;
-      _errorMessage = '';
-    });
-
     try {
-      final prefs = await SharedPreferences.getInstance();
-      final uuid = prefs.getString('user_uuid');
+      setState(() {
+        _isLoading = true;
+        _isInitialLoading = true;
+      });
+
+      final uuid = await SharedPreferences.getInstance()
+          .then((prefs) => prefs.getString('user_uuid'));
 
       if (uuid == null) {
-        throw Exception('No UUID found');
+        throw Exception('User UUID not found');
       }
 
-      // Check cache first
-      final cachedPosts =
-          await CacheService.getCachedData('feed_posts_initial');
-      if (cachedPosts != null) {
-        final posts = PostModel.fromApiResponse({
-          'status': 'success',
-          'data': cachedPosts,
-        });
+      // Use compute to move heavy operations off the main thread
+      final result = await compute(_loadPostsInBackground, {
+        'page': _currentPage,
+        'uuid': uuid,
+      });
 
+      if (!mounted) return;
+
+      if (result['error'] as bool) {
         setState(() {
-          _posts.addAll(posts);
+          _isError = true;
+          _errorMessage = result['errorMessage'] as String;
           _isLoading = false;
           _isInitialLoading = false;
         });
-
-        // Preload media for cached posts
-        _preloadPostResources(posts);
-
-        // Fetch fresh data in background
-        _fetchFreshPosts(uuid);
         return;
       }
 
-      await _fetchFreshPosts(uuid);
-    } catch (e) {
-      debugPrint('Error loading posts: $e');
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-          _isInitialLoading = false;
-          _isError = true;
-          _errorMessage = 'Failed to load posts. Please try again.';
-        });
-      }
-    }
-  }
-
-  Future<void> _fetchFreshPosts(String uuid) async {
-    final response = await compute(
-      (uuid) => ThinkProvider().getFeed(uuid: uuid),
-      uuid,
-    );
-
-    if (!mounted) return;
-
-    if (response['status'] == 'success' && response['data'] != null) {
-      final newPosts = PostModel.fromApiResponse(response);
-
-      // Cache the posts
-      await CacheService.cacheData(
-        key: 'feed_posts_initial',
-        data: response['data'],
-        duration: const Duration(minutes: 15),
-      );
+      // Fix: The posts are already PostModel objects, no need to convert them again
+      final posts = result['posts'] as List<PostModel>;
 
       setState(() {
-        _posts.clear();
-        _posts.addAll(newPosts);
-        _hasMore = response['data']['has_more'] ?? false;
-        _currentPage = 1;
+        _posts.addAll(posts);
+        _isLoading = false;
+        _isInitialLoading = false;
+        _isError = false;
+        _errorMessage = '';
+      });
+
+      // Preload author images and comments for the loaded posts
+      _preloadPostResources(posts);
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _isError = true;
+        _errorMessage = 'Failed to load posts: $e';
         _isLoading = false;
         _isInitialLoading = false;
       });
-
-      // Preload resources for visible and next few posts
-      _preloadPostResources(newPosts);
-    } else {
-      throw Exception(response['message'] ?? 'Failed to load posts');
     }
   }
 
-  void _preloadPostResources(List<PostModel> posts) async {
-    final videoUrls = <String>[];
-    final thumbnailUrls = <String>[];
-
-    for (var i = 0; i < posts.length && i < _preloadDistance + 5; i++) {
-      final post = posts[i];
-
-      // Add media URLs for preloading
-      if (post.media.type == 'video') {
-        videoUrls.add(post.media.source);
-      } else {
-        thumbnailUrls.add(post.media.source);
-      }
-
-      // Add profile image for preloading
-      thumbnailUrls.add(post.authorProfile.profileImage);
-
-      // Preload comments if not already loaded
-      final commentsCacheKey = 'comments_${post.postId}_1';
-      final cachedComments = await CacheService.getCachedData(commentsCacheKey);
-      if (cachedComments == null && post.commentIds.isNotEmpty) {
-        _preloadComments(post.postId);
-      }
-    }
-
-    // Preload media using CacheService
-    await CacheService.preloadMedia(
-      videoUrls: videoUrls,
-      thumbnailUrls: thumbnailUrls,
-      priority: CachePriority.high,
-    );
-  }
-
-  Future<void> _preloadComments(String postId) async {
+  // Background function to load posts
+  static Future<Map<String, dynamic>> _loadPostsInBackground(
+      Map<String, dynamic> params) async {
     try {
-      final prefs = await SharedPreferences.getInstance();
-      final uuid = prefs.getString('user_uuid');
-      if (uuid == null) return;
+      final posts =
+          await _fetchPosts(params['page'] as int, params['uuid'] as String);
+      return {
+        'posts': posts,
+        'error': false,
+        'errorMessage': '',
+      };
+    } catch (e) {
+      return {
+        'posts': <PostModel>[],
+        'error': true,
+        'errorMessage': e.toString(),
+      };
+    }
+  }
 
-      final response = await ThinkProvider().fetchComments(
+  // Static method to fetch posts
+  static Future<List<PostModel>> _fetchPosts(int page, String uuid) async {
+    try {
+      // Check cache first
+      try {
+        final cachedPosts =
+            await CacheService.getCachedData('feed_posts_$page');
+        if (cachedPosts != null) {
+          debugPrint('Using cached posts for page $page');
+          return PostModel.fromApiResponse({
+            'status': 'success',
+            'data': cachedPosts,
+          });
+        }
+      } catch (e) {
+        debugPrint('Error accessing cache: $e');
+        // Continue to fetch fresh data if cache fails
+      }
+
+      // Fetch fresh data
+      debugPrint('Fetching fresh posts for page $page');
+      final response = await ThinkProvider().getFeed(
         uuid: uuid,
-        contentId: postId,
-        contentType: 'post',
-        page: 1,
-        pageSize: 10,
+        page: page,
       );
 
-      if (response['status'] == 'success') {
-        await CacheService.cacheData(
-          key: 'comments_${postId}_1',
-          data: response['data'],
-          duration: const Duration(minutes: 30),
-        );
+      if (response['status'] == 'success' && response['data'] != null) {
+        final posts = PostModel.fromApiResponse(response);
+
+        // Try to cache the posts, but don't fail if caching fails
+        try {
+          await CacheService.cacheData(
+            key: 'feed_posts_$page',
+            data: response['data'],
+            duration: const Duration(minutes: 15),
+          );
+          debugPrint('Cached posts for page $page');
+        } catch (e) {
+          debugPrint('Error caching posts: $e');
+          // Continue even if caching fails
+        }
+
+        return posts;
+      } else {
+        throw Exception(response['message'] ?? 'Failed to load posts');
       }
     } catch (e) {
-      debugPrint('Error preloading comments for post $postId: $e');
+      debugPrint('Error fetching posts: $e');
+      rethrow;
+    }
+  }
+
+  Future<void> _onScroll() async {
+    if (_scrollController.position.pixels >=
+        _scrollController.position.maxScrollExtent - 200) {
+      if (!_isLoadingMore && _hasMore) {
+        _loadMorePosts();
+      }
     }
   }
 
   Future<void> _loadMorePosts() async {
-    if (_isLoading || !_hasMore || _isLoadingMore) return;
+    if (_isLoadingMore) return;
 
     setState(() {
-      _isLoading = true;
       _isLoadingMore = true;
+      _currentPage++;
     });
 
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      final uuid = prefs.getString('user_uuid');
-
-      if (uuid == null) {
-        throw Exception('No UUID found');
-      }
-
-      final response = await ThinkProvider().getFeed(
-        uuid: uuid,
-        page: _currentPage + 1,
-      );
-
+    // Use compute to move heavy operations off the main thread
+    await compute(_loadPostsInBackground, {
+      'page': _currentPage,
+      'uuid': await SharedPreferences.getInstance()
+          .then((prefs) => prefs.getString('user_uuid')),
+    }).then((result) {
       if (!mounted) return;
 
-      if (response['status'] == 'success' && response['data'] != null) {
-        final newPosts = PostModel.fromApiResponse(response);
+      final posts = result['posts'] as List<PostModel>;
+      setState(() {
+        _posts.addAll(posts);
+        _isLoadingMore = false;
+        _hasMore = posts.isNotEmpty;
+      });
 
-        setState(() {
-          if (newPosts.isEmpty) {
-            _hasMore = false;
-          } else {
-            _posts.addAll(newPosts);
-            _hasMore = response['data']['has_more'] ?? true;
-            _currentPage += 1;
+      // Preload resources for the newly loaded posts
+      _preloadPostResources(posts);
+    });
+  }
+
+  // Preload resources for posts (author images, comments, comment author images)
+  void _preloadPostResources(List<PostModel> posts) {
+    // Use a microtask to avoid blocking the UI thread
+    Future.microtask(() async {
+      try {
+        // Get the first 5 posts (or fewer if less than 5 posts are available)
+        final postsToPreload = posts.take(5).toList();
+        final authorIds = <String>{};
+        final authorImageUrls = <String>{};
+
+        // Collect all author information first
+        for (final post in postsToPreload) {
+          // Collect author information
+          if (post.authorProfileId.isNotEmpty) {
+            authorIds.add(post.authorProfileId);
           }
-          _isLoading = false;
-          _isLoadingMore = false;
-        });
-      } else {
-        throw Exception(response['message'] ?? 'Failed to load more posts');
+          if (post.authorProfile.profileImage.isNotEmpty) {
+            authorImageUrls.add(post.authorProfile.profileImage);
+          }
+        }
+
+        // Process in parallel using compute
+        await Future.wait([
+          // Preload author images
+          authorImageUrls.isNotEmpty
+              ? compute(_preloadAuthorImages, authorImageUrls.toList())
+              : Future.value(),
+
+          // Pre-cache author profiles
+          authorIds.isNotEmpty
+              ? compute(_precacheAuthorProfilesInBackground, authorIds.toList())
+              : Future.value(),
+
+          // Preload comments for each post
+          ...postsToPreload
+              .map((post) => compute(_preloadCommentsInBackground, {
+                    'postId': post.postId,
+                    'uuid': SharedPreferences.getInstance()
+                        .then((prefs) => prefs.getString('user_uuid')),
+                  })),
+        ]);
+      } catch (e) {
+        debugPrint('Error preloading post resources: $e');
       }
+    });
+  }
+
+  // Background function to preload author images
+  static Future<void> _preloadAuthorImages(List<String> imageUrls) async {
+    try {
+      debugPrint('Preloading ${imageUrls.length} author images');
+      await CacheService.preloadMedia(
+        thumbnailUrls: imageUrls,
+        priority: CachePriority.high,
+      );
     } catch (e) {
-      debugPrint('Error loading more posts: $e');
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-          _isLoadingMore = false;
-          if (e.toString().contains('No more posts')) {
-            _hasMore = false;
-          }
-        });
-      }
+      debugPrint('Error preloading author images: $e');
     }
   }
 
-  void _onScroll() {
-    // Handle story section visibility
-    if (_scrollController.offset > 20 && _showStories) {
-      setState(() => _showStories = false);
-    } else if (_scrollController.offset <= 20 && !_showStories) {
-      setState(() => _showStories = true);
+  // Background function to pre-cache author profiles
+  static Future<void> _precacheAuthorProfilesInBackground(
+      List<String> authorIds) async {
+    try {
+      debugPrint('Pre-caching ${authorIds.length} author profiles');
+      final uuid = await SharedPreferences.getInstance()
+          .then((prefs) => prefs.getString('user_uuid'));
+
+      if (uuid == null) {
+        throw Exception('User UUID not found');
+      }
+
+      // Batch fetch author profiles
+      final response = await ThinkProvider().fetchAuthorProfiles(
+        uuid: uuid,
+        authorIds: authorIds,
+      );
+
+      if (response['status'] == 'success' && response['data'] != null) {
+        final profiles = response['data']['profiles'] as List;
+        for (final profile in profiles) {
+          final authorId = profile['author_id'] as String;
+          await CacheService.cacheData(
+            key: 'author_profile_$authorId',
+            data: profile,
+            duration: const Duration(hours: 1), // Cache for 1 hour
+          );
+        }
+      }
+    } catch (e) {
+      debugPrint('Error pre-caching author profiles: $e');
     }
+  }
 
-    // Debug prints
-    debugPrint('Scroll position: ${_scrollController.position.pixels}');
-    debugPrint(
-        'Max scroll extent: ${_scrollController.position.maxScrollExtent}');
-    debugPrint('hasMore: $_hasMore');
-    debugPrint('isLoading: $_isLoading');
-    debugPrint('Posts length: ${_posts.length}');
+  // Background function to preload comments
+  static Future<void> _preloadCommentsInBackground(
+      Map<String, dynamic> params) async {
+    try {
+      final postId = params['postId'] as String;
+      final uuid = params['uuid'] as String;
 
-    // Handle infinite scroll with better threshold
-    if (!_isLoading &&
-        _hasMore &&
-        _scrollController.position.pixels >=
-            _scrollController.position.maxScrollExtent * 0.85) {
-      debugPrint('Triggering load more posts');
-      _loadMorePosts();
+      final cacheKey = 'post_comments_$postId';
+
+      // Check memory cache first
+      final memoryCachedComments =
+          await CacheService.getCachedData('${cacheKey}_memory');
+      if (memoryCachedComments != null) {
+        debugPrint('Using memory cached comments for post $postId');
+        _preloadCommentAuthorImagesInBackground(memoryCachedComments);
+        return;
+      }
+
+      // Check disk cache
+      final cachedComments = await CacheService.getCachedData(cacheKey);
+      if (cachedComments != null) {
+        debugPrint('Using disk cached comments for post $postId');
+        _preloadCommentAuthorImagesInBackground(cachedComments);
+        return;
+      }
+
+      // Fetch fresh comments
+      debugPrint('Fetching fresh comments for post $postId');
+      final response = await ThinkProvider().fetchComments(
+        uuid: uuid,
+        contentType: 'post',
+        contentId: postId,
+        page: 1,
+        pageSize: 10,
+      );
+
+      if (response['status'] == 'success' && response['data'] != null) {
+        // Cache the comments in both memory and disk
+        final comments = response['data']['comments'] as List;
+        await CacheService.cacheData(
+          key: '${cacheKey}_memory',
+          data: comments,
+          duration: const Duration(minutes: 5), // Short memory cache
+        );
+
+        await CacheService.cacheData(
+          key: cacheKey,
+          data: response['data'],
+          duration: const Duration(minutes: 15),
+        );
+
+        // Preload comment author images
+        _preloadCommentAuthorImagesInBackground(comments);
+      }
+    } catch (e) {
+      debugPrint('Error preloading comments for post ${params['postId']}: $e');
     }
+  }
 
-    // Check if we've reached the end
-    if (_scrollController.position.pixels >=
-            _scrollController.position.maxScrollExtent &&
-        !_hasMore &&
-        !_isLoading) {
-      debugPrint('Reached end of feed!');
+  // Background function to preload comment author images
+  static void _preloadCommentAuthorImagesInBackground(List<dynamic> comments) {
+    try {
+      // Extract unique author image URLs
+      final authorImageUrls = comments
+          .where((comment) =>
+              comment['author'] != null &&
+              comment['author']['image_url'] != null &&
+              comment['author']['image_url'].toString().isNotEmpty)
+          .map((comment) => comment['author']['image_url'].toString())
+          .toSet() // Remove duplicates
+          .toList();
+
+      if (authorImageUrls.isNotEmpty) {
+        debugPrint(
+            'Preloading ${authorImageUrls.length} comment author images');
+        CacheService.preloadMedia(
+          thumbnailUrls: authorImageUrls,
+          priority: CachePriority.medium,
+        );
+      }
+
+      // Also preload reply author images
+      final replyAuthorImageUrls = comments
+          .expand((comment) => (comment['replies'] as List? ?? []))
+          .where((reply) =>
+              reply['author'] != null &&
+              reply['author']['image_url'] != null &&
+              reply['author']['image_url'].toString().isNotEmpty)
+          .map((reply) => reply['author']['image_url'].toString())
+          .toSet() // Remove duplicates
+          .toList();
+
+      if (replyAuthorImageUrls.isNotEmpty) {
+        debugPrint(
+            'Preloading ${replyAuthorImageUrls.length} reply author images');
+        CacheService.preloadMedia(
+          thumbnailUrls: replyAuthorImageUrls,
+          priority: CachePriority.low,
+        );
+      }
+    } catch (e) {
+      debugPrint('Error preloading comment author images: $e');
     }
   }
 
@@ -655,6 +805,17 @@ class _HomeTabState extends State<HomeTab> {
           (route) => false,
         );
       }
+    }
+  }
+
+  // Initialize CacheService
+  Future<void> _initializeCacheService() async {
+    try {
+      await CacheService.init();
+      debugPrint('CacheService initialized in HomeTab');
+    } catch (e) {
+      debugPrint('Error initializing CacheService in HomeTab: $e');
+      // Continue even if cache initialization fails
     }
   }
 }

@@ -1,9 +1,10 @@
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
-import 'package:path_provider/path_provider.dart';
+import 'package:path_provider/path_provider.dart' as path_provider;
 import 'package:path/path.dart' as p;
 import 'dart:async';
+import 'package:flutter/services.dart';
 
 // Cache priority levels
 enum CachePriority {
@@ -73,6 +74,7 @@ class SnipCacheManager extends CacheManager {
   static final Map<String, CachePriority> _priorities = {};
   static Timer? _diskMonitorTimer;
   static bool _isPrewarming = false;
+  static String? _cacheDir;
 
   factory SnipCacheManager() {
     _instance ??= SnipCacheManager._();
@@ -87,6 +89,24 @@ class SnipCacheManager extends CacheManager {
           repo: JsonCacheInfoRepository(databaseName: key),
           fileService: HttpFileService(),
         )) {
+    try {
+      // Ensure background isolate messenger is initialized
+      final rootIsolateToken = RootIsolateToken.instance;
+      if (rootIsolateToken != null) {
+        BackgroundIsolateBinaryMessenger.ensureInitialized(rootIsolateToken);
+        debugPrint(
+            'BackgroundIsolateBinaryMessenger initialized in SnipCacheManager');
+      } else {
+        debugPrint('Warning: RootIsolateToken is null in SnipCacheManager');
+      }
+
+      _initialize();
+      debugPrint('SnipCacheManager initialized successfully');
+    } catch (e) {
+      debugPrint('Error initializing SnipCacheManager: $e');
+      rethrow;
+    }
+
     // Start disk space monitoring
     _startDiskMonitoring();
   }
@@ -105,7 +125,7 @@ class SnipCacheManager extends CacheManager {
   // Check disk space and clean if needed
   Future<void> _checkDiskSpace() async {
     try {
-      final dir = await getTemporaryDirectory();
+      final dir = await path_provider.getTemporaryDirectory();
       final stat = await dir.stat();
       final total = stat.size;
       final free = await _getFreeDiskSpace();
@@ -126,8 +146,7 @@ class SnipCacheManager extends CacheManager {
   // Get free disk space (platform specific implementation needed)
   Future<int> _getFreeDiskSpace() async {
     try {
-      final dir = await getTemporaryDirectory();
-      // This is a simplified check, might need platform-specific implementation
+      final dir = await path_provider.getTemporaryDirectory();
       final stat = await dir.stat();
       return stat.size;
     } catch (e) {
@@ -333,7 +352,7 @@ class SnipCacheManager extends CacheManager {
   // Get cache size
   Future<int> _getCacheSize() async {
     try {
-      final cacheDir = await getTemporaryDirectory();
+      final cacheDir = await path_provider.getTemporaryDirectory();
       final snipCacheDir = Directory(p.join(cacheDir.path, key));
 
       if (!await snipCacheDir.exists()) return 0;
@@ -375,4 +394,33 @@ class SnipCacheManager extends CacheManager {
     }
     return batches;
   }
+
+  Future<void> _initialize() async {
+    if (_isInitialized) return;
+
+    try {
+      final appDir = await path_provider.getApplicationDocumentsDirectory();
+      if (appDir.path.isEmpty) {
+        throw Exception('Application documents directory path is empty');
+      }
+
+      _cacheDir = '${appDir.path}/snip_cache';
+      debugPrint('Initializing SnipCacheManager with path: $_cacheDir');
+
+      final cacheDir = Directory(_cacheDir!);
+      if (!await cacheDir.exists()) {
+        await cacheDir.create(recursive: true);
+      }
+
+      _startDiskMonitoring();
+
+      _isInitialized = true;
+      debugPrint('SnipCacheManager initialization complete');
+    } catch (e) {
+      debugPrint('Error in SnipCacheManager._initialize: $e');
+      rethrow;
+    }
+  }
+
+  static bool _isInitialized = false;
 }

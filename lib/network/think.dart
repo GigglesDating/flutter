@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import '../services/api_service.dart';
 import '../network/config.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter/services.dart';
 // import 'dart:convert';
 
 class ThinkProvider {
@@ -9,7 +10,21 @@ class ThinkProvider {
   static final ThinkProvider _instance = ThinkProvider._internal();
 
   factory ThinkProvider() => _instance;
-  ThinkProvider._internal();
+  ThinkProvider._internal() {
+    try {
+      // Ensure background isolate messenger is initialized
+      final rootIsolateToken = RootIsolateToken.instance;
+      if (rootIsolateToken != null) {
+        BackgroundIsolateBinaryMessenger.ensureInitialized(rootIsolateToken);
+        debugPrint(
+            'BackgroundIsolateBinaryMessenger initialized in ThinkProvider');
+      }
+      debugPrint('ThinkProvider initialized successfully');
+    } catch (e) {
+      debugPrint('Error initializing ThinkProvider: $e');
+      rethrow;
+    }
+  }
 
   // Helper method for API calls - will be used by all endpoint functions
   @protected // Mark as protected to indicate it's for internal use
@@ -996,6 +1011,46 @@ class ThinkProvider {
         'status': 'error',
         'message': 'Failed to fetch comments',
         'error': e.toString(),
+      };
+    }
+  }
+
+  // Fetch author profiles in batch
+  Future<Map<String, dynamic>> fetchAuthorProfiles({
+    required String uuid,
+    required List<String> authorIds,
+  }) async {
+    try {
+      debugPrint('Fetching author profiles for ${authorIds.length} authors');
+
+      // Use the correct endpoint format
+      final response = await _callFunction(
+        ApiConfig
+            .fetchProfile, // Use fetchProfile instead of fetchAuthorProfiles
+        {
+          'uuid': uuid,
+          'author_ids': authorIds, // Pass author IDs as a parameter
+        },
+      );
+
+      if (response['status'] == 'success') {
+        return {
+          'status': 'success',
+          'data': {
+            'profiles': response['data']['profiles'] ?? [],
+          },
+        };
+      } else {
+        return {
+          'status': 'error',
+          'message': response['message'] ?? 'Failed to fetch author profiles',
+        };
+      }
+    } catch (e) {
+      debugPrint('Error fetching author profiles: $e');
+      return {
+        'status': 'error',
+        'message': 'Failed to fetch author profiles: $e',
       };
     }
   }

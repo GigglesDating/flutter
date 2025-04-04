@@ -52,9 +52,6 @@ void main() async {
   try {
     WidgetsFlutterBinding.ensureInitialized();
 
-    // Initialize cache service before running the app
-    await _initializeCacheService();
-
     // Set permanent system UI settings
     SystemChrome.setSystemUIOverlayStyle(
       const SystemUiOverlayStyle(
@@ -86,6 +83,21 @@ void main() async {
       );
     };
 
+    // Initialize background isolate messenger with root isolate token
+    final rootIsolateToken = RootIsolateToken.instance;
+    if (rootIsolateToken != null) {
+      BackgroundIsolateBinaryMessenger.ensureInitialized(rootIsolateToken);
+      debugPrint('BackgroundIsolateBinaryMessenger initialized in main');
+    } else {
+      debugPrint('Warning: RootIsolateToken is null in main');
+    }
+
+    // Wait a moment to ensure the messenger is fully initialized
+    await Future.delayed(const Duration(milliseconds: 100));
+
+    // Initialize cache service after messenger is ready
+    await _initializeCacheService();
+
     runApp(
       MultiProvider(
         providers: [
@@ -103,7 +115,10 @@ void main() async {
 
 Future<void> _initializeCacheService() async {
   int retryCount = 0;
-  while (retryCount < 3) {
+  const maxRetries = 3;
+  const baseDelay = Duration(milliseconds: 500);
+
+  while (retryCount < maxRetries) {
     try {
       await CacheService.init();
       debugPrint('Cache service initialized successfully');
@@ -111,12 +126,15 @@ Future<void> _initializeCacheService() async {
     } catch (e) {
       retryCount++;
       debugPrint('Failed to initialize cache (attempt $retryCount): $e');
-      if (retryCount < 3) {
-        await Future.delayed(Duration(milliseconds: 500 * retryCount));
+      if (retryCount < maxRetries) {
+        await Future.delayed(baseDelay * retryCount);
+      } else {
+        debugPrint(
+            'Warning: Cache initialization failed after $maxRetries attempts');
+        // Don't rethrow here, let the app continue with limited caching
       }
     }
   }
-  debugPrint('Warning: Cache initialization failed after 3 attempts');
 }
 
 class MyApp extends StatelessWidget {

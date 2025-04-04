@@ -4,8 +4,25 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 import 'dart:async';
 import 'config.dart';
+import 'package:flutter/services.dart';
 
 class AuthProvider extends ChangeNotifier {
+  AuthProvider() {
+    try {
+      // Ensure background isolate messenger is initialized
+      final rootIsolateToken = RootIsolateToken.instance;
+      if (rootIsolateToken != null) {
+        BackgroundIsolateBinaryMessenger.ensureInitialized(rootIsolateToken);
+        debugPrint(
+            'BackgroundIsolateBinaryMessenger initialized in AuthProvider');
+      }
+      debugPrint('AuthProvider initialized successfully');
+    } catch (e) {
+      debugPrint('Error initializing AuthProvider: $e');
+      rethrow;
+    }
+  }
+
   String? _requestId;
   String? _uuid;
   String? _phoneNumber;

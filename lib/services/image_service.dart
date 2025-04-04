@@ -1,14 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
+import 'package:flutter/services.dart';
 
 class ImageService {
   static final ImageService _instance = ImageService._internal();
   factory ImageService() => _instance;
-  ImageService._internal();
+  ImageService._internal() {
+    // Ensure background isolate messenger is initialized
+    final rootIsolateToken = RootIsolateToken.instance;
+    if (rootIsolateToken != null) {
+      BackgroundIsolateBinaryMessenger.ensureInitialized(rootIsolateToken);
+    }
+  }
 
   static const Duration _cacheDuration = Duration(days: 7);
-  static const int _maxCacheSize = 200 * 1024 * 1024; // 200MB
 
   final _imageCache = <String, bool>{};
   final _preloadQueue = <String>[];

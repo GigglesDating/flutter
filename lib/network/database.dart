@@ -1,8 +1,26 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'config.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter/foundation.dart';
 
 class DatabaseProvider {
+  DatabaseProvider() {
+    try {
+      // Ensure background isolate messenger is initialized
+      final rootIsolateToken = RootIsolateToken.instance;
+      if (rootIsolateToken != null) {
+        BackgroundIsolateBinaryMessenger.ensureInitialized(rootIsolateToken);
+        debugPrint(
+            'BackgroundIsolateBinaryMessenger initialized in DatabaseProvider');
+      }
+      debugPrint('DatabaseProvider initialized successfully');
+    } catch (e) {
+      debugPrint('Error initializing DatabaseProvider: $e');
+      rethrow;
+    }
+  }
+
   Future<Map<String, dynamic>> getData({
     required String uuid,
     required String bucket,

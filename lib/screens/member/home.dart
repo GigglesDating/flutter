@@ -265,25 +265,30 @@ class _HomeTabState extends State<HomeTab> {
         }
 
         // Process in parallel using compute
-        await Future.wait([
-          // Preload author images
-          authorImageUrls.isNotEmpty
-              ? compute(_preloadAuthorImages, authorImageUrls.toList())
-              : Future.value(),
+        final futures = <Future<void>>[];
 
-          // Pre-cache author profiles
-          authorIds.isNotEmpty
-              ? compute(_precacheAuthorProfilesInBackground, authorIds.toList())
-              : Future.value(),
+        // Preload author images
+        if (authorImageUrls.isNotEmpty) {
+          futures.add(compute(_preloadAuthorImages, authorImageUrls.toList()));
+        }
 
-          // Preload comments for each post
-          ...postsToPreload
-              .map((post) => compute(_preloadCommentsInBackground, {
-                    'postId': post.postId,
-                    'uuid': SharedPreferences.getInstance()
-                        .then((prefs) => prefs.getString('user_uuid')),
-                  })),
-        ]);
+        // Pre-cache author profiles
+        if (authorIds.isNotEmpty) {
+          futures.add(
+              compute(_precacheAuthorProfilesInBackground, authorIds.toList()));
+        }
+
+        // Preload comments for each post
+        for (final post in postsToPreload) {
+          futures.add(compute(_preloadCommentsInBackground, {
+            'postId': post.postId,
+            'uuid': await SharedPreferences.getInstance()
+                .then((prefs) => prefs.getString('user_uuid')),
+          }));
+        }
+
+        // Wait for all operations to complete
+        await Future.wait(futures);
       } catch (e) {
         debugPrint('Error preloading post resources: $e');
       }
@@ -446,13 +451,113 @@ class _HomeTabState extends State<HomeTab> {
   Widget build(BuildContext context) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
 
-    return Scaffold(
+    // Use a more efficient approach for the feed section
+    Widget feedSection;
+    if (_isInitialLoading) {
+      feedSection = const Center(
+        child: CircularProgressIndicator(),
+      );
+    } else if (_isError) {
+      feedSection = Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.error_outline,
+              size: 48,
+              color: isDarkMode ? Colors.white : Colors.black,
+            ),
+            const SizedBox(height: 16),
+            Text(
+              _errorMessage,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: isDarkMode ? Colors.white70 : Colors.black54,
+              ),
+            ),
+            const SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: _loadInitialPosts,
+              child: const Text('Try Again'),
+            ),
+          ],
+        ),
+      );
+    } else {
+      feedSection = RefreshIndicator(
+        onRefresh: _loadInitialPosts,
+        child: ListView.builder(
+          controller: _scrollController,
+          itemCount: _posts.length + 1,
+          itemBuilder: (context, index) {
+            if (index == _posts.length) {
+              return _hasMore
+                  ? _buildLoadingIndicator()
+                  : _buildEndOfFeedIndicator(isDarkMode);
+            }
+
+            return PostCard(
+              key: ValueKey('post_${_posts[index].postId}'),
+              post: _posts[index],
+              isDarkMode: isDarkMode,
+            );
+          },
+        ),
+      );
+    }
+
+    // Build the app bar once to avoid rebuilding it on every frame
+    final appBar = AppBar(
       backgroundColor: isDarkMode ? Colors.black : Colors.white,
-      appBar: AppBar(
-        backgroundColor: isDarkMode ? Colors.black : Colors.white,
-        elevation: 0,
-        leading: IconButton(
-          onPressed: () => showImageModalSheet(),
+      elevation: 0,
+      leading: IconButton(
+        onPressed: () => showImageModalSheet(),
+        icon: Container(
+          width: 40,
+          height: 40,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: isDarkMode
+                ? Colors.white.withAlpha(38)
+                : Colors.black.withAlpha(26),
+          ),
+          child: Center(
+            child: SvgPicture.asset(
+              'assets/icons/feed/plus.svg',
+              width: 22,
+              height: 22,
+              colorFilter: ColorFilter.mode(
+                isDarkMode ? Colors.white : Colors.black,
+                BlendMode.srcIn,
+              ),
+            ),
+          ),
+        ),
+      ),
+      title: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const SizedBox(width: 28),
+          Image.asset(
+            isDarkMode ? 'assets/dark/favicon.png' : 'assets/light/favicon.png',
+            height: 24,
+            width: 24,
+          ),
+          const Text('iggles'),
+        ],
+      ),
+      centerTitle: true,
+      actions: [
+        IconButton(
+          onPressed: () {
+            HapticFeedback.lightImpact();
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const NotificationsPage(),
+              ),
+            );
+          },
           icon: Container(
             width: 40,
             height: 40,
@@ -464,7 +569,7 @@ class _HomeTabState extends State<HomeTab> {
             ),
             child: Center(
               child: SvgPicture.asset(
-                'assets/icons/feed/plus.svg',
+                'assets/icons/feed/notifications.svg',
                 width: 22,
                 height: 22,
                 colorFilter: ColorFilter.mode(
@@ -475,89 +580,50 @@ class _HomeTabState extends State<HomeTab> {
             ),
           ),
         ),
-        title: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const SizedBox(width: 28),
-            Image.asset(
-              isDarkMode
-                  ? 'assets/dark/favicon.png'
-                  : 'assets/light/favicon.png',
-              height: 24,
-              width: 24,
+        IconButton(
+          onPressed: () {},
+          icon: Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: isDarkMode
+                  ? Colors.white.withAlpha(38)
+                  : Colors.black.withAlpha(26),
             ),
-            const Text('iggles'),
-          ],
+            child: Center(
+              child: SvgPicture.asset(
+                'assets/icons/feed/messenger.svg',
+                width: 22,
+                height: 22,
+                colorFilter: ColorFilter.mode(
+                  isDarkMode ? Colors.white : Colors.black,
+                  BlendMode.srcIn,
+                ),
+              ),
+            ),
+          ),
         ),
-        centerTitle: true,
-        actions: [
-          IconButton(
-            onPressed: () {
-              HapticFeedback.lightImpact();
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const NotificationsPage(),
-                ),
-              );
-            },
-            icon: Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: isDarkMode
-                    ? Colors.white.withAlpha(38)
-                    : Colors.black.withAlpha(26),
-              ),
-              child: Center(
-                child: SvgPicture.asset(
-                  'assets/icons/feed/notifications.svg',
-                  width: 22,
-                  height: 22,
-                  colorFilter: ColorFilter.mode(
-                    isDarkMode ? Colors.white : Colors.black,
-                    BlendMode.srcIn,
-                  ),
-                ),
-              ),
-            ),
-          ),
-          IconButton(
-            onPressed: () {},
-            icon: Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: isDarkMode
-                    ? Colors.white.withAlpha(38)
-                    : Colors.black.withAlpha(26),
-              ),
-              child: Center(
-                child: SvgPicture.asset(
-                  'assets/icons/feed/messenger.svg',
-                  width: 22,
-                  height: 22,
-                  colorFilter: ColorFilter.mode(
-                    isDarkMode ? Colors.white : Colors.black,
-                    BlendMode.srcIn,
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
+      ],
+    );
+
+    // Build the story section only if needed
+    final storySection = _showStories
+        ? AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            height: 85,
+            child: _buildStorySection(isDarkMode),
+          )
+        : const SizedBox.shrink();
+
+    return Scaffold(
+      backgroundColor: isDarkMode ? Colors.black : Colors.white,
+      appBar: appBar,
       body: Column(
         children: [
-          AnimatedContainer(
-            duration: const Duration(milliseconds: 200),
-            height: _showStories ? 85 : 0,
-            child: _buildStorySection(isDarkMode),
-          ),
+          storySection,
           Expanded(
-            child: _buildFeedSection(isDarkMode),
+            child: feedSection,
           ),
         ],
       ),
@@ -637,65 +703,6 @@ class _HomeTabState extends State<HomeTab> {
           backgroundImage: AssetImage(profile),
           radius: 35,
         ),
-      ),
-    );
-  }
-
-  Widget _buildFeedSection(bool isDarkMode) {
-    if (_isInitialLoading) {
-      return const Center(
-        child: CircularProgressIndicator(),
-      );
-    }
-
-    if (_isError) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.error_outline,
-              size: 48,
-              color: isDarkMode ? Colors.white : Colors.black,
-            ),
-            const SizedBox(height: 16),
-            Text(
-              _errorMessage,
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                color: isDarkMode ? Colors.white70 : Colors.black54,
-              ),
-            ),
-            const SizedBox(height: 16),
-            ElevatedButton(
-              onPressed: _loadInitialPosts,
-              child: const Text('Try Again'),
-            ),
-          ],
-        ),
-      );
-    }
-
-    return RefreshIndicator(
-      onRefresh: _loadInitialPosts,
-      child: ListView.builder(
-        controller: _scrollController,
-        itemCount: _posts.length +
-            1, // Always add one more item for either loading or end indicator
-        itemBuilder: (context, index) {
-          if (index == _posts.length) {
-            debugPrint('Rendering last item. hasMore: $_hasMore');
-            return _hasMore
-                ? _buildLoadingIndicator()
-                : _buildEndOfFeedIndicator(isDarkMode);
-          }
-
-          return PostCard(
-            key: ValueKey('post_${_posts[index].postId}'),
-            post: _posts[index],
-            isDarkMode: isDarkMode,
-          );
-        },
       ),
     );
   }

@@ -41,6 +41,15 @@ class CacheService {
             'BackgroundIsolateBinaryMessenger initialized in CacheService');
       } else {
         debugPrint('Warning: RootIsolateToken is null in CacheService');
+        // Try to initialize without the token as a fallback
+        try {
+          // We can't initialize without a token, so we'll just log the issue
+          debugPrint(
+              'Cannot initialize BackgroundIsolateBinaryMessenger without RootIsolateToken');
+        } catch (e) {
+          debugPrint(
+              'Failed to initialize BackgroundIsolateBinaryMessenger: $e');
+        }
       }
 
       // Get application documents directory with error handling

@@ -6,7 +6,7 @@ export 'common/banned.dart';
 export 'member/home.dart';
 export 'utilities/navbar.dart';
 export 'member/swipe.dart';
-export 'member/snip.dart';
+export 'member/snips.dart';
 export 'utilities/action_bar.dart';
 export 'utilities/comments_sheet.dart';
 export 'utilities/share_sheet.dart';

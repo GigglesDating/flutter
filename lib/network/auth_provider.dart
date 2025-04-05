@@ -19,7 +19,7 @@ class AuthProvider extends ChangeNotifier {
       debugPrint('AuthProvider initialized successfully');
     } catch (e) {
       debugPrint('Error initializing AuthProvider: $e');
-      rethrow;
+      // Don't rethrow, let the app continue with limited functionality
     }
   }
 

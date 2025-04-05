@@ -46,27 +46,10 @@ class _HomeTabState extends State<HomeTab> {
     super.initState();
     _scrollController.addListener(_onScroll);
 
-    // Ensure background isolate messenger is initialized
-    try {
-      final rootIsolateToken = RootIsolateToken.instance;
-      if (rootIsolateToken != null) {
-        BackgroundIsolateBinaryMessenger.ensureInitialized(rootIsolateToken);
-        debugPrint('BackgroundIsolateBinaryMessenger initialized in HomeTab');
-      } else {
-        debugPrint('Warning: RootIsolateToken is null in HomeTab');
-      }
-    } catch (e) {
-      debugPrint(
-          'Error initializing BackgroundIsolateBinaryMessenger in HomeTab: $e');
-    }
-
-    // Initialize CacheService before loading posts
-    _initializeCacheService().then((_) {
-      // Delay initial load to allow UI to render first
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        _loadInitialPosts();
-        _checkAuthentication();
-      });
+    // Delay initial load to allow UI to render first
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadInitialPosts();
+      _checkAuthentication();
     });
   }
 
@@ -83,6 +66,7 @@ class _HomeTabState extends State<HomeTab> {
       setState(() {
         _isLoading = true;
         _isInitialLoading = true;
+        _errorMessage = '';
       });
 
       final uuid = await SharedPreferences.getInstance()
@@ -100,7 +84,7 @@ class _HomeTabState extends State<HomeTab> {
 
       if (!mounted) return;
 
-      if (result['error'] as bool) {
+      if (result['error'] == true) {
         setState(() {
           _isError = true;
           _errorMessage = result['errorMessage'] as String;
@@ -110,7 +94,6 @@ class _HomeTabState extends State<HomeTab> {
         return;
       }
 
-      // Fix: The posts are already PostModel objects, no need to convert them again
       final posts = result['posts'] as List<PostModel>;
 
       setState(() {
@@ -146,6 +129,7 @@ class _HomeTabState extends State<HomeTab> {
         'errorMessage': '',
       };
     } catch (e) {
+      debugPrint('Error loading posts in background: $e');
       return {
         'posts': <PostModel>[],
         'error': true,
@@ -817,13 +801,9 @@ class _HomeTabState extends State<HomeTab> {
 
   // Initialize CacheService
   Future<void> _initializeCacheService() async {
-    try {
-      await CacheService.init();
-      debugPrint('CacheService initialized in HomeTab');
-    } catch (e) {
-      debugPrint('Error initializing CacheService in HomeTab: $e');
-      // Continue even if cache initialization fails
-    }
+    // No need to initialize CacheService here as it's already initialized in main.dart
+    // This method is kept for backward compatibility
+    debugPrint('CacheService initialization check in HomeTab');
   }
 }
 

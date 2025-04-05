@@ -52,6 +52,18 @@ void main() async {
   try {
     WidgetsFlutterBinding.ensureInitialized();
 
+    // Initialize background isolate messenger with root isolate token
+    final rootIsolateToken = RootIsolateToken.instance;
+    if (rootIsolateToken != null) {
+      BackgroundIsolateBinaryMessenger.ensureInitialized(rootIsolateToken);
+      debugPrint('BackgroundIsolateBinaryMessenger initialized in main');
+    } else {
+      debugPrint('Warning: RootIsolateToken is null in main');
+    }
+
+    // Wait a moment to ensure the messenger is fully initialized
+    await Future.delayed(const Duration(milliseconds: 100));
+
     // Set permanent system UI settings
     SystemChrome.setSystemUIOverlayStyle(
       const SystemUiOverlayStyle(
@@ -83,18 +95,6 @@ void main() async {
       );
     };
 
-    // Initialize background isolate messenger with root isolate token
-    final rootIsolateToken = RootIsolateToken.instance;
-    if (rootIsolateToken != null) {
-      BackgroundIsolateBinaryMessenger.ensureInitialized(rootIsolateToken);
-      debugPrint('BackgroundIsolateBinaryMessenger initialized in main');
-    } else {
-      debugPrint('Warning: RootIsolateToken is null in main');
-    }
-
-    // Wait a moment to ensure the messenger is fully initialized
-    await Future.delayed(const Duration(milliseconds: 100));
-
     // Initialize cache service after messenger is ready
     await _initializeCacheService();
 
@@ -120,18 +120,24 @@ Future<void> _initializeCacheService() async {
 
   while (retryCount < maxRetries) {
     try {
+      debugPrint(
+          'Initializing CacheService (attempt ${retryCount + 1}/$maxRetries)');
       await CacheService.init();
-      debugPrint('Cache service initialized successfully');
+      debugPrint('CacheService initialized successfully');
       return;
     } catch (e) {
       retryCount++;
-      debugPrint('Failed to initialize cache (attempt $retryCount): $e');
+      debugPrint('Failed to initialize CacheService (attempt $retryCount): $e');
+
       if (retryCount < maxRetries) {
-        await Future.delayed(baseDelay * retryCount);
+        // Exponential backoff for retries
+        final delay = baseDelay * (1 << (retryCount - 1));
+        debugPrint('Retrying in ${delay.inMilliseconds}ms...');
+        await Future.delayed(delay);
       } else {
         debugPrint(
-            'Warning: Cache initialization failed after $maxRetries attempts');
-        // Don't rethrow here, let the app continue with limited caching
+            'CacheService initialization failed after $maxRetries attempts');
+        // Don't rethrow, let the app continue with limited caching
       }
     }
   }

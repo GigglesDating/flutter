@@ -35,12 +35,15 @@ class ThinkProvider {
     bool forceRefresh = false,
   }) async {
     try {
+      // Format request body according to API spec
+      final requestBody = {
+        'uuid': params['uuid'],
+        'function': functionName,
+      };
+
       return await _apiService.makeRequest(
         endpoint: ApiConfig.functions,
-        body: {
-          'function': functionName,
-          ...params,
-        },
+        body: requestBody,
         cacheDuration: cacheDuration,
         forceRefresh: forceRefresh,
       );

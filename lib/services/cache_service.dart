@@ -4,7 +4,6 @@ import 'package:flutter/foundation.dart';
 import '../models/utils/snip_cache_manager.dart';
 import 'package:path_provider/path_provider.dart' as path_provider;
 import 'package:flutter/services.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/rendering.dart';
 
 class CacheService {

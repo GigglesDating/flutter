@@ -10,6 +10,7 @@ import '../../network/think.dart';
 import 'dart:async'; // Add this import for Timer
 import 'dart:ui';
 import 'dart:collection'; // Add this import for Queue
+import 'package:shared_preferences/shared_preferences.dart';
 
 class LifecycleAwareMemoryMonitor extends WidgetsBindingObserver {
   final VoidCallback onMemoryPressure;
@@ -74,8 +75,20 @@ class _SnipsScreenState extends State<SnipsScreen>
 
   Future<void> _initializeSnips() async {
     try {
+      // Get UUID from SharedPreferences
+      final prefs = await SharedPreferences.getInstance();
+      final uuid = prefs.getString('user_uuid');
+
+      if (uuid == null) {
+        setState(() {
+          _error = 'User not logged in';
+          _isLoading = false;
+        });
+        return;
+      }
+
       final response = await _thinkProvider.getSnips(
-        uuid: widget.uuid ?? '',
+        uuid: uuid,
         page: 1,
       );
 
@@ -391,8 +404,20 @@ class _SnipsScreenState extends State<SnipsScreen>
     if (!_hasMore || _nextPage == null) return;
 
     try {
+      // Get UUID from SharedPreferences
+      final prefs = await SharedPreferences.getInstance();
+      final uuid = prefs.getString('user_uuid');
+
+      if (uuid == null) {
+        setState(() {
+          _error = 'User not logged in';
+          _isLoading = false;
+        });
+        return;
+      }
+
       final response = await _thinkProvider.getSnips(
-        uuid: widget.uuid ?? '',
+        uuid: uuid,
         page: _nextPage!,
       );
 

@@ -51,7 +51,6 @@ export 'utilities/report_sheet.dart';
 
 // New Snip Implementation import files
 export 'utilities/snip_card.dart';
-export 'member/snips.dart';
 export '../models/snips_model.dart';
 export '../models/utils/snip_cache_manager.dart';
 export '../models/utils/video_service.dart';

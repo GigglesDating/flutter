@@ -1,4 +1,5 @@
 import '../models/user_model.dart';
+import 'package:flutter/foundation.dart';
 
 enum VideoQuality {
   auto,
@@ -293,42 +294,35 @@ class VideoContent {
   });
 
   factory VideoContent.fromJson(Map<String, dynamic> json) {
-    return VideoContent(
-      source: json['source'] as String,
-      thumbnail: json['thumbnail'] as String?,
-      qualityUrls: Map<VideoQuality, String>.fromEntries(
-        (json['quality_urls'] as Map<String, dynamic>).entries.map(
-              (e) => MapEntry(
-                VideoQuality.values.firstWhere(
-                  (q) => q.toString().split('.').last == e.key,
-                ),
-                e.value as String,
-              ),
-            ),
-      ),
-      currentQuality: VideoQuality.values.firstWhere(
-        (q) =>
-            q.toString().split('.').last ==
-            (json['current_quality'] as String? ?? 'auto'),
-      ),
-      duration: json['duration'] as int,
-      resolution:
-          VideoResolution.fromJson(json['resolution'] as Map<String, dynamic>),
-      playbackState: VideoPlaybackState.values.firstWhere(
-        (s) =>
-            s.toString().split('.').last ==
-            (json['playback_state'] as String? ?? 'initial'),
-      ),
-      cacheStatus: CacheStatus.values.firstWhere(
-        (s) =>
-            s.toString().split('.').last ==
-            (json['cache_status'] as String? ?? 'notCached'),
-      ),
-      analytics: json['analytics'] != null
-          ? VideoAnalytics.fromJson(json['analytics'] as Map<String, dynamic>)
-          : const VideoAnalytics(),
-      error: json['error'] as String?,
-    );
+    try {
+      // Handle simpler video structure from API
+      return VideoContent(
+        source: json['source'] as String? ?? '',
+        thumbnail: json['thumbnail'] as String?,
+        qualityUrls: {VideoQuality.auto: json['source'] as String? ?? ''},
+        duration: 0, // Duration will be set by video controller
+        resolution: const VideoResolution(
+          width: 0,
+          height: 0,
+          aspectRatio: 9 / 16, // Default vertical video aspect ratio
+          bitrate: 0,
+        ),
+      );
+    } catch (e) {
+      debugPrint('Error parsing VideoContent: $e');
+      return VideoContent(
+        source: '',
+        qualityUrls: {VideoQuality.auto: ''},
+        duration: 0,
+        resolution: const VideoResolution(
+          width: 0,
+          height: 0,
+          aspectRatio: 9 / 16,
+          bitrate: 0,
+        ),
+        error: e.toString(),
+      );
+    }
   }
 
   Map<String, dynamic> toJson() => {

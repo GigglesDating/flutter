@@ -35,20 +35,31 @@ class ThinkProvider {
     bool forceRefresh = false,
   }) async {
     try {
-      // Format request body according to API spec
-      final requestBody = {
-        'uuid': params['uuid'],
-        'function': functionName,
-      };
+      debugPrint('_callFunction called with:');
+      debugPrint('functionName: $functionName');
+      debugPrint('params: $params');
+      debugPrint('cacheDuration: $cacheDuration');
+      debugPrint('forceRefresh: $forceRefresh');
 
-      return await _apiService.makeRequest(
+      // Format request body according to API spec - include all params
+      final requestBody = {
+        'function': functionName,
+        ...params, // Spread all parameters into the request body
+      };
+      debugPrint('Formatted request body: $requestBody');
+
+      final response = await _apiService.makeRequest(
         endpoint: ApiConfig.functions,
         body: requestBody,
         cacheDuration: cacheDuration,
         forceRefresh: forceRefresh,
       );
-    } catch (e) {
+      debugPrint('API service response: $response');
+
+      return response;
+    } catch (e, stackTrace) {
       debugPrint('Error in _callFunction for $functionName: $e');
+      debugPrint('Stack trace: $stackTrace');
       return {
         'status': 'error',
         'message': 'Failed to execute function: $functionName',
@@ -857,6 +868,9 @@ class ThinkProvider {
     String? profileId,
   }) async {
     try {
+      debugPrint(
+          'getSnips called with uuid: $uuid, page: $page, profileId: $profileId');
+
       final Map<String, dynamic> params = {
         'uuid': uuid,
         'page': page,
@@ -867,27 +881,29 @@ class ThinkProvider {
         params['profile_id'] = profileId;
       }
 
+      debugPrint('Making API call with params: $params');
       final response = await _callFunction(
         ApiConfig.getSnips,
         params,
-        cacheDuration: ApiConfig
-            .shortCache, // Short cache since snips feed updates frequently
+        cacheDuration: ApiConfig.shortCache,
       );
+      debugPrint('API response received: $response');
 
       if (response['status'] == 'success') {
         return {
           'status': 'success',
-          'data': response[
-              'data'], // Contains snips, has_more, next_page, and total_snips
+          'data': response['data'],
         };
       } else {
+        debugPrint('API call failed with response: $response');
         return {
           'status': 'error',
           'message': response['message'] ?? 'Failed to fetch snips',
         };
       }
-    } catch (e) {
+    } catch (e, stackTrace) {
       debugPrint('Error in getSnips: $e');
+      debugPrint('Stack trace: $stackTrace');
       return {
         'status': 'error',
         'message': 'Failed to fetch snips',
@@ -952,62 +968,86 @@ class ThinkProvider {
         };
       }
 
-      final response = await _callFunction(
-        ApiConfig.fetchComments,
-        {
-          'uuid': uuid,
-          'content_type': contentType,
-          'content_id': contentId,
-        },
-        cacheDuration: ApiConfig.shortCache,
-      );
+      // Add retry logic with exponential backoff
+      int retryCount = 0;
+      const maxRetries = 3;
+      Duration delay = const Duration(milliseconds: 500);
 
-      if (response['status'] == 'success') {
-        // Handle empty comments case explicitly
-        if (response['data'] == null || response['data']['comments'] == null) {
-          return {
-            'status': 'success',
-            'data': {
-              'comments': [],
-              'total_comments': 0,
-              'current_page': page,
-              'total_pages': 1,
-              'has_more': false,
+      while (retryCount < maxRetries) {
+        try {
+          final response = await _callFunction(
+            ApiConfig.fetchComments,
+            {
+              'uuid': uuid,
+              'content_type': contentType,
+              'content_id': contentId,
+              'page': page,
+              'page_size': pageSize,
+            },
+            cacheDuration: ApiConfig.shortCache,
+          );
+
+          if (response['status'] == 'success') {
+            // Handle empty comments case explicitly
+            if (response['data'] == null ||
+                response['data']['comments'] == null) {
+              return {
+                'status': 'success',
+                'data': {
+                  'comments': [],
+                  'total_comments': 0,
+                  'current_page': page,
+                  'total_pages': 1,
+                  'has_more': false,
+                }
+              };
             }
-          };
-        }
 
-        // Get all comments
-        final allComments = response['data']['comments'] as List;
-        final totalComments = response['data']['total_comments'] as int;
+            // Get all comments
+            final allComments = response['data']['comments'] as List;
+            final totalComments = response['data']['total_comments'] as int;
 
-        // Calculate pagination
-        final startIndex = (page - 1) * pageSize;
-        final endIndex = startIndex + pageSize;
-        final totalPages = (totalComments / pageSize).ceil();
+            // Calculate pagination
+            final startIndex = (page - 1) * pageSize;
+            final endIndex = startIndex + pageSize;
+            final totalPages = (totalComments / pageSize).ceil();
 
-        // Get paginated comments
-        final paginatedComments = allComments.sublist(
-          startIndex,
-          endIndex > allComments.length ? allComments.length : endIndex,
-        );
+            // Get paginated comments
+            final paginatedComments = allComments.sublist(
+              startIndex,
+              endIndex > allComments.length ? allComments.length : endIndex,
+            );
 
-        return {
-          'status': 'success',
-          'data': {
-            'comments': paginatedComments,
-            'total_comments': totalComments,
-            'current_page': page,
-            'total_pages': totalPages,
-            'has_more': page < totalPages,
+            return {
+              'status': 'success',
+              'data': {
+                'comments': paginatedComments,
+                'total_comments': totalComments,
+                'current_page': page,
+                'total_pages': totalPages,
+                'has_more': page < totalPages,
+              }
+            };
+          } else {
+            // Only retry on connection errors, not on validation errors
+            if (response['message']?.contains('Failed to connect') == true) {
+              throw Exception('Connection error');
+            }
+            return response;
           }
-        };
-      } else {
-        return {
-          'status': 'error',
-          'message': response['message'] ?? 'Failed to fetch comments',
-        };
+        } catch (e) {
+          retryCount++;
+          if (retryCount >= maxRetries) {
+            rethrow;
+          }
+          debugPrint(
+              'Retrying fetchComments after error: $e (attempt $retryCount)');
+          await Future.delayed(delay);
+          delay *= 2; // Exponential backoff
+        }
       }
+
+      throw Exception('Failed to fetch comments after $maxRetries retries');
     } catch (e) {
       debugPrint('Error in fetchComments: $e');
       return {

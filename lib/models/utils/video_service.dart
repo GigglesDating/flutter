@@ -79,23 +79,59 @@ class VideoService {
         await _cleanupOldControllers();
       }
 
-      final initFuture = _initializeNewController(
-        videoUrl,
-        preferredQuality: preferredQuality,
-        qualityUrls: qualityUrls,
-      );
-      _initializingControllers[videoUrl] = initFuture;
+      // Initialize with retry logic
+      int retryCount = 0;
+      VideoPlayerController? controller;
+      Exception? lastError;
 
-      await initFuture;
-      _initializingControllers.remove(videoUrl);
+      while (retryCount < _maxRetryAttempts) {
+        try {
+          // Create controller with direct URL first
+          controller = VideoPlayerController.networkUrl(Uri.parse(videoUrl));
+          await controller.initialize();
+          break;
+        } catch (e) {
+          lastError = e as Exception;
+          controller?.dispose();
+
+          // If direct URL fails, try downloading via cache manager
+          try {
+            final file = await DefaultCacheManager().getSingleFile(videoUrl);
+            controller = VideoPlayerController.file(file);
+            await controller.initialize();
+            break;
+          } catch (cacheError) {
+            controller?.dispose();
+            debugPrint('Cache attempt failed: $cacheError');
+
+            retryCount++;
+            if (retryCount < _maxRetryAttempts) {
+              await Future.delayed(_retryDelay * pow(2, retryCount - 1));
+            }
+          }
+        }
+      }
+
+      if (controller == null || !controller.value.isInitialized) {
+        throw lastError ?? Exception('Failed to initialize video controller');
+      }
 
       // Track initialization time
       final loadTime = DateTime.now().difference(startTime);
       _updateAnalytics(
-          videoUrl,
-          (current) => current.copyWith(
-                averageLoadTime: loadTime,
-              ));
+        videoUrl,
+        (current) => current.copyWith(
+          averageLoadTime: loadTime,
+        ),
+      );
+
+      // Setup controller
+      controller.setLooping(true);
+      await controller.setVolume(1.0);
+
+      // Add to controllers map
+      _controllers[videoUrl] = controller;
+      _currentQualities[videoUrl] = preferredQuality;
 
       // Pre-buffer next videos if provided
       if (nextVideos != null && nextVideos.isNotEmpty) {
@@ -103,20 +139,10 @@ class VideoService {
         _startPreBuffering(qualityUrls);
       }
 
-      return _controllers[videoUrl];
-    } catch (e, stackTrace) {
+      return controller;
+    } catch (e) {
       debugPrint('Error initializing video controller: $e');
-      debugPrint('Stack trace: $stackTrace');
-
-      _updateAnalytics(
-          videoUrl,
-          (current) => current.copyWith(
-                errorCount: current.errorCount + 1,
-              ));
-
-      // Attempt error recovery
-      return _handleInitializationError(
-          videoUrl, preferredQuality, qualityUrls);
+      rethrow;
     }
   }
 

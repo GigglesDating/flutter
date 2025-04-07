@@ -53,8 +53,7 @@ class SnipCard extends StatefulWidget {
   State<SnipCard> createState() => _SnipCardState();
 }
 
-class _SnipCardState extends State<SnipCard>
-    with SingleTickerProviderStateMixin {
+class _SnipCardState extends State<SnipCard> with TickerProviderStateMixin {
   VideoPlayerController? _controller;
   bool _isPlaying = false;
   bool _isMuted = false;
@@ -62,8 +61,10 @@ class _SnipCardState extends State<SnipCard>
   bool _isDraggingProgress = false;
   double _progressBarHeight = 2.0;
   Timer? _controlsTimer;
-  late AnimationController _progressBarController;
+  late AnimationController _animationController;
   late Animation<double> _progressBarAnimation;
+  late Animation<double> _likeAnimation;
+  late Animation<double> _profilePositionAnimation;
 
   // UI State
   bool _showProfileInfo = false;
@@ -72,36 +73,43 @@ class _SnipCardState extends State<SnipCard>
   bool _isLiked = false;
   bool _showHeart = false;
 
-  late AnimationController _likeAnimationController;
-  late Animation<double> _likeAnimation;
-
-  // Add animation controller for profile info position
-  late AnimationController _profilePositionController;
-  late Animation<double> _profilePositionAnimation;
-
   String? _error;
 
   @override
   void initState() {
     super.initState();
-    _setupProgressBarAnimation();
-    _setupLikeAnimation();
-    _setupProfileAnimation();
+    _setupAnimations();
     _initializeVideo();
   }
 
-  void _setupProgressBarAnimation() {
-    _progressBarController = AnimationController(
-      duration: const Duration(milliseconds: 200),
+  void _setupAnimations() {
+    _animationController = AnimationController(
+      duration: const Duration(milliseconds: 300),
       vsync: this,
     );
 
+    // Progress bar animation
     _progressBarAnimation = Tween<double>(
       begin: 2.0,
       end: 4.0,
     ).animate(CurvedAnimation(
-      parent: _progressBarController,
-      curve: Curves.easeInOut,
+      parent: _animationController,
+      curve: const Interval(0.0, 0.3, curve: Curves.easeInOut),
+    ));
+
+    // Like animation
+    _likeAnimation = CurvedAnimation(
+      parent: _animationController,
+      curve: const Interval(0.3, 0.7, curve: Curves.easeOutBack),
+    );
+
+    // Profile position animation
+    _profilePositionAnimation = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(CurvedAnimation(
+      parent: _animationController,
+      curve: const Interval(0.7, 1.0, curve: Curves.easeInOut),
     ));
 
     _progressBarAnimation.addListener(() {
@@ -111,103 +119,92 @@ class _SnipCardState extends State<SnipCard>
     });
   }
 
-  void _setupLikeAnimation() {
-    _likeAnimationController = AnimationController(
-      duration: const Duration(milliseconds: 300),
-      vsync: this,
-    );
-
-    _likeAnimation = CurvedAnimation(
-      parent: _likeAnimationController,
-      curve: Curves.easeOutBack,
-    );
-  }
-
-  void _setupProfileAnimation() {
-    _profilePositionController = AnimationController(
-      duration: const Duration(milliseconds: 300),
-      vsync: this,
-    );
-
-    _profilePositionAnimation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _profilePositionController,
-      curve: Curves.easeInOut,
-    ));
-  }
-
   Future<void> _initializeVideo() async {
-    // In profile view, only show thumbnail
-    if (widget.isProfileView) {
-      setState(() => _isBuffering = false);
-      return;
-    }
+    if (!mounted) return;
+
+    debugPrint('Starting video initialization...');
+    debugPrint('Video URL: ${widget.snip.video.source}');
+
+    setState(() {
+      _isBuffering = true;
+      _error = null;
+    });
 
     try {
-      // Start with thumbnail and low quality
-      final controller = await VideoService.initializeController(
-        widget.snip.video.source,
-        preferredQuality: VideoQuality.low,
-        qualityUrls: widget.snip.video.qualityUrls,
-      );
+      int retryCount = 0;
+      const maxRetries = 3;
+      const retryDelay = Duration(seconds: 2);
+
+      while (retryCount < maxRetries) {
+        try {
+          debugPrint(
+              'Attempting video initialization (attempt ${retryCount + 1}/${maxRetries})');
+
+          final controller = VideoPlayerController.networkUrl(
+            Uri.parse(widget.snip.video.source),
+            videoPlayerOptions: VideoPlayerOptions(
+              mixWithOthers: true,
+              allowBackgroundPlayback: false,
+            ),
+          );
+
+          if (!mounted) return;
+
+          debugPrint('Initializing controller...');
+          await controller.initialize();
+          debugPrint('Controller initialized successfully');
+
+          if (!mounted) return;
+
+          // Set volume before playing to avoid audio sync issues
+          await controller.setVolume(1.0);
+          await controller.setLooping(true);
+
+          // Configure playback parameters
+          controller.setPlaybackSpeed(1.0);
+
+          setState(() {
+            _controller = controller;
+            _isBuffering = false;
+            _error = null;
+            _isMuted = false;
+          });
+
+          // Add video state listeners
+          _controller?.addListener(_videoListener);
+
+          // Play if visible and autoPlay is true
+          if (widget.isVisible && widget.autoPlay) {
+            debugPrint('Auto-playing video...');
+            await _playVideo();
+          }
+
+          // Successfully initialized, break retry loop
+          break;
+        } catch (e) {
+          debugPrint(
+              'Error during initialization attempt ${retryCount + 1}: $e');
+          retryCount++;
+          if (retryCount >= maxRetries) {
+            rethrow;
+          }
+          debugPrint(
+              'Retrying in ${retryDelay.inSeconds * retryCount} seconds...');
+          await Future.delayed(retryDelay * retryCount);
+        }
+      }
+    } catch (e, stackTrace) {
+      debugPrint('Final error initializing video: $e');
+      debugPrint('Stack trace: $stackTrace');
 
       if (!mounted) return;
 
-      setState(() {
-        _controller = controller;
-        _isBuffering = false;
-      });
-
-      // Add video state listeners
-      _controller?.addListener(() {
-        if (!mounted) return;
-
-        if (_controller?.value.isPlaying != _isPlaying) {
-          _handleVideoStateChange(_controller?.value.isPlaying == true
-              ? VideoPlaybackState.playing
-              : VideoPlaybackState.paused);
-        }
-
-        if (_controller?.value.position != null &&
-            _controller?.value.duration != null &&
-            _controller!.value.position >= _controller!.value.duration) {
-          _handleVideoStateChange(VideoPlaybackState.completed);
-        }
-      });
-
-      // Play if visible and autoPlay is true
-      if (widget.isVisible && widget.autoPlay) {
-        _playVideo();
-      }
-
-      // Switch to higher quality after initial load
-      if (_controller != null) {
-        await VideoService.switchQuality(
-          widget.snip.video.source,
-          VideoQuality.high,
-          widget.snip.video.qualityUrls,
-        );
-      }
-    } catch (e, stackTrace) {
-      debugPrint('Error initializing video: $e');
-      debugPrint('Stack trace: $stackTrace');
       setState(() {
         _isBuffering = false;
         _error = e.toString();
         _handleVideoStateChange(VideoPlaybackState.error);
       });
       widget.onVideoError?.call(e.toString());
-
-      // Add retry mechanism
-      if (widget.isVisible) {
-        Future.delayed(const Duration(seconds: 5), () {
-          if (mounted && _controller == null) {
-            _initializeVideo(); // Auto retry after 5 seconds
-          }
-        });
-      }
     }
   }
 
@@ -242,11 +239,16 @@ class _SnipCardState extends State<SnipCard>
     });
   }
 
-  void _playVideo() async {
+  Future<void> _playVideo() async {
     if (_controller == null) return;
-    await _controller!.play();
-    setState(() => _isPlaying = true);
-    _updateUIVisibility(false);
+    try {
+      await _controller!.play();
+      setState(() => _isPlaying = true);
+      _updateUIVisibility(false);
+    } catch (e) {
+      debugPrint('Error playing video: $e');
+      setState(() => _isPlaying = false);
+    }
   }
 
   void _pauseVideo() async {
@@ -258,7 +260,7 @@ class _SnipCardState extends State<SnipCard>
 
   void _onProgressDragStart(DragStartDetails details) {
     setState(() => _isDraggingProgress = true);
-    _progressBarController.forward();
+    _animationController.forward(from: 0.0);
   }
 
   void _onProgressDragUpdate(DragUpdateDetails details) {
@@ -275,16 +277,14 @@ class _SnipCardState extends State<SnipCard>
 
   void _onProgressDragEnd(DragEndDetails details) {
     setState(() => _isDraggingProgress = false);
-    _progressBarController.reverse();
+    _animationController.reverse();
   }
 
   @override
   void dispose() {
     _controller?.removeListener(_videoListener);
     _controller?.dispose();
-    _progressBarController.dispose();
-    _likeAnimationController.dispose();
-    _profilePositionController.dispose();
+    _animationController.dispose();
     _controlsTimer?.cancel();
     super.dispose();
   }
@@ -454,17 +454,21 @@ class _SnipCardState extends State<SnipCard>
       child: Stack(
         fit: StackFit.expand,
         children: [
-          if (widget.snip.video.thumbnail != null)
+          if (widget.snip.video.thumbnail != null &&
+              widget.snip.video.thumbnail!.isNotEmpty)
             Image.network(
               widget.snip.video.thumbnail!,
               fit: BoxFit.cover,
               errorBuilder: (context, error, stackTrace) {
                 debugPrint('Error loading thumbnail: $error');
-                return const Center(
-                  child: Icon(
-                    Icons.image_not_supported,
-                    color: Colors.white54,
-                    size: 48,
+                return Container(
+                  color: Colors.black54,
+                  child: const Center(
+                    child: Icon(
+                      Icons.play_circle_outline,
+                      color: Colors.white54,
+                      size: 48,
+                    ),
                   ),
                 );
               },
@@ -552,8 +556,8 @@ class _SnipCardState extends State<SnipCard>
       _showHeart = true;
     });
 
-    _likeAnimationController.forward().then((_) {
-      _likeAnimationController.reverse().then((_) {
+    _animationController.forward().then((_) {
+      _animationController.reverse().then((_) {
         if (mounted) {
           setState(() => _showHeart = false);
         }

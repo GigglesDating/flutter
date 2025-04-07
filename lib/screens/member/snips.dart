@@ -79,6 +79,8 @@ class _SnipsScreenState extends State<SnipsScreen>
       final prefs = await SharedPreferences.getInstance();
       final uuid = prefs.getString('user_uuid');
 
+      debugPrint('Initializing snips with UUID: $uuid');
+
       if (uuid == null) {
         setState(() {
           _error = 'User not logged in';
@@ -87,17 +89,29 @@ class _SnipsScreenState extends State<SnipsScreen>
         return;
       }
 
+      debugPrint('Making API call to getSnips...');
       final response = await _thinkProvider.getSnips(
         uuid: uuid,
         page: 1,
       );
+      debugPrint('Raw API Response: $response');
 
+      debugPrint('Parsing snip response...');
       final parsedResponse = await SnipParser.parseSnipResponse(response);
+      debugPrint('Parsed Response: $parsedResponse');
 
       if (parsedResponse['status'] == 'success') {
         final data = parsedResponse['data'];
+        debugPrint('Snips data received:');
+        debugPrint('Total snips: ${data['total_snips']}');
+        debugPrint('Has more: ${data['has_more']}');
+        debugPrint('Next page: ${data['next_page']}');
+
+        final snips = List<SnipModel>.from(data['snips']);
+        debugPrint('First snip video URL: ${snips.first.video.source}');
+
         setState(() {
-          _snips = List<SnipModel>.from(data['snips']);
+          _snips = snips;
           _hasMore = data['has_more'] ?? false;
           _nextPage = data['next_page'];
           _isLoading = false;
@@ -105,15 +119,20 @@ class _SnipsScreenState extends State<SnipsScreen>
 
         // Preload first video and its thumbnail
         if (_snips.isNotEmpty) {
+          debugPrint('Starting preload of first video...');
           _preloadVideo(0);
         }
       } else {
+        debugPrint('API call failed with status: ${parsedResponse['status']}');
+        debugPrint('Error message: ${parsedResponse['message']}');
         setState(() {
           _error = parsedResponse['message'] ?? 'Failed to load snips';
           _isLoading = false;
         });
       }
-    } catch (e) {
+    } catch (e, stackTrace) {
+      debugPrint('Error in _initializeSnips: $e');
+      debugPrint('Stack trace: $stackTrace');
       setState(() {
         _error = 'Error loading snips: $e';
         _isLoading = false;

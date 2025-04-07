@@ -215,14 +215,15 @@ class SnipModel {
 
   factory SnipModel.fromJson(Map<String, dynamic> json) {
     return SnipModel(
-      snipId: json['snip_id'] as String,
+      snipId: json['snip_id'].toString(),
       video: VideoContent.fromJson(json['video'] as Map<String, dynamic>),
       timestamp: DateTime.parse(json['timestamp'] as String),
-      commentIds: (json['comment_ids'] as List).cast<String>(),
+      commentIds:
+          (json['comment_ids'] as List).map((e) => e.toString()).toList(),
       description: json['description'] as String,
       likesCount: json['likes_count'] as int,
       commentsCount: json['comments_count'] as int,
-      authorProfileId: json['author_profile_id'] as String,
+      authorProfileId: json['author_profile_id'].toString(),
       authorProfile:
           UserModel.fromJson(json['author_profile'] as Map<String, dynamic>),
     );
@@ -295,18 +296,48 @@ class VideoContent {
 
   factory VideoContent.fromJson(Map<String, dynamic> json) {
     try {
-      // Handle simpler video structure from API
-      return VideoContent(
-        source: json['source'] as String? ?? '',
-        thumbnail: json['thumbnail'] as String?,
-        qualityUrls: {VideoQuality.auto: json['source'] as String? ?? ''},
-        duration: 0, // Duration will be set by video controller
-        resolution: const VideoResolution(
+      // Get the source URL and thumbnail
+      final sourceUrl = json['source'] as String? ?? '';
+      final thumbnail = json['thumbnail'] as String?;
+
+      // Parse quality URLs if available
+      final qualityUrls = <VideoQuality, String>{};
+      if (json['quality_urls'] != null) {
+        (json['quality_urls'] as Map<String, dynamic>).forEach((key, value) {
+          final quality = VideoQuality.values.firstWhere(
+            (q) =>
+                q.toString().split('.').last.toLowerCase() == key.toLowerCase(),
+            orElse: () => VideoQuality.auto,
+          );
+          qualityUrls[quality] = value as String;
+        });
+      }
+
+      // If no quality URLs provided, use source URL as auto quality
+      if (qualityUrls.isEmpty) {
+        qualityUrls[VideoQuality.auto] = sourceUrl;
+      }
+
+      // Parse resolution if available
+      VideoResolution resolution;
+      if (json['resolution'] != null) {
+        resolution = VideoResolution.fromJson(
+            json['resolution'] as Map<String, dynamic>);
+      } else {
+        resolution = const VideoResolution(
           width: 0,
           height: 0,
           aspectRatio: 9 / 16, // Default vertical video aspect ratio
           bitrate: 0,
-        ),
+        );
+      }
+
+      return VideoContent(
+        source: sourceUrl,
+        thumbnail: thumbnail,
+        qualityUrls: qualityUrls,
+        duration: json['duration'] as int? ?? 0,
+        resolution: resolution,
       );
     } catch (e) {
       debugPrint('Error parsing VideoContent: $e');

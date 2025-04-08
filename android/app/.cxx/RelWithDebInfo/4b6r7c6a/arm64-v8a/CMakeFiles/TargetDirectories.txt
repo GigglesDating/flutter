@@ -1,0 +1,2 @@
+C:/Users/skris/Desktop/New folder (2)/flutter/android/app/.cxx/RelWithDebInfo/4b6r7c6a/arm64-v8a/CMakeFiles/edit_cache.dir
+C:/Users/skris/Desktop/New folder (2)/flutter/android/app/.cxx/RelWithDebInfo/4b6r7c6a/arm64-v8a/CMakeFiles/rebuild_cache.dir

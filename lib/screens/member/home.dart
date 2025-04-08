@@ -800,37 +800,37 @@ class _HomeTabState extends State<HomeTab> {
   }
 
   // Initialize CacheService
-  Future<void> _initializeCacheService() async {
-    // No need to initialize CacheService here as it's already initialized in main.dart
-    // This method is kept for backward compatibility
-    debugPrint('CacheService initialization check in HomeTab');
-  }
-}
+//   Future<void> _initializeCacheService() async {
+//     // No need to initialize CacheService here as it's already initialized in main.dart
+//     // This method is kept for backward compatibility
+//     debugPrint('CacheService initialization check in HomeTab');
+//   }
+// }
 
-class CropAspectRatioPresetCustom implements CropAspectRatioPresetData {
-  @override
-  (int, int)? get data => (2, 3);
+// class CropAspectRatioPresetCustom implements CropAspectRatioPresetData {
+//   @override
+//   (int, int)? get data => (2, 3);
 
-  @override
-  String get name => '2x3 (customized)';
-}
+//   @override
+//   String get name => '2x3 (customized)';
+// }
 
-class AppBarClipper extends CustomClipper<Path> {
-  @override
-  Path getClip(Size size) {
-    final path = Path();
-    path.moveTo(0, 0);
-    path.lineTo(0, size.height);
-    path.quadraticBezierTo(
-      size.width / 2,
-      size.height - 20,
-      size.width,
-      size.height,
-    );
-    path.lineTo(size.width, 0);
-    return path;
-  }
+// class AppBarClipper extends CustomClipper<Path> {
+//   @override
+//   Path getClip(Size size) {
+//     final path = Path();
+//     path.moveTo(0, 0);
+//     path.lineTo(0, size.height);
+//     path.quadraticBezierTo(
+//       size.width / 2,
+//       size.height - 20,
+//       size.width,
+//       size.height,
+//     );
+//     path.lineTo(size.width, 0);
+//     return path;
+//   }
 
-  @override
-  bool shouldReclip(CustomClipper<Path> oldClipper) => false;
+//   @override
+//   bool shouldReclip(CustomClipper<Path> oldClipper) => false;
 }

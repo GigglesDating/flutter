@@ -172,7 +172,9 @@ class NavigationControllerState extends State<NavigationController>
                               'assets/app/nav.svg',
                               fit: BoxFit.fill,
                               colorFilter: ColorFilter.mode(
-                                isDarkMode ? Colors.black : Colors.white,
+                                isDarkMode
+                                    ? const Color(0xFF333333)
+                                    : const Color(0xFF333333),
                                 BlendMode.srcIn,
                               ),
                             ),

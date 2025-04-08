@@ -1,12 +1,6 @@
 import '../models/user_model.dart';
 import 'package:flutter/foundation.dart';
-
-enum VideoQuality {
-  auto,
-  low, // 480p
-  medium, // 720p
-  high // 1080p
-}
+import 'video_quality.dart';
 
 class VideoResolution {
   final int width;

@@ -4,6 +4,7 @@ import 'package:video_player/video_player.dart';
 import 'dart:async';
 import 'dart:ui';
 import '../barrel.dart';
+import '../../models/video_quality.dart';
 
 class SnipCard extends StatefulWidget {
   final SnipModel snip;
@@ -119,11 +120,20 @@ class _SnipCardState extends State<SnipCard> with TickerProviderStateMixin {
     });
   }
 
+  void _updateUIVisibility(bool show) {
+    setState(() {
+      _showProfileInfo = show;
+      _showDescription = show;
+      _showStats = show;
+    });
+  }
+
   Future<void> _initializeVideo() async {
     if (!mounted) return;
 
     debugPrint('Starting video initialization...');
     debugPrint('Video URL: ${widget.snip.video.source}');
+    debugPrint('Quality URLs: ${widget.snip.video.qualityUrls}');
 
     setState(() {
       _isBuffering = true;
@@ -131,67 +141,33 @@ class _SnipCardState extends State<SnipCard> with TickerProviderStateMixin {
     });
 
     try {
-      int retryCount = 0;
-      const maxRetries = 3;
-      const retryDelay = Duration(seconds: 2);
+      // Initialize video with quality management
+      final controller = await VideoService.initializeController(
+        widget.snip.video.source,
+        preferredQuality: widget.snip.video.currentQuality,
+        qualityUrls:
+            Map<VideoQuality, String>.from(widget.snip.video.qualityUrls),
+      );
 
-      while (retryCount < maxRetries) {
-        try {
-          debugPrint(
-              'Attempting video initialization (attempt ${retryCount + 1}/${maxRetries})');
+      if (!mounted) return;
 
-          final controller = VideoPlayerController.networkUrl(
-            Uri.parse(widget.snip.video.source),
-            videoPlayerOptions: VideoPlayerOptions(
-              mixWithOthers: true,
-              allowBackgroundPlayback: false,
-            ),
-          );
+      if (controller != null) {
+        setState(() {
+          _controller = controller;
+          _isBuffering = false;
+          _error = null;
+        });
 
-          if (!mounted) return;
+        // Add video state listeners
+        _controller?.addListener(_videoListener);
 
-          debugPrint('Initializing controller...');
-          await controller.initialize();
-          debugPrint('Controller initialized successfully');
-
-          if (!mounted) return;
-
-          // Set volume before playing to avoid audio sync issues
-          await controller.setVolume(1.0);
-          await controller.setLooping(true);
-
-          // Configure playback parameters
-          controller.setPlaybackSpeed(1.0);
-
-          setState(() {
-            _controller = controller;
-            _isBuffering = false;
-            _error = null;
-            _isMuted = false;
-          });
-
-          // Add video state listeners
-          _controller?.addListener(_videoListener);
-
-          // Play if visible and autoPlay is true
-          if (widget.isVisible && widget.autoPlay) {
-            debugPrint('Auto-playing video...');
-            await _playVideo();
-          }
-
-          // Successfully initialized, break retry loop
-          break;
-        } catch (e) {
-          debugPrint(
-              'Error during initialization attempt ${retryCount + 1}: $e');
-          retryCount++;
-          if (retryCount >= maxRetries) {
-            rethrow;
-          }
-          debugPrint(
-              'Retrying in ${retryDelay.inSeconds * retryCount} seconds...');
-          await Future.delayed(retryDelay * retryCount);
+        // Play if visible and autoPlay is true
+        if (widget.isVisible && widget.autoPlay) {
+          debugPrint('Auto-playing video...');
+          await _playVideo();
         }
+      } else {
+        throw Exception('Failed to initialize video controller');
       }
     } catch (e, stackTrace) {
       debugPrint('Final error initializing video: $e');
@@ -220,6 +196,11 @@ class _SnipCardState extends State<SnipCard> with TickerProviderStateMixin {
     final isBuffering = _controller!.value.isBuffering;
     if (isBuffering != _isBuffering) {
       setState(() => _isBuffering = isBuffering);
+      if (isBuffering) {
+        debugPrint('Video started buffering');
+      } else {
+        debugPrint('Video resumed playback');
+      }
     }
 
     // Handle state changes
@@ -228,15 +209,9 @@ class _SnipCardState extends State<SnipCard> with TickerProviderStateMixin {
       setState(() => _isPlaying = isPlaying);
       widget.onVideoStateChange?.call(isPlaying);
       _updateUIVisibility(!isPlaying);
+      debugPrint(
+          'Video playback state changed: ${isPlaying ? 'playing' : 'paused'}');
     }
-  }
-
-  void _updateUIVisibility(bool show) {
-    setState(() {
-      _showProfileInfo = show;
-      _showDescription = show;
-      _showStats = show;
-    });
   }
 
   Future<void> _playVideo() async {
@@ -245,17 +220,23 @@ class _SnipCardState extends State<SnipCard> with TickerProviderStateMixin {
       await _controller!.play();
       setState(() => _isPlaying = true);
       _updateUIVisibility(false);
+      debugPrint('Video playback started');
     } catch (e) {
       debugPrint('Error playing video: $e');
       setState(() => _isPlaying = false);
     }
   }
 
-  void _pauseVideo() async {
+  Future<void> _pauseVideo() async {
     if (_controller == null) return;
-    await _controller!.pause();
-    setState(() => _isPlaying = false);
-    _updateUIVisibility(true);
+    try {
+      await _controller!.pause();
+      setState(() => _isPlaying = false);
+      _updateUIVisibility(true);
+      debugPrint('Video playback paused');
+    } catch (e) {
+      debugPrint('Error pausing video: $e');
+    }
   }
 
   void _onProgressDragStart(DragStartDetails details) {
@@ -282,10 +263,11 @@ class _SnipCardState extends State<SnipCard> with TickerProviderStateMixin {
 
   @override
   void dispose() {
+    debugPrint('Disposing SnipCard');
     _controller?.removeListener(_videoListener);
-    _controller?.dispose();
-    _animationController.dispose();
+    VideoService.disposeController(widget.snip.video.source);
     _controlsTimer?.cancel();
+    _animationController.dispose();
     super.dispose();
   }
 

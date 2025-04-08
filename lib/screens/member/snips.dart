@@ -6,6 +6,7 @@ import '../utilities/navbar.dart';
 import '../../models/snips_model.dart';
 import '../../models/utils/snip_parser.dart';
 import '../../models/utils/snip_cache_manager.dart';
+import '../../models/video_quality.dart';
 import '../../network/think.dart';
 import 'dart:async'; // Add this import for Timer
 import 'dart:ui';

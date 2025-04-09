@@ -4,7 +4,7 @@ import 'package:video_player/video_player.dart';
 import 'dart:async';
 import 'dart:ui';
 import '../barrel.dart';
-import '../../models/video_quality.dart';
+// import '../../models/video_quality.dart';
 
 class SnipCard extends StatefulWidget {
   final SnipModel snip;
@@ -143,10 +143,10 @@ class _SnipCardState extends State<SnipCard> with TickerProviderStateMixin {
     try {
       // Initialize video with quality management
       final controller = await VideoService.initializeController(
-        widget.snip.video.source,
-        preferredQuality: widget.snip.video.currentQuality,
-        qualityUrls:
-            Map<VideoQuality, String>.from(widget.snip.video.qualityUrls),
+        url: widget.snip.video.source,
+        snipId: widget.snip.snipId,
+        quality: widget.snip.video.currentQuality.name,
+        preBufferUrls: widget.snip.video.qualityUrls.values.toList(),
       );
 
       if (!mounted) return;

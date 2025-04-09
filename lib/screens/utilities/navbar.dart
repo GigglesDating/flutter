@@ -251,7 +251,7 @@ class NavigationControllerState extends State<NavigationController>
             shape: BoxShape.circle,
             color: isDarkMode
                 ? Colors.white.withAlpha(38)
-                : Colors.black.withAlpha(26),
+                : const Color.fromARGB(255, 255, 255, 255).withAlpha(26),
           ),
           child: Center(
             child: AnimatedScale(

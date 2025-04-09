@@ -258,35 +258,6 @@ class VideoService {
     }
   }
 
-  // static void _handleBuffering(String videoUrl) {
-  //   _bufferCount[videoUrl] = (_bufferCount[videoUrl] ?? 0) + 1;
-
-  //   if (_bufferCount[videoUrl]! >= _maxBufferCount) {
-  //     final currentQuality = _currentQualities[videoUrl];
-  //     if (currentQuality != null) {
-  //       final lowerQuality = _getLowerQuality(currentQuality);
-  //       if (lowerQuality != null) {
-  //         switchQuality(videoUrl, lowerQuality);
-  //       }
-  //     }
-
-  //     _bufferCount[videoUrl] = 0;
-  //   }
-
-  //   Future.delayed(_bufferTimeout, () {
-  //     _bufferCount[videoUrl] = 0;
-  //   });
-  // }
-
-  // static VideoQuality? _getLowerQuality(VideoQuality current) {
-  //   const qualities = VideoQuality.values;
-  //   final currentIndex = qualities.indexOf(current);
-  //   if (currentIndex > 1) {
-  //     return qualities[currentIndex - 1];
-  //   }
-  //   return null;
-  // }
-
   static Future<void> switchQuality(
       String videoUrl, VideoQuality newQuality) async {
     final controller = _controllers[videoUrl];

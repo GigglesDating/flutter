@@ -53,24 +53,24 @@ dependencies:
   # For Reorder Photos on User creation Profile
   reorderable_grid_view: ^2.2.8
   # Aadhar SDK integration for Face Match
-  hyperkyc_flutter: ^0.33.0
+  hyperkyc_flutter: ^0.42.0
   #  Map
   google_maps_flutter: ^2.9.0
-  geolocator: ^13.0.1
-  flutter_widget_from_html: ^0.15.3
+  geolocator: ^14.0.0
+  flutter_widget_from_html: ^0.16.0
   # For OTP Verification via Google SMS Retriever & Consent Api
   smart_auth: ^3.1.0
   intl:
   pinput:
   image_picker:
-  image_cropper: ^8.0.2
+  image_cropper: ^9.1.0
   camera:
   video_player: ^2.9.2
   flutter_svg: ^2.0.10+1
-  syncfusion_flutter_datepicker: ^28.1.33
+  syncfusion_flutter_datepicker: ^29.1.39
   # for emoji
-  emoji_picker_flutter: ^3.1.0
-  share_plus: ^10.1.3
+  emoji_picker_flutter: ^4.3.0
+  share_plus: ^11.0.0
   fluttertoast: ^8.2.10
 
 
@@ -78,7 +78,7 @@ dependencies:
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  flutter_launcher_icons: ^0.13.1
+  flutter_launcher_icons: ^0.14.3
 flutter_icons:
   image_path: "assets/images/logolighttheme.png"
   andriod: true

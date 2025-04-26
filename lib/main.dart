@@ -13,7 +13,11 @@ import 'network/auth_provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  
+  // Initialize SharedPreferences
   SharedPref.preferences = await SharedPreferences.getInstance();
+  
+  // Set system UI mode
   SystemChrome.setEnabledSystemUIMode(SystemUiMode.manual,
       overlays: [SystemUiOverlay.bottom]);
 
@@ -35,9 +39,17 @@ class MyApp extends StatefulWidget {
 
 class _MyAppState extends State<MyApp> {
   ThemeMode _themeMode = ThemeMode.system;
+
   @override
   void initState() {
     super.initState();
+    // Initialize any required shared preferences data
+    _initializePrefs();
+  }
+
+  Future<void> _initializePrefs() async {
+    // Set initial screen state if needed
+    await SharedPref.signUpVerifiedScreenSave();
   }
 
   @override
@@ -47,7 +59,7 @@ class _MyAppState extends State<MyApp> {
       themeMode: _themeMode,
       theme: lightTheme,
       darkTheme: darkTheme,
-      home:  SplashPage(),
+      home: const AadharVerificationPage(),
       debugShowCheckedModeBanner: false,
     );
   }

@@ -14,8 +14,8 @@ if (keystorePropertiesFile.exists()) {
 
 android {
     namespace = "com.platonicdating.giggles"
-    compileSdk = flutter.compileSdkVersion
-    ndkVersion = "25.1.8937393" // Replace with correct NDK version
+    compileSdk = 34 // Updated to latest stable
+    ndkVersion = "25.1.8937393"
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_1_8
@@ -27,11 +27,10 @@ android {
     }
 
     defaultConfig {
-        // Application ID
         applicationId = "com.platonicdating.giggles"
         multiDexEnabled true
         minSdk = 23
-        targetSdk = flutter.targetSdkVersion
+        targetSdk = 34 // Updated to match compileSdk
         versionCode = flutter.versionCode
         versionName = flutter.versionName
     }
@@ -47,14 +46,19 @@ android {
 
     buildTypes {
         release {
-            // Use the release signing configuration
             signingConfig = signingConfigs.release
-            // Disable code shrinking and resource shrinking for easier debugging
             minifyEnabled false
             shrinkResources false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
+}
+
+dependencies {
+    // Use compatible versions of AndroidX libraries
+    implementation 'androidx.core:core-ktx:1.12.0'
+    implementation 'androidx.core:core:1.12.0'
+    implementation 'androidx.multidex:multidex:2.0.1'
 }
 
 flutter {
